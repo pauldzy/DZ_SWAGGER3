@@ -11,7 +11,7 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   FUNCTION dz_swagger_table_list
+   FUNCTION dz_swagger3_table_list
    RETURN MDSYS.SDO_STRING2_ARRAY;
  
  END dz_swagger3_setup;
