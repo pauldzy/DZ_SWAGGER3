@@ -79,6 +79,7 @@ AS
               || '   ,info_desc_updated   DATE '
               || '   ,info_desc_author    VARCHAR2(30 Char) '
               || '   ,info_desc_notes     VARCHAR2(255 Char) '
+              || '   ,doc_externalDocs_id VARCHAR2(255 Char) '
               || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
@@ -145,18 +146,18 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_doc '
+      str_sql := 'ALTER TABLE dz_swagger3_group '
               || 'ADD( '
-              || '    CONSTRAINT dz_swagger3_doc_c01 '
+              || '    CONSTRAINT dz_swagger3_group_c01 '
               || '    CHECK (group_id = TRIM(group_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_doc_c02 '
+              || '   ,CONSTRAINT dz_swagger3_group_c02 '
               || '    CHECK (doc_id = TRIM(doc_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_doc_c03 '
+              || '   ,CONSTRAINT dz_swagger3_group_c03 '
               || '    CHECK (path_id = TRIM(path_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_doc_c04 '
+              || '   ,CONSTRAINT dz_swagger3_group_c04 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -256,51 +257,6 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 70
-      -- Build HEAD_TO_PATH table
-      --------------------------------------------------------------------------
-      str_sql := 'CREATE TABLE dz_swagger3_path_info_map('
-              || '    info_id             VARCHAR2(255 Char) NOT NULL '
-              || '   ,path_id             VARCHAR2(255 Char) NOT NULL '
-              || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
-              || ') ';
-              
-      IF p_table_tablespace IS NOT NULL
-      THEN
-         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
-      END IF;
-      
-      EXECUTE IMMEDIATE str_sql;
-      
-      str_sql := 'ALTER TABLE dz_swagger3_path_info_map '
-              || 'ADD CONSTRAINT dz_swagger3_path_info_map_pk '
-              || 'PRIMARY KEY(versionid,info_id,path_id) ';
-              
-      IF p_index_tablespace IS NOT NULL
-      THEN
-         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
-      END IF;
-      
-      EXECUTE IMMEDIATE str_sql;
-      
-      str_sql := 'ALTER TABLE dz_swagger3_path_info_map '
-              || 'ADD( '
-              || '    CONSTRAINT dz_swagger3_path_info_map_c01 '
-              || '    CHECK (info_id = TRIM(info_id)) '
-              || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_path_info_map_c02 '
-              || '    CHECK (path_id = TRIM(path_id)) '
-              || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_path_info_map_c03 '
-              || '    CHECK (versionid = TRIM(versionid)) '
-              || '    ENABLE VALIDATE '
-              || ') ';
-              
-      EXECUTE IMMEDIATE str_sql;
-      
-      --------------------------------------------------------------------------
-      -- Step 80
       -- Build PATH table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_path('
@@ -359,7 +315,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 90
+      -- Step 80
       -- Build PARENT_TO_PARM table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_parm_parent_map('
@@ -405,7 +361,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 100
+      -- Step 90
       -- Build PARM table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_parm('
@@ -484,7 +440,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 110
+      -- Step 100
       -- Build OPERATION table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_operation('
@@ -542,11 +498,12 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 120
+      -- Step 110
       -- Build PARENT_TO_PARM table
       --------------------------------------------------------------------------
-      str_sql := 'CREATE TABLE dz_swagger3_respns_operatn_map('
+      str_sql := 'CREATE TABLE dz_swagger3_operation_resp_map('
               || '    operation_id        VARCHAR2(255 Char) NOT NULL '
+              || '   ,response_code       VARCHAR2(255 Char) NOT NULL '
               || '   ,response_id         VARCHAR2(255 Char) NOT NULL '
               || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
               || ') ';
@@ -559,9 +516,9 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_respns_operatn_map '
-              || 'ADD CONSTRAINT dz_swagger3_respns_operatn_mpk '
-              || 'PRIMARY KEY(versionid,operation_id,response_id) ';
+      str_sql := 'ALTER TABLE dz_swagger3_operation_resp_map '
+              || 'ADD CONSTRAINT dz_swagger3_operation_resp_mpk '
+              || 'PRIMARY KEY(versionid,operation_id,response_code,response_id) ';
               
       IF p_index_tablespace IS NOT NULL
       THEN
@@ -571,15 +528,18 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_respns_operatn_map '
+      str_sql := 'ALTER TABLE dz_swagger3_operation_resp_map '
               || 'ADD( '
-              || '    CONSTRAINT dz_swagger3_respns_operatn_c01 '
+              || '    CONSTRAINT dz_swagger3_operation_resp_c01 '
               || '    CHECK (operation_id = TRIM(operation_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_respns_operatn_c02 '
+              || '   ,CONSTRAINT dz_swagger3_operation_resp_c02 '
+              || '    CHECK (response_code = TRIM(response_code)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_operation_resp_c03 '
               || '    CHECK (response_id = TRIM(response_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_respns_operatn_c03 '
+              || '   ,CONSTRAINT dz_swagger3_operation_resp_c04 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -587,7 +547,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 130
+      -- Step 120
       -- Build RESPONSE table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_response('
@@ -632,7 +592,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 140
+      -- Step 130
       -- Build CONTENT_TO_RESP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_media_parent_map('
@@ -678,13 +638,13 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 150
+      -- Step 140
       -- Build MEDIA table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_media('
               || '    media_id            VARCHAR2(255 Char) NOT NULL '
               || '   ,media_schema_id     VARCHAR2(255 Char) NOT NULL '
-              || '   ,media_example       VARCHAR2(255 Char) NOT NULL '
+              || '   ,media_example       VARCHAR2(255 Char) '
               || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
@@ -721,7 +681,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 160
+      -- Step 150
       -- Build SCHEMA table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_schema('
@@ -775,6 +735,52 @@ AS
               || '    CHECK (schema_id = TRIM(schema_id)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_schema_c03 '
+              || '    CHECK (versionid = TRIM(versionid)) '
+              || '    ENABLE VALIDATE '
+              || ') ';
+              
+      EXECUTE IMMEDIATE str_sql;
+      
+      --------------------------------------------------------------------------
+      -- Step 160
+      -- Build COMPONENTS table
+      --------------------------------------------------------------------------
+      str_sql := 'CREATE TABLE dz_swagger3_schema_components('
+              || '    schema_parent_id         VARCHAR2(255 Char) NOT NULL '
+              || '   ,schema_component_id      VARCHAR2(255 Char) NOT NULL '
+              || '   ,schema_component_order   INTEGER NOT NULL '
+              || '   ,versionid                VARCHAR2(40 Char) NOT NULL '
+              || ') ';
+              
+      IF p_table_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_schema_components '
+              || 'ADD CONSTRAINT dz_swagger3_schema_componenpk '
+              || 'PRIMARY KEY(versionid,schema_parent_id,schema_component_order) ';
+              
+      IF p_index_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_schema_components '
+              || 'ADD( '
+              || '    CONSTRAINT dz_swagger3_schema_componec01 '
+              || '    CHECK (schema_parent_id = TRIM(schema_parent_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_schema_componec02 '
+              || '    CHECK (schema_component_id = TRIM(schema_component_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_schema_componec03 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -1209,16 +1215,16 @@ AS
          ,'DZ_SWAGGER3_GROUP'
          ,'DZ_SWAGGER3_SERVER_PARENT_MAP'
          ,'DZ_SWAGGER3_SERVER'
-         ,'DZ_SWAGGER3_PATH_INFO_MAP'
          ,'DZ_SWAGGER3_PATH'
          ,'DZ_SWAGGER3_PARM_PARENT_MAP'
          ,'DZ_SWAGGER3_PARM'
-         ,'DZ_SWAGGER3_RESPNS_OPERATN_MAP'
          ,'DZ_SWAGGER3_OPERATION'
+         ,'DZ_SWAGGER3_OPERATION_RESP_MAP'
          ,'DZ_SWAGGER3_RESPONSE'
          ,'DZ_SWAGGER3_MEDIA_PARENT_MAP'
          ,'DZ_SWAGGER3_MEDIA'
          ,'DZ_SWAGGER3_SCHEMA'
+         ,'DZ_SWAGGER3_SCHEMA_COMPONENTS'
          ,'DZ_SWAGGER3_REQUESTBODY'
          ,'DZ_SWAGGER3_EXAMPLE'
          ,'DZ_SWAGGER3_ENCODING'
