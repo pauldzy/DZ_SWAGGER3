@@ -90,7 +90,7 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_doc'
+      str_sql := 'ALTER TABLE dz_swagger3_doc '
               || 'ADD CONSTRAINT dz_swagger3_doc_pk '
               || 'PRIMARY KEY(versionid,doc_id) ';
               
@@ -223,8 +223,8 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_path_head_map '
-              || 'ADD CONSTRAINT dz_swagger3_path_head_map_pk '
+      str_sql := 'ALTER TABLE dz_swagger3_path_info_map '
+              || 'ADD CONSTRAINT dz_swagger3_path_info_map_pk '
               || 'PRIMARY KEY(versionid,info_id,path_id) ';
               
       IF p_index_tablespace IS NOT NULL
@@ -235,15 +235,15 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_path_head_map '
+      str_sql := 'ALTER TABLE dz_swagger3_path_info_map '
               || 'ADD( '
-              || '    CONSTRAINT dz_swagger3_path_head_map_c01 '
+              || '    CONSTRAINT dz_swagger3_path_info_map_c01 '
               || '    CHECK (info_id = TRIM(info_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_path_head_map_c02 '
+              || '   ,CONSTRAINT dz_swagger3_path_info_map_c02 '
               || '    CHECK (path_id = TRIM(path_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_path_head_map_c03 '
+              || '   ,CONSTRAINT dz_swagger3_path_info_map_c03 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -328,8 +328,8 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_server_parent_map '
-              || 'ADD CONSTRAINT dz_swagger3_server_parent_mapk '
+      str_sql := 'ALTER TABLE dz_swagger3_parm_parent_map '
+              || 'ADD CONSTRAINT dz_swagger3_parm_parent_map_pk '
               || 'PRIMARY KEY(versionid,parent_id,parm_id) ';
               
       IF p_index_tablespace IS NOT NULL
@@ -340,15 +340,15 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_server_parent_map '
+      str_sql := 'ALTER TABLE dz_swagger3_parm_parent_map '
               || 'ADD( '
-              || '    CONSTRAINT dz_swagger3_server_parent_mc01 '
+              || '    CONSTRAINT dz_swagger3_parm_parent_mapc01 '
               || '    CHECK (parent_id = TRIM(parent_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_server_parent_mc02 '
+              || '   ,CONSTRAINT dz_swagger3_parm_parent_mapc02 '
               || '    CHECK (parm_id = TRIM(parm_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_server_parent_mc03 '
+              || '   ,CONSTRAINT dz_swagger3_parm_parent_mapc03 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -1078,7 +1078,7 @@ AS
               || '   ,CONSTRAINT dz_swagger3_tag_c02 '
               || '    CHECK (tag_name = TRIM(tag_name)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger_path_tags_c03 '
+              || '   ,CONSTRAINT dz_swagger3_path_tag_c03 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -1179,8 +1179,8 @@ AS
          ,'DZ_SWAGGER3_CONDENSE'
       );
    
-   END dz_swagger_table_list;
+   END dz_swagger3_table_list;
 
-END dz_swagger_setup;
+END dz_swagger3_setup;
 /
 
