@@ -694,7 +694,6 @@ AS
               || '   ,schema_discriminator    VARCHAR2(255 Char) '
               || '   ,schema_readOnly         VARCHAR2(5 Char) '
               || '   ,schema_writeOnly        VARCHAR2(5 Char) '
-              || '   ,schema_xml              VARCHAR2(255 Char) '
               || '   ,schema_externalDocs_id  VARCHAR2(255 Char) '
               || '   ,schema_example          VARCHAR2(255 Char) '
               || '   ,schema_deprecated       VARCHAR2(5 Char) '
@@ -734,7 +733,25 @@ AS
               || '    CONSTRAINT dz_swagger3_schema_c01 '
               || '    CHECK (schema_id = TRIM(schema_id)) '
               || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_schema_c02 '
+              || '    CHECK (schema_nullable IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_schema_c03 '
+              || '    CHECK (schema_readOnly IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_schema_c04 '
+              || '    CHECK (schema_writeOnly IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_schema_c05 '
+              || '    CHECK (schema_deprecated IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_schema_c06 '
+              || '    CHECK (xml_attribute IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_schema_c07 '
+              || '    CHECK (xml_wrapped IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_schema_c08 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -745,10 +762,11 @@ AS
       -- Step 160
       -- Build COMPONENTS table
       --------------------------------------------------------------------------
-      str_sql := 'CREATE TABLE dz_swagger3_schema_components('
-              || '    schema_parent_id         VARCHAR2(255 Char) NOT NULL '
-              || '   ,schema_component_id      VARCHAR2(255 Char) NOT NULL '
-              || '   ,schema_component_order   INTEGER NOT NULL '
+      str_sql := 'CREATE TABLE dz_swagger3_schema_prop_map('
+              || '    schema_id                VARCHAR2(255 Char) NOT NULL '
+              || '   ,property_id              VARCHAR2(255 Char) NOT NULL '
+              || '   ,property_order           INTEGER NOT NULL '
+              || '   ,property_required        VARCHAR2(5 Char)   NOT NULL '
               || '   ,versionid                VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
@@ -760,9 +778,9 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_schema_components '
-              || 'ADD CONSTRAINT dz_swagger3_schema_componenpk '
-              || 'PRIMARY KEY(versionid,schema_parent_id,schema_component_order) ';
+      str_sql := 'ALTER TABLE dz_swagger3_schema_prop_map '
+              || 'ADD CONSTRAINT dz_swagger3_schema_prop_mappk '
+              || 'PRIMARY KEY(versionid,schema_id,property_order) ';
               
       IF p_index_tablespace IS NOT NULL
       THEN
@@ -772,15 +790,18 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_schema_components '
+      str_sql := 'ALTER TABLE dz_swagger3_schema_prop_map '
               || 'ADD( '
-              || '    CONSTRAINT dz_swagger3_schema_componec01 '
-              || '    CHECK (schema_parent_id = TRIM(schema_parent_id)) '
+              || '    CONSTRAINT dz_swagger3_schema_prop_mac01 '
+              || '    CHECK (schema_id = TRIM(schema_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_schema_componec02 '
-              || '    CHECK (schema_component_id = TRIM(schema_component_id)) '
+              || '   ,CONSTRAINT dz_swagger3_schema_prop_mac02 '
+              || '    CHECK (property_id = TRIM(property_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_schema_componec03 '
+              || '   ,CONSTRAINT dz_swagger3_schema_prop_mac03 '
+              || '    CHECK (property_required IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_schema_prop_mac04 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -789,6 +810,80 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 170
+      -- Build PROPERTIES table
+      --------------------------------------------------------------------------
+      str_sql := 'CREATE TABLE dz_swagger3_property('
+              || '    property_id           VARCHAR2(255 Char) NOT NULL '
+              || '   ,property              VARCHAR2(255 Char) NOT NULL '
+              || '   ,property_type         VARCHAR2(255 Char) NOT NULL '
+              || '   ,property_target       VARCHAR2(255 Char) '
+              || '   ,property_format       VARCHAR2(255 Char) '
+              || '   ,property_allow_null   VARCHAR2(5 Char) NOT NULL '
+              || '   ,property_title        VARCHAR2(255 Char) '
+              || '   ,property_exp_string   VARCHAR2(255 Char) '
+              || '   ,property_exp_number   NUMBER '
+              || '   ,property_description  VARCHAR2(4000 Char) '
+              || '   ,property_desc_updated DATE '
+              || '   ,property_desc_author  VARCHAR2(30 Char) '
+              || '   ,property_desc_notes   VARCHAR2(255 Char) '
+              || '   ,xml_name              VARCHAR2(255 Char) '
+              || '   ,xml_namespace         VARCHAR2(2000 Char) '
+              || '   ,xml_prefix            VARCHAR2(255 Char) '
+              || '   ,xml_attribute         VARCHAR2(5 Char) '
+              || '   ,xml_wrapped           VARCHAR2(5 Char) '
+              || '   ,xml_array_name        VARCHAR2(255 Char) '
+              || '   ,versionid             VARCHAR2(40 Char) NOT NULL '
+              || ') ';
+              
+      IF p_table_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_property '
+              || 'ADD CONSTRAINT dz_swagger3_property_pk '
+              || 'PRIMARY KEY(versionid,property_id) ';
+              
+      IF p_index_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_property '
+              || 'ADD( '
+              || '    CONSTRAINT dz_swagger3_property_c01 '
+              || '    CHECK (property_id = TRIM(property_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_property_c02 '
+              || '    CHECK (property = TRIM(property)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_property_c03 '
+              || '    CHECK (property_target = TRIM(property_target)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_property_c04 '
+              || '    CHECK (property_allow_null IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_property_c05 '
+              || '    CHECK (xml_attribute IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_property_c06 '
+              || '    CHECK (xml_wrapped IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_property_c07 '
+              || '    CHECK (versionid = TRIM(versionid)) '
+              || '    ENABLE VALIDATE '
+              || ') ';
+              
+      EXECUTE IMMEDIATE str_sql;
+      
+      --------------------------------------------------------------------------
+      -- Step 180
       -- Build EXAMPLE table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_requestBody('
@@ -834,7 +929,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 180
+      -- Step 190
       -- Build EXAMPLE table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_example('
@@ -880,7 +975,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 190
+      -- Step 200
       -- Build ENCODING table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_encoding('
@@ -931,7 +1026,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 200
+      -- Step 210
       -- Build PARM table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_header('
@@ -1000,7 +1095,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 210
+      -- Step 220
       -- Build EXTERNALDOC table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_externaldoc('
@@ -1043,7 +1138,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 220
+      -- Step 230
       -- Build SECURITYSCHEME table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_securityScheme('
@@ -1094,7 +1189,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 230
+      -- Step 240
       -- Build TAG table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_tag('
@@ -1141,7 +1236,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 240
+      -- Step 250
       -- Build CONDENSE table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_condense('
@@ -1224,7 +1319,8 @@ AS
          ,'DZ_SWAGGER3_MEDIA_PARENT_MAP'
          ,'DZ_SWAGGER3_MEDIA'
          ,'DZ_SWAGGER3_SCHEMA'
-         ,'DZ_SWAGGER3_SCHEMA_COMPONENTS'
+         ,'DZ_SWAGGER3_SCHEMA_PROP_MAP'
+         ,'DZ_SWAGGER3_PROPERTY'
          ,'DZ_SWAGGER3_REQUESTBODY'
          ,'DZ_SWAGGER3_EXAMPLE'
          ,'DZ_SWAGGER3_ENCODING'
