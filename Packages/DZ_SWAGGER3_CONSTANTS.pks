@@ -32,6 +32,15 @@ AS
       NULL to use the schema default
    */
    c_index_tablespace  CONSTANT VARCHAR2(40 Char) := NULL;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   /*
+   Constant: dz_swagger3_constants.c_openapi_version
+      Sematic version number of the OpenAPI Specification version used by the 
+      package.
+   */
+   c_openapi_version  CONSTANT VARCHAR2(16 Char) := '3.0.0';
 
 END dz_swagger3_constants;
 /
