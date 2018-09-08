@@ -17,7 +17,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_info(
        p_doc_id         IN  VARCHAR2
-      ,p_version        IN  VARCHAR2
+      ,p_versionid      IN  VARCHAR2
    ) RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------

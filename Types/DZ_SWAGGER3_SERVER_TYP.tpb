@@ -14,14 +14,16 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_info_license(
-       p_license_name     IN  VARCHAR2
-      ,p_license_url      IN  VARCHAR2
+       p_server_url         IN  VARCHAR2
+      ,p_server_description IN  VARCHAR2
+      ,p_server_variables   IN  dz_swagger3_server_var_list
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.license_name      := p_license_name;
-      self.license_url       := p_license_url;
+      self.server_url         := p_server_url;
+      self.server_description := p_server_description;
+      self.server_variables   := p_server_variables;
       
       RETURN; 
       
@@ -34,7 +36,7 @@ AS
    AS
    BEGIN
    
-      IF self.license_name IS NOT NULL
+      IF self.server_url IS NOT NULL
       THEN
          RETURN 'FALSE';
          

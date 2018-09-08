@@ -9,7 +9,7 @@ AS
    BEGIN 
       RETURN; 
       
-   END dz_swagger_info;
+   END dz_swagger3_info;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -38,10 +38,12 @@ AS
       )
       INTO SELF
       FROM
-      dz_swagger3_doc
+      dz_swagger3_doc a
       WHERE
           a.versionid = p_versionid
       AND a.doc_id = p_doc_id;
+      
+      RETURN;
    
    END dz_swagger3_info;
 
@@ -67,7 +69,7 @@ AS
       
       RETURN; 
       
-   END dz_swagger_info;
+   END dz_swagger3_info;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
