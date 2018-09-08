@@ -96,7 +96,7 @@ AS
          FOR i IN 1 .. self.scope_names.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                str_pad || json_format(self.scope_names(i))
+                str_pad || dz_json_main.json_format(self.scope_names(i))
                ,p_pretty_print + 1
             );
             str_pad := ',';

@@ -1079,7 +1079,7 @@ AS
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_link('
               || '    link_id                VARCHAR2(255 Char) NOT NULL '
-              || '    link_operationRef      VARCHAR2(255 Char) '
+              || '   ,link_operationRef      VARCHAR2(255 Char) '
               || '   ,link_operationId       VARCHAR2(255 Char) '
               || '   ,link_description       VARCHAR2(4000 Char) '
               || '   ,link_server_id         VARCHAR2(255 Char) '

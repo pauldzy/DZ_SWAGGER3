@@ -14,14 +14,14 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_extrdocs_typ(
-       p_description      IN  VARCHAR2
-      ,p_url              IN  VARCHAR2
+       p_doc_description   IN  VARCHAR2
+      ,p_doc_url           IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.description       := p_description;
-      self.url               := p_url;
+      self.doc_description    := p_doc_description;
+      self.doc_url            := p_doc_url;
       
       RETURN; 
       
@@ -34,7 +34,7 @@ AS
    AS
    BEGIN
    
-      IF self.description IS NOT NULL
+      IF self.doc_description IS NOT NULL
       THEN
          RETURN 'FALSE';
          
@@ -48,10 +48,9 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print     IN  NUMBER   DEFAULT NULL
+       p_pretty_print     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      num_pretty_print NUMBER := p_pretty_print;
       clb_output       CLOB;
       
    BEGIN
@@ -65,7 +64,7 @@ AS
       -- Step 20
       -- Build the wrapper
       --------------------------------------------------------------------------
-      IF num_pretty_print IS NULL
+      IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
          
@@ -81,25 +80,25 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           ' ' || dz_json_main.value2json(
              'description'
-            ,self.description
-            ,num_pretty_print + 1
+            ,self.doc_description
+            ,p_pretty_print + 1
          )
-         ,num_pretty_print + 1
+         ,p_pretty_print + 1
       );
          
       --------------------------------------------------------------------------
       -- Step 40
       -- Add optional url 
       --------------------------------------------------------------------------
-      IF self.license_url IS NOT NULL
+      IF self.doc_url IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              ',' || dz_json_main.value2json(
                 'url'
-               ,self.url
-               ,num_pretty_print + 1
+               ,self.doc_url
+               ,p_pretty_print + 1
             )
-            ,num_pretty_print + 1
+            ,p_pretty_print + 1
          );
 
       END IF;
@@ -110,7 +109,7 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
           '}'
-         ,num_pretty_print,NULL,NULL
+         ,p_pretty_print,NULL,NULL
       );
       
       --------------------------------------------------------------------------
@@ -124,11 +123,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  NUMBER   DEFAULT 0
+      p_pretty_print      IN  INTEGER   DEFAULT 0
    ) RETURN CLOB
    AS
       clb_output        CLOB;
-      num_pretty_print  NUMBER := p_pretty_print;
       
    BEGIN
    
@@ -143,10 +141,10 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           'description: ' || dz_swagger_util.yaml_text(
-             self.description
-            ,num_pretty_print
+             self.doc_description
+            ,p_pretty_print
          )
-         ,num_pretty_print
+         ,p_pretty_print
          ,'  '
       );
       
@@ -154,14 +152,14 @@ AS
       -- Step 30
       -- Write the optional license url
       --------------------------------------------------------------------------
-      IF self.url IS NOT NULL
+      IF self.doc_url IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'url: ' || dz_swagger_util.yaml_text(
-                self.url
-               ,num_pretty_print
+                self.doc_url
+               ,p_pretty_print
             )
-            ,num_pretty_print
+            ,p_pretty_print
             ,'  '
          );
          

@@ -6,12 +6,12 @@ AS OBJECT (
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_link_typ
+   ,CONSTRUCTOR FUNCTION dz_swagger3_string_hash_typ
     RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_link_typ(
+   ,CONSTRUCTOR FUNCTION dz_swagger3_string_hash_typ(
        p_hash_key           IN  VARCHAR2
       ,p_string_value       IN  VARCHAR2
    ) RETURN SELF AS RESULT
@@ -29,13 +29,13 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
-      p_pretty_print      IN  NUMBER   DEFAULT NULL
+      p_pretty_print      IN  INTEGER   DEFAULT NULL
     ) RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  NUMBER   DEFAULT 0
+      p_pretty_print      IN  INTEGER   DEFAULT 0
    ) RETURN CLOB
 
 );

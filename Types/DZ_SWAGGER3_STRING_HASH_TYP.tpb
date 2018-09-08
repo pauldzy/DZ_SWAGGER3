@@ -64,7 +64,7 @@ AS
    AS
    BEGIN
    
-      RETURN json_format(self.string_value);
+      RETURN dz_json_main.json_format(self.string_value);
            
    END toJSON;
    

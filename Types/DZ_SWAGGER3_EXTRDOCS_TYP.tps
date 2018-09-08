@@ -1,8 +1,8 @@
 CREATE OR REPLACE TYPE dz_swagger3_extrdocs_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    description         VARCHAR2(4000 Char)
-   ,url                 VARCHAR2(255 Char)
+    doc_description      VARCHAR2(4000 Char)
+   ,doc_url              VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -12,8 +12,8 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_extrdocs_typ(
-       p_description      IN  VARCHAR2
-      ,p_url              IN  VARCHAR2
+       p_doc_description   IN  VARCHAR2
+      ,p_doc_url           IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -24,13 +24,13 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
-      p_pretty_print      IN  NUMBER   DEFAULT NULL
+      p_pretty_print      IN  INTEGER   DEFAULT NULL
     ) RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  NUMBER   DEFAULT 0
+      p_pretty_print      IN  INTEGER   DEFAULT 0
    ) RETURN CLOB
 
 );

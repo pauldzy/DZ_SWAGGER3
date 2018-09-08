@@ -55,7 +55,7 @@ AS
    AS
    BEGIN
    
-      IF self.tag_name IS NOT NULL
+      IF self.hash_key IS NOT NULL
       THEN
          RETURN 'FALSE';
          
@@ -301,7 +301,8 @@ AS
       p_pretty_print      IN  INTEGER   DEFAULT 0
    ) RETURN CLOB
    AS
-      clb_output        CLOB;
+      clb_output       CLOB;
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
       
    BEGIN
    
