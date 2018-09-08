@@ -94,7 +94,7 @@ AS
       ,p_components          IN  dz_swagger3_components
       ,p_security            IN  dz_swagger3_security_list
       ,p_tags                IN  dz_swagger3_tag_list
-      ,p_externalDocs        IN  dz_swagger3_externalDocs
+      ,p_externalDocs        IN  dz_swagger3_extrdocs_typ
       ,p_versionid           IN  VARCHAR2
    ) RETURN SELF AS RESULT
    AS

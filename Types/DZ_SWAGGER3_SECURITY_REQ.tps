@@ -1,20 +1,25 @@
-CREATE OR REPLACE TYPE dz_swagger3_info_license FORCE
+CREATE OR REPLACE TYPE dz_swagger3_security_req FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    license_name        VARCHAR2(255 Char)
-   ,license_url         VARCHAR2(255 Char)
+    hash_key            VARCHAR2(255 Char)
+   ,scope_names         MDSYS.SDO_STRING2_ARRAY
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_info_license
+   ,CONSTRUCTOR FUNCTION dz_swagger3_security_req
     RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_info_license(
-       p_license_name     IN  VARCHAR2
-      ,p_license_url      IN  VARCHAR2
+   ,CONSTRUCTOR FUNCTION dz_swagger3_security_req(
+       p_hash_key           IN  VARCHAR2
+      ,p_scope_names        IN  MDSYS.SDO_STRING2_ARRAY
    ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION key
+    RETURN VARCHAR2
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -24,17 +29,17 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
-      p_pretty_print      IN  INTEGER   DEFAULT NULL
+      p_pretty_print      IN  NUMBER   DEFAULT NULL
     ) RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  INTEGER   DEFAULT 0
+      p_pretty_print      IN  NUMBER   DEFAULT 0
    ) RETURN CLOB
 
 );
 /
 
-GRANT EXECUTE ON dz_swagger3_info_license TO public;
+GRANT EXECUTE ON dz_swagger3_security_req TO public;
 

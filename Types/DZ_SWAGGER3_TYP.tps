@@ -7,9 +7,9 @@ AS OBJECT (
    ,servers             dz_swagger3_server_list
    ,paths               dz_swagger3_path_list
    ,components          dz_swagger3_components
-   ,security            dz_swagger3_security_list
+   ,security            dz_swagger3_security_req_list
    ,tags                dz_swagger3_tag_list
-   ,externalDocs        dz_swagger3_externalDocs
+   ,externalDocs        dz_swagger3_extrdocs_typ
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -34,7 +34,7 @@ AS OBJECT (
       ,p_components          IN  dz_swagger3_components
       ,p_security            IN  dz_swagger3_security_list
       ,p_tags                IN  dz_swagger3_tag_list
-      ,p_externalDocs        IN  dz_swagger3_externalDocs
+      ,p_externalDocs        IN  dz_swagger3_extrdocs_typ
       ,p_versionid           IN  VARCHAR2
     ) RETURN SELF AS RESULT
     

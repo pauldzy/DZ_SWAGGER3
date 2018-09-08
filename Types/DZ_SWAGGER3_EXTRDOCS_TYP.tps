@@ -1,4 +1,4 @@
-CREATE OR REPLACE TYPE dz_swagger3_externaldocs FORCE
+CREATE OR REPLACE TYPE dz_swagger3_extrdocs_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
     description         VARCHAR2(4000 Char)
@@ -6,12 +6,12 @@ AS OBJECT (
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_externaldocs
+   ,CONSTRUCTOR FUNCTION dz_swagger3_extrdocs_typ
     RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_externaldocs(
+   ,CONSTRUCTOR FUNCTION dz_swagger3_extrdocs_typ(
        p_description      IN  VARCHAR2
       ,p_url              IN  VARCHAR2
    ) RETURN SELF AS RESULT
@@ -36,5 +36,5 @@ AS OBJECT (
 );
 /
 
-GRANT EXECUTE ON dz_swagger3_externaldocs TO public;
+GRANT EXECUTE ON dz_swagger3_extrdocs_typ TO public;
 

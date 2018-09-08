@@ -1,31 +1,41 @@
-CREATE OR REPLACE TYPE BODY dz_swagger3_info_license
+CREATE OR REPLACE TYPE BODY dz_swagger3_security_req
 AS 
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_info_license
+   CONSTRUCTOR FUNCTION dz_swagger3_security_req
    RETURN SELF AS RESULT 
    AS 
    BEGIN 
       RETURN; 
       
-   END dz_swagger3_info_license;
+   END dz_swagger3_security_req;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_info_license(
-       p_license_name     IN  VARCHAR2
-      ,p_license_url      IN  VARCHAR2
+   CONSTRUCTOR FUNCTION dz_swagger3_security_req(
+       p_hash_key           IN  VARCHAR2
+      ,p_scope_names        IN  MDSYS.SDO_STRING2_ARRAY
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.license_name      := p_license_name;
-      self.license_url       := p_license_url;
+      self.hash_key        := p_hash_key;
+      self.scope_names     := p_scope_names;
       
       RETURN; 
       
-   END dz_swagger3_info_license;
+   END dz_swagger3_security_req;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION key
+   RETURN VARCHAR2
+   AS
+   BEGIN
+      RETURN self.hash_key;
+
+   END key;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -34,7 +44,7 @@ AS
    AS
    BEGIN
    
-      IF self.license_name IS NOT NULL
+      IF self.hash_key IS NOT NULL
       THEN
          RETURN 'FALSE';
          
@@ -52,6 +62,7 @@ AS
    ) RETURN CLOB
    AS
       clb_output       CLOB;
+      str_pad          VARCHAR2(1 Char);
       
    BEGIN
       
@@ -64,12 +75,14 @@ AS
       -- Step 20
       -- Build the wrapper
       --------------------------------------------------------------------------
-      IF num_pretty_print IS NULL
+      IF p_pretty_print IS NULL
       THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
+         clb_output  := dz_json_util.pretty('[',NULL);
+         str_pad     := '';
          
       ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
+         clb_output  := dz_json_util.pretty('[',-1);
+         str_pad     := ' ';
          
       END IF;
       
@@ -77,43 +90,32 @@ AS
       -- Step 30
       -- Add name element
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          ' ' || dz_json_main.value2json(
-             'name'
-            ,self.license_name
-            ,p_pretty_print + 1
-         )
-         ,num_pretty_print + 1
-      );
+      IF  self.scope_names IS NOT NULL
+      AND self.scope_names.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.scope_names.COUNT
+         LOOP
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad || json_format(self.scope_names(i))
+               ,p_pretty_print + 1
+            );
+            str_pad := ',';
+
+         END LOOP;
+         
+      END IF;
          
       --------------------------------------------------------------------------
       -- Step 40
-      -- Add optional url 
-      --------------------------------------------------------------------------
-      IF self.license_url IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             ',' || dz_json_main.value2json(
-                'url'
-               ,self.license_url
-               ,p_pretty_print + 1
-            )
-            ,num_pretty_print + 1
-         );
-
-      END IF;
- 
-      --------------------------------------------------------------------------
-      -- Step 100
       -- Add the left bracket
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
-          '}'
+          ']'
          ,p_pretty_print,NULL,NULL
       );
       
       --------------------------------------------------------------------------
-      -- Step 110
+      -- Step 50
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
@@ -137,32 +139,23 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Write the yaml license name
+      -- Write the yaml contact name
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty_str(
-          'name: ' || dz_swagger3_util.yaml_text(
-             self.license_name
-            ,p_pretty_print
-         )
-         ,p_pretty_print
-         ,'  '
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Write the optional license url
-      --------------------------------------------------------------------------
-      IF self.license_url IS NOT NULL
+      IF  self.scope_names IS NOT NULL
+      AND self.scope_names.COUNT > 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'url: ' || dz_swagger3_util.yaml_text(
-                self.license_url
+         clb_output := clb_output || ': ';
+
+         FOR i IN 1 .. self.scope_names.COUNT
+         LOOP
+            clb_output := clb_output || dz_json_util.pretty(
+                '- ' || dz_swagger3_util.yaml_text(self.scope_names(i),p_pretty_print)
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
+               ,'  '
+            );
+
+         END LOOP;
+
       END IF;
       
       --------------------------------------------------------------------------

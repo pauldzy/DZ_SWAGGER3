@@ -1,19 +1,19 @@
-CREATE OR REPLACE TYPE BODY dz_swagger3_externaldocs
+CREATE OR REPLACE TYPE BODY dz_swagger3_extrdocs_typ
 AS 
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_externaldocs
+   CONSTRUCTOR FUNCTION dz_swagger3_extrdocs_typ
    RETURN SELF AS RESULT 
    AS 
    BEGIN 
       RETURN; 
       
-   END dz_swagger3_externaldocs;
+   END dz_swagger3_extrdocs_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_externaldocs(
+   CONSTRUCTOR FUNCTION dz_swagger3_extrdocs_typ(
        p_description      IN  VARCHAR2
       ,p_url              IN  VARCHAR2
    ) RETURN SELF AS RESULT 
@@ -25,7 +25,7 @@ AS
       
       RETURN; 
       
-   END dz_swagger3_externaldocs;
+   END dz_swagger3_extrdocs_typ;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

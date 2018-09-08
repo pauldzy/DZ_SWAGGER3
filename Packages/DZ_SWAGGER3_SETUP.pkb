@@ -1075,6 +1075,51 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 220
+      -- Build LINK table
+      --------------------------------------------------------------------------
+      str_sql := 'CREATE TABLE dz_swagger3_link('
+              || '    link_id                VARCHAR2(255 Char) NOT NULL '
+              || '    link_operationRef      VARCHAR2(255 Char) '
+              || '   ,link_operationId       VARCHAR2(255 Char) '
+              || '   ,link_description       VARCHAR2(4000 Char) '
+              || '   ,link_server_id         VARCHAR2(255 Char) '
+              || '   ,versionid              VARCHAR2(40 Char) NOT NULL '
+              || ') ';
+              
+      IF p_table_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_link '
+              || 'ADD CONSTRAINT dz_swagger3_link_pk '
+              || 'PRIMARY KEY(versionid,link_id) ';
+              
+      IF p_index_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_link '
+              || 'ADD( '
+              || '    CONSTRAINT dz_swagger3_link_c01 '
+              || '    CHECK (link_id = TRIM(link_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_link_c02 '
+              || '    CHECK (versionid = TRIM(versionid)) '
+              || '    ENABLE VALIDATE '
+              || ') ';
+              
+      EXECUTE IMMEDIATE str_sql;
+      
+      --------------------------------------------------------------------------
+      -- Step 230
       -- Build PARM table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_header('
@@ -1143,7 +1188,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 230
+      -- Step 240
       -- Build EXTERNALDOC table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_externaldoc('
@@ -1186,7 +1231,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 240
+      -- Step 250
       -- Build SECURITYSCHEME table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_securityScheme('
@@ -1237,7 +1282,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 250
+      -- Step 260
       -- Build TAG table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_tag('
@@ -1284,7 +1329,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 260
+      -- Step 270
       -- Build CONDENSE table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_condense('
@@ -1373,6 +1418,7 @@ AS
          ,'DZ_SWAGGER3_REQUESTBODY'
          ,'DZ_SWAGGER3_EXAMPLE'
          ,'DZ_SWAGGER3_ENCODING'
+         ,'DZ_SWAGGER3_LINK'
          ,'DZ_SWAGGER3_HEADER'
          ,'DZ_SWAGGER3_EXTERNALDOC'
          ,'DZ_SWAGGER3_SECURITYSCHEME'

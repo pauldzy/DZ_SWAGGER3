@@ -1,33 +1,52 @@
-CREATE OR REPLACE TYPE BODY dz_swagger3_server_typ
+CREATE OR REPLACE TYPE BODY dz_swagger3_link_typ
 AS 
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_server_typ
+   CONSTRUCTOR FUNCTION dz_swagger3_link_typ
    RETURN SELF AS RESULT 
    AS 
    BEGIN 
       RETURN; 
       
-   END dz_swagger3_server_typ;
+   END dz_swagger3_link_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_server_typ(
-       p_server_url         IN  VARCHAR2
-      ,p_server_description IN  VARCHAR2
-      ,p_server_variables   IN  dz_swagger3_server_var_list
+   CONSTRUCTOR FUNCTION dz_swagger3_link_typ(
+       p_hash_key           IN  VARCHAR2
+      ,p_link_operationRef  IN  VARCHAR2
+      ,p_link_operationId   IN  VARCHAR2
+      ,p_link_parameters    IN  dz_swagger3_string_hash_list
+      ,p_link_requestBody   IN  VARCHAR2
+      ,p_link_description   IN  VARCHAR2
+      ,p_link_server        IN  dz_swagger3_server_typ
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.server_url         := p_server_url;
-      self.server_description := p_server_description;
-      self.server_variables   := p_server_variables;
+      self.hash_key          := p_hash_key;
+      self.link_operationRef := p_link_operationRef;
+      self.link_operationId  := p_link_operationId;
+      self.link_parameters   := p_link_parameters;
+      self.link_requestBody  := p_link_requestBody;
+      self.link_description  := p_link_description;
+      self.link_server       := p_link_server;
       
       RETURN; 
       
-   END dz_swagger3_server_typ;
+   END dz_swagger3_link_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION key
+   RETURN VARCHAR2
+   AS
+   BEGIN
+   
+      RETURN self.hash_key;
+   
+   END key;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -36,7 +55,7 @@ AS
    AS
    BEGIN
    
-      IF self.server_url IS NOT NULL
+      IF self.tag_name IS NOT NULL
       THEN
          RETURN 'FALSE';
          
@@ -49,15 +68,15 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION server_variables_keys
+   MEMBER FUNCTION link_parameters_keys
    RETURN MDSYS.SDO_STRING2_ARRAY
    AS
       int_index  PLS_INTEGER;
       ary_output MDSYS.SDO_STRING2_ARRAY;
       
    BEGIN
-      IF self.server_variables IS NULL
-      OR self.server_variables.COUNT = 0
+      IF self.link_parameters IS NULL
+      OR self.link_parameters.COUNT = 0
       THEN
          RETURN NULL;
          
@@ -65,15 +84,15 @@ AS
       
       int_index  := 1;
       ary_output := MDSYS.SDO_STRING2_ARRAY();
-      FOR i IN 1 .. self.server_variables.COUNT
+      FOR i IN 1 .. self.link_parameters.COUNT
       LOOP
-         ary_output(int_index) := self.server_variables(i).hash_key;
+         ary_output(int_index) := self.link_parameters(i).hash_key;
       
       END LOOP;
       
       RETURN ary_output;
    
-   END server_variables_keys;
+   END link_parameters_keys;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -82,11 +101,11 @@ AS
    ) RETURN CLOB
    AS
       clb_output       CLOB;
+      clb_hash         CLOB;
       str_pad          VARCHAR2(1 Char);
       str_pad1         VARCHAR2(1 Char);
       str_pad2         VARCHAR2(1 Char);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      clb_hash         CLOB;
       
    BEGIN
       
@@ -112,29 +131,33 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 30
-      -- Add name element
+      -- Add optional operationRef
       --------------------------------------------------------------------------
       str_pad1 := str_pad;
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.value2json(
-             'url'
-            ,self.server_url
-            ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-         
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Add optional url 
-      --------------------------------------------------------------------------
-      IF self.server_description IS NOT NULL
+      IF self.link_operationRef IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
-                'description'
-               ,self.server_description
+                'operationRef'
+               ,self.link_operationRef
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
+      END IF;
+         
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Add optional operationId
+      --------------------------------------------------------------------------
+      IF self.link_operationId IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'operationId'
+               ,self.link_operationId
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -145,14 +168,14 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 50
-      -- Add optional variables map
+      -- Add optional parameter map
       --------------------------------------------------------------------------
-      IF  self.server_variables IS NULL 
-      AND self.server_variables.COUNT = 0
+      IF self.link_parameters IS NOT NULL
+      AND self.link_parameters.COUNT > 0
       THEN
          clb_hash := 'null';
-         
-      ELSE
+      
+       ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -165,14 +188,14 @@ AS
          END IF;
       
       
-         ary_keys := self.server_variables_keys();
+         ary_keys := self.link_parameters_keys();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || dz_json_main.value2json(
                    ary_keys(i)
-                  ,self.server_variables(i).toJSON(
+                  ,self.link_parameters(i).toJSON(
                      p_pretty_print => p_pretty_print + 1
                    )
                   ,p_pretty_print + 1
@@ -192,16 +215,71 @@ AS
          
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.formatted2json(
-              'variables'
+              'parameters'
              ,clb_hash
              ,p_pretty_print + 1
           )
          ,p_pretty_print + 1
       );
       str_pad1 := ',';
-
+      
       --------------------------------------------------------------------------
       -- Step 60
+      -- Add optional requestBody
+      --------------------------------------------------------------------------
+      IF self.link_operationId IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'requestBody'
+               ,self.link_requestBody
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 70
+      -- Add optional description
+      --------------------------------------------------------------------------
+      IF self.link_description IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'description'
+               ,self.link_description
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 80
+      -- Add server object
+      --------------------------------------------------------------------------
+      IF  self.link_server IS NOT NULL
+      AND self.link_server.isNULL() = 'FALSE'
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                'server'
+               ,self.link_server.toJSON(p_pretty_print + 1)
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+
+      END IF;
+ 
+      --------------------------------------------------------------------------
+      -- Step 90
       -- Add the left bracket
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
@@ -210,7 +288,7 @@ AS
       );
       
       --------------------------------------------------------------------------
-      -- Step 70
+      -- Step 100
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
@@ -224,7 +302,6 @@ AS
    ) RETURN CLOB
    AS
       clb_output        CLOB;
-      ary_keys          MDSYS.SDO_STRING2_ARRAY;
       
    BEGIN
    
@@ -235,26 +312,30 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Write the url item
+      -- Write the required operationRef
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty_str(
-          'url: ' || dz_swagger3_util.yaml_text(
-             self.server_url
+      IF self.link_operationRef IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'operationRef: ' || dz_swagger3_util.yaml_text(
+                self.link_operationRef
+               ,p_pretty_print
+            )
             ,p_pretty_print
-         )
-         ,p_pretty_print
-         ,'  '
-      );
+            ,'  '
+         );
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 30
-      -- Write the optional description item
+      -- Write the optional operationId
       --------------------------------------------------------------------------
-      IF self.server_description IS NOT NULL
+      IF self.link_operationId IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'description: ' || dz_swagger3_util.yaml_text(
-                self.server_description
+             'operationId: ' || dz_swagger3_util.yaml_text(
+                self.link_operationId
                ,p_pretty_print
             )
             ,p_pretty_print
@@ -265,12 +346,12 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 40
-      -- Write the optional variables map
+      -- Add optional parameter map
       --------------------------------------------------------------------------
-      IF  self.server_variables IS NULL 
-      AND self.server_variables.COUNT = 0
+      IF  self.link_parameters IS NULL 
+      AND self.link_parameters.COUNT = 0
       THEN
-         ary_keys := self.server_variables_keys();
+         ary_keys := self.link_parameters_keys();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -278,7 +359,7 @@ AS
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.server_variables(i).toYAML(
+            ) || self.link_parameters(i).toYAML(
                p_pretty_print + 2
             );
          
@@ -288,6 +369,57 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 50
+      -- Write the optional operationId
+      --------------------------------------------------------------------------
+      IF self.link_requestBody IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'requestBody: ' || dz_swagger3_util.yaml_text(
+                self.link_requestBody
+               ,p_pretty_print
+            )
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 60
+      -- Write the optional operationId
+      --------------------------------------------------------------------------
+      IF self.link_description IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'description: ' || dz_swagger3_util.yaml_text(
+                self.link_description
+               ,p_pretty_print
+            )
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Write the server object
+      --------------------------------------------------------------------------
+      IF  self.link_server IS NOT NULL
+      AND self.link_server.isNULL() = 'FALSE'
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'server: ' 
+            ,p_pretty_print
+            ,'  '
+         ) || self.link_server.toYAML(
+            p_pretty_print + 1
+         );
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 110
       -- Cough it out without final line feed
       --------------------------------------------------------------------------
       RETURN clb_output;
