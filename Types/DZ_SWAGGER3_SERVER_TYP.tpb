@@ -1,19 +1,19 @@
-CREATE OR REPLACE TYPE BODY dz_swagger3_info_license
+CREATE OR REPLACE TYPE BODY dz_swagger3_server_typ
 AS 
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_info_license
+   CONSTRUCTOR FUNCTION dz_swagger3_server_typ
    RETURN SELF AS RESULT 
    AS 
    BEGIN 
       RETURN; 
       
-   END dz_swagger3_info_license;
+   END dz_swagger3_server_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_info_license(
+   CONSTRUCTOR FUNCTION dz_swagger3_server_typ(
        p_server_url         IN  VARCHAR2
       ,p_server_description IN  VARCHAR2
       ,p_server_variables   IN  dz_swagger3_server_var_list
@@ -27,7 +27,7 @@ AS
       
       RETURN; 
       
-   END dz_swagger3_info_license;
+   END dz_swagger3_server_typ;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -171,7 +171,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                str_prefix || dz_json_main.value2json(
+                str_pad2 || dz_json_main.value2json(
                    ary_keys(i)
                   ,self.server_variables(i).toJSON(
                      p_pretty_print => int_pretty_print + 1
@@ -180,6 +180,7 @@ AS
                )
                ,int_pretty_print + 1
             );
+            str_pad2 := ',';
          
          END LOOP;
          
@@ -225,6 +226,7 @@ AS
    AS
       clb_output        CLOB;
       int_pretty_print  INTEGER := p_pretty_print;
+      ary_keys          MDSYS.SDO_STRING2_ARRAY;
       
    BEGIN
    
