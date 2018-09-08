@@ -1,7 +1,7 @@
-CREATE OR REPLACE TYPE dz_swagger3_requestBody_list FORCE                                       
+CREATE OR REPLACE TYPE dz_swagger3_example_list FORCE                                       
 AS 
-TABLE OF dz_swagger_requestBody;
+TABLE OF dz_swagger_example_typ;
 /
 
-GRANT EXECUTE ON dz_swagger3_requestBody_list TO public;
+GRANT EXECUTE ON dz_swagger3_example_list TO public;
 
