@@ -1,15 +1,15 @@
 CREATE OR REPLACE TYPE dz_swagger3_components FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    schemas             dz_swagger3_schema_map
-   ,responses           dz_swagger3_response_map
-   ,parameters          dz_swagger3_parameter_map
-   ,examples            dz_swagger3_example_map
-   ,requestBodies       dz_swagger3_requestBody_map
-   ,headers             dz_swagger3_header_map
-   ,securitySchemes     dz_swagger3_securityScheme_map
-   ,links               dz_swagger3_link_map
-   ,callbacks           dz_swagger3_callback_map
+    schemas             dz_swagger3_schema_list
+   ,responses           dz_swagger3_response_list
+   ,parameters          dz_swagger3_parameter_list
+   ,examples            dz_swagger3_example_list
+   ,requestBodies       dz_swagger3_requestBody_list
+   ,headers             dz_swagger3_header_list
+   ,securitySchemes     dz_swagger3_securitySchem_list
+   ,links               dz_swagger3_link_list
+   ,callbacks           dz_swagger3_callback_list
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

@@ -5,7 +5,7 @@ AS OBJECT (
    ,group_id            VARCHAR2(255 Char)
    ,info                dz_swagger3_info
    ,servers             dz_swagger3_server_list
-   ,paths               dz_swagger3_path_map
+   ,paths               dz_swagger3_path_list
    ,components          dz_swagger3_components
    ,security            dz_swagger3_security_list
    ,tags                dz_swagger3_tag_list

@@ -142,7 +142,7 @@ AS
       -- Write the yaml license name
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
-          'name: ' || dz_swagger_util.yaml_text(
+          'name: ' || dz_swagger3_util.yaml_text(
              self.license_name
             ,num_pretty_print
          )
@@ -157,7 +157,7 @@ AS
       IF self.license_url IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'url: ' || dz_swagger_util.yaml_text(
+             'url: ' || dz_swagger3_util.yaml_text(
                 self.license_url
                ,num_pretty_print
             )

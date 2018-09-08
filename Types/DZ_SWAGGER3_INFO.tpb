@@ -10,6 +10,40 @@ AS
       RETURN; 
       
    END dz_swagger_info;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_info(
+       p_doc_id         IN  VARCHAR2
+      ,p_versionid      IN  VARCHAR2
+   ) RETURN SELF AS RESULT
+   AS
+   BEGIN
+   
+      SELECT 
+      dz_swagger3_info(
+         p_title          => a.info_title
+        ,p_description    => a.info_description
+        ,p_termsofservice => a.info_termsofservice
+        ,p_contact        => dz_swagger3_info_contact(
+             p_contact_name  => a.info_contact_name
+            ,p_contact_url   => a.info_contact_url
+            ,p_contact_email => a.info_contact_email
+         )
+        ,p_license        => dz_swagger3_info_license(
+             p_license_name  => a.info_license_name
+            ,p_license_url   => a.info_license_url
+         )
+        ,p_version        => a.info_version
+      )
+      INTO SELF
+      FROM
+      dz_swagger3_doc
+      WHERE
+          a.versionid = p_versionid
+      AND a.doc_id = p_doc_id;
+   
+   END dz_swagger3_info;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -218,7 +252,7 @@ AS
       -- Write the info title
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
-          'title: ' || dz_swagger_util.yaml_text(
+          'title: ' || dz_swagger3_util.yaml_text(
              self.title
             ,num_pretty_print
          )
@@ -233,7 +267,7 @@ AS
       IF self.description IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'description: ' || dz_swagger_util.yaml_text(
+             'description: ' || dz_swagger3_util.yaml_text(
                 self.description
                ,num_pretty_print
             )
@@ -250,7 +284,7 @@ AS
       IF self.termsOfService IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'termsOfService: ' || dz_swagger_util.yaml_text(
+             'termsOfService: ' || dz_swagger3_util.yaml_text(
                 self.termsOfService
                ,num_pretty_print
             )
@@ -297,7 +331,7 @@ AS
       -- Write the optional info version
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
-          'version: ' || dz_swagger_util.yaml_text(
+          'version: ' || dz_swagger3_util.yaml_text(
              self.version
             ,num_pretty_print
          )

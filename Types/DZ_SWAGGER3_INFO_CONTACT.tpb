@@ -184,7 +184,7 @@ AS
       IF self.contact_name IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'name: ' || dz_swagger_util.yaml_text(
+             'name: ' || dz_swagger3_util.yaml_text(
                 self.contact_name
                ,num_pretty_print
             )
@@ -201,7 +201,7 @@ AS
       IF self.contact_url IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'url: ' || dz_swagger_util.yaml_text(
+             'url: ' || dz_swagger3_util.yaml_text(
                 self.contact_url
                ,num_pretty_print
             )
@@ -218,7 +218,7 @@ AS
       IF self.contact_email IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'email: ' || dz_swagger_util.yaml_text(
+             'email: ' || dz_swagger3_util.yaml_text(
                 self.contact_email
                ,num_pretty_print
             )

@@ -16,6 +16,13 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_info(
+       p_doc_id         IN  VARCHAR2
+      ,p_version        IN  VARCHAR2
+   ) RETURN SELF AS RESULT
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_info(
        p_title          IN  VARCHAR2
       ,p_description    IN  VARCHAR2
       ,p_termsofservice IN  VARCHAR2
