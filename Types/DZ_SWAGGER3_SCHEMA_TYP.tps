@@ -1,4 +1,4 @@
-CREATE OR REPLACE TYPE dz_swagger_schema_typ FORCE
+CREATE OR REPLACE TYPE dz_swagger3_schema_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
     schema_id            VARCHAR2(255 Char)
@@ -23,12 +23,12 @@ AS OBJECT (
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger_schema_typ
+   ,CONSTRUCTOR FUNCTION dz_swagger3_schema_typ
     RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger_schema_typ(
+   ,CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
        p_schema_id            IN  VARCHAR2
       ,p_schema_title         IN  VARCHAR2
       ,p_schema_type          IN  VARCHAR2
@@ -65,5 +65,5 @@ AS OBJECT (
 );
 /
 
-GRANT EXECUTE ON dz_swagger_schema_typ TO public;
+GRANT EXECUTE ON dz_swagger3_schema_typ TO public;
 

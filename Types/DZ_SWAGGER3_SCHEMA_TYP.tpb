@@ -1,19 +1,19 @@
-CREATE OR REPLACE TYPE BODY dz_swagger_schema_typ
+CREATE OR REPLACE TYPE BODY dz_swagger3_schema_typ
 AS 
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger_schema_typ
+   CONSTRUCTOR FUNCTION dz_swagger3_schema_typ
    RETURN SELF AS RESULT 
    AS 
    BEGIN 
       RETURN; 
       
-   END dz_swagger_schema_typ;
+   END dz_swagger3_schema_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger_schema_typ(
+   CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
        p_schema_id            IN  VARCHAR2
       ,p_schema_title         IN  VARCHAR2
       ,p_schema_type          IN  VARCHAR2
@@ -57,7 +57,7 @@ AS
       
       RETURN; 
       
-   END dz_swagger_schema_typ;
+   END dz_swagger3_schema_typ;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -141,12 +141,12 @@ AS
       -- Step 50
       -- Add optional description object
       --------------------------------------------------------------------------
-      IF self.schema_desc IS NOT NULL
+      IF self.schema_description IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
                 'description'
-               ,self.schema_desc
+               ,self.schema_description
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -404,7 +404,7 @@ AS
             IF self.schema_properties(i).property_required = 'TRUE'
             THEN
                ary_required.EXTEND();
-               ary_required(int_counter) := self.swagger_properties(i).property;
+               ary_required(int_counter) := self.schema_properties(i).property;
                int_counter := int_counter + 1;
 
             END IF;

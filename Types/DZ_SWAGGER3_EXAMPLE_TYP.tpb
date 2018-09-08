@@ -168,7 +168,7 @@ AS
       -- Step 60
       -- Add optional externalValue
       --------------------------------------------------------------------------
-      IF self.externalValue IS NOT NULL
+      IF self.example_externalValue IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad || dz_json_main.value2json(

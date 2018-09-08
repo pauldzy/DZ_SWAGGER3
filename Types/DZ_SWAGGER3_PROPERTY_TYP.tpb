@@ -29,7 +29,6 @@ AS
       ,p_xml_attribute        IN  VARCHAR2
       ,p_xml_wrapped          IN  VARCHAR2
       ,p_xml_array_name       IN  VARCHAR2
-      ,p_versionid            IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -49,7 +48,6 @@ AS
       self.xml_attribute        := TRIM(p_xml_attribute);
       self.xml_wrapped          := TRIM(p_xml_wrapped);
       self.xml_array_name       := TRIM(p_xml_array_name);
-      self.versionid            := p_versionid;
       
       RETURN; 
       
@@ -113,10 +111,7 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad || dz_json_main.value2json(
                 '$ref'
-               ,'#/definitions/' || dz_swagger3_util.dzcondense(
-                  self.versionid 
-                 ,self.property_target
-                )
+               ,'#/definitions/' || self.property_id
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -190,36 +185,6 @@ AS
          END IF;
       
       --------------------------------------------------------------------------
-      -- Step 60
-      -- Add optional example 
-      --------------------------------------------------------------------------
-         IF  str_jsonschema = 'FALSE'
-         AND self.property_exp_string IS NOT NULL
-         THEN
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad || dz_json_main.value2json(
-                   'example'
-                  ,self.property_exp_string
-                  ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
-            );
-
-         ELSIF str_jsonschema = 'FALSE'
-         AND   self.property_exp_number IS NOT NULL
-         THEN
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad || dz_json_main.value2json(
-                   'example'
-                  ,self.property_exp_number
-                  ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
-            );
-            
-         END IF;
-      
-      --------------------------------------------------------------------------
       -- Step 70
       -- Add optional description
       --------------------------------------------------------------------------
@@ -280,10 +245,7 @@ AS
                clb_output := clb_output || dz_json_util.pretty(
                   str_pad2 || dz_json_main.value2json(
                       '$ref'
-                     ,'#/definitions/' || dz_swagger3_util.dzcondense(
-                         self.versionid
-                        ,self.property_target
-                      )
+                     ,'#/definitions/' || self.property_id
                      ,p_pretty_print + 2
                   )
                   ,p_pretty_print + 2
@@ -373,10 +335,7 @@ AS
       IF self.property_type = 'reference' 
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             '"$ref": "#/definitions/' || dz_swagger3_util.dzcondense(
-                 self.versionid
-                ,self.property_target
-             ) || '" '
+             '"$ref": "#/definitions/' || self.property_id || '" '
             ,p_pretty_print + 1
             ,'  '
          );
@@ -410,32 +369,7 @@ AS
             );
 
          END IF;
-         
-         -----------------------------------------------------------------------
-         IF self.property_exp_string IS NOT NULL
-         THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'example: ' || dz_swagger3_util.yaml_text(
-                   self.property_exp_string
-                  ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
-               ,'  '
-            );
 
-         ELSIF self.property_exp_number IS NOT NULL
-         THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'example: ' || dz_swagger3_util.yaml_text(
-                   self.property_exp_number
-                  ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
-               ,'  '
-            );
-            
-         END IF;
-      
       --------------------------------------------------------------------------
       -- Step 70
       -- Add optional description
@@ -489,10 +423,7 @@ AS
             
             ELSE
                clb_output := clb_output || dz_json_util.pretty_str(
-                   '"$ref": "#/definitions/' || dz_swagger3_util.dzcondense(
-                       self.versionid
-                      ,self.property_target
-                   ) || '" '
+                   '"$ref": "#/definitions/' || self.property_id || '" '
                   ,p_pretty_print + 2
                   ,'  '
                );
