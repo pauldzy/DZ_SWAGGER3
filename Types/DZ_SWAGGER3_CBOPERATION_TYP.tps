@@ -1,4 +1,4 @@
-CREATE OR REPLACE TYPE dz_swagger3_operation_typ FORCE
+CREATE OR REPLACE TYPE dz_swagger3_cboperation_typ FORCE
 AUTHID DEFINER
 AS OBJECT (
     hash_key                 VARCHAR2(255 Char)
@@ -17,12 +17,12 @@ AS OBJECT (
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_operation_typ
+   ,CONSTRUCTOR FUNCTION dz_swagger3_cboperation_typ
     RETURN SELF AS RESULT
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_operation_typ(
+   ,CONSTRUCTOR FUNCTION dz_swagger3_cboperation_typ(
        p_hash_key                IN  VARCHAR2
       ,p_operation_tags          IN  MDSYS.SDO_STRING2_ARRAY
       ,p_operation_summary       IN  VARCHAR2
@@ -73,5 +73,5 @@ AS OBJECT (
 );
 /
 
-GRANT EXECUTE ON dz_swagger3_operation_typ TO public;
+GRANT EXECUTE ON dz_swagger3_cboperation_typ TO public;
 
