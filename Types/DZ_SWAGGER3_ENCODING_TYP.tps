@@ -16,12 +16,12 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_encoding_typ(
-       p_hash_key              IN  VARCHAR2
-      ,p_example_summary       IN  VARCHAR2
-      ,p_example_description   IN  VARCHAR2
-      ,p_example_value_string  IN  VARCHAR2
-      ,p_example_value_number  IN  NUMBER
-      ,p_example_externalValue IN  VARCHAR2
+       p_hash_key               IN  VARCHAR2
+      ,p_encoding_contentType   IN  VARCHAR2
+      ,p_encoding_headers       IN  dz_swagger3_header_list
+      ,p_encoding_style         IN  VARCHAR2
+      ,p_encoding_explode       IN  VARCHAR2
+      ,p_encoding_allowReserved IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
