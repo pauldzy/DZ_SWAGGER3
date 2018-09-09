@@ -8,7 +8,7 @@ AS OBJECT (
    ,scheme_in               VARCHAR2(255 Char)
    ,scheme_auth             VARCHAR2(255 Char)
    ,scheme_bearerFormat     VARCHAR2(255 Char)
-   ,scheme_flows            dz_swagger3_oauth_flows
+   ,scheme_flows            dz_swagger3_oauth_flows_typ
    ,scheme_openIdConnectUrl VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
@@ -26,7 +26,7 @@ AS OBJECT (
       ,p_scheme_in               IN  VARCHAR2
       ,p_scheme_auth             IN  VARCHAR2
       ,p_scheme_bearerFormat     IN  VARCHAR2
-      ,p_scheme_flows            IN  dz_swagger3_oauth_flows
+      ,p_scheme_flows            IN  dz_swagger3_oauth_flows_typ
       ,p_scheme_openIdConnectUrl IN  VARCHAR2
    ) RETURN SELF AS RESULT
    

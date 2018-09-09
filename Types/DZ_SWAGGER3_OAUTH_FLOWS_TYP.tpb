@@ -39,6 +39,7 @@ AS
    AS
       clb_output       CLOB;
       str_pad          VARCHAR2(1 Char);
+      str_pad1         VARCHAR2(1 Char);
       
    BEGIN
       

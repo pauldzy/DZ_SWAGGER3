@@ -49,8 +49,9 @@ AS OBJECT (
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toYAML
-    RETURN CLOB
+   ,MEMBER FUNCTION toYAML(
+       p_pretty_print        IN  INTEGER DEFAULT NULL
+    ) RETURN CLOB
 
 );
 /

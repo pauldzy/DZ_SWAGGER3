@@ -10,7 +10,6 @@ AS OBJECT (
    ,operation_parameters     dz_swagger3_parameter_list
    ,operation_requestBody    dz_swagger3_requestbody_typ
    ,operation_responses      dz_swagger3_response_list
-   ,operation_callbacks      dz_swagger3_path_list
    ,operation_deprecated     VARCHAR2(5 Char)
    ,operation_security       dz_swagger3_security_req_list
    ,operation_servers        dz_swagger3_server_list
@@ -32,7 +31,6 @@ AS OBJECT (
       ,p_operation_parameters    IN  dz_swagger3_parameter_list
       ,p_operation_requestBody   IN  dz_swagger3_requestbody_typ
       ,p_operation_responses     IN  dz_swagger3_response_list
-      ,p_operation_callbacks     IN  dz_swagger3_path_list
       ,p_operation_deprecated    IN  VARCHAR2
       ,p_operation_security      IN  dz_swagger3_security_req_list
       ,p_operation_servers       IN  dz_swagger3_server_list
@@ -51,11 +49,6 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION operation_responses_keys
-    RETURN MDSYS.SDO_STRING2_ARRAY
-    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION operation_callbacks_keys
     RETURN MDSYS.SDO_STRING2_ARRAY
 
    -----------------------------------------------------------------------------

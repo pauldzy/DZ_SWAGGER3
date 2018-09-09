@@ -21,7 +21,7 @@ AS
       ,p_scheme_in               IN  VARCHAR2
       ,p_scheme_auth             IN  VARCHAR2
       ,p_scheme_bearerFormat     IN  VARCHAR2
-      ,p_scheme_flows            IN  dz_swagger3_oauth_flows
+      ,p_scheme_flows            IN  dz_swagger3_oauth_flows_typ
       ,p_scheme_openIdConnectUrl IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
@@ -77,6 +77,7 @@ AS
    AS
       clb_output       CLOB;
       str_pad          VARCHAR2(1 Char);
+      str_pad1         VARCHAR2(1 Char);
       
    BEGIN
       
@@ -215,7 +216,6 @@ AS
       -- Add flows object
       --------------------------------------------------------------------------
       IF  self.scheme_flows IS NOT NULL
-      AND self.scheme_flows.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -385,7 +385,7 @@ AS
       -- Step 80
       -- Write the yaml scheme in
       --------------------------------------------------------------------------
-      IF self.scheme_flows.isNULL() = 'FALSE'
+      IF self.scheme_flows IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'flows: '

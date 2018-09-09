@@ -9,7 +9,7 @@ AS OBJECT (
    ,components_headers          dz_swagger3_header_list
    ,components_securitySchemes  dz_swagger3_securitySchem_list
    ,components_links            dz_swagger3_link_list
-   ,components_callbacks        dz_swagger3_path_list
+   ,components_callbacks        dz_swagger3_callback_list
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -27,7 +27,7 @@ AS OBJECT (
       ,p_components_headers           IN  dz_swagger3_header_list
       ,p_components_securitySchemes   IN  dz_swagger3_securitySchem_list
       ,p_components_links             IN  dz_swagger3_link_list
-      ,p_components_callbacks         IN  dz_swagger3_path_list
+      ,p_components_callbacks         IN  dz_swagger3_callback_list
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -78,13 +78,13 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
-      p_pretty_print      IN  NUMBER   DEFAULT NULL
+      p_pretty_print      IN  INTEGER  DEFAULT NULL
     ) RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  NUMBER   DEFAULT 0
+      p_pretty_print      IN  INTEGER  DEFAULT 0
    ) RETURN CLOB
 
 );

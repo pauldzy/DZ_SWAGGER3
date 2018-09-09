@@ -23,7 +23,7 @@ AS
       ,p_operation_parameters    IN  dz_swagger3_parameter_list
       ,p_operation_requestBody   IN  dz_swagger3_requestbody_typ
       ,p_operation_responses     IN  dz_swagger3_response_list
-      ,p_operation_callbacks     IN  dz_swagger3_path_list
+      ,p_operation_callbacks     IN  dz_swagger3_callback_list
       ,p_operation_deprecated    IN  VARCHAR2
       ,p_operation_security      IN  dz_swagger3_security_req_list
       ,p_operation_servers       IN  dz_swagger3_server_list
@@ -526,8 +526,8 @@ AS
       -- Step 190
       -- Add server array
       --------------------------------------------------------------------------
-      IF  self.operation_server IS NULL 
-      AND self.operation_server.COUNT = 0
+      IF  self.operation_servers IS NULL 
+      AND self.operation_servers.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -543,10 +543,10 @@ AS
             
          END IF;
       
-         FOR i IN 1 .. operation_server.COUNT
+         FOR i IN 1 .. operation_servers.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-               str_pad2 || self.operation_server(i).toJSON(
+               str_pad2 || self.operation_servers(i).toJSON(
                   p_pretty_print => p_pretty_print + 1
                )
                ,p_pretty_print + 1
@@ -564,7 +564,7 @@ AS
          
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.formatted2json(
-              'server'
+              'servers'
              ,clb_hash
              ,p_pretty_print + 1
           )
@@ -577,7 +577,7 @@ AS
       -- Add the left bracket
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
-          '}'
+          ']'
          ,p_pretty_print,NULL,NULL
       );
       

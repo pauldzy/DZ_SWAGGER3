@@ -13,7 +13,7 @@ AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger_typ(
+   CONSTRUCTOR FUNCTION dz_swagger3_typ(
        p_doc_id              IN  VARCHAR2
       ,p_group_id            IN  VARCHAR2 DEFAULT NULL
       ,p_versionid           IN  VARCHAR2 DEFAULT NULL
@@ -48,7 +48,7 @@ AS
             a.versionid
             INTO str_versionid
             FROM
-            dz_swagger_vers a
+            dz_swagger3_vers a
             WHERE
                 a.is_default = 'TRUE'
             AND rownum <= 1;
@@ -66,7 +66,7 @@ AS
       -- Step 30
       -- Load the info object
       --------------------------------------------------------------------------
-      self.info := dz_swagger_info(
+      self.info := dz_swagger3_info(
           p_doc_id    => p_doc_id
          ,p_versionid => p_versionid
       );
@@ -78,11 +78,11 @@ AS
 
       RETURN;
 
-   END dz_swagger_typ;
+   END dz_swagger3_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger_typ(
+   CONSTRUCTOR FUNCTION dz_swagger3_typ(
        p_info                IN  dz_swagger3_info
       ,p_servers             IN  dz_swagger3_server_list
       ,p_paths               IN  dz_swagger3_path_list
@@ -114,7 +114,7 @@ AS
 
       RETURN;      
 
-   END dz_swagger_typ;
+   END dz_swagger3_typ;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -147,7 +147,7 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print      IN  NUMBER   DEFAULT NULL
+       p_pretty_print      IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -168,7 +168,7 @@ AS
       -- Step 20
       -- Add the left bracket
       --------------------------------------------------------------------------
-      IF num_pretty_print IS NULL
+      IF p_pretty_print IS NULL
       THEN
          clb_output := dz_json_util.pretty('{',NULL);
          str_pad := '';
@@ -189,9 +189,9 @@ AS
           str_pad1 || dz_json_main.value2json(
              'openapi'
             ,dz_swagger3_constants.c_openapi_version
-            ,num_pretty_print + 1
+            ,p_pretty_print + 1
          )
-         ,num_pretty_print + 1
+         ,p_pretty_print + 1
       );
       str_pad1 := ',';
 
@@ -202,10 +202,10 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.formatted2json(
               'info'
-             ,self.swagger_info.toJSON(num_pretty_print + 1)
-             ,num_pretty_print + 1
+             ,self.info.toJSON(p_pretty_print + 1)
+             ,p_pretty_print + 1
           )
-         ,num_pretty_print + 1
+         ,p_pretty_print + 1
       );
       str_pad1 := ',';
       
@@ -471,8 +471,9 @@ AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION toYAML()
-   RETURN CLOB
+   MEMBER FUNCTION toYAML(
+      p_pretty_print        IN  INTEGER DEFAULT NULL
+   ) RETURN CLOB
    AS
       clb_output       CLOB;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
@@ -490,14 +491,14 @@ AS
       --------------------------------------------------------------------------
       clb_output := dz_json_util.pretty_str(
           '---'
-         ,0
+         ,p_pretty_print
          ,'  '
       ) || dz_json_util.pretty_str(
           'openapi: ' || dz_swagger3_util.yaml_text(
              dz_swagger3_constants.c_openapi_version
-            ,0
+            ,p_pretty_print
           )
-         ,0
+         ,p_pretty_print
          ,'  '
       );
       
@@ -507,9 +508,9 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           'info: '
-         ,0
+         ,p_pretty_print
          ,'  '
-      ) || self.swagger_info.toYAML(1);
+      ) || self.info.toYAML(p_pretty_print + 1);
 
       --------------------------------------------------------------------------
       -- Step 40
@@ -547,7 +548,7 @@ AS
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'paths: '
-            ,0
+            ,p_pretty_print
             ,'  '
          );
 
@@ -557,7 +558,7 @@ AS
          LOOP
             clb_output := clb_output || dz_json_util.pretty_str(
                 '"' || self.paths(i).hash_key || '": '
-               ,1
+               ,p_pretty_print + 1
                ,'  '
             ) || self.paths(i).toYAML(2);
 

@@ -5,6 +5,7 @@ AS OBJECT (
    ,path_summary             VARCHAR2(255 Char)
    ,path_description         VARCHAR2(4000 Char)
    ,path_get_operation       dz_swagger3_cboperation_typ
+   ,path_put_operation       dz_swagger3_cboperation_typ
    ,path_post_operation      dz_swagger3_cboperation_typ
    ,path_delete_operation    dz_swagger3_cboperation_typ
    ,path_options_operation   dz_swagger3_cboperation_typ
@@ -26,6 +27,7 @@ AS OBJECT (
       ,p_path_summary            IN  VARCHAR2
       ,p_path_description        IN  VARCHAR2
       ,p_path_get_operation      IN  dz_swagger3_cboperation_typ
+      ,p_path_put_operation      IN  dz_swagger3_cboperation_typ
       ,p_path_post_operation     IN  dz_swagger3_cboperation_typ
       ,p_path_delete_operation   IN  dz_swagger3_cboperation_typ
       ,p_path_options_operation  IN  dz_swagger3_cboperation_typ

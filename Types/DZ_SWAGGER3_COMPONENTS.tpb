@@ -22,7 +22,7 @@ AS
       ,p_components_headers           IN  dz_swagger3_header_list
       ,p_components_securitySchemes   IN  dz_swagger3_securitySchem_list
       ,p_components_links             IN  dz_swagger3_link_list
-      ,p_components_callbacks         IN  dz_swagger3_path_list
+      ,p_components_callbacks         IN  dz_swagger3_callback_list
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -61,7 +61,7 @@ AS
       ary_output := MDSYS.SDO_STRING2_ARRAY();
       FOR i IN 1 .. self.components_schemas.COUNT
       LOOP
-         ary_output(int_index) := self.components_schemas(i).hash_key;
+         ary_output(int_index) := self.components_schemas(i).key();
       
       END LOOP;
       
@@ -296,7 +296,7 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print     IN  NUMBER   DEFAULT NULL
+       p_pretty_print     IN  INTEGER  DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -854,11 +854,11 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  NUMBER   DEFAULT 0
+      p_pretty_print      IN  INTEGER  DEFAULT 0
    ) RETURN CLOB
    AS
-      clb_output        CLOB;
-      p_pretty_print  NUMBER := p_pretty_print;
+      clb_output       CLOB;
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
       
    BEGIN
    

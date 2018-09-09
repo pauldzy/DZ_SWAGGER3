@@ -231,6 +231,7 @@ AS
    ) RETURN CLOB
    AS
       clb_output        CLOB;
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
       
    BEGIN
    

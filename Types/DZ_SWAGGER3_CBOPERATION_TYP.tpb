@@ -23,7 +23,6 @@ AS
       ,p_operation_parameters    IN  dz_swagger3_parameter_list
       ,p_operation_requestBody   IN  dz_swagger3_requestbody_typ
       ,p_operation_responses     IN  dz_swagger3_response_list
-      ,p_operation_callbacks     IN  dz_swagger3_path_list
       ,p_operation_deprecated    IN  VARCHAR2
       ,p_operation_security      IN  dz_swagger3_security_req_list
       ,p_operation_servers       IN  dz_swagger3_server_list
@@ -40,7 +39,6 @@ AS
       self.operation_parameters    := p_operation_parameters;
       self.operation_requestBody   := p_operation_requestBody;
       self.operation_responses     := p_operation_responses;
-      self.operation_callbacks     := p_operation_callbacks;
       self.operation_deprecated    := p_operation_deprecated;
       self.operation_security      := p_operation_security;
       self.operation_servers       := p_operation_servers;
@@ -104,34 +102,6 @@ AS
       RETURN ary_output;
    
    END operation_responses_keys;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION operation_callbacks_keys
-   RETURN MDSYS.SDO_STRING2_ARRAY
-   AS
-      int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
-      
-   BEGIN
-      IF self.operation_callbacks IS NULL
-      OR self.operation_callbacks.COUNT = 0
-      THEN
-         RETURN NULL;
-         
-      END IF;
-      
-      int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
-      FOR i IN 1 .. self.operation_callbacks.COUNT
-      LOOP
-         ary_output(int_index) := self.operation_callbacks(i).hash_key;
-      
-      END LOOP;
-      
-      RETURN ary_output;
-   
-   END operation_callbacks_keys;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -389,63 +359,6 @@ AS
       str_pad1 := ',';
       
       --------------------------------------------------------------------------
-      -- Step 160
-      -- Add operation callbacks map
-      --------------------------------------------------------------------------
-      IF  self.operation_callbacks IS NULL 
-      AND self.operation_callbacks.COUNT = 0
-      THEN
-         clb_hash := 'null';
-         
-      ELSE
-         str_pad2 := str_pad;
-         
-         IF p_pretty_print IS NULL
-         THEN
-            clb_hash := dz_json_util.pretty('{',NULL);
-            
-         ELSE
-            clb_hash := dz_json_util.pretty('{',-1);
-            
-         END IF;
-      
-      
-         ary_keys := self.operation_callbacks_keys();
-      
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
-            clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || dz_json_main.value2json(
-                   ary_keys(i)
-                  ,self.operation_callbacks(i).toJSON(
-                     p_pretty_print => p_pretty_print + 1
-                   )
-                  ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
-            );
-            str_pad2 := ',';
-         
-         END LOOP;
-         
-         clb_hash := clb_hash || dz_json_util.pretty(
-             '}'
-            ,p_pretty_print + 1,NULL,NULL
-         );
-         
-      END IF;
-         
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'callbacks'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
-      --------------------------------------------------------------------------
       -- Step 170
       -- Add deprecated flag
       --------------------------------------------------------------------------
@@ -526,8 +439,8 @@ AS
       -- Step 190
       -- Add server array
       --------------------------------------------------------------------------
-      IF  self.operation_server IS NULL 
-      AND self.operation_server.COUNT = 0
+      IF  self.operation_servers IS NULL 
+      AND self.operation_servers.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -543,10 +456,10 @@ AS
             
          END IF;
       
-         FOR i IN 1 .. operation_server.COUNT
+         FOR i IN 1 .. operation_servers.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-               str_pad2 || self.operation_server(i).toJSON(
+               str_pad2 || self.operation_servers(i).toJSON(
                   p_pretty_print => p_pretty_print + 1
                )
                ,p_pretty_print + 1
@@ -564,7 +477,7 @@ AS
          
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.formatted2json(
-              'server'
+              'servers'
              ,clb_hash
              ,p_pretty_print + 1
           )
@@ -737,35 +650,6 @@ AS
          ) || self.operation_requestBody.toYAML(
             p_pretty_print + 1
          );
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 90
-      -- Write the optional variables map
-      --------------------------------------------------------------------------
-      IF  self.operation_callbacks IS NULL 
-      AND self.operation_callbacks.COUNT = 0
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'callbacks: '
-            ,p_pretty_print + 1
-            ,'  '
-         );
-         
-         ary_keys := self.operation_callbacks_keys();
-      
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
-            clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
-               ,p_pretty_print + 2
-               ,'  '
-            ) || self.operation_callbacks(i).toYAML(
-               p_pretty_print + 3
-            );
-         
-         END LOOP;
          
       END IF;
       

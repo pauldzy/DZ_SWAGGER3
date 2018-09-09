@@ -17,13 +17,14 @@ AS
        p_hash_key                IN  VARCHAR2
       ,p_path_summary            IN  VARCHAR2
       ,p_path_description        IN  VARCHAR2
-      ,p_path_get_operation      IN  dz_swagger3_operation_typ
-      ,p_path_post_operation     IN  dz_swagger3_operation_typ
-      ,p_path_delete_operation   IN  dz_swagger3_operation_typ
-      ,p_path_options_operation  IN  dz_swagger3_operation_typ
-      ,p_path_head_operation     IN  dz_swagger3_operation_typ
-      ,p_path_patch_operation    IN  dz_swagger3_operation_typ
-      ,p_path_trace_operation    IN  dz_swagger3_operation_typ
+      ,p_path_get_operation      IN  dz_swagger3_cboperation_typ
+      ,p_path_put_operation      IN  dz_swagger3_cboperation_typ
+      ,p_path_post_operation     IN  dz_swagger3_cboperation_typ
+      ,p_path_delete_operation   IN  dz_swagger3_cboperation_typ
+      ,p_path_options_operation  IN  dz_swagger3_cboperation_typ
+      ,p_path_head_operation     IN  dz_swagger3_cboperation_typ
+      ,p_path_patch_operation    IN  dz_swagger3_cboperation_typ
+      ,p_path_trace_operation    IN  dz_swagger3_cboperation_typ
       ,p_path_servers            IN  dz_swagger3_server_list
       ,p_path_parameters         IN  dz_swagger3_parameter_list
    ) RETURN SELF AS RESULT 
@@ -34,6 +35,7 @@ AS
       self.path_summary            := p_path_summary;
       self.path_description        := p_path_description;
       self.path_get_operation      := p_path_get_operation;
+      self.path_put_operation      := p_path_put_operation;
       self.path_post_operation     := p_path_post_operation;
       self.path_delete_operation   := p_path_delete_operation;
       self.path_options_operation  := p_path_options_operation;
@@ -407,7 +409,7 @@ AS
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || dz_json_main.value2json(
                    ary_keys(i)
-                  ,self.response_headers(i).toJSON(
+                  ,self.path_parameters(i).toJSON(
                      p_pretty_print => p_pretty_print + 1
                    )
                   ,p_pretty_print + 1
@@ -649,7 +651,7 @@ AS
                 '- '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.response_content(i).toYAML(
+            ) || self.path_servers(i).toYAML(
                p_pretty_print + 1
             );
             
@@ -678,7 +680,7 @@ AS
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 2
                ,'  '
-            ) || self.response_content(i).toYAML(
+            ) || self.path_parameters(i).toYAML(
                p_pretty_print + 3
             );
          

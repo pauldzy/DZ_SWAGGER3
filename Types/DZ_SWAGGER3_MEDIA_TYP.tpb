@@ -328,7 +328,7 @@ AS
    ) RETURN CLOB
    AS
       clb_output       CLOB;
-      str_temp         VARCHAR2(5 Char);
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
       
    BEGIN
    
