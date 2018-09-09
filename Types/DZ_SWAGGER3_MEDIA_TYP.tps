@@ -16,9 +16,10 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_media_typ(
        p_hash_key                IN  VARCHAR2
-      ,p_requestbody_description IN  VARCHAR2
-      ,p_requestbody_content     IN  dz_swagger3_media_list
-      ,p_requestbody_required    IN  VARCHAR2
+      ,p_media_schema            IN  dz_swagger3_schema_typ
+      ,p_media_example           IN  VARCHAR2
+      ,p_media_examples          IN  dz_swagger3_example_list
+      ,p_media_encoding          IN  dz_swagger3_encoding_list
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
