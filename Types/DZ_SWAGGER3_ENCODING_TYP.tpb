@@ -339,7 +339,7 @@ AS
             ,'  '
          );
          
-         ary_keys := self.parameter_examples_keys();
+         ary_keys := self.encoding_headers_keys();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
