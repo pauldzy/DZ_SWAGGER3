@@ -51,7 +51,7 @@ AS
       
       RETURN; 
       
-   END dz_swagger3_header_typ;
+   END dz_swagger3_parameter_typ;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -473,7 +473,8 @@ AS
       p_pretty_print      IN  INTEGER   DEFAULT 0
    ) RETURN CLOB
    AS
-      clb_output        CLOB;
+      clb_output       CLOB;
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
       
    BEGIN
    
@@ -643,7 +644,7 @@ AS
             ,'  '
          );
          
-      ELSIF self.header_value_number IS NOT NULL
+      ELSIF self.parameter_example_number IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'example: ' || dz_swagger_util.yaml_text(

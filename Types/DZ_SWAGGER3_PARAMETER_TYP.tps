@@ -19,12 +19,12 @@ AS OBJECT (
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_header_typ
+   ,CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ
     RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_header_typ(
+   ,CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
        p_hash_key                  IN  VARCHAR2
       ,p_parameter_id              IN  VARCHAR2
       ,p_parameter_name            IN  VARCHAR2

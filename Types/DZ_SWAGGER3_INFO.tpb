@@ -22,19 +22,19 @@ AS
    
       SELECT 
       dz_swagger3_info(
-         p_title          => a.info_title
-        ,p_description    => a.info_description
-        ,p_termsofservice => a.info_termsofservice
-        ,p_contact        => dz_swagger3_info_contact(
+         p_info_title          => a.info_title
+        ,p_info_description    => a.info_description
+        ,p_info_termsofservice => a.info_termsofservice
+        ,p_info_contact        => dz_swagger3_info_contact(
              p_contact_name  => a.info_contact_name
             ,p_contact_url   => a.info_contact_url
             ,p_contact_email => a.info_contact_email
          )
-        ,p_license        => dz_swagger3_info_license(
+        ,p_info_license        => dz_swagger3_info_license(
              p_license_name  => a.info_license_name
             ,p_license_url   => a.info_license_url
          )
-        ,p_version        => a.info_version
+        ,p_info_version        => a.info_version
       )
       INTO SELF
       FROM
@@ -197,7 +197,7 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad || dz_json_main.formatted2json(
                 'license'
-               ,self.info_license.toJSON(num_pretty_print + 1)
+               ,self.info_license.toJSON(p_pretty_print + 1)
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -273,7 +273,7 @@ AS
       -- Step 30
       -- Write the optional info description
       --------------------------------------------------------------------------
-      IF self.description IS NOT NULL
+      IF self.info_description IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'description: ' || dz_swagger3_util.yaml_text(
@@ -290,7 +290,7 @@ AS
       -- Step 40
       -- Write the optional info termsOfService
       --------------------------------------------------------------------------
-      IF self.termsOfService IS NOT NULL
+      IF self.info_termsOfService IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'termsOfService: ' || dz_swagger3_util.yaml_text(

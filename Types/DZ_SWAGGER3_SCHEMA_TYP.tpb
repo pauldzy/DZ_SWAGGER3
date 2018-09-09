@@ -61,6 +61,23 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER FUNCTION isNULL
+   RETURN VARCHAR2
+   AS
+   BEGIN
+      IF self.schema_id IS NOT NULL
+      THEN
+         RETURN 'FALSE';
+         
+      ELSE
+         RETURN 'TRUE';
+
+      END IF;
+      
+   END isNULL;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print      IN  INTEGER  DEFAULT NULL
       ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
