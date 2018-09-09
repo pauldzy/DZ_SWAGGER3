@@ -75,10 +75,6 @@ AS
       -- Step 40
       -- Load the paths
       --------------------------------------------------------------------------
-      self.info := dz_swagger_info(
-          p_doc_id    => p_doc_id
-         ,p_versionid => p_versionid
-      );
 
       RETURN;
 
@@ -87,15 +83,13 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger_typ(
-       p_group_id            IN  VARCHAR2
-      ,p_info                IN  dz_swagger3_info
+       p_info                IN  dz_swagger3_info
       ,p_servers             IN  dz_swagger3_server_list
-      ,p_paths               IN  dz_swagger3_path_hash
+      ,p_paths               IN  dz_swagger3_path_list
       ,p_components          IN  dz_swagger3_components
-      ,p_security            IN  dz_swagger3_security_list
+      ,p_security            IN  dz_swagger3_security_req_list
       ,p_tags                IN  dz_swagger3_tag_list
       ,p_externalDocs        IN  dz_swagger3_extrdocs_typ
-      ,p_versionid           IN  VARCHAR2
    ) RETURN SELF AS RESULT
    AS
 
@@ -110,7 +104,6 @@ AS
       -- Step 20
       -- Load the object
       --------------------------------------------------------------------------
-      self.group_id            := p_group_id;
       self.info                := p_info;
       self.servers             := p_servers;
       self.paths               := p_paths;
@@ -118,11 +111,38 @@ AS
       self.security            := p_security;
       self.tags                := p_tags;
       self.externalDocs        := p_externalDocs;
-      self.versionid           := p_versionid;
 
       RETURN;      
 
    END dz_swagger_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION paths_keys
+   RETURN MDSYS.SDO_STRING2_ARRAY
+   AS
+      int_index  PLS_INTEGER;
+      ary_output MDSYS.SDO_STRING2_ARRAY;
+      
+   BEGIN
+      IF self.paths IS NULL
+      OR self.paths.COUNT = 0
+      THEN
+         RETURN NULL;
+         
+      END IF;
+      
+      int_index  := 1;
+      ary_output := MDSYS.SDO_STRING2_ARRAY();
+      FOR i IN 1 .. self.paths.COUNT
+      LOOP
+         ary_output(int_index) := self.paths(i).hash_key;
+      
+      END LOOP;
+      
+      RETURN ary_output;
+   
+   END paths_keys;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -130,7 +150,13 @@ AS
        p_pretty_print      IN  NUMBER   DEFAULT NULL
    ) RETURN CLOB
    AS
-
+      clb_output       CLOB;
+      str_pad          VARCHAR2(1 Char);
+      str_pad1         VARCHAR2(1 Char);
+      str_pad2         VARCHAR2(1 Char);
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      clb_hash         CLOB;
+      
    BEGIN
 
       --------------------------------------------------------------------------
@@ -152,13 +178,13 @@ AS
          str_pad := ' ';
 
       END IF;
+      
+      str_pad1 := str_pad;
 
       --------------------------------------------------------------------------
       -- Step 30
       -- Add base attributes
       --------------------------------------------------------------------------
-      str_pad1 := str_pad;
-
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              'openapi'
@@ -169,6 +195,10 @@ AS
       );
       str_pad1 := ',';
 
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Add info object
+      --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.formatted2json(
               'info'
@@ -178,139 +208,261 @@ AS
          ,num_pretty_print + 1
       );
       str_pad1 := ',';
-
+      
       --------------------------------------------------------------------------
-      -- Step 40
-      -- Add the parms
+      -- Step 50
+      -- Add servers
       --------------------------------------------------------------------------
-      /*
-      IF self.swagger_parms IS NULL
-      OR self.swagger_parms.COUNT = 0
+      IF  self.servers IS NULL 
+      AND self.servers.COUNT = 0
       THEN
-         NULL;
-
+         clb_hash := 'null';
+         
       ELSE
+         str_pad2 := str_pad;
+         
+         IF p_pretty_print IS NULL
+         THEN
+            clb_hash := dz_json_util.pretty('[',NULL);
+            
+         ELSE
+            clb_hash := dz_json_util.pretty('[',-1);
+            
+         END IF;
+      
+         FOR i IN 1 .. servers.COUNT
+         LOOP
+            clb_hash := clb_hash || dz_json_util.pretty(
+                str_pad2 || self.servers(i).toJSON(
+                  p_pretty_print => p_pretty_print + 1
+                )
+               ,p_pretty_print + 1
+            );
+            str_pad2 := ',';
+         
+         END LOOP;
+         
+         clb_hash := clb_hash || dz_json_util.pretty(
+             ']'
+            ,p_pretty_print + 1,NULL,NULL
+         );
+         
+      END IF;
+         
+      clb_output := clb_output || dz_json_util.pretty(
+          str_pad1 || dz_json_main.formatted2json(
+              'servers'
+             ,clb_hash
+             ,p_pretty_print + 1
+          )
+         ,p_pretty_print + 1
+      );
+      str_pad1 := ',';
+      
+      --------------------------------------------------------------------------
+      -- Step 60
+      -- Add paths
+      --------------------------------------------------------------------------
+      IF  self.paths IS NULL 
+      AND self.paths.COUNT = 0
+      THEN
+         clb_hash := 'null';
+         
+      ELSE
+         str_pad2 := str_pad;
+         
+         IF p_pretty_print IS NULL
+         THEN
+            clb_hash := dz_json_util.pretty('{',NULL);
+            
+         ELSE
+            clb_hash := dz_json_util.pretty('{',-1);
+            
+         END IF;
+      
+      
+         ary_keys := self.paths_keys();
+      
+         FOR i IN 1 .. ary_keys.COUNT
+         LOOP
+            clb_hash := clb_hash || dz_json_util.pretty(
+                str_pad2 || dz_json_main.value2json(
+                   ary_keys(i)
+                  ,self.paths(i).toJSON(
+                     p_pretty_print => p_pretty_print + 1
+                   )
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad2 := ',';
+         
+         END LOOP;
+         
+         clb_hash := clb_hash || dz_json_util.pretty(
+             '}'
+            ,p_pretty_print + 1,NULL,NULL
+         );
+         
+      END IF;
+         
+      clb_output := clb_output || dz_json_util.pretty(
+          str_pad1 || dz_json_main.formatted2json(
+              'paths'
+             ,clb_hash
+             ,p_pretty_print + 1
+          )
+         ,p_pretty_print + 1
+      );
+      str_pad1 := ',';
+      
+      --------------------------------------------------------------------------
+      -- Step 70
+      -- Add get operation
+      --------------------------------------------------------------------------
+      IF self.components IS NOT NULL
+      THEN
          clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.fastname('parameters',num_pretty_print) || '{'
-            ,num_pretty_print + 1
+             str_pad1 || dz_json_main.formatted2json(
+                'components'
+               ,self.components.toJSON(p_pretty_print + 1)
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
          );
          str_pad1 := ',';
-
-         str_pad2 := str_pad;
-         FOR i IN 1 .. self.swagger_parms.COUNT
-         LOOP
-            IF  self.swagger_parms(i).inline_parm = 'FALSE'
-            AND self.swagger_parms(i).parm_undocumented = 'FALSE'
-            THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad2 || '"' || self.swagger_parms(i).parameter_ref_id || '": ' || self.swagger_parms(i).toJSON(
-                      p_pretty_print => num_pretty_print + 2
-                   )
-                  ,num_pretty_print + 2
-               );
-               str_pad2 := ',';
-
-            END IF;
-
-         END LOOP;
-
-         clb_output := clb_output || dz_json_util.pretty(
-             '}'
-            ,num_pretty_print + 1
-         );
 
       END IF;
 
       --------------------------------------------------------------------------
       -- Step 80
-      -- Add the paths
+      -- Add security
       --------------------------------------------------------------------------
-      IF self.swagger_paths IS NULL
-      OR self.swagger_paths.COUNT = 0
+      IF  self.security IS NULL 
+      AND self.security.COUNT = 0
       THEN
-         NULL;
-
+         clb_hash := 'null';
+         
       ELSE
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.fastname('paths',num_pretty_print) || '{'
-            ,num_pretty_print + 1
-         );
-         str_pad1 := ',';
-
          str_pad2 := str_pad;
-         FOR i IN 1 .. self.swagger_paths.COUNT
+         
+         IF p_pretty_print IS NULL
+         THEN
+            clb_hash := dz_json_util.pretty('[',NULL);
+            
+         ELSE
+            clb_hash := dz_json_util.pretty('[',-1);
+            
+         END IF;
+      
+         FOR i IN 1 .. security.COUNT
          LOOP
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad2 || self.swagger_paths(i).toJSON(
-                   p_pretty_print => num_pretty_print + 2
+            clb_hash := clb_hash || dz_json_util.pretty(
+                str_pad2 || self.security(i).toJSON(
+                  p_pretty_print => p_pretty_print + 1
                 )
-               ,num_pretty_print + 2
+               ,p_pretty_print + 1
             );
             str_pad2 := ',';
-
+         
          END LOOP;
-
-         clb_output := clb_output || dz_json_util.pretty(
-             '}'
-            ,num_pretty_print + 1
+         
+         clb_hash := clb_hash || dz_json_util.pretty(
+             ']'
+            ,p_pretty_print + 1,NULL,NULL
          );
-
+         
       END IF;
+         
+      clb_output := clb_output || dz_json_util.pretty(
+          str_pad1 || dz_json_main.formatted2json(
+              'security'
+             ,clb_hash
+             ,p_pretty_print + 1
+          )
+         ,p_pretty_print + 1
+      );
+      str_pad1 := ',';
 
       --------------------------------------------------------------------------
       -- Step 90
-      -- Add the defs
+      -- Add tags
       --------------------------------------------------------------------------
-      IF self.swagger_defs IS NULL
-      OR self.swagger_defs.COUNT = 0
+      IF  self.tags IS NULL 
+      AND self.tags.COUNT = 0
       THEN
-         NULL;
-
+         clb_hash := 'null';
+         
       ELSE
+         str_pad2 := str_pad;
+         
+         IF p_pretty_print IS NULL
+         THEN
+            clb_hash := dz_json_util.pretty('[',NULL);
+            
+         ELSE
+            clb_hash := dz_json_util.pretty('[',-1);
+            
+         END IF;
+      
+         FOR i IN 1 .. tags.COUNT
+         LOOP
+            clb_hash := clb_hash || dz_json_util.pretty(
+                str_pad2 || self.tags(i).toJSON(
+                  p_pretty_print => p_pretty_print + 1
+                )
+               ,p_pretty_print + 1
+            );
+            str_pad2 := ',';
+         
+         END LOOP;
+         
+         clb_hash := clb_hash || dz_json_util.pretty(
+             ']'
+            ,p_pretty_print + 1,NULL,NULL
+         );
+         
+      END IF;
+         
+      clb_output := clb_output || dz_json_util.pretty(
+          str_pad1 || dz_json_main.formatted2json(
+              'tags'
+             ,clb_hash
+             ,p_pretty_print + 1
+          )
+         ,p_pretty_print + 1
+      );
+      str_pad1 := ',';
+      
+      --------------------------------------------------------------------------
+      -- Step 100
+      -- Add externalDocs
+      --------------------------------------------------------------------------
+      IF self.externalDocs IS NOT NULL
+      THEN
          clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.fastname('definitions',num_pretty_print) || '{'
-            ,num_pretty_print + 1
+             str_pad1 || dz_json_main.formatted2json(
+                'externalDocs'
+               ,self.externalDocs.toJSON(p_pretty_print + 1)
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
-         str_pad2 := str_pad;
-         FOR i IN 1 .. self.swagger_defs.COUNT
-         LOOP
-            IF self.swagger_defs(i).inline_def = 'FALSE'
-            THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad2 || '"' || dz_swagger_util.dzcondense(
-                      self.swagger_defs(i).versionid
-                     ,self.swagger_defs(i).definition
-                   ) || '": ' || self.swagger_defs(i).toJSON(
-                      p_pretty_print => num_pretty_print + 2
-                   )
-                  ,num_pretty_print + 2
-               );
-               str_pad2 := ',';
-
-            END IF;
-
-         END LOOP;
-
-         clb_output := clb_output || dz_json_util.pretty(
-             '}'
-            ,num_pretty_print + 1
-         );
-
       END IF;
-*/
+      
       --------------------------------------------------------------------------
-      -- Step 100
+      -- Step 110
       -- Add the left bracket
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
           '}'
-         ,num_pretty_print,NULL,NULL
+         ,p_pretty_print,NULL,NULL
       );
 
       --------------------------------------------------------------------------
-      -- Step 110
+      -- Step 120
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
@@ -322,7 +474,9 @@ AS
    MEMBER FUNCTION toYAML()
    RETURN CLOB
    AS
-
+      clb_output       CLOB;
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      
    BEGIN
 
       --------------------------------------------------------------------------
@@ -345,111 +499,160 @@ AS
           )
          ,0
          ,'  '
-      ) || dz_json_util.pretty_str(
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Write the info object
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty_str(
           'info: '
          ,0
          ,'  '
       ) || self.swagger_info.toYAML(1);
-/*
+
       --------------------------------------------------------------------------
-      -- Step 30
-      -- Do the parameters
+      -- Step 40
+      -- Write the server array
       --------------------------------------------------------------------------
-      IF self.swagger_parms IS NOT NULL
-      AND self.swagger_parms.COUNT > 0
+      IF  self.servers IS NOT NULL 
+      AND self.servers.COUNT > 0
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'parameters: '
+             'servers: '
+            ,p_pretty_print + 1
+            ,'  '
+         );
+         
+         FOR i IN 1 .. self.servers.COUNT
+         LOOP
+            clb_output := clb_output || dz_json_util.pretty(
+                '- '
+               ,p_pretty_print + 1
+               ,'  '
+            ) || self.servers(i).toYAML(
+               p_pretty_print + 1
+            );
+            
+         END LOOP;
+         
+      END IF;
+
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Do the paths
+      --------------------------------------------------------------------------
+      IF  self.paths IS NOT NULL 
+      AND self.paths.COUNT > 0
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'paths: '
             ,0
             ,'  '
          );
 
-         FOR i IN 1 .. self.swagger_parms.COUNT
+         ary_keys := self.paths_keys();
+      
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            IF  self.swagger_parms(i).inline_parm = 'FALSE'
-            AND self.swagger_parms(i).parm_undocumented = 'FALSE'
-            THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   self.swagger_parms(i).parameter_ref_id || ': '
-                  ,1
-                  ,'  '
-               ) || self.swagger_parms(i).toYAML(2);
-
-            END IF;
+            clb_output := clb_output || dz_json_util.pretty_str(
+                '"' || self.paths(i).hash_key || '": '
+               ,1
+               ,'  '
+            ) || self.paths(i).toYAML(2);
 
          END LOOP;
-
+         
       END IF;
 
+      --------------------------------------------------------------------------
+      -- Step 60
+      -- Write the components operation
+      --------------------------------------------------------------------------
+      IF self.components IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'components: ' 
+            ,p_pretty_print
+            ,'  '
+         ) || self.components.toYAML(
+            p_pretty_print + 1
+         );
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 70
+      -- Write the security array
+      --------------------------------------------------------------------------
+      IF  self.security IS NOT NULL 
+      AND self.security.COUNT > 0
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'security: '
+            ,p_pretty_print + 1
+            ,'  '
+         );
+         
+         FOR i IN 1 .. self.security.COUNT
+         LOOP
+            clb_output := clb_output || dz_json_util.pretty(
+                '- '
+               ,p_pretty_print + 1
+               ,'  '
+            ) || self.security(i).toYAML(
+               p_pretty_print + 1
+            );
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 80
+      -- Write the tags array
+      --------------------------------------------------------------------------
+      IF  self.tags IS NOT NULL 
+      AND self.tags.COUNT > 0
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'tags: '
+            ,p_pretty_print + 1
+            ,'  '
+         );
+         
+         FOR i IN 1 .. self.tags.COUNT
+         LOOP
+            clb_output := clb_output || dz_json_util.pretty(
+                '- '
+               ,p_pretty_print + 1
+               ,'  '
+            ) || self.tags(i).toYAML(
+               p_pretty_print + 1
+            );
+            
+         END LOOP;
+         
+      END IF;
+      
       --------------------------------------------------------------------------
       -- Step 90
-      -- Do the paths
+      -- Write the externalDocs
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty_str(
-          'paths: '
-         ,0
-         ,'  '
-      );
-
-      FOR i IN 1 .. self.swagger_paths.COUNT
-      LOOP
+      IF self.externalDocs IS NOT NULL
+      THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             '"' || self.swagger_paths(i).swagger_path || '": '
-            ,1
+             'externalDocs: ' 
+            ,p_pretty_print
             ,'  '
-         ) || self.swagger_paths(i).toYAML(2);
-
-      END LOOP;
-
+         ) || self.externalDocs.toYAML(
+            p_pretty_print + 1
+         );
+         
+      END IF;
+      
       --------------------------------------------------------------------------
       -- Step 100
-      -- Do the definitions
-      --------------------------------------------------------------------------
-      IF self.swagger_defs IS NOT NULL
-      AND self.swagger_defs.COUNT > 0
-      THEN
-         int_counter := 0;
-         FOR i IN 1 .. self.swagger_defs.COUNT
-         LOOP
-            IF self.swagger_defs(i).inline_def = 'FALSE'
-            THEN
-               int_counter := int_counter + 1;
-
-            END IF;
-
-         END LOOP;
-
-         IF int_counter > 0
-         THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'definitions: '
-               ,0
-               ,'  '
-            );
-
-            FOR i IN 1 .. self.swagger_defs.COUNT
-            LOOP
-               IF self.swagger_defs(i).inline_def = 'FALSE'
-               THEN
-                  clb_output := clb_output || dz_json_util.pretty(
-                      dz_swagger_util.dzcondense(
-                         self.swagger_defs(i).versionid
-                        ,self.swagger_defs(i).definition
-                     ) || ': '
-                     ,1
-                     ,'  '
-                  ) || self.swagger_defs(i).toYAML(2);
-
-               END IF;
-
-            END LOOP;
-
-         END IF;
-
-      END IF;
-*/
-      --------------------------------------------------------------------------
-      -- Step 110
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;

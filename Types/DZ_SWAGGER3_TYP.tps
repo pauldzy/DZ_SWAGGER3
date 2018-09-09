@@ -27,16 +27,19 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_typ(
-       p_group_id            IN  VARCHAR2
-      ,p_info                IN  dz_swagger3_info
+       p_info                IN  dz_swagger3_info
       ,p_servers             IN  dz_swagger3_server_list
-      ,p_paths               IN  dz_swagger3_path_hash
+      ,p_paths               IN  dz_swagger3_path_list
       ,p_components          IN  dz_swagger3_components
-      ,p_security            IN  dz_swagger3_security_list
+      ,p_security            IN  dz_swagger3_security_req_list
       ,p_tags                IN  dz_swagger3_tag_list
       ,p_externalDocs        IN  dz_swagger3_extrdocs_typ
-      ,p_versionid           IN  VARCHAR2
     ) RETURN SELF AS RESULT
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION paths_keys
+    RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
