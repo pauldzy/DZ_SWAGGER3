@@ -270,6 +270,12 @@ AS
       IF  self.server_variables IS NULL 
       AND self.server_variables.COUNT = 0
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'variables: '
+            ,p_pretty_print + 1
+            ,'  '
+         );
+         
          ary_keys := self.server_variables_keys();
       
          FOR i IN 1 .. ary_keys.COUNT

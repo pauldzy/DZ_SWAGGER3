@@ -1,12 +1,12 @@
 CREATE OR REPLACE TYPE dz_swagger3_info FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    title              VARCHAR2(255 Char)
-   ,description        VARCHAR2(4000 Char)
-   ,termsofservice     VARCHAR2(255 Char)
-   ,contact            dz_swagger3_info_contact
-   ,license            dz_swagger3_info_license
-   ,version            VARCHAR2(255 Char)
+    info_title           VARCHAR2(255 Char)
+   ,info_description     VARCHAR2(4000 Char)
+   ,info_termsofservice  VARCHAR2(255 Char)
+   ,info_contact         dz_swagger3_info_contact
+   ,info_license         dz_swagger3_info_license
+   ,info_version         VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -23,12 +23,12 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_info(
-       p_title          IN  VARCHAR2
-      ,p_description    IN  VARCHAR2
-      ,p_termsofservice IN  VARCHAR2
-      ,p_contact        IN  dz_swagger3_info_contact
-      ,p_license        IN  dz_swagger3_info_license
-      ,p_version        IN  VARCHAR2
+       p_info_title          IN  VARCHAR2
+      ,p_info_description    IN  VARCHAR2
+      ,p_info_termsofservice IN  VARCHAR2
+      ,p_info_contact        IN  dz_swagger3_info_contact
+      ,p_info_license        IN  dz_swagger3_info_license
+      ,p_info_version        IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
