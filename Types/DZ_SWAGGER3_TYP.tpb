@@ -90,10 +90,52 @@ AS
       -- Load the paths
       --------------------------------------------------------------------------
       self.paths        := dz_swagger3_path_list();
+      
+      --------------------------------------------------------------------------
+      -- Step 60
+      -- Load the components
+      --------------------------------------------------------------------------
       self.components   := dz_swagger3_components();
+      
+      --------------------------------------------------------------------------
+      -- Step 70
+      -- Load the security
+      --------------------------------------------------------------------------
       self.security     := dz_swagger3_security_req_list();
+      
+      --------------------------------------------------------------------------
+      -- Step 80
+      -- Load the tags
+      --------------------------------------------------------------------------
       self.tags         := dz_swagger3_tag_list();
-      self.externalDocs := NULL;
+      
+      --------------------------------------------------------------------------
+      -- Step 90
+      -- Load the externalDocs
+      --------------------------------------------------------------------------
+      BEGIN
+         SELECT
+         dz_swagger3_extrdocs_typ(
+             p_doc_description  => a.doc_description
+            ,p_doc_url          => a.doc_url
+         )
+         INTO self.externalDocs
+         FROM
+         dz_swagger3_doc a
+         WHERE
+             a.versionid = str_versionid
+         AND a.doc_id = str_doc_id;
+      
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            self.externalDocs := NULL;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
 
       RETURN;
 

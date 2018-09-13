@@ -10,6 +10,58 @@ AS
       RETURN; 
       
    END dz_swagger3_operation_typ;
+   
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_operation_typ(
+       p_operation_id            IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+   ) RETURN SELF AS RESULT
+   AS 
+   BEGIN 
+      
+      -------------------------------------------------------------------------
+      -- Step 10
+      -- Load the path object and operations
+      -------------------------------------------------------------------------
+      BEGIN
+         SELECT
+         dz_swagger3_operation_typ(
+             p_hash_key               => a.operation_type
+            ,p_operation_tags         => NULL
+            ,p_operation_summary      => a.operation_summary
+            ,p_operation_description  => a.operation_description
+            ,p_operation_externalDocs => a.operation_externalDocs_id
+            ,p_operation_operationID  => a.operation_operationID
+            ,p_operation_parameters   => NULL
+            ,p_operation_requestBody  => NULL
+            ,p_operation_responses    => NULL
+            ,p_operation_callbacks    => NULL
+            ,p_operation_deprecated   => a.operation_deprecated
+            ,p_operation_security     => NULL
+            ,p_operation_servers      => NULL
+         )
+         INTO SELF
+         FROM
+         dz_swagger3_operation a
+         WHERE
+             a.versionid    = p_versionid
+         AND a.operation_id = p_operation_id;
+
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            RETURN;
+             
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
+      
+      RETURN;       
+      
+   END dz_swagger3_operation_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
