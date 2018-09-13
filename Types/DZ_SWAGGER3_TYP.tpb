@@ -253,9 +253,9 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || self.servers(i).toJSON(
-                  p_pretty_print => p_pretty_print + 1
+                  p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -542,28 +542,22 @@ AS
       IF self.servers IS NULL 
       OR self.servers.COUNT = 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'servers: null'
-            ,p_pretty_print + 1
-            ,'  '
-         );
+         NULL;
          
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'servers: '
-            ,p_pretty_print + 1
+            ,p_pretty_print
             ,'  '
          );
          
          FOR i IN 1 .. self.servers.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '- '
-               ,p_pretty_print + 1
+                '- ' || self.servers(i).toYAML(p_pretty_print + 1,'FALSE')
+               ,p_pretty_print
                ,'  '
-            ) || self.servers(i).toYAML(
-               p_pretty_print + 1
-            );
+            ) ;
             
          END LOOP;
          
@@ -573,22 +567,18 @@ AS
       -- Step 50
       -- Do the paths
       --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty_str(
+          'paths: '
+         ,p_pretty_print
+         ,'  '
+      );
+      
       IF self.paths IS NULL 
       OR self.paths.COUNT = 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'paths: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
          
       ELSE
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'paths: '
-            ,p_pretty_print
-            ,'  '
-         );
-
          ary_keys := self.paths_keys();
       
          FOR i IN 1 .. ary_keys.COUNT
@@ -609,11 +599,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components IS NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'components: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
          
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -633,11 +619,7 @@ AS
       IF self.security IS NULL 
       OR self.security.COUNT = 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'security: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
          
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -667,11 +649,7 @@ AS
       IF self.tags IS NULL 
       OR self.tags.COUNT = 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'tags: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
          
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -700,11 +678,7 @@ AS
       --------------------------------------------------------------------------
       IF self.externalDocs IS NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'externalDocs: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
       
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(

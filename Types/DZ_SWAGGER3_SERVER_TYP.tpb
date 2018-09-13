@@ -20,7 +20,7 @@ AS
    AS 
       str_url         VARCHAR2(255 Char);
       str_description VARCHAR2(255 Char);
-      ary_variables   dz_swagger3_server_var_list();
+      ary_variables   dz_swagger3_server_var_list;
       
    BEGIN 
    
@@ -31,13 +31,13 @@ AS
        str_url
       ,str_description
       FROM
-      dz_swagger_server a
+      dz_swagger3_server a
       WHERE
           a.versionid = p_versionid
       AND a.server_id = p_server_id;
       
       SELECT
-      dz_swagger3_server_variable(
+      dz_swagger3_server_var_typ(
           p_hash_key       => a.server_var_name
          ,p_enum           => dz_json_util.gz_split(
              p_str            => a.server_var_enum
@@ -49,18 +49,22 @@ AS
       )
       BULK COLLECT INTO ary_variables
       FROM
-      dz_swagger_server_variable a
+      dz_swagger3_server_variable a
       WHERE
           a.versionid = p_versionid
       AND a.server_id = p_server_id
       ORDER BY
-      a.server_var_id;
+      a.server_var_name;
       
-      RETURN dz_swagger3_server_typ(
+      SELECT dz_swagger3_server_typ(
           p_server_url         => str_url
          ,p_server_description => str_description
          ,p_server_variables   => ary_variables
-      );
+      )
+      INTO SELF
+      FROM dual;
+      
+      RETURN;
       
    END dz_swagger3_server_typ;
 
@@ -182,26 +186,22 @@ AS
       -- Step 40
       -- Add optional url 
       --------------------------------------------------------------------------
-      IF self.server_description IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'description'
-               ,self.server_description
-               ,p_pretty_print + 1
-            )
+      clb_output := clb_output || dz_json_util.pretty(
+          str_pad1 || dz_json_main.value2json(
+             'description'
+            ,self.server_description
             ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-
-      END IF;
+         )
+         ,p_pretty_print + 1
+      );
+      str_pad1 := ',';
       
       --------------------------------------------------------------------------
       -- Step 50
       -- Add optional variables map
       --------------------------------------------------------------------------
-      IF  self.server_variables IS NULL 
-      AND self.server_variables.COUNT = 0
+      IF self.server_variables IS NULL 
+      OR self.server_variables.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -273,11 +273,13 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;
       ary_keys          MDSYS.SDO_STRING2_ARRAY;
+      int_pretty_print  INTEGER := p_pretty_print;
       
    BEGIN
    
@@ -285,17 +287,22 @@ AS
       -- Step 10
       -- Check incoming parameters
       --------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         int_pretty_print := 0;
+       
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Write the url item
+      -- Write the url item, note the dumn handling if object array
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           'url: ' || dz_swagger3_util.yaml_text(
              self.server_url
             ,p_pretty_print
          )
-         ,p_pretty_print
+         ,int_pretty_print
          ,'  '
       );
       
@@ -303,8 +310,11 @@ AS
       -- Step 30
       -- Write the optional description item
       --------------------------------------------------------------------------
-      IF self.server_description IS NOT NULL
+      IF self.server_description IS NULL
       THEN
+         NULL;
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'description: ' || dz_swagger3_util.yaml_text(
                 self.server_description
@@ -321,11 +331,14 @@ AS
       -- Write the optional variables map
       --------------------------------------------------------------------------
       IF  self.server_variables IS NULL 
-      AND self.server_variables.COUNT = 0
+      OR self.server_variables.COUNT = 0
       THEN
+         NULL;
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'variables: '
-            ,p_pretty_print + 1
+            ,p_pretty_print
             ,'  '
          );
          
@@ -349,7 +362,7 @@ AS
       -- Step 50
       -- Cough it out without final line feed
       --------------------------------------------------------------------------
-      RETURN clb_output;
+      RETURN REGEXP_REPLACE(clb_output,CHR(10) || '$','');
       
    END toYAML;
    

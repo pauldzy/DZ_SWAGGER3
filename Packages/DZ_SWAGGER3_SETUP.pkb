@@ -217,7 +217,6 @@ AS
               || '    server_id           VARCHAR2(255 Char) NOT NULL '
               || '   ,server_url          VARCHAR2(255 Char) NOT NULL '
               || '   ,server_description  VARCHAR2(4000 Char) '
-              || '   ,server_variables    CLOB '
               || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
@@ -249,8 +248,6 @@ AS
               || '   ,CONSTRAINT dz_swagger3_server_c02 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT ensure_json '
-              || '    CHECK(server_variables IS JSON) '
               || ') ';
               
       EXECUTE IMMEDIATE str_sql;
@@ -261,9 +258,9 @@ AS
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_server_variable('
               || '    server_id              VARCHAR2(255 Char) NOT NULL '
-              || '    server_var_name        VARCHAR2(255 Char) NOT NULL '
+              || '   ,server_var_name        VARCHAR2(255 Char) NOT NULL '
               || '   ,server_var_enum        VARCHAR2(4000 Char) '
-              || '    server_var_default     VARCHAR2(255 Char) NOT NULL '
+              || '   ,server_var_default     VARCHAR2(255 Char) NOT NULL '
               || '   ,server_var_description VARCHAR2(4000 Char) '
               || '   ,versionid              VARCHAR2(40 Char) NOT NULL '
               || ') ';

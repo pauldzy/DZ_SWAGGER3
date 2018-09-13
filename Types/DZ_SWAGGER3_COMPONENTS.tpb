@@ -305,6 +305,32 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER FUNCTION isNULL
+   RETURN VARCHAR2
+   AS
+   BEGIN
+   
+      IF  (self.components_schemas         IS NULL OR self.components_schemas.COUNT = 0 )
+      AND (self.components_responses       IS NULL OR self.components_responses.COUNT = 0 )
+      AND (self.components_parameters      IS NULL OR self.components_parameters.COUNT = 0 )
+      AND (self.components_examples        IS NULL OR self.components_examples.COUNT = 0 )
+      AND (self.components_requestBodies   IS NULL OR self.components_requestBodies.COUNT = 0 )
+      AND (self.components_headers         IS NULL OR self.components_headers.COUNT = 0 )
+      AND (self.components_securitySchemes IS NULL OR self.components_securitySchemes.COUNT = 0 )
+      AND (self.components_links           IS NULL OR self.components_links.COUNT = 0 )
+      AND (self.components_callbacks       IS NULL OR self.components_callbacks.COUNT = 0 )
+      THEN
+         RETURN 'TRUE';
+         
+      ELSE
+         RETURN 'FALSE';
+         
+      END IF;
+   
+   END isNULL;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print     IN  INTEGER  DEFAULT NULL
    ) RETURN CLOB
