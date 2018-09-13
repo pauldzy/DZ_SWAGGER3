@@ -7,7 +7,17 @@ AS
    RETURN SELF AS RESULT 
    AS 
    BEGIN 
-      RETURN; 
+      self.components_schemas         := dz_swagger3_schema_list();
+      self.components_responses       := dz_swagger3_response_list();
+      self.components_parameters      := dz_swagger3_parameter_list();
+      self.components_examples        := dz_swagger3_example_list();
+      self.components_requestBodies   := dz_swagger3_requestBody_list();
+      self.components_headers         := dz_swagger3_header_list();
+      self.components_securitySchemes := dz_swagger3_securitySchem_list();
+      self.components_links           := dz_swagger3_link_list();
+      self.components_callbacks       := dz_swagger3_callback_list();
+      
+      RETURN;
       
    END dz_swagger3_components;
 
@@ -334,12 +344,12 @@ AS
       -- Step 30
       -- Add schemas map
       --------------------------------------------------------------------------
-      IF self.components_schemas IS NOT NULL
-      AND self.components_schemas.COUNT > 0
+      IF self.components_schemas IS NULL
+      OR self.components_schemas.COUNT = 0
       THEN
          clb_hash := 'null';
       
-       ELSE
+      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -390,12 +400,12 @@ AS
       -- Step 40
       -- Add responses map
       --------------------------------------------------------------------------
-      IF self.components_responses IS NOT NULL
-      AND self.components_responses.COUNT > 0
+      IF self.components_responses IS NULL
+      OR self.components_responses.COUNT = 0
       THEN
          clb_hash := 'null';
       
-       ELSE
+      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -446,12 +456,12 @@ AS
       -- Step 50
       -- Add parameters map
       --------------------------------------------------------------------------
-      IF self.components_parameters IS NOT NULL
-      AND self.components_parameters.COUNT > 0
+      IF self.components_parameters IS NULL
+      OR self.components_parameters.COUNT = 0
       THEN
          clb_hash := 'null';
       
-       ELSE
+      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -502,12 +512,12 @@ AS
       -- Step 60
       -- Add examples map
       --------------------------------------------------------------------------
-      IF self.components_examples IS NOT NULL
-      AND self.components_examples.COUNT > 0
+      IF self.components_examples IS NULL
+      OR self.components_examples.COUNT = 0
       THEN
          clb_hash := 'null';
       
-       ELSE
+      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -558,12 +568,12 @@ AS
       -- Step 70
       -- Add requestBodies map
       --------------------------------------------------------------------------
-      IF self.components_requestBodies IS NOT NULL
-      AND self.components_requestBodies.COUNT > 0
+      IF self.components_requestBodies IS NULL
+      OR self.components_requestBodies.COUNT = 0
       THEN
          clb_hash := 'null';
       
-       ELSE
+      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -614,12 +624,12 @@ AS
       -- Step 80
       -- Add headers map
       --------------------------------------------------------------------------
-      IF self.components_headers IS NOT NULL
-      AND self.components_headers.COUNT > 0
+      IF self.components_headers IS NULL
+      OR self.components_headers.COUNT = 0
       THEN
          clb_hash := 'null';
       
-       ELSE
+      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -670,12 +680,12 @@ AS
       -- Step 90
       -- Add headers map
       --------------------------------------------------------------------------
-      IF self.components_securitySchemes IS NOT NULL
-      AND self.components_securitySchemes.COUNT > 0
+      IF self.components_securitySchemes IS NULL
+      OR self.components_securitySchemes.COUNT = 0
       THEN
          clb_hash := 'null';
       
-       ELSE
+      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -726,12 +736,12 @@ AS
       -- Step 100
       -- Add links map
       --------------------------------------------------------------------------
-      IF self.components_links IS NOT NULL
-      AND self.components_links.COUNT > 0
+      IF self.components_links IS NULL
+      OR self.components_links.COUNT = 0
       THEN
          clb_hash := 'null';
       
-       ELSE
+      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -782,12 +792,12 @@ AS
       -- Step 110
       -- Add callbacks map
       --------------------------------------------------------------------------
-      IF self.components_callbacks IS NOT NULL
-      AND self.components_callbacks.COUNT > 0
+      IF self.components_callbacks IS NULL
+      OR self.components_callbacks.COUNT = 0
       THEN
          clb_hash := 'null';
       
-       ELSE
+      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -872,8 +882,15 @@ AS
       -- Write the component schemas
       --------------------------------------------------------------------------
       IF  self.components_schemas IS NULL 
-      AND self.components_schemas.COUNT = 0
+      OR self.components_schemas.COUNT = 0
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'schemas: null'
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'schemas: '
             ,p_pretty_print
@@ -900,9 +917,16 @@ AS
       -- Step 30
       -- Write the component responses
       --------------------------------------------------------------------------
-      IF  self.components_responses IS NULL 
-      AND self.components_responses.COUNT = 0
+      IF self.components_responses IS NULL 
+      OR self.components_responses.COUNT = 0
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'responses: null'
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'responses: '
             ,p_pretty_print
@@ -929,9 +953,16 @@ AS
       -- Step 40
       -- Write the component parameters
       --------------------------------------------------------------------------
-      IF  self.components_parameters IS NULL 
-      AND self.components_parameters.COUNT = 0
+      IF self.components_parameters IS NULL 
+      OR self.components_parameters.COUNT = 0
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'parameters: null'
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'parameters: '
             ,p_pretty_print
@@ -958,9 +989,16 @@ AS
       -- Step 50
       -- Write the component examples
       --------------------------------------------------------------------------
-      IF  self.components_examples IS NULL 
-      AND self.components_examples.COUNT = 0
+      IF self.components_examples IS NULL 
+      OR self.components_examples.COUNT = 0
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'examples: null'
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'examples: '
             ,p_pretty_print
@@ -987,9 +1025,16 @@ AS
       -- Step 60
       -- Write the component requestBodies
       --------------------------------------------------------------------------
-      IF  self.components_requestBodies IS NULL 
-      AND self.components_requestBodies.COUNT = 0
+      IF self.components_requestBodies IS NULL 
+      OR self.components_requestBodies.COUNT = 0
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'requestBodies: null'
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'requestBodies: '
             ,p_pretty_print
@@ -1016,9 +1061,16 @@ AS
       -- Step 70
       -- Write the component headers
       --------------------------------------------------------------------------
-      IF  self.components_headers IS NULL 
-      AND self.components_headers.COUNT = 0
+      IF self.components_headers IS NULL 
+      OR self.components_headers.COUNT = 0
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'headers: null'
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'headers: '
             ,p_pretty_print
@@ -1045,9 +1097,16 @@ AS
       -- Step 80
       -- Write the component securitySchemes
       --------------------------------------------------------------------------
-      IF  self.components_securitySchemes IS NULL 
-      AND self.components_securitySchemes.COUNT = 0
+      IF self.components_securitySchemes IS NULL 
+      OR self.components_securitySchemes.COUNT = 0
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'securitySchemes: null'
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'securitySchemes: '
             ,p_pretty_print
@@ -1074,9 +1133,16 @@ AS
       -- Step 90
       -- Write the component links
       --------------------------------------------------------------------------
-      IF  self.components_links IS NULL 
-      AND self.components_links.COUNT = 0
+      IF self.components_links IS NULL 
+      OR self.components_links.COUNT = 0
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'links: null'
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'links: '
             ,p_pretty_print
@@ -1103,9 +1169,16 @@ AS
       -- Step 100
       -- Write the component callbacks
       --------------------------------------------------------------------------
-      IF  self.components_callbacks IS NULL 
-      AND self.components_callbacks.COUNT = 0
+      IF self.components_callbacks IS NULL 
+      OR self.components_callbacks.COUNT = 0
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'callbacks: null'
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'callbacks: '
             ,p_pretty_print

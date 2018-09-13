@@ -44,13 +44,13 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER DEFAULT NULL
+      p_pretty_print        IN  INTEGER DEFAULT NULL
     ) RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(
-       p_pretty_print        IN  INTEGER DEFAULT NULL
+      p_pretty_print        IN  INTEGER DEFAULT 0
     ) RETURN CLOB
 
 );

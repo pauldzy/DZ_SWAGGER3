@@ -19,8 +19,9 @@ AS
       ,p_versionid           IN  VARCHAR2 DEFAULT NULL
    ) RETURN SELF AS RESULT
    AS
-      str_group_id      VARCHAR2(4000 Char);
-      str_versionid     VARCHAR2(40 Char) := p_versionid;
+      str_doc_id        VARCHAR2(4000 Char) := p_doc_id;
+      str_group_id      VARCHAR2(4000 Char) := p_group_id;
+      str_versionid     VARCHAR2(40 Char)   := p_versionid;
 
    BEGIN
 
@@ -28,12 +29,9 @@ AS
       -- Step 10
       -- Check over incoming parameters
       --------------------------------------------------------------------------
-      IF p_group_id IS NULL
+      IF str_group_id IS NULL
       THEN
-         str_group_id := p_doc_id;
-
-      ELSE
-         str_group_id := p_group_id;
+         str_group_id := str_doc_id;
 
       END IF;
 
@@ -67,14 +65,20 @@ AS
       -- Load the info object
       --------------------------------------------------------------------------
       self.info := dz_swagger3_info(
-          p_doc_id    => p_doc_id
-         ,p_versionid => p_versionid
+          p_doc_id    => str_doc_id
+         ,p_versionid => str_versionid
       );
       
       --------------------------------------------------------------------------
       -- Step 40
-      -- Load the paths
+      -- Load the servers
       --------------------------------------------------------------------------
+      self.servers      := dz_swagger3_server_list();
+      self.paths        := dz_swagger3_path_list();
+      self.components   := dz_swagger3_components();
+      self.security     := dz_swagger3_security_req_list();
+      self.tags         := dz_swagger3_tag_list();
+      self.externalDocs := NULL;
 
       RETURN;
 
@@ -147,7 +151,7 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print      IN  INTEGER   DEFAULT NULL
+      p_pretty_print      IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -213,8 +217,8 @@ AS
       -- Step 50
       -- Add servers
       --------------------------------------------------------------------------
-      IF  self.servers IS NULL 
-      AND self.servers.COUNT = 0
+      IF self.servers IS NULL 
+      OR self.servers.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -263,8 +267,8 @@ AS
       -- Step 60
       -- Add paths
       --------------------------------------------------------------------------
-      IF  self.paths IS NULL 
-      AND self.paths.COUNT = 0
+      IF self.paths IS NULL 
+      OR self.paths.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -279,8 +283,7 @@ AS
             clb_hash := dz_json_util.pretty('{',-1);
             
          END IF;
-      
-      
+
          ary_keys := self.paths_keys();
       
          FOR i IN 1 .. ary_keys.COUNT
@@ -338,8 +341,8 @@ AS
       -- Step 80
       -- Add security
       --------------------------------------------------------------------------
-      IF  self.security IS NULL 
-      AND self.security.COUNT = 0
+      IF self.security IS NULL 
+      OR self.security.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -388,8 +391,8 @@ AS
       -- Step 90
       -- Add tags
       --------------------------------------------------------------------------
-      IF  self.tags IS NULL 
-      AND self.tags.COUNT = 0
+      IF self.tags IS NULL 
+      OR self.tags.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -438,19 +441,24 @@ AS
       -- Step 100
       -- Add externalDocs
       --------------------------------------------------------------------------
-      IF self.externalDocs IS NOT NULL
+      IF self.externalDocs IS NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                'externalDocs'
-               ,self.externalDocs.toJSON(p_pretty_print + 1)
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+         clb_hash := 'null';
+         
+      ELSE
+         clb_hash := self.externalDocs.toJSON(p_pretty_print + 1);
 
       END IF;
+      
+      clb_output := clb_output || dz_json_util.pretty(
+          str_pad1 || dz_json_main.formatted2json(
+             'externalDocs'
+            ,clb_hash
+            ,p_pretty_print + 1
+         )
+         ,p_pretty_print + 1
+      );
+      str_pad1 := ',';
       
       --------------------------------------------------------------------------
       -- Step 110
@@ -472,7 +480,7 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-      p_pretty_print        IN  INTEGER DEFAULT NULL
+      p_pretty_print        IN  INTEGER DEFAULT 0
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -516,9 +524,16 @@ AS
       -- Step 40
       -- Write the server array
       --------------------------------------------------------------------------
-      IF  self.servers IS NOT NULL 
-      AND self.servers.COUNT > 0
+      IF self.servers IS NULL 
+      OR self.servers.COUNT = 0
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'servers: null'
+            ,p_pretty_print + 1
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'servers: '
             ,p_pretty_print + 1
@@ -543,9 +558,16 @@ AS
       -- Step 50
       -- Do the paths
       --------------------------------------------------------------------------
-      IF  self.paths IS NOT NULL 
-      AND self.paths.COUNT > 0
+      IF self.paths IS NULL 
+      OR self.paths.COUNT = 0
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'paths: null'
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'paths: '
             ,p_pretty_print
@@ -560,7 +582,7 @@ AS
                 '"' || self.paths(i).hash_key || '": '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.paths(i).toYAML(2);
+            ) || self.paths(i).toYAML(p_pretty_print + 2);
 
          END LOOP;
          
@@ -570,8 +592,15 @@ AS
       -- Step 60
       -- Write the components operation
       --------------------------------------------------------------------------
-      IF self.components IS NOT NULL
+      IF self.components IS NULL
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'components: null'
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'components: ' 
             ,p_pretty_print
@@ -586,12 +615,19 @@ AS
       -- Step 70
       -- Write the security array
       --------------------------------------------------------------------------
-      IF  self.security IS NOT NULL 
-      AND self.security.COUNT > 0
+      IF self.security IS NULL 
+      OR self.security.COUNT = 0
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
+             'security: null'
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
+         clb_output := clb_output || dz_json_util.pretty_str(
              'security: '
-            ,p_pretty_print + 1
+            ,p_pretty_print
             ,'  '
          );
          
@@ -602,7 +638,7 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.security(i).toYAML(
-               p_pretty_print + 1
+               p_pretty_print + 2
             );
             
          END LOOP;
@@ -613,12 +649,19 @@ AS
       -- Step 80
       -- Write the tags array
       --------------------------------------------------------------------------
-      IF  self.tags IS NOT NULL 
-      AND self.tags.COUNT > 0
+      IF self.tags IS NULL 
+      OR self.tags.COUNT = 0
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
+             'tags: null'
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
+         clb_output := clb_output || dz_json_util.pretty_str(
              'tags: '
-            ,p_pretty_print + 1
+            ,p_pretty_print
             ,'  '
          );
          
@@ -629,7 +672,7 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.tags(i).toYAML(
-               p_pretty_print + 1
+               p_pretty_print + 2
             );
             
          END LOOP;
@@ -640,8 +683,15 @@ AS
       -- Step 90
       -- Write the externalDocs
       --------------------------------------------------------------------------
-      IF self.externalDocs IS NOT NULL
+      IF self.externalDocs IS NULL
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'externalDocs: null'
+            ,p_pretty_print
+            ,'  '
+         );
+      
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'externalDocs: ' 
             ,p_pretty_print
