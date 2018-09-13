@@ -73,7 +73,22 @@ AS
       -- Step 40
       -- Load the servers
       --------------------------------------------------------------------------
-      self.servers      := dz_swagger3_server_list();
+      SELECT
+      dz_swagger3_server_typ(
+          p_server_id    => a.server_id
+         ,p_versionid    => str_versionid
+      )
+      BULK COLLECT INTO self.servers
+      FROM
+      dz_swagger3_server_parent_map a
+      WHERE
+          a.versionid = str_versionid
+      AND a.parent_id = str_doc_id;
+      
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Load the paths
+      --------------------------------------------------------------------------
       self.paths        := dz_swagger3_path_list();
       self.components   := dz_swagger3_components();
       self.security     := dz_swagger3_security_req_list();

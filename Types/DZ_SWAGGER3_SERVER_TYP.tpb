@@ -10,6 +10,59 @@ AS
       RETURN; 
       
    END dz_swagger3_server_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_server_typ(
+       p_server_id           IN  VARCHAR2
+      ,p_versionid           IN  VARCHAR2 DEFAULT NULL
+   ) RETURN SELF AS RESULT
+   AS 
+      str_url         VARCHAR2(255 Char);
+      str_description VARCHAR2(255 Char);
+      ary_variables   dz_swagger3_server_var_list();
+      
+   BEGIN 
+   
+      SELECT
+       a.server_url
+      ,a.server_description
+      INTO
+       str_url
+      ,str_description
+      FROM
+      dz_swagger_server a
+      WHERE
+          a.versionid = p_versionid
+      AND a.server_id = p_server_id;
+      
+      SELECT
+      dz_swagger3_server_variable(
+          p_hash_key       => a.server_var_name
+         ,p_enum           => dz_json_util.gz_split(
+             p_str            => a.server_var_enum
+            ,p_regex          => ','
+            ,p_trim           => 'TRUE'
+          )
+         ,p_default_value  => a.server_var_default
+         ,p_description    => a.server_var_description
+      )
+      BULK COLLECT INTO ary_variables
+      FROM
+      dz_swagger_server_variable a
+      WHERE
+          a.versionid = p_versionid
+      AND a.server_id = p_server_id
+      ORDER BY
+      a.server_var_id;
+      
+      RETURN dz_swagger3_server_typ(
+          p_server_url         => str_url
+         ,p_server_description => str_description
+         ,p_server_variables   => ary_variables
+      );
+      
+   END dz_swagger3_server_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

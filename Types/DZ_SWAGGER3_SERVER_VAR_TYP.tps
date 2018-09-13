@@ -1,4 +1,4 @@
-CREATE OR REPLACE TYPE dz_swagger3_server_variable FORCE
+CREATE OR REPLACE TYPE dz_swagger3_server_var_typ FORCE
 AUTHID DEFINER
 AS OBJECT (
     hash_key            VARCHAR2(255 Char)
@@ -8,12 +8,12 @@ AS OBJECT (
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_server_variable
+   ,CONSTRUCTOR FUNCTION dz_swagger3_server_var_typ
     RETURN SELF AS RESULT
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_server_variable(
+   ,CONSTRUCTOR FUNCTION dz_swagger3_server_var_typ(
        p_hash_key           IN  VARCHAR2
       ,p_enum               IN  MDSYS.SDO_STRING2_ARRAY
       ,p_default_value      IN  VARCHAR2
@@ -45,5 +45,5 @@ AS OBJECT (
 );
 /
 
-GRANT EXECUTE ON dz_swagger3_server_variable TO public;
+GRANT EXECUTE ON dz_swagger3_server_var_typ TO public;
 

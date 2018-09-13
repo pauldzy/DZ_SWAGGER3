@@ -13,9 +13,16 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_server_typ(
-       p_server_url         IN  VARCHAR2
-      ,p_server_description IN  VARCHAR2
-      ,p_server_variables   IN  dz_swagger3_server_var_list
+       p_server_id           IN  VARCHAR2
+      ,p_versionid           IN  VARCHAR2 DEFAULT NULL
+   ) RETURN SELF AS RESULT
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_server_typ(
+       p_server_url          IN  VARCHAR2
+      ,p_server_description  IN  VARCHAR2
+      ,p_server_variables    IN  dz_swagger3_server_var_list
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -31,13 +38,13 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
-      p_pretty_print        IN  INTEGER   DEFAULT NULL
+      p_pretty_print         IN  INTEGER   DEFAULT NULL
     ) RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(
-      p_pretty_print        IN  INTEGER   DEFAULT 0
+      p_pretty_print         IN  INTEGER   DEFAULT 0
    ) RETURN CLOB
 
 );

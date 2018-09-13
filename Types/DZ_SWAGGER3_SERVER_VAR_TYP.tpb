@@ -1,19 +1,19 @@
-CREATE OR REPLACE TYPE BODY dz_swagger3_server_variable
+CREATE OR REPLACE TYPE BODY dz_swagger3_server_var_typ
 AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_server_variable
+   CONSTRUCTOR FUNCTION dz_swagger3_server_var_typ
    RETURN SELF AS RESULT
    AS
    BEGIN
       RETURN;
 
-   END dz_swagger3_server_variable;
+   END dz_swagger3_server_var_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_server_variable(
+   CONSTRUCTOR FUNCTION dz_swagger3_server_var_typ(
        p_hash_key           IN  VARCHAR2
       ,p_enum               IN  MDSYS.SDO_STRING2_ARRAY
       ,p_default_value      IN  VARCHAR2
@@ -29,7 +29,7 @@ AS
 
       RETURN;
 
-   END dz_swagger3_server_variable;
+   END dz_swagger3_server_var_typ
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

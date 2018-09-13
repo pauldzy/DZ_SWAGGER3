@@ -7,6 +7,8 @@ AS
    RETURN SELF AS RESULT 
    AS 
    BEGIN 
+      self.schema_externalDocs  := dz_swagger3_extrdocs_typ();
+      
       RETURN; 
       
    END dz_swagger3_schema_typ;
