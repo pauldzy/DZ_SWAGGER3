@@ -106,8 +106,6 @@ AS
           a.versionid = str_versionid
       AND a.group_id  = str_group_id;
       
-      self.paths        := dz_swagger3_path_list();
-      
       --------------------------------------------------------------------------
       -- Step 60
       -- Load the components
@@ -219,7 +217,9 @@ AS
       ary_output := MDSYS.SDO_STRING2_ARRAY();
       FOR i IN 1 .. self.paths.COUNT
       LOOP
+         ary_output.EXTEND();
          ary_output(int_index) := self.paths(i).hash_key;
+         int_index := int_index + 1;
       
       END LOOP;
       

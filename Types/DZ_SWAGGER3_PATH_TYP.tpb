@@ -410,8 +410,8 @@ AS
       -- Step 130
       -- Add servers
       -------------------------------------------------------------------------
-      IF  self.path_servers IS NULL 
-      AND self.path_servers.COUNT = 0
+      IF self.path_servers IS NULL 
+      OR self.path_servers.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -460,8 +460,8 @@ AS
       -- Step 140
       -- Add parameters
       -------------------------------------------------------------------------
-      IF  self.path_parameters IS NULL 
-      AND self.path_parameters.COUNT = 0
+      IF self.path_parameters IS NULL 
+      OR self.path_parameters.COUNT = 0
       THEN
          clb_hash := 'null';
          

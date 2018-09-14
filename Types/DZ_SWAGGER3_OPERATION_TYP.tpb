@@ -318,8 +318,8 @@ AS
       -- Step 130
       -- Add parameters array
       --------------------------------------------------------------------------
-      IF  self.operation_parameters IS NULL 
-      AND self.operation_parameters.COUNT = 0
+      IF self.operation_parameters IS NULL 
+      OR self.operation_parameters.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -387,8 +387,8 @@ AS
       -- Step 150
       -- Add optional variables map
       --------------------------------------------------------------------------
-      IF  self.operation_responses IS NULL 
-      AND self.operation_responses.COUNT = 0
+      IF self.operation_responses IS NULL 
+      OR self.operation_responses.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -444,8 +444,8 @@ AS
       -- Step 160
       -- Add operation callbacks map
       --------------------------------------------------------------------------
-      IF  self.operation_callbacks IS NULL 
-      AND self.operation_callbacks.COUNT = 0
+      IF self.operation_callbacks IS NULL 
+      OR self.operation_callbacks.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -528,8 +528,8 @@ AS
       -- Step 180
       -- Add security array
       --------------------------------------------------------------------------
-      IF  self.operation_security IS NULL 
-      AND self.operation_security.COUNT = 0
+      IF self.operation_security IS NULL 
+      OR self.operation_security.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -578,8 +578,8 @@ AS
       -- Step 190
       -- Add server array
       --------------------------------------------------------------------------
-      IF  self.operation_servers IS NULL 
-      AND self.operation_servers.COUNT = 0
+      IF self.operation_servers IS NULL 
+      OR self.operation_servers.COUNT = 0
       THEN
          clb_hash := 'null';
          
