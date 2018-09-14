@@ -124,7 +124,9 @@ AS
       ary_output := MDSYS.SDO_STRING2_ARRAY();
       FOR i IN 1 .. self.server_variables.COUNT
       LOOP
+         ary_output.EXTEND();
          ary_output(int_index) := self.server_variables(i).hash_key;
+         int_index := int_index + 1;
       
       END LOOP;
       
@@ -223,13 +225,9 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || dz_json_main.value2json(
-                   ary_keys(i)
-                  ,self.server_variables(i).toJSON(
-                     p_pretty_print => p_pretty_print + 1
-                   )
-                  ,p_pretty_print + 1
-               )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.server_variables(i).toJSON(
+                  p_pretty_print => p_pretty_print + 2
+                )
                ,p_pretty_print + 1
             );
             str_pad2 := ',';

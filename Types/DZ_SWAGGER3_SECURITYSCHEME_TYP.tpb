@@ -286,7 +286,7 @@ AS
       IF self.scheme_type IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'type: ' || dz_swagger_util.yaml_text(
+             'type: ' || dz_swagger3_util.yaml_text(
                 self.scheme_type
                ,p_pretty_print
             )
@@ -303,7 +303,7 @@ AS
       IF self.scheme_description IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'description: ' || dz_swagger_util.yaml_text(
+             'description: ' || dz_swagger3_util.yaml_text(
                 self.scheme_description
                ,p_pretty_print
             )
@@ -320,7 +320,7 @@ AS
       IF self.scheme_name IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'name: ' || dz_swagger_util.yaml_text(
+             'name: ' || dz_swagger3_util.yaml_text(
                 self.scheme_name
                ,p_pretty_print
             )
@@ -337,7 +337,7 @@ AS
       IF self.scheme_in IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'in: ' || dz_swagger_util.yaml_text(
+             'in: ' || dz_swagger3_util.yaml_text(
                 self.scheme_in
                ,p_pretty_print
             )
@@ -354,7 +354,7 @@ AS
       IF self.scheme_auth IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'scheme: ' || dz_swagger_util.yaml_text(
+             'scheme: ' || dz_swagger3_util.yaml_text(
                 self.scheme_auth
                ,p_pretty_print
             )
@@ -371,7 +371,7 @@ AS
       IF self.scheme_bearerFormat IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'bearerFormat: ' || dz_swagger_util.yaml_text(
+             'bearerFormat: ' || dz_swagger3_util.yaml_text(
                 self.scheme_bearerFormat
                ,p_pretty_print
             )
@@ -404,7 +404,7 @@ AS
       IF self.scheme_openIdConnectUrl IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'openIdConnectUrl: ' || dz_swagger_util.yaml_text(
+             'openIdConnectUrl: ' || dz_swagger3_util.yaml_text(
                 self.scheme_openIdConnectUrl
                ,p_pretty_print
             )

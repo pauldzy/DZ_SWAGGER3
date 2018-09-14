@@ -368,13 +368,9 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || dz_json_main.value2json(
-                   ary_keys(i)
-                  ,self.paths(i).toJSON(
-                     p_pretty_print => p_pretty_print + 1
-                   )
-                  ,p_pretty_print + 1
-               )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.paths(i).toJSON(
+                  p_pretty_print => p_pretty_print + 2
+                )
                ,p_pretty_print + 1
             );
             str_pad2 := ',';

@@ -83,7 +83,9 @@ AS
       ary_output := MDSYS.SDO_STRING2_ARRAY();
       FOR i IN 1 .. self.encoding_headers.COUNT
       LOOP
+         ary_output.EXTEND();
          ary_output(int_index) := self.encoding_headers(i).hash_key;
+         int_index := int_index + 1;
       
       END LOOP;
       
@@ -173,13 +175,9 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || dz_json_main.value2json(
-                   ary_keys(i)
-                  ,self.encoding_headers(i).toJSON(
-                     p_pretty_print => p_pretty_print + 1
-                   )
-                  ,p_pretty_print + 1
-               )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.encoding_headers(i).toJSON(
+                  p_pretty_print => p_pretty_print + 2
+                )
                ,p_pretty_print + 1
             );
             str_pad2 := ',';
@@ -207,7 +205,6 @@ AS
       -- Step 50
       -- Add optional summary
       --------------------------------------------------------------------------
-      str_pad1 := str_pad;
       IF self.encoding_style IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty(
@@ -316,7 +313,7 @@ AS
       IF self.encoding_contentType IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'contentType: ' || dz_swagger_util.yaml_text(
+             'contentType: ' || dz_swagger3_util.yaml_text(
                 self.encoding_contentType
                ,p_pretty_print
             )
@@ -362,7 +359,7 @@ AS
       IF self.encoding_style IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'style: ' || dz_swagger_util.yaml_text(
+             'style: ' || dz_swagger3_util.yaml_text(
                 self.encoding_style
                ,p_pretty_print
             )
