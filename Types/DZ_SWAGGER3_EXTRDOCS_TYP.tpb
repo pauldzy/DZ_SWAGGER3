@@ -14,14 +14,14 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_extrdocs_typ(
-       p_doc_description   IN  VARCHAR2
-      ,p_doc_url           IN  VARCHAR2
+       p_externaldoc_description IN  VARCHAR2
+      ,p_externaldoc_url         IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.doc_description    := p_doc_description;
-      self.doc_url            := p_doc_url;
+      self.externaldoc_description := p_externaldoc_description;
+      self.externaldoc_url         := p_externaldoc_url;
       
       RETURN; 
       
@@ -34,7 +34,7 @@ AS
    AS
    BEGIN
    
-      IF self.doc_description IS NOT NULL
+      IF self.externaldoc_description IS NOT NULL
       THEN
          RETURN 'FALSE';
          
@@ -80,7 +80,7 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           ' ' || dz_json_main.value2json(
              'description'
-            ,self.doc_description
+            ,self.externaldoc_description
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1
@@ -90,12 +90,12 @@ AS
       -- Step 40
       -- Add optional url 
       --------------------------------------------------------------------------
-      IF self.doc_url IS NOT NULL
+      IF self.externaldoc_url IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              ',' || dz_json_main.value2json(
                 'url'
-               ,self.doc_url
+               ,self.externaldoc_url
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -141,7 +141,7 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           'description: ' || dz_swagger_util.yaml_text(
-             self.doc_description
+             self.externaldoc_description
             ,p_pretty_print
          )
          ,p_pretty_print
@@ -152,11 +152,11 @@ AS
       -- Step 30
       -- Write the optional license url
       --------------------------------------------------------------------------
-      IF self.doc_url IS NOT NULL
+      IF self.externaldoc_url IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'url: ' || dz_swagger_util.yaml_text(
-                self.doc_url
+                self.externaldoc_url
                ,p_pretty_print
             )
             ,p_pretty_print

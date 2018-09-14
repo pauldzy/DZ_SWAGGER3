@@ -1,8 +1,8 @@
 CREATE OR REPLACE TYPE dz_swagger3_extrdocs_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    doc_description      VARCHAR2(4000 Char)
-   ,doc_url              VARCHAR2(255 Char)
+    externaldoc_description  VARCHAR2(4000 Char)
+   ,externaldoc_url          VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -12,8 +12,8 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_extrdocs_typ(
-       p_doc_description   IN  VARCHAR2
-      ,p_doc_url           IN  VARCHAR2
+       p_externaldoc_description IN  VARCHAR2
+      ,p_externaldoc_url         IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------

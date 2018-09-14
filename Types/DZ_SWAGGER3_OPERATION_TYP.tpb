@@ -31,7 +31,7 @@ AS
             ,p_operation_tags         => NULL
             ,p_operation_summary      => a.operation_summary
             ,p_operation_description  => a.operation_description
-            ,p_operation_externalDocs => a.operation_externalDocs_id
+            ,p_operation_externalDocs => NULL
             ,p_operation_operationID  => a.operation_operationID
             ,p_operation_parameters   => NULL
             ,p_operation_requestBody  => NULL
