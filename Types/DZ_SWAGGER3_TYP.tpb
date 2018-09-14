@@ -116,12 +116,17 @@ AS
       BEGIN
          SELECT
          dz_swagger3_extrdocs_typ(
-             p_doc_description  => a.doc_description
-            ,p_doc_url          => a.doc_url
+             p_externaldoc_description  => b.externaldoc_description
+            ,p_externaldoc_url          => b.externaldoc_url
          )
          INTO self.externalDocs
          FROM
          dz_swagger3_doc a
+         JOIN
+         dz_swagger3_externaldoc b
+         ON
+             a.versionid = b.versionid
+         AND a.doc_externaldocs_id = b.externaldoc_id
          WHERE
              a.versionid = str_versionid
          AND a.doc_id = str_doc_id;
