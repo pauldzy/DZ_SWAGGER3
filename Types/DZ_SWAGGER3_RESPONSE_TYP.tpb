@@ -81,8 +81,10 @@ AS
       ary_output := MDSYS.SDO_STRING2_ARRAY();
       FOR i IN 1 .. self.response_headers.COUNT
       LOOP
+         ary_output.EXTEND();
          ary_output(int_index) := self.response_headers(i).hash_key;
-      
+         int_index := int_index + 1;
+         
       END LOOP;
       
       RETURN ary_output;
@@ -109,8 +111,10 @@ AS
       ary_output := MDSYS.SDO_STRING2_ARRAY();
       FOR i IN 1 .. self.response_content.COUNT
       LOOP
+         ary_output.EXTEND();
          ary_output(int_index) := self.response_content(i).hash_key;
-      
+         int_index := int_index + 1;
+         
       END LOOP;
       
       RETURN ary_output;
@@ -137,8 +141,10 @@ AS
       ary_output := MDSYS.SDO_STRING2_ARRAY();
       FOR i IN 1 .. self.response_links.COUNT
       LOOP
+         ary_output.EXTEND();
          ary_output(int_index) := self.response_links(i).hash_key;
-      
+         int_index := int_index + 1;
+         
       END LOOP;
       
       RETURN ary_output;
@@ -227,13 +233,9 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || dz_json_main.value2json(
-                   ary_keys(i)
-                  ,self.response_headers(i).toJSON(
-                     p_pretty_print => p_pretty_print + 1
-                   )
-                  ,p_pretty_print + 1
-               )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.response_headers(i).toJSON(
+                  p_pretty_print => p_pretty_print + 2
+                )
                ,p_pretty_print + 1
             );
             str_pad2 := ',';
@@ -284,13 +286,9 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || dz_json_main.value2json(
-                   ary_keys(i)
-                  ,self.response_content(i).toJSON(
-                     p_pretty_print => p_pretty_print + 1
-                   )
-                  ,p_pretty_print + 1
-               )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.response_content(i).toJSON(
+                  p_pretty_print => p_pretty_print + 2
+                )
                ,p_pretty_print + 1
             );
             str_pad2 := ',';
@@ -341,13 +339,9 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || dz_json_main.value2json(
-                   ary_keys(i)
-                  ,self.response_links(i).toJSON(
-                     p_pretty_print => p_pretty_print + 1
-                   )
-                  ,p_pretty_print + 1
-               )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.response_links(i).toJSON(
+                  p_pretty_print => p_pretty_print + 2
+                )
                ,p_pretty_print + 1
             );
             str_pad2 := ',';

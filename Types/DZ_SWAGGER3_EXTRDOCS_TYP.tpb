@@ -140,7 +140,7 @@ AS
       -- Write the yaml description
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
-          'description: ' || dz_swagger_util.yaml_text(
+          'description: ' || dz_swagger3_util.yaml_text(
              self.externaldoc_description
             ,p_pretty_print
          )
@@ -155,7 +155,7 @@ AS
       IF self.externaldoc_url IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'url: ' || dz_swagger_util.yaml_text(
+             'url: ' || dz_swagger3_util.yaml_text(
                 self.externaldoc_url
                ,p_pretty_print
             )
