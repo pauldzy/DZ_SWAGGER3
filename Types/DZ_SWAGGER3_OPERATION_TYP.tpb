@@ -625,7 +625,7 @@ AS
       -- Add the left bracket
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
-          ']'
+          '}'
          ,p_pretty_print,NULL,NULL
       );
       
@@ -716,7 +716,8 @@ AS
       -- Step 50
       -- Write the description
       --------------------------------------------------------------------------
-      IF self.operation_externalDocs.isNULL() = 'FALSE'
+      IF  self.operation_externalDocs IS NOT NULL
+      AND self.operation_externalDocs.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'externalDocs: ' 
@@ -749,9 +750,12 @@ AS
       -- Step 70
       -- Write the parameters map
       --------------------------------------------------------------------------
-      IF  self.operation_parameters IS NULL 
-      AND self.operation_parameters.COUNT = 0
+      IF self.operation_parameters IS NULL 
+      OR self.operation_parameters.COUNT = 0
       THEN
+         NULL;
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'parameters: '
             ,p_pretty_print + 1
@@ -776,7 +780,8 @@ AS
       -- Step 80
       -- Write the requestBody
       --------------------------------------------------------------------------
-      IF self.operation_requestBody.isNULL() = 'FALSE'
+      IF  self.operation_requestBody IS NOT NULL
+      AND self.operation_requestBody.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'requestBody: ' 
@@ -792,9 +797,12 @@ AS
       -- Step 90
       -- Write the optional variables map
       --------------------------------------------------------------------------
-      IF  self.operation_callbacks IS NULL 
-      AND self.operation_callbacks.COUNT = 0
+      IF self.operation_callbacks IS NULL 
+      OR self.operation_callbacks.COUNT = 0
       THEN
+         NULL;
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'callbacks: '
             ,p_pretty_print + 1
@@ -835,9 +843,12 @@ AS
       -- Step 110
       -- Write the security array
       --------------------------------------------------------------------------
-      IF  self.operation_security IS NULL 
-      AND self.operation_security.COUNT = 0
+      IF self.operation_security IS NULL 
+      OR self.operation_security.COUNT = 0
       THEN
+         NULL;
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'security: '
             ,p_pretty_print + 1
@@ -862,9 +873,12 @@ AS
       -- Step 120
       -- Write the servers arrya
       --------------------------------------------------------------------------
-      IF  self.operation_servers IS NULL 
-      AND self.operation_servers.COUNT = 0
+      IF self.operation_servers IS NULL 
+      OR self.operation_servers.COUNT = 0
       THEN
+         NULL;
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'servers: '
             ,p_pretty_print + 1

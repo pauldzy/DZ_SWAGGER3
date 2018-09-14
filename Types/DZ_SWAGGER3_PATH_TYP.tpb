@@ -407,7 +407,7 @@ AS
       IF self.path_servers IS NULL 
       OR self.path_servers.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -438,18 +438,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
-      END IF;
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'servers'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'servers'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
+      END IF;
+
       -------------------------------------------------------------------------
       -- Step 140
       -- Add parameters
@@ -457,7 +457,7 @@ AS
       IF self.path_parameters IS NULL 
       OR self.path_parameters.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -477,7 +477,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.parameters(i).toJSON(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.path_parameters(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
                ,p_pretty_print + 1
@@ -491,18 +491,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
-      END IF;
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'parameters'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'parameters'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
- 
+      END IF;
+
       -------------------------------------------------------------------------
       -- Step 150
       -- Add the left bracket
@@ -574,7 +574,8 @@ AS
       -- Step 40
       -- Write the get operation
       -------------------------------------------------------------------------
-      IF self.path_get_operation.isNULL() = 'FALSE'
+      IF  self.path_get_operation IS NOT NULL
+      AND self.path_get_operation.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'get: ' 
@@ -590,7 +591,8 @@ AS
       -- Step 50
       -- Write the get operation
       -------------------------------------------------------------------------
-      IF self.path_put_operation.isNULL() = 'FALSE'
+      IF  self.path_put_operation IS NOT NULL
+      AND self.path_put_operation.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'put: ' 
@@ -606,7 +608,8 @@ AS
       -- Step 60
       -- Write the post operation
       -------------------------------------------------------------------------
-      IF self.path_post_operation.isNULL() = 'FALSE'
+      IF  self.path_post_operation IS NOT NULL
+      AND self.path_post_operation.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'post: ' 
@@ -622,7 +625,8 @@ AS
       -- Step 70
       -- Write the delete operation
       -------------------------------------------------------------------------
-      IF self.path_delete_operation.isNULL() = 'FALSE'
+      IF  self.path_delete_operation IS NOT NULL
+      AND self.path_delete_operation.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'delete: ' 
@@ -638,7 +642,8 @@ AS
       -- Step 80
       -- Write the options operation
       -------------------------------------------------------------------------
-      IF self.path_options_operation.isNULL() = 'FALSE'
+      IF  self.path_options_operation IS NOT NULL
+      AND self.path_options_operation.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'options: ' 
@@ -654,7 +659,8 @@ AS
       -- Step 90
       -- Write the head operation
       -------------------------------------------------------------------------
-      IF self.path_head_operation.isNULL() = 'FALSE'
+      IF  self.path_head_operation IS NOT NULL
+      AND self.path_head_operation.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'head: ' 
@@ -670,7 +676,8 @@ AS
       -- Step 100
       -- Write the patch operation
       -------------------------------------------------------------------------
-      IF self.path_patch_operation.isNULL() = 'FALSE'
+      IF  self.path_patch_operation IS NOT NULL
+      AND self.path_patch_operation.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'patch: ' 
@@ -686,7 +693,8 @@ AS
       -- Step 110
       -- Write the trace operation
       -------------------------------------------------------------------------
-      IF self.path_trace_operation.isNULL() = 'FALSE'
+      IF  self.path_trace_operation IS NOT NULL
+      AND self.path_trace_operation.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'trace: ' 
@@ -729,8 +737,8 @@ AS
       -- Step 130
       -- Write the parameters map
       -------------------------------------------------------------------------
-      IF  self.path_parameters IS NULL 
-      AND self.path_parameters.COUNT = 0
+      IF  self.path_parameters IS NOT NULL 
+      AND self.path_parameters.COUNT > 0
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'parameters: '
