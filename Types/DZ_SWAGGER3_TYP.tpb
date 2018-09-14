@@ -89,6 +89,23 @@ AS
       -- Step 50
       -- Load the paths
       --------------------------------------------------------------------------
+      SELECT
+      dz_swagger3_path_typ(
+          p_path_id    => b.path_id
+         ,p_versionid  => str_versionid
+      )
+      BULK COLLECT INTO self.paths
+      FROM
+      dz_swagger3_group a
+      JOIN
+      dz_swagger3_path b
+      ON
+          a.versionid = b.versionid
+      AND a.path_id   = b.path_id
+      WHERE
+          a.versionid = str_versionid
+      AND a.group_id  = str_group_id;
+      
       self.paths        := dz_swagger3_path_list();
       
       --------------------------------------------------------------------------
