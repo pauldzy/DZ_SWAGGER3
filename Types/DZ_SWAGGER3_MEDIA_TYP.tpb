@@ -10,13 +10,56 @@ AS
       RETURN; 
       
    END dz_swagger3_media_typ;
+   
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_media_typ(
+       p_media_id                IN  VARCHAR2
+      ,p_media_type              IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+   ) RETURN SELF AS RESULT
+   AS 
+   BEGIN
+   
+      BEGIN
+         SELECT
+         dz_swagger3_media_typ(
+             p_hash_key              => p_media_type
+            ,p_media_schema          => NULL
+            ,p_media_example_string  => a.media_example_string
+            ,p_media_example_number  => a.media_example_number
+            ,p_media_examples        => NULL
+            ,p_media_encoding        => NULL
+         )
+         INTO SELF
+         FROM
+         dz_swagger3_media a
+         WHERE
+             a.versionid = p_versionid
+         AND a.media_id  = p_media_id;
+         
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
+   
+      RETURN; 
+      
+   END dz_swagger3_media_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_media_typ(
        p_hash_key                IN  VARCHAR2
       ,p_media_schema            IN  dz_swagger3_schema_typ
-      ,p_media_example           IN  VARCHAR2
+      ,p_media_example_string    IN  VARCHAR2
+      ,p_media_example_number    IN  NUMBER
       ,p_media_examples          IN  dz_swagger3_example_list
       ,p_media_encoding          IN  dz_swagger3_encoding_list
    ) RETURN SELF AS RESULT 
@@ -25,7 +68,8 @@ AS
    
       self.hash_key                := p_hash_key;
       self.media_schema            := p_media_schema;
-      self.media_example           := p_media_example;
+      self.media_example_string    := p_media_example_string;
+      self.media_example_number    := p_media_example_number;
       self.media_examples          := p_media_examples;
       self.media_encoding          := p_media_encoding;
       
@@ -157,11 +201,12 @@ AS
          
       END IF;
       
+      str_pad1 := str_pad;
+      
       --------------------------------------------------------------------------
       -- Step 30
       -- Add optional description
       --------------------------------------------------------------------------
-      str_pad1 := str_pad;
       IF self.media_schema.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty(
@@ -180,12 +225,24 @@ AS
       -- Step 40
       -- Add optional description 
       --------------------------------------------------------------------------
-      IF self.media_example IS NOT NULL
+      IF self.media_example_string IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
                 'example'
-               ,self.media_example
+               ,self.media_example_string
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
+      ELSIF self.media_example_number IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'example'
+               ,self.media_example_number
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -335,7 +392,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Write the yaml description
+      -- Write the yaml schema object
       --------------------------------------------------------------------------
       IF self.media_schema IS NOT NULL
       THEN
@@ -351,13 +408,24 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 30
-      -- Write the yaml description
+      -- Write the yaml example item
       --------------------------------------------------------------------------
-      IF self.media_example IS NOT NULL
+      IF self.media_example_string IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'example: ' || dz_swagger_util.yaml_text(
-                self.media_example
+                self.media_example_string
+               ,p_pretty_print
+            )
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSIF self.media_example_number IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'example: ' || dz_swagger_util.yaml_text(
+                self.media_example_number
                ,p_pretty_print
             )
             ,p_pretty_print

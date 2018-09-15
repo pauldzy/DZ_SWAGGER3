@@ -738,10 +738,11 @@ AS
       -- Build MEDIA table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_media('
-              || '    media_id            VARCHAR2(255 Char) NOT NULL '
-              || '   ,media_schema_id     VARCHAR2(255 Char) NOT NULL '
-              || '   ,media_example       VARCHAR2(255 Char) '
-              || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
+              || '    media_id              VARCHAR2(255 Char) NOT NULL '
+              || '   ,media_schema_id       VARCHAR2(255 Char) NOT NULL '
+              || '   ,media_example_string  VARCHAR2(4000 Char) '
+              || '   ,media_example_number  NUMBER '
+              || '   ,versionid             VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
