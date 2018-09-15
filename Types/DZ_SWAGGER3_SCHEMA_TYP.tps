@@ -19,12 +19,19 @@ AS OBJECT (
    ,xml_attribute        VARCHAR2(5 Char)
    ,xml_wrapped          VARCHAR2(5 Char)
    ,schema_properties    dz_swagger3_property_list
-   ,dummy                INTEGER
+   ,schema_scalar        VARCHAR2(255 Char)
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_schema_typ
     RETURN SELF AS RESULT
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
+       p_schema_id            IN  VARCHAR2
+      ,p_versionid            IN  VARCHAR2
+   ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

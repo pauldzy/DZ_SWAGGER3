@@ -19,9 +19,10 @@ AS
       ,p_versionid           IN  VARCHAR2 DEFAULT NULL
    ) RETURN SELF AS RESULT
    AS
-      str_doc_id        VARCHAR2(4000 Char) := p_doc_id;
-      str_group_id      VARCHAR2(4000 Char) := p_group_id;
-      str_versionid     VARCHAR2(40 Char)   := p_versionid;
+      str_doc_id          VARCHAR2(4000 Char) := p_doc_id;
+      str_group_id        VARCHAR2(4000 Char) := p_group_id;
+      str_versionid       VARCHAR2(40 Char)   := p_versionid;
+      str_externaldocs_id VARCHAR2(255 Char);
 
    BEGIN
 
@@ -62,12 +63,36 @@ AS
 
       --------------------------------------------------------------------------
       -- Step 30
-      -- Load the info object
+      -- Load the info object and externalDocs object
       --------------------------------------------------------------------------
-      self.info := dz_swagger3_info(
-          p_doc_id    => str_doc_id
-         ,p_versionid => str_versionid
-      );
+      SELECT
+       dz_swagger3_info(
+          p_info_title          => a.info_title
+         ,p_info_description    => a.info_description
+         ,p_info_termsofservice => a.info_termsofservice
+         ,p_info_contact        => dz_swagger3_info_contact(
+             p_contact_name  => a.info_contact_name
+            ,p_contact_url   => a.info_contact_url
+            ,p_contact_email => a.info_contact_email
+          )
+         ,p_info_license        => dz_swagger3_info_license(
+             p_license_name  => a.info_license_name
+            ,p_license_url   => a.info_license_url
+          )
+         ,p_info_version        => a.info_version
+       )
+      ,dz_swagger3_extrdocs_typ(
+          p_externaldoc_id      => a.doc_externaldocs_id
+         ,p_versionid           => str_versionid
+       )
+      INTO 
+       self.info
+      ,self.externalDocs
+      FROM
+      dz_swagger3_doc a
+      WHERE
+          a.versionid  = str_versionid
+      AND a.doc_id     = str_doc_id;
       
       --------------------------------------------------------------------------
       -- Step 40
@@ -126,37 +151,8 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 90
-      -- Load the externalDocs
+      -- Return the completed object
       --------------------------------------------------------------------------
-      BEGIN
-         SELECT
-         dz_swagger3_extrdocs_typ(
-             p_externaldoc_description  => b.externaldoc_description
-            ,p_externaldoc_url          => b.externaldoc_url
-         )
-         INTO self.externalDocs
-         FROM
-         dz_swagger3_doc a
-         JOIN
-         dz_swagger3_externaldoc b
-         ON
-             a.versionid = b.versionid
-         AND a.doc_externaldocs_id = b.externaldoc_id
-         WHERE
-             a.versionid = str_versionid
-         AND a.doc_id = str_doc_id;
-      
-      EXCEPTION
-         WHEN NO_DATA_FOUND
-         THEN
-            self.externalDocs := NULL;
-            
-         WHEN OTHERS
-         THEN
-            RAISE;
-            
-      END;
-
       RETURN;
 
    END dz_swagger3_typ;
@@ -516,25 +512,21 @@ AS
       -- Step 100
       -- Add externalDocs
       --------------------------------------------------------------------------
-      IF self.externalDocs IS NULL
+      IF  self.externalDocs IS NOT NULL
+      AND self.externalDocs.isNULL() = 'FALSE'
       THEN
-         clb_hash := 'null';
-         
-      ELSE
-         clb_hash := self.externalDocs.toJSON(p_pretty_print + 1);
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                'externalDocs'
+               ,self.externalDocs.toJSON(p_pretty_print + 1)
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
 
       END IF;
-      
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-             'externalDocs'
-            ,clb_hash
-            ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
+       
       --------------------------------------------------------------------------
       -- Step 110
       -- Add the left bracket

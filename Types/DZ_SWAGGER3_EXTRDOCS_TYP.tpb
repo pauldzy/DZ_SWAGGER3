@@ -10,6 +10,45 @@ AS
       RETURN; 
       
    END dz_swagger3_extrdocs_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_extrdocs_typ(
+       p_externaldoc_id          IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+   ) RETURN SELF AS RESULT 
+   AS 
+   BEGIN 
+   
+      BEGIN
+         SELECT
+         dz_swagger3_extrdocs_typ(
+             p_externaldoc_description  => a.externaldoc_description
+            ,p_externaldoc_url          => a.externaldoc_url
+         )
+         INTO SELF
+         FROM
+         dz_swagger3_externaldoc a
+         WHERE
+             a.versionid      = p_versionid
+         AND a.externaldoc_id = p_externaldoc_id;
+      
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            self.externaldoc_url         := NULL;
+            self.externaldoc_description := NULL;
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
+      
+      RETURN; 
+      
+   END dz_swagger3_extrdocs_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -34,7 +73,8 @@ AS
    AS
    BEGIN
    
-      IF self.externaldoc_description IS NOT NULL
+      IF self.externaldoc_url         IS NOT NULL
+      OR self.externaldoc_description IS NOT NULL
       THEN
          RETURN 'FALSE';
          

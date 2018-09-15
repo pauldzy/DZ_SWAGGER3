@@ -22,7 +22,7 @@ AS
       
       -------------------------------------------------------------------------
       -- Step 10
-      -- Load the path object and operations
+      -- Load the operation type
       -------------------------------------------------------------------------
       BEGIN
          SELECT
@@ -31,7 +31,10 @@ AS
             ,p_operation_tags         => NULL
             ,p_operation_summary      => a.operation_summary
             ,p_operation_description  => a.operation_description
-            ,p_operation_externalDocs => NULL
+            ,p_operation_externalDocs => dz_swagger3_extrdocs_typ(
+                p_externaldoc_id      => a.operation_externaldocs_id
+               ,p_versionid           => p_versionid
+             )
             ,p_operation_operationID  => a.operation_operationID
             ,p_operation_parameters   => NULL
             ,p_operation_requestBody  => NULL
@@ -59,6 +62,118 @@ AS
             
       END;
       
+      -------------------------------------------------------------------------
+      -- Step 20
+      -- Add any required tags
+      -------------------------------------------------------------------------
+      SELECT
+      a.tag_name
+      BULK COLLECT INTO self.operation_tags
+      FROM
+      dz_swagger3_operation_tag_map a
+      WHERE
+          a.versionid    = p_versionid
+      AND a.operation_id = p_operation_id
+      ORDER by
+      a.tag_name;
+      
+      -------------------------------------------------------------------------
+      -- Step 30
+      -- Add any parameters
+      -------------------------------------------------------------------------
+      SELECT
+      dz_swagger3_parameter_typ(
+          p_hash_key                  => a.parameter_name
+         ,p_parameter_id              => a.parameter_id
+         ,p_parameter_name            => a.parameter_name
+         ,p_parameter_in              => a.parameter_in
+         ,p_parameter_description     => a.parameter_description
+         ,p_parameter_required        => a.parameter_required
+         ,p_parameter_deprecated      => a.parameter_deprecated
+         ,p_parameter_allowEmptyValue => a.parameter_allowEmptyValue
+         ,p_parameter_style           => a.parameter_style
+         ,p_parameter_explode         => a.parameter_explode
+         ,p_parameter_allowReserved   => a.parameter_allowReserved
+         ,p_parameter_schema          => NULL
+         ,p_parameter_example_string  => a.parameter_example_string
+         ,p_parameter_example_number  => a.parameter_example_number
+         ,p_parameter_examples        => NULL
+      )
+      BULK COLLECT INTO self.operation_parameters
+      FROM
+      dz_swagger3_parameter a
+      JOIN
+      dz_swagger3_parm_parent_map b
+      ON
+          a.versionid = b.versionid
+      AND a.parameter_id = b.parameter_id
+      WHERE
+          b.versionid = p_versionid
+      AND b.parent_id = p_operation_id
+      ORDER BY
+      b.parm_order;
+      
+      -------------------------------------------------------------------------
+      -- Step 40
+      -- Add the requestBody
+      -------------------------------------------------------------------------
+      
+      -------------------------------------------------------------------------
+      -- Step 50
+      -- Add the responses
+      -------------------------------------------------------------------------
+      SELECT
+      dz_swagger3_response_typ(
+          p_hash_key               => a.response_code
+         ,p_response_description   => b.response_description
+         ,p_response_headers       => NULL
+         ,p_response_content       => NULL
+         ,p_response_links         => NULL
+      )
+      BULK COLLECT INTO self.operation_responses
+      FROM
+      dz_swagger3_operation_resp_map a
+      JOIN
+      dz_swagger3_response b
+      ON
+          a.versionid   = b.versionid
+      AND a.response_id = b.response_id
+      WHERE
+          a.versionid = p_versionid
+      AND a.operation_id = p_operation_id
+      ORDER BY
+      a.response_order;
+      
+      -------------------------------------------------------------------------
+      -- Step 60
+      -- Add any callbacks
+      -------------------------------------------------------------------------
+      
+      -------------------------------------------------------------------------
+      -- Step 70
+      -- Add any security
+      -------------------------------------------------------------------------
+      
+      -------------------------------------------------------------------------
+      -- Step 80
+      -- Add any servers
+      -------------------------------------------------------------------------
+      SELECT
+      dz_swagger3_server_typ(
+          p_server_id    => a.server_id
+         ,p_versionid    => str_versionid
+      )
+      BULK COLLECT INTO self.operation_servers
+      FROM
+      dz_swagger3_server_parent_map a
+      WHERE
+          a.versionid = str_versionid
+      AND a.parent_id = p_operation_id;
+      
+      -------------------------------------------------------------------------
+      -- Step 90
+      -- Return the completed object
+      -------------------------------------------------------------------------
       RETURN;       
       
    END dz_swagger3_operation_typ;

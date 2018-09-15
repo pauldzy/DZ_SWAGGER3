@@ -83,6 +83,31 @@ AS
             
       END;
       
+      -------------------------------------------------------------------------
+      -- Step 20
+      -- Load the server objects on this path
+      -------------------------------------------------------------------------
+      SELECT
+      dz_swagger3_server_typ(
+          p_server_id    => a.server_id
+         ,p_versionid    => str_versionid
+      )
+      BULK COLLECT INTO self.servers
+      FROM
+      dz_swagger3_server_parent_map a
+      WHERE
+          a.versionid = p_versionid
+      AND a.parent_id = p_path_id;
+      
+      -------------------------------------------------------------------------
+      -- Step 30
+      -- Load the parameter objects on this path
+      -------------------------------------------------------------------------
+      
+      -------------------------------------------------------------------------
+      -- Step 40
+      -- Return the object
+      -------------------------------------------------------------------------
       RETURN; 
       
    END dz_swagger3_path_typ;

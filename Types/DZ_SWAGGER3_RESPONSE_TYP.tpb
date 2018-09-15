@@ -10,6 +10,47 @@ AS
       RETURN; 
       
    END dz_swagger3_response_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_response_typ(
+       p_response_id             IN  VARCHAR2
+      ,p_response_code           IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+   ) RETURN SELF AS RESULT
+   AS 
+   BEGIN 
+   
+      BEGIN
+         SELECT
+         dz_swagger3_response_typ(
+             p_hash_key              => p_response_code
+            ,p_response_description  => a.response_description
+            ,p_response_headers      => NULL
+            ,p_response_content      => NULL
+            ,p_response_links        => NULL
+         )
+         INTO SELF
+         FROM
+         dz_swagger3_response a
+         WHERE
+             a.versionid   = p_versionid
+         AND a.response_id = p_response_id;
+         
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
+   
+      RETURN; 
+      
+   END dz_swagger3_response_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
