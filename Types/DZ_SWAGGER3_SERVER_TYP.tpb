@@ -277,7 +277,6 @@ AS
    AS
       clb_output        CLOB;
       ary_keys          MDSYS.SDO_STRING2_ARRAY;
-      int_pretty_print  INTEGER := p_pretty_print;
       
    BEGIN
    
@@ -285,11 +284,6 @@ AS
       -- Step 10
       -- Check incoming parameters
       --------------------------------------------------------------------------
-      IF p_initial_indent = 'FALSE'
-      THEN
-         int_pretty_print := 0;
-       
-      END IF;
       
       --------------------------------------------------------------------------
       -- Step 20
@@ -300,7 +294,7 @@ AS
              self.server_url
             ,p_pretty_print
          )
-         ,int_pretty_print
+         ,p_pretty_print
          ,'  '
       );
       
@@ -360,6 +354,12 @@ AS
       -- Step 50
       -- Cough it out without final line feed
       --------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+         
       RETURN REGEXP_REPLACE(clb_output,CHR(10) || '$','');
       
    END toYAML;

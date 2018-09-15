@@ -399,10 +399,10 @@ AS
       -- Step 120
       -- Add optional variables map
       --------------------------------------------------------------------------
-      IF  self.parameter_examples IS NULL 
-      AND self.parameter_examples.COUNT = 0
+      IF self.parameter_examples IS NULL 
+      OR self.parameter_examples.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -436,18 +436,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
-      END IF;
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'examples'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'examples'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
- 
+      END IF;
+      
       --------------------------------------------------------------------------
       -- Step 130
       -- Add the left bracket
@@ -468,7 +468,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print      IN  INTEGER   DEFAULT 0
+      ,p_initial_indent    IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -615,7 +616,8 @@ AS
       -- Step 90
       -- Write the optional info license object
       --------------------------------------------------------------------------
-      IF self.parameter_schema.isNULL() = 'FALSE'
+      IF  self.parameter_schema IS NOT NULL
+      AND self.parameter_schema.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'schema: '
@@ -659,8 +661,8 @@ AS
       -- Step 110
       -- Write the optional variables map
       --------------------------------------------------------------------------
-      IF  self.parameter_examples IS NULL 
-      AND self.parameter_examples.COUNT = 0
+      IF  self.parameter_examples IS NOT NULL 
+      AND self.parameter_examples.COUNT > 0
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'examples: '
@@ -688,7 +690,13 @@ AS
       -- Step 110
       -- Cough it out without final line feed
       --------------------------------------------------------------------------
-      RETURN clb_output;
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+         
+      RETURN REGEXP_REPLACE(clb_output,CHR(10) || '$','');
       
    END toYAML;
    

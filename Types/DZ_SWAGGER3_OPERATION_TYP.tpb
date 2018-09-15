@@ -111,7 +111,7 @@ AS
           b.versionid = p_versionid
       AND b.parent_id = p_operation_id
       ORDER BY
-      b.parm_order;
+      b.parameter_order;
       
       -------------------------------------------------------------------------
       -- Step 40
@@ -139,7 +139,7 @@ AS
           a.versionid   = b.versionid
       AND a.response_id = b.response_id
       WHERE
-          a.versionid = p_versionid
+          a.versionid    = p_versionid
       AND a.operation_id = p_operation_id
       ORDER BY
       a.response_order;
@@ -161,13 +161,13 @@ AS
       SELECT
       dz_swagger3_server_typ(
           p_server_id    => a.server_id
-         ,p_versionid    => str_versionid
+         ,p_versionid    => p_versionid
       )
       BULK COLLECT INTO self.operation_servers
       FROM
       dz_swagger3_server_parent_map a
       WHERE
-          a.versionid = str_versionid
+          a.versionid = p_versionid
       AND a.parent_id = p_operation_id;
       
       -------------------------------------------------------------------------
@@ -458,9 +458,9 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                str_pad2 || self.operation_parameters(i).toJSON(
-                  p_pretty_print => p_pretty_print + 1
+                  p_pretty_print => p_pretty_print + 2
                )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -532,7 +532,7 @@ AS
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.operation_responses(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -802,9 +802,9 @@ AS
          clb_output := clb_output || dz_json_util.pretty_str(
              'summary: ' || dz_swagger_util.yaml_text(
                 self.operation_summary
-               ,p_pretty_print
+               ,p_pretty_print + 1
             )
-            ,p_pretty_print
+            ,p_pretty_print + 1
             ,'  '
          );
          
@@ -819,9 +819,9 @@ AS
          clb_output := clb_output || dz_json_util.pretty_str(
              'description: ' || dz_swagger_util.yaml_text(
                 self.operation_description
-               ,p_pretty_print
+               ,p_pretty_print + 1
             )
-            ,p_pretty_print
+            ,p_pretty_print + 1
             ,'  '
          );
          
@@ -836,7 +836,7 @@ AS
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'externalDocs: ' 
-            ,p_pretty_print
+            ,p_pretty_print + 1
             ,'  '
          ) || self.operation_externalDocs.toYAML(
             p_pretty_print + 1
@@ -853,9 +853,9 @@ AS
          clb_output := clb_output || dz_json_util.pretty_str(
              'operationId: ' || dz_swagger_util.yaml_text(
                 self.operation_operationId
-               ,p_pretty_print
+               ,p_pretty_print + 1
             )
-            ,p_pretty_print
+            ,p_pretty_print + 1
             ,'  '
          );
          
@@ -880,11 +880,8 @@ AS
          FOR i IN 1 .. operation_parameters.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '- '
-               ,p_pretty_print + 2
-               ,'  '
-            ) || self.operation_parameters(i).toYAML(
-               p_pretty_print + 3
+                '- ' || self.operation_parameters(i).toYAML(p_pretty_print + 2,'FALSE')
+               ,p_pretty_print
             );
          
          END LOOP;
@@ -900,7 +897,7 @@ AS
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'requestBody: ' 
-            ,p_pretty_print
+            ,p_pretty_print + 1
             ,'  '
          ) || self.operation_requestBody.toYAML(
             p_pretty_print + 1
@@ -930,10 +927,10 @@ AS
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 '''' || ary_keys(i) || ''': '
-               ,p_pretty_print + 2
+               ,p_pretty_print + 1
                ,'  '
             ) || self.operation_callbacks(i).toYAML(
-               p_pretty_print + 3
+               p_pretty_print + 2
             );
          
          END LOOP;
@@ -948,7 +945,7 @@ AS
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'deprecated: ' || LOWER(self.operation_deprecated)
-            ,p_pretty_print
+            ,p_pretty_print + 1
             ,'  '
          );
          
@@ -974,10 +971,10 @@ AS
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 '- '
-               ,p_pretty_print + 2
+               ,p_pretty_print + 1
                ,'  '
             ) || self.operation_security(i).toYAML(
-               p_pretty_print + 3
+               p_pretty_print + 2
             );
          
          END LOOP;
@@ -1004,10 +1001,10 @@ AS
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 '- '
-               ,p_pretty_print + 2
+               ,p_pretty_print + 1
                ,'  '
             ) || self.operation_servers(i).toYAML(
-               p_pretty_print + 3
+               p_pretty_print + 2
             );
          
          END LOOP;

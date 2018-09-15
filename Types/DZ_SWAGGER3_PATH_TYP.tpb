@@ -90,9 +90,9 @@ AS
       SELECT
       dz_swagger3_server_typ(
           p_server_id    => a.server_id
-         ,p_versionid    => str_versionid
+         ,p_versionid    => p_versionid
       )
-      BULK COLLECT INTO self.servers
+      BULK COLLECT INTO self.path_servers
       FROM
       dz_swagger3_server_parent_map a
       WHERE
@@ -607,7 +607,7 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.path_get_operation.toYAML(
-            p_pretty_print + 1
+            p_pretty_print
          );
          
       END IF;
@@ -624,7 +624,7 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.path_put_operation.toYAML(
-            p_pretty_print + 1
+            p_pretty_print
          );
          
       END IF;
@@ -641,7 +641,7 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.path_post_operation.toYAML(
-            p_pretty_print + 1
+            p_pretty_print
          );
          
       END IF;
@@ -658,7 +658,7 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.path_delete_operation.toYAML(
-            p_pretty_print + 1
+            p_pretty_print
          );
          
       END IF;
@@ -675,7 +675,7 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.path_options_operation.toYAML(
-            p_pretty_print + 1
+            p_pretty_print
          );
          
       END IF;
@@ -692,7 +692,7 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.path_head_operation.toYAML(
-            p_pretty_print + 1
+            p_pretty_print
          );
          
       END IF;
@@ -709,7 +709,7 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.path_patch_operation.toYAML(
-            p_pretty_print + 1
+            p_pretty_print
          );
          
       END IF;
@@ -726,7 +726,7 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.path_trace_operation.toYAML(
-            p_pretty_print + 1
+            p_pretty_print
          );
          
       END IF;

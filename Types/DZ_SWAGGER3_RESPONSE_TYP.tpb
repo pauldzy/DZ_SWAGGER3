@@ -228,11 +228,12 @@ AS
          
       END IF;
       
+      str_pad1 := str_pad;
+      
       --------------------------------------------------------------------------
       -- Step 30
       -- Add optional description 
       --------------------------------------------------------------------------
-      str_pad1 := str_pad;
       IF self.response_description IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty(
@@ -251,8 +252,8 @@ AS
       -- Step 40
       -- Add optional variables map
       --------------------------------------------------------------------------
-      IF  self.response_headers IS NULL 
-      AND self.response_headers.COUNT = 0
+      IF self.response_headers IS NULL 
+      OR self.response_headers.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -267,7 +268,6 @@ AS
             clb_hash := dz_json_util.pretty('{',-1);
             
          END IF;
-      
       
          ary_keys := self.response_headers_keys();
       
@@ -304,8 +304,8 @@ AS
       -- Step 50
       -- Add optional variables map
       --------------------------------------------------------------------------
-      IF  self.response_content IS NULL 
-      AND self.response_content.COUNT = 0
+      IF self.response_content IS NULL 
+      OR self.response_content.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -320,7 +320,6 @@ AS
             clb_hash := dz_json_util.pretty('{',-1);
             
          END IF;
-      
       
          ary_keys := self.response_content_keys();
       
@@ -357,8 +356,8 @@ AS
       -- Step 60
       -- Add optional variables map
       --------------------------------------------------------------------------
-      IF  self.response_links IS NULL 
-      AND self.response_links.COUNT = 0
+      IF self.response_links IS NULL 
+      OR self.response_links.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -373,7 +372,6 @@ AS
             clb_hash := dz_json_util.pretty('{',-1);
             
          END IF;
-      
       
          ary_keys := self.response_links_keys();
       
@@ -460,8 +458,8 @@ AS
       -- Step 30
       -- Write the optional variables map
       --------------------------------------------------------------------------
-      IF  self.response_headers IS NULL 
-      AND self.response_headers.COUNT = 0
+      IF  self.response_headers IS NOT NULL 
+      AND self.response_headers.COUNT > 0
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'headers: '
@@ -489,8 +487,8 @@ AS
       -- Step 40
       -- Write the optional variables map
       --------------------------------------------------------------------------
-      IF  self.response_content IS NULL 
-      AND self.response_content.COUNT = 0
+      IF  self.response_content IS NOT NULL 
+      AND self.response_content.COUNT > 0
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'content: '
@@ -518,8 +516,8 @@ AS
       -- Step 50
       -- Write the optional variables map
       --------------------------------------------------------------------------
-      IF  self.response_links IS NULL 
-      AND self.response_links.COUNT = 0
+      IF  self.response_links IS NOT NULL 
+      AND self.response_links.COUNT > 0
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'links: '
