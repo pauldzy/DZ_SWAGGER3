@@ -395,9 +395,16 @@ AS
       -- Step 20
       -- Write the yaml schema object
       --------------------------------------------------------------------------
-      IF  self.media_schema IS NOT NULL
-      AND self.media_schema.isNULL() = 'FALSE'
+      IF self.media_schema IS NULL
+      OR self.media_schema.isNULL() = 'TRUE'
       THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             'schema: ' 
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'schema: ' 
             ,p_pretty_print

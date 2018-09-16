@@ -497,7 +497,7 @@ AS
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'headers: '
-            ,p_pretty_print + 1
+            ,p_pretty_print
             ,'  '
          );
          
@@ -507,10 +507,10 @@ AS
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 '''' || ary_keys(i) || ''': '
-               ,p_pretty_print + 2
+               ,p_pretty_print + 1
                ,'  '
             ) || self.response_headers(i).toYAML(
-               p_pretty_print + 3
+               p_pretty_print + 2
             );
          
          END LOOP;
@@ -526,7 +526,7 @@ AS
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'content: '
-            ,p_pretty_print + 1
+            ,p_pretty_print
             ,'  '
          );
          
@@ -536,10 +536,10 @@ AS
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 '''' || ary_keys(i) || ''': '
-               ,p_pretty_print + 2
+               ,p_pretty_print + 1
                ,'  '
             ) || self.response_content(i).toYAML(
-               p_pretty_print + 3
+               p_pretty_print + 2
             );
          
          END LOOP;
@@ -555,7 +555,7 @@ AS
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'links: '
-            ,p_pretty_print + 1
+            ,p_pretty_print
             ,'  '
          );
          
@@ -565,10 +565,10 @@ AS
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 '''' || ary_keys(i) || ''': '
-               ,p_pretty_print + 2
+               ,p_pretty_print + 1
                ,'  '
             ) || self.response_links(i).toYAML(
-               p_pretty_print + 3
+               p_pretty_print + 2
             );
          
          END LOOP;

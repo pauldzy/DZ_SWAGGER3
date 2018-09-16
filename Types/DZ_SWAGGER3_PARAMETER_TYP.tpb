@@ -10,6 +10,56 @@ AS
       RETURN; 
       
    END dz_swagger3_parameter_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
+       p_parameter_id              IN  VARCHAR2
+      ,p_versionid                 IN  VARCHAR2
+   ) RETURN SELF AS RESULT
+   AS 
+   BEGIN
+   
+      BEGIN
+         SELECT
+         dz_swagger3_parameter_typ(
+             p_hash_key                  => a.parameter_name
+            ,p_parameter_id              => a.parameter_id
+            ,p_parameter_name            => a.parameter_name
+            ,p_parameter_in              => a.parameter_in
+            ,p_parameter_description     => a.parameter_description
+            ,p_parameter_required        => a.parameter_required
+            ,p_parameter_deprecated      => a.parameter_deprecated
+            ,p_parameter_allowEmptyValue => a.parameter_allowEmptyValue
+            ,p_parameter_style           => a.parameter_style
+            ,p_parameter_explode         => a.parameter_explode
+            ,p_parameter_allowReserved   => a.parameter_allowReserved
+            ,p_parameter_schema          => NULL
+            ,p_parameter_example_string  => a.parameter_example_string
+            ,p_parameter_example_number  => a.parameter_example_number
+            ,p_parameter_examples        => NULL
+         )
+         INTO SELF
+         FROM
+         dz_swagger3_parameter a
+         WHERE
+             a.versionid    = p_versionid
+         AND a.parameter_id = p_parameter_id;
+
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
+      
+      RETURN;
+      
+   END;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

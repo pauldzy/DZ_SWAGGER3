@@ -83,21 +83,8 @@ AS
       --------------------------------------------------------------------------
       SELECT
       dz_swagger3_parameter_typ(
-          p_hash_key                  => a.parameter_name
-         ,p_parameter_id              => a.parameter_id
-         ,p_parameter_name            => a.parameter_name
-         ,p_parameter_in              => a.parameter_in
-         ,p_parameter_description     => a.parameter_description
-         ,p_parameter_required        => a.parameter_required
-         ,p_parameter_deprecated      => a.parameter_deprecated
-         ,p_parameter_allowEmptyValue => a.parameter_allowEmptyValue
-         ,p_parameter_style           => a.parameter_style
-         ,p_parameter_explode         => a.parameter_explode
-         ,p_parameter_allowReserved   => a.parameter_allowReserved
-         ,p_parameter_schema          => NULL
-         ,p_parameter_example_string  => a.parameter_example_string
-         ,p_parameter_example_number  => a.parameter_example_number
-         ,p_parameter_examples        => NULL
+          p_parameter_id     => a.parameter_id
+         ,p_versionid        => p_versionid
       )
       BULK COLLECT INTO self.operation_parameters
       FROM
@@ -924,11 +911,11 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': ' || self.operation_responses(i).toYAML(
-                  p_pretty_print + 2
-                  ,'FALSE'
-                )
+                '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 2
+               ,'  '
+            ) || self.operation_responses(i).toYAML(
+               p_pretty_print + 3
             );
          
          END LOOP;

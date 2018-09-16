@@ -25,6 +25,13 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
+       p_parameter_id              IN  VARCHAR2
+      ,p_versionid                 IN  VARCHAR2
+   ) RETURN SELF AS RESULT
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
        p_hash_key                  IN  VARCHAR2
       ,p_parameter_id              IN  VARCHAR2
       ,p_parameter_name            IN  VARCHAR2

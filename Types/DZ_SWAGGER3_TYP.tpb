@@ -606,10 +606,10 @@ AS
          FOR i IN 1 .. self.servers.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '- ' || self.servers(i).toYAML(p_pretty_print + 1,'FALSE')
+                '- ' || self.servers(i).toYAML(p_pretty_print + 1,'FALSE','FALSE')
                ,p_pretty_print
                ,'  '
-            ) ;
+            );
             
          END LOOP;
          
