@@ -11,8 +11,8 @@ AS
       
    END dz_swagger3_media_typ;
    
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_media_typ(
        p_media_id                IN  VARCHAR2
       ,p_media_type              IN  VARCHAR2
@@ -207,7 +207,8 @@ AS
       -- Step 30
       -- Add optional description
       --------------------------------------------------------------------------
-      IF self.media_schema.isNULL() = 'FALSE'
+      IF  self.media_schema IS NOT NULL
+      AND self.media_schema.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -255,8 +256,8 @@ AS
       -- Step 120
       -- Add optional variables map
       --------------------------------------------------------------------------
-      IF  self.media_examples IS NULL 
-      AND self.media_examples.COUNT = 0
+      IF self.media_examples IS NULL 
+      OR self.media_examples.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -308,8 +309,8 @@ AS
       -- Step 120
       -- Add optional variables map
       --------------------------------------------------------------------------
-      IF  self.media_encoding IS NULL 
-      AND self.media_encoding.COUNT = 0
+      IF self.media_encoding IS NULL 
+      OR self.media_encoding.COUNT = 0
       THEN
          clb_hash := 'null';
          
@@ -394,7 +395,8 @@ AS
       -- Step 20
       -- Write the yaml schema object
       --------------------------------------------------------------------------
-      IF self.media_schema IS NOT NULL
+      IF  self.media_schema IS NOT NULL
+      AND self.media_schema.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'schema: ' 
@@ -438,8 +440,8 @@ AS
       -- Step 40
       -- Write the optional variables map
       --------------------------------------------------------------------------
-      IF  self.media_examples IS NULL 
-      AND self.media_examples.COUNT = 0
+      IF  self.media_examples IS NOT NULL 
+      AND self.media_examples.COUNT > 0
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'examples: '
@@ -467,8 +469,8 @@ AS
       -- Step 50
       -- Write the optional variables map
       --------------------------------------------------------------------------
-      IF  self.media_encoding IS NULL 
-      AND self.media_encoding.COUNT = 0
+      IF  self.media_encoding IS NOT NULL 
+      AND self.media_encoding.COUNT > 0
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'encoding: '
