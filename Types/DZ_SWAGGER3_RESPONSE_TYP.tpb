@@ -58,12 +58,9 @@ AS
       -------------------------------------------------------------------------- 
       SELECT
       dz_swagger3_media_typ(
-          p_hash_key              => a.media_type
-         ,p_media_schema          => NULL
-         ,p_media_example_string  => b.media_example_string
-         ,p_media_example_number  => b.media_example_number
-         ,p_media_examples        => NULL
-         ,p_media_encoding        => NULL
+          p_media_id              => b.media_id
+         ,p_media_type            => a.media_type
+         ,p_versionid             => p_versionid
       )
       BULK COLLECT INTO self.response_content
       FROM

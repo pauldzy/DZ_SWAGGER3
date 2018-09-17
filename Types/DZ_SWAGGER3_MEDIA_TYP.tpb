@@ -25,7 +25,7 @@ AS
          SELECT
          dz_swagger3_media_typ(
              p_hash_key              => p_media_type
-            ,p_media_schema          => dz_swagger3_schema(
+            ,p_media_schema          => dz_swagger3_schema_typ(
                 p_schema_id             => a.media_schema_id
                ,p_versionid             => p_versionid
              )
@@ -210,9 +210,20 @@ AS
       -- Step 30
       -- Add optional description
       --------------------------------------------------------------------------
-      IF  self.media_schema IS NOT NULL
-      AND self.media_schema.isNULL() = 'FALSE'
+      IF self.media_schema IS NULL
+      OR self.media_schema.isNULL() = 'TRUE'
       THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'schema'
+               ,CAST(NULL AS NUMBER)
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+
+      ELSE
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
                 'schema'

@@ -1,4 +1,5 @@
-CREATE OR REPLACE TYPE dz_swagger3_schema_typ UNDER dz_swagger3_schema_typ_nf(
+CREATE OR REPLACE TYPE dz_swagger3_schema_typ FORCE 
+UNDER dz_swagger3_schema_typ_nf(
     
     schema_id                VARCHAR2(255 Char)
    ,schema_title             VARCHAR2(255 Char)
@@ -66,7 +67,6 @@ CREATE OR REPLACE TYPE dz_swagger3_schema_typ UNDER dz_swagger3_schema_typ_nf(
       ,p_schema_example_string   IN  VARCHAR2
       ,p_schema_example_number   IN  NUMBER
       ,p_schema_deprecated       IN  VARCHAR2
-      ,p_schema_items_schema     IN  dz_swagger3_schema_typ_nf
       ,p_schema_default_string   IN  VARCHAR2
       ,p_schema_default_number   IN  NUMBER 
       ,p_schema_multipleOf       IN  NUMBER 
@@ -91,6 +91,14 @@ CREATE OR REPLACE TYPE dz_swagger3_schema_typ UNDER dz_swagger3_schema_typ_nf(
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   ,MEMBER PROCEDURE addChildSchema(
+       SELF         IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_schema_id  IN  VARCHAR2
+      ,p_versionid  IN  VARCHAR2
+   )
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    ,MEMBER FUNCTION isNULL
     RETURN VARCHAR2
     
@@ -101,14 +109,14 @@ CREATE OR REPLACE TYPE dz_swagger3_schema_typ UNDER dz_swagger3_schema_typ_nf(
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toJSON(
+   ,OVERRIDING MEMBER FUNCTION toJSON(
        p_pretty_print      IN  INTEGER  DEFAULT NULL
       ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE'       
    ) RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toYAML(
+   ,OVERRIDING MEMBER FUNCTION toYAML(
        p_pretty_print      IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
