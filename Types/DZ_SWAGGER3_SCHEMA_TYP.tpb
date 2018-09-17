@@ -7,8 +7,6 @@ AS
    RETURN SELF AS RESULT 
    AS 
    BEGIN 
-      self.schema_externalDocs  := dz_swagger3_extrdocs_typ();
-      
       RETURN; 
       
    END dz_swagger3_schema_typ;
@@ -48,46 +46,77 @@ AS
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
-       p_schema_id            IN  VARCHAR2
-      ,p_schema_title         IN  VARCHAR2
-      ,p_schema_type          IN  VARCHAR2
-      ,p_schema_description   IN  VARCHAR2
-      ,p_schema_format        IN  VARCHAR2
-      ,p_schema_nullable      IN  VARCHAR2
-      ,p_schema_discriminator IN  VARCHAR2
-      ,p_schema_readonly      IN  VARCHAR2
-      ,p_schema_writeonly     IN  VARCHAR2
-      ,p_schema_externalDocs  IN  dz_swagger3_extrdocs_typ
-      ,p_schema_example       IN  VARCHAR2
-      ,p_schema_deprecated    IN  VARCHAR2
-      ,p_xml_name             IN  VARCHAR2
-      ,p_xml_namespace        IN  VARCHAR2
-      ,p_xml_prefix           IN  VARCHAR2
-      ,p_xml_attribute        IN  VARCHAR2
-      ,p_xml_wrapped          IN  VARCHAR2
-      ,p_schema_properties    IN  dz_swagger3_property_list
+       p_schema_id               IN  VARCHAR2
+      ,p_schema_title            IN  VARCHAR2
+      ,p_schema_type             IN  VARCHAR2
+      ,p_schema_description      IN  VARCHAR2
+      ,p_schema_format           IN  VARCHAR2
+      ,p_schema_nullable         IN  VARCHAR2
+      ,p_schema_discriminator    IN  VARCHAR2
+      ,p_schema_readonly         IN  VARCHAR2
+      ,p_schema_writeonly        IN  VARCHAR2
+      ,p_schema_externalDocs     IN  dz_swagger3_extrdocs_typ
+      ,p_schema_example_string   IN  VARCHAR2
+      ,p_schema_example_number   IN  NUMBER
+      ,p_schema_deprecated       IN  VARCHAR2
+      ,p_schema_items_schema     IN  dz_swagger3_schema_typ_nf
+      ,p_schema_default_string   IN  VARCHAR2
+      ,p_schema_default_number   IN  NUMBER 
+      ,p_schema_multipleOf       IN  NUMBER 
+      ,p_schema_minimum          IN  NUMBER 
+      ,p_schema_exclusiveMinimum IN  VARCHAR2
+      ,p_schema_maximum          IN  NUMBER 
+      ,p_schema_exclusiveMaximum IN  VARCHAR2
+      ,p_schema_minLength        IN  INTEGER 
+      ,p_schema_maxLength        IN  INTEGER 
+      ,p_schema_pattern          IN  VARCHAR2
+      ,p_schema_minItems         IN  INTEGER 
+      ,p_schema_maxItems         IN  INTEGER 
+      ,p_schema_uniqueItems      IN  VARCHAR2 
+      ,p_schema_minProperties    IN  INTEGER 
+      ,p_schema_maxProperties    IN  INTEGER
+      ,p_xml_name                IN  VARCHAR2
+      ,p_xml_namespace           IN  VARCHAR2
+      ,p_xml_prefix              IN  VARCHAR2
+      ,p_xml_attribute           IN  VARCHAR2
+      ,p_xml_wrapped             IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.schema_id            := p_schema_id;
-      self.schema_title         := p_schema_title;
-      self.schema_type          := p_schema_type;
-      self.schema_description   := p_schema_description;
-      self.schema_format        := p_schema_format;
-      self.schema_nullable      := p_schema_nullable;
-      self.schema_discriminator := p_schema_discriminator;
-      self.schema_readonly      := p_schema_readonly;
-      self.schema_writeonly     := p_schema_writeonly;
-      self.schema_externalDocs  := p_schema_externalDocs;
-      self.schema_example       := p_schema_example;
-      self.schema_deprecated    := p_schema_deprecated;
-      self.xml_name             := p_xml_name;
-      self.xml_namespace        := p_xml_namespace;
-      self.xml_prefix           := p_xml_prefix;
-      self.xml_attribute        := p_xml_attribute;
-      self.xml_wrapped          := p_xml_wrapped;
-      self.schema_properties    := p_schema_properties;
+      self.schema_id               := p_schema_id;
+      self.schema_title            := p_schema_title;
+      self.schema_type             := p_schema_type;
+      self.schema_description      := p_schema_description;
+      self.schema_format           := p_schema_format;
+      self.schema_nullable         := p_schema_nullable;
+      self.schema_discriminator    := p_schema_discriminator;
+      self.schema_readonly         := p_schema_readonly;
+      self.schema_writeonly        := p_schema_writeonly;
+      self.schema_externalDocs     := p_schema_externalDocs;
+      self.schema_example_string   := p_schema_example_string;
+      self.schema_deprecated       := p_schema_deprecated;
+      self.schema_items_schema     := p_schema_items_schema;
+      self.schema_default_string   := p_schema_default_string;
+      self.schema_default_number   := p_schema_default_number;
+      self.schema_multipleOf       := p_schema_multipleOf;
+      self.schema_minimum          := p_schema_minimum;
+      self.schema_exclusiveMinimum := p_schema_exclusiveMinimum;
+      self.schema_maximum          := p_schema_maximum;
+      self.schema_exclusiveMaximum := p_schema_exclusiveMaximum;
+      self.schema_minLength        := p_schema_minLength;
+      self.schema_maxLength        := p_schema_maxLength;
+      self.schema_pattern          := p_schema_pattern;
+      self.schema_minItems         := p_schema_minItems;
+      self.schema_maxItems         := p_schema_maxItems;
+      self.schema_uniqueItems      := p_schema_uniqueItems;
+      self.schema_minProperties    := p_schema_minProperties;
+      self.schema_maxProperties    := p_schema_maxProperties;
+      self.xml_name                := p_xml_name;
+      self.xml_namespace           := p_xml_namespace;
+      self.xml_prefix              := p_xml_prefix;
+      self.xml_attribute           := p_xml_attribute;
+      self.xml_wrapped             := p_xml_wrapped;
       
       RETURN; 
       
@@ -357,12 +386,24 @@ AS
       -- Step 120
       -- Add optional description object
       -------------------------------------------------------------------------
-      IF self.schema_example IS NOT NULL
+      IF self.schema_example_string IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
                 'example'
-               ,self.schema_example
+               ,self.schema_example_string
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+      
+      ELSIF self.schema_example_number IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'example'
+               ,self.schema_example_number
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -396,6 +437,25 @@ AS
          );
          str_pad1 := ',';
       
+      END IF;
+      
+      -------------------------------------------------------------------------
+      -- Step 140
+      -- Add schema items
+      -------------------------------------------------------------------------
+      IF  self.schema_externalDocs IS NOT NULL
+      AND self.schema_externalDocs.isNULL() = 'FALSE'
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad || dz_json_main.formatted2json(
+                'items'
+               ,self.schema_items.toJSON(p_pretty_print + 1)
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad := ',';
+
       END IF;
       
       -------------------------------------------------------------------------
@@ -520,7 +580,9 @@ AS
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  INTEGER  DEFAULT 0
+       p_pretty_print      IN  INTEGER  DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;
@@ -779,8 +841,20 @@ AS
       
       -------------------------------------------------------------------------
       -- Step 70
-      -- Cough it out
+      -- Cough it out with adjustments as needed
       -------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+      
+      IF p_final_linefeed = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         
+      END IF;
+               
       RETURN clb_output;
       
    END toYAML;
