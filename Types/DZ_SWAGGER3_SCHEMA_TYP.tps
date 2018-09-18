@@ -32,6 +32,9 @@ UNDER dz_swagger3_schema_typ_nf(
    ,schema_uniqueItems       VARCHAR2(5 Char) 
    ,schema_minProperties     INTEGER 
    ,schema_maxProperties     INTEGER
+   -----
+   ,schema_properties        dz_swagger3_schema_nf_list
+   -----
    ,xml_name                 VARCHAR2(255 Char)
    ,xml_namespace            VARCHAR2(2000 Char)
    ,xml_prefix               VARCHAR2(255 Char)
@@ -91,9 +94,16 @@ UNDER dz_swagger3_schema_typ_nf(
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE addChildSchema(
+   ,MEMBER PROCEDURE addItemsSchema(
+       SELF               IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_items_schema_id  IN  VARCHAR2
+      ,p_versionid        IN  VARCHAR2
+   )
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER PROCEDURE addProperties(
        SELF         IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_schema_id  IN  VARCHAR2
       ,p_versionid  IN  VARCHAR2
    )
    
@@ -106,6 +116,11 @@ UNDER dz_swagger3_schema_typ_nf(
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION key
     RETURN VARCHAR2
+    
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   ,MEMBER FUNCTION schema_properties_keys
+    RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

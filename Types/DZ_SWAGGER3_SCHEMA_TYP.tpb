@@ -91,9 +91,16 @@ AS
       -- Step 20
       -- Process object definitions for remaining schema types
       --------------------------------------------------------------------------
-      IF str_items_schema_id IS NOT NULL
+      IF self.schema_type = 'object'
       THEN
-         self.addChildSchema(
+         self.addProperties(
+            p_versionid  => p_versionid
+         );
+      
+      ELSIF self.schema_type = 'array'
+      AND str_items_schema_id IS NOT NULL
+      THEN
+         self.addItemsSchema(
              p_schema_id  => str_items_schema_id
             ,p_versionid  => p_versionid
          );
@@ -188,20 +195,48 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER PROCEDURE addChildSchema(
-       SELF         IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_schema_id  IN  VARCHAR2
-      ,p_versionid  IN  VARCHAR2
+   MEMBER PROCEDURE addItemsSchema(
+       SELF               IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_items_schema_id  IN  VARCHAR2
+      ,p_versionid        IN  VARCHAR2
    )
    AS
    BEGIN
       
       self.schema_items_schema := dz_swagger3_schema_typ(
-          p_schema_id  => p_schema_id
+          p_schema_id  => p_items_schema_id
          ,p_versionid  => p_versionid 
       );   
    
    END addChildSchema;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER PROCEDURE addProperties(
+       SELF         IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_versionid  IN  VARCHAR2
+   )
+   AS
+   BEGIN
+      
+      SELECT
+      dz_swagger3_schema_typ(
+          p_schema_id  => p_items_schema_id
+         ,p_versionid  => p_versionid 
+      )
+      BULK COLLECT INTO self.schema_properties
+      FROM
+      dz_swagger3_schema_prop_map a
+      JOIN
+      dz_swagger3_schema b
+      ON
+          a.versionid          = b.versionid
+      AND a.property_schema_id = b.schema_id
+      WHERE
+          a.versionid        = p_versionid
+      AND a.parent_schema_id = self.schema_id;      
+   
+   END addProperties;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -230,6 +265,36 @@ AS
       RETURN self.schema_id;
       
    END key;
+   
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   MEMBER FUNCTION schema_properties_keys
+   RETURN MDSYS.SDO_STRING2_ARRAY
+   AS
+      int_index  PLS_INTEGER;
+      ary_output MDSYS.SDO_STRING2_ARRAY;
+      
+   BEGIN
+      IF self.schema_properties IS NULL
+      OR self.schema_properties.COUNT = 0
+      THEN
+         RETURN NULL;
+         
+      END IF;
+      
+      int_index  := 1;
+      ary_output := MDSYS.SDO_STRING2_ARRAY();
+      FOR i IN 1 .. self.schema_properties.COUNT
+      LOOP
+         ary_output.EXTEND();
+         ary_output(int_index) := self.schema_properties(i).hash_key;
+         int_index := int_index + 1;
+      
+      END LOOP;
+      
+      RETURN ary_output;
+   
+   END schema_properties_keys;
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
@@ -572,9 +637,62 @@ AS
          END IF;
          
       END IF;
+      
+      -------------------------------------------------------------------------
+      -- Step 140
+      -- Add parameters
+      -------------------------------------------------------------------------
+      IF self.schema_properties IS NULL 
+      OR self.schema_properties.COUNT = 0
+      THEN
+         NULL;
+         
+      ELSE
+         str_pad2 := str_pad;
+         
+         IF p_pretty_print IS NULL
+         THEN
+            clb_hash := dz_json_util.pretty('{',NULL);
+            
+         ELSE
+            clb_hash := dz_json_util.pretty('{',-1);
+            
+         END IF;
+      
+      
+         ary_keys := self.schema_properties_keys();
+      
+         FOR i IN 1 .. ary_keys.COUNT
+         LOOP
+            clb_hash := clb_hash || dz_json_util.pretty(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.schema_properties(i).toJSON(
+                  p_pretty_print => p_pretty_print + 2
+                )
+               ,p_pretty_print + 1
+            );
+            str_pad2 := ',';
+         
+         END LOOP;
+         
+         clb_hash := clb_hash || dz_json_util.pretty(
+             '}'
+            ,p_pretty_print + 1,NULL,NULL
+         );
+         
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'properties'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
+      END IF;
 
       --------------------------------------------------------------------------
-      -- Step 90
+      -- Step 160
       -- Add the left bracket
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
@@ -583,7 +701,7 @@ AS
       );
       
       --------------------------------------------------------------------------
-      -- Step 100
+      -- Step 170
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
@@ -593,7 +711,7 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    OVERRIDING MEMBER FUNCTION toYAML(
-       p_pretty_print      IN  INTEGER  DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
@@ -794,7 +912,36 @@ AS
             p_pretty_print + 1
          );
       
-      END IF; 
+      END IF;
+      
+      -------------------------------------------------------------------------
+      -- Step 60
+      -- Write the properties map
+      -------------------------------------------------------------------------
+      IF  self.schema_properties IS NOT NULL 
+      AND self.schema_properties.COUNT > 0
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'properties: '
+            ,p_pretty_print + 1
+            ,'  '
+         );
+         
+         ary_keys := self.schema_properties_keys();
+      
+         FOR i IN 1 .. ary_keys.COUNT
+         LOOP
+            clb_output := clb_output || dz_json_util.pretty(
+                '''' || ary_keys(i) || ''': '
+               ,p_pretty_print + 2
+               ,'  '
+            ) || self.schema_properties(i).toYAML(
+               p_pretty_print + 3
+            );
+         
+         END LOOP;
+         
+      END IF;
 
       --------------------------------------------------------------------------
       -- Step 70
