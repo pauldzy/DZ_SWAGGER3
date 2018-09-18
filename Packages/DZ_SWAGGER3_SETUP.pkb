@@ -262,6 +262,7 @@ AS
               || '   ,server_var_enum        VARCHAR2(4000 Char) '
               || '   ,server_var_default     VARCHAR2(255 Char) NOT NULL '
               || '   ,server_var_description VARCHAR2(4000 Char) '
+              || '   ,server_var_order       INTEGER '
               || '   ,versionid              VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
@@ -420,7 +421,7 @@ AS
               || '   ,parameter_style           VARCHAR2(255 Char) '
               || '   ,parameter_explode         VARCHAR2(5 Char) '
               || '   ,parameter_allowReserved   VARCHAR2(5 Char) '
-              || '   ,parameter_schema          VARCHAR2(255 Char) '
+              || '   ,parameter_schema_id       VARCHAR2(255 Char) '
               || '   ,parameter_example_string  VARCHAR2(255 Char) '
               || '   ,parameter_example_number  NUMBER '
               || '   ,parameter_content         VARCHAR2(255 Char) '

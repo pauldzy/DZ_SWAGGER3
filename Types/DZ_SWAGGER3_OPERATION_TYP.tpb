@@ -695,9 +695,9 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                str_pad2 || self.operation_servers(i).toJSON(
-                  p_pretty_print => p_pretty_print + 1
+                  p_pretty_print => p_pretty_print + 2
                )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -714,7 +714,7 @@ AS
           str_pad1 || dz_json_main.formatted2json(
               'servers'
              ,clb_hash
-             ,p_pretty_print + 1
+             ,p_pretty_print + 2
           )
          ,p_pretty_print + 1
       );
@@ -1017,11 +1017,13 @@ AS
          FOR i IN 1 .. operation_servers.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '- '
+                '- ' || self.operation_servers(i).toYAML(
+                  p_pretty_print + 2
+                  ,'FALSE'
+                  ,'FALSE'
+               )
                ,p_pretty_print + 1
                ,'  '
-            ) || self.operation_servers(i).toYAML(
-               p_pretty_print + 2
             );
          
          END LOOP;

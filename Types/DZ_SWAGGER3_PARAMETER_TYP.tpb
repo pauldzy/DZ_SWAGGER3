@@ -34,7 +34,7 @@ AS
             ,p_parameter_style           => a.parameter_style
             ,p_parameter_explode         => a.parameter_explode
             ,p_parameter_allowReserved   => a.parameter_allowReserved
-            ,p_parameter_schema          => dz_swagger3_schema(
+            ,p_parameter_schema          => dz_swagger3_schema_typ(
                 p_schema_id                 => a.parameter_schema_id
                ,p_versionid                 => p_versionid
              )

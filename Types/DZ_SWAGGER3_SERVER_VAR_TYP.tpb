@@ -227,7 +227,7 @@ AS
       -- Step 50
       -- Cough it out without final line feed
       --------------------------------------------------------------------------
-      RETURN REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+      RETURN clb_output;
 
    END toYAML;
 

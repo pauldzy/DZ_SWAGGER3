@@ -54,7 +54,8 @@ AS
           a.versionid = p_versionid
       AND a.server_id = p_server_id
       ORDER BY
-      a.server_var_name;
+       a.server_var_order
+      ,a.server_var_name;
       
       SELECT dz_swagger3_server_typ(
           p_server_url         => str_url
@@ -228,7 +229,7 @@ AS
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.server_variables(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
