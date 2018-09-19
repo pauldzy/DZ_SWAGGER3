@@ -2,7 +2,8 @@ CREATE OR REPLACE TYPE dz_swagger3_schema_typ_nf FORCE
 AUTHID DEFINER 
 AS OBJECT (
 
-    dummy INTEGER
+    hash_key        VARCHAR2(255 Char)
+   ,schema_required VARCHAR2(5 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

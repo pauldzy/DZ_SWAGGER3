@@ -26,7 +26,9 @@ AS
          dz_swagger3_media_typ(
              p_hash_key              => p_media_type
             ,p_media_schema          => dz_swagger3_schema_typ(
-                p_schema_id             => a.media_schema_id
+                p_hash_key              => NULL
+               ,p_schema_id             => a.media_schema_id
+               ,p_required              => NULL
                ,p_versionid             => p_versionid
              )
             ,p_media_example_string  => a.media_example_string

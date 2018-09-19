@@ -14,8 +14,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
-       p_schema_id            IN  VARCHAR2
-      ,p_versionid            IN  VARCHAR2
+       p_hash_key                IN  VARCHAR2
+      ,p_schema_id               IN  VARCHAR2
+      ,p_required                IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT
    AS
       str_items_schema_id  VARCHAR2(255 Char);
@@ -86,9 +88,16 @@ AS
             RAISE;
             
       END;
-
+      
       --------------------------------------------------------------------------
       -- Step 20
+      -- Add hash key and required flag
+      --------------------------------------------------------------------------
+      self.hash_key        := p_hash_key;
+      self.schema_required := p_required;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
       -- Process object definitions for remaining schema types
       --------------------------------------------------------------------------
       IF self.schema_type = 'object'
@@ -101,14 +110,14 @@ AS
       AND str_items_schema_id IS NOT NULL
       THEN
          self.addItemsSchema(
-             p_schema_id  => str_items_schema_id
-            ,p_versionid  => p_versionid
+             p_items_schema_id => str_items_schema_id
+            ,p_versionid       => p_versionid
          );
          
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 30
+      -- Step 40
       -- Return completed object
       --------------------------------------------------------------------------
       RETURN;
@@ -204,11 +213,13 @@ AS
    BEGIN
       
       self.schema_items_schema := dz_swagger3_schema_typ(
-          p_schema_id  => p_items_schema_id
-         ,p_versionid  => p_versionid 
-      );   
+          p_hash_key        => NULL
+         ,p_schema_id       => p_items_schema_id
+         ,p_required        => NULL
+         ,p_versionid       => p_versionid 
+      );
    
-   END addChildSchema;
+   END addItemsSchema;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -221,8 +232,10 @@ AS
       
       SELECT
       dz_swagger3_schema_typ(
-          p_schema_id  => p_items_schema_id
-         ,p_versionid  => p_versionid 
+          p_hash_key        => a.property_name
+         ,p_schema_id       => a.property_schema_id 
+         ,p_required        => a.property_required
+         ,p_versionid       => p_versionid 
       )
       BULK COLLECT INTO self.schema_properties
       FROM
@@ -234,7 +247,9 @@ AS
       AND a.property_schema_id = b.schema_id
       WHERE
           a.versionid        = p_versionid
-      AND a.parent_schema_id = self.schema_id;      
+      AND a.parent_schema_id = self.schema_id
+      ORDER BY
+      a.property_order;      
    
    END addProperties;
    
@@ -308,8 +323,10 @@ AS
       str_pad          VARCHAR2(1 Char);
       str_pad1         VARCHAR2(1 Char);
       str_pad2         VARCHAR2(1 Char);
-      ary_required     MDSYS.SDO_STRING2_ARRAY;
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      clb_hash         CLOB;
       int_counter      PLS_INTEGER;
+      ary_required     MDSYS.SDO_STRING2_ARRAY;
       boo_temp         BOOLEAN;
       
    BEGIN
@@ -605,7 +622,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 140
+      -- Step 150
       -- Add optional xml object
       --------------------------------------------------------------------------
       IF str_jsonschema = 'FALSE'
@@ -639,7 +656,7 @@ AS
       END IF;
       
       -------------------------------------------------------------------------
-      -- Step 140
+      -- Step 160
       -- Add parameters
       -------------------------------------------------------------------------
       IF self.schema_properties IS NULL 
@@ -649,6 +666,7 @@ AS
          
       ELSE
          str_pad2 := str_pad;
+         ary_required := MDSYS.SDO_STRING2_ARRAY();
          
          IF p_pretty_print IS NULL
          THEN
@@ -662,15 +680,24 @@ AS
       
          ary_keys := self.schema_properties_keys();
       
+         int_counter := 1;
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.schema_properties(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
+            
+            IF self.schema_properties(i).schema_required = 'TRUE'
+            THEN
+               ary_required.EXTEND();
+               ary_required(int_counter) := self.schema_properties(i).hash_key;
+               int_counter := int_counter + 1;
+
+            END IF;
          
          END LOOP;
          
@@ -689,10 +716,29 @@ AS
          );
          str_pad1 := ',';
          
+      -------------------------------------------------------------------------
+      -- Step 170
+      -- Add required array
+      -------------------------------------------------------------------------
+         IF ary_required IS NOT NULL
+         AND ary_required.COUNT > 0
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'required'
+                  ,ary_required
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+         
+         END IF;
+         
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 160
+      -- Step 180
       -- Add the left bracket
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
@@ -701,7 +747,7 @@ AS
       );
       
       --------------------------------------------------------------------------
-      -- Step 170
+      -- Step 190
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
@@ -716,9 +762,11 @@ AS
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
-      clb_output        CLOB;
-      boo_required      BOOLEAN;
-      boo_temp          BOOLEAN;
+      clb_output       CLOB;
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      ary_required     MDSYS.SDO_STRING2_ARRAY;
+      int_counter      PLS_INTEGER;
+      boo_check        BOOLEAN;
       
    BEGIN
       
@@ -766,7 +814,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 50
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_format IS NOT NULL
@@ -780,7 +828,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 60
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_nullable IS NOT NULL
@@ -794,7 +842,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 70
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_discriminator IS NOT NULL
@@ -808,7 +856,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 80
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_readonly IS NOT NULL
@@ -822,7 +870,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 90
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_writeonly IS NOT NULL
@@ -836,7 +884,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 30
+      -- Step 100
       -- Write the optional externalDocs object
       --------------------------------------------------------------------------
       IF  self.schema_externalDocs IS NOT NULL
@@ -853,7 +901,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 110
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_example_string IS NOT NULL
@@ -875,7 +923,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 120
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_deprecated IS NOT NULL
@@ -889,7 +937,7 @@ AS
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 50
+      -- Step 130
       -- Add optional xml object
       --------------------------------------------------------------------------
       IF self.xml_name      IS NOT NULL
@@ -915,12 +963,16 @@ AS
       END IF;
       
       -------------------------------------------------------------------------
-      -- Step 60
+      -- Step 140
       -- Write the properties map
       -------------------------------------------------------------------------
       IF  self.schema_properties IS NOT NULL 
       AND self.schema_properties.COUNT > 0
       THEN
+         boo_check    := FALSE;
+         int_counter  := 1;
+         ary_required := MDSYS.SDO_STRING2_ARRAY();
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'properties: '
             ,p_pretty_print + 1
@@ -938,13 +990,46 @@ AS
             ) || self.schema_properties(i).toYAML(
                p_pretty_print + 3
             );
+            
+            IF self.schema_properties(i).schema_required = 'TRUE'
+            THEN
+               ary_required.EXTEND();
+               ary_required(int_counter) := self.schema_properties(i).hash_key;
+               int_counter := int_counter + 1;
+               boo_check   := TRUE;
+
+            END IF;
          
          END LOOP;
+         
+      --------------------------------------------------------------------------
+      -- Step 140
+      -- Add requirements array
+      --------------------------------------------------------------------------
+         IF boo_check
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'required: '
+               ,p_pretty_print + 1
+               ,'  '
+            );
+            
+            FOR i IN 1 .. ary_required.COUNT
+            LOOP
+               clb_output := clb_output || dz_json_util.pretty_str(
+                   '- ' || ary_required(i)
+                  ,p_pretty_print + 1
+                  ,'  '
+               );
+               
+            END LOOP;
+            
+         END IF;
          
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 70
+      -- Step 150
       -- Cough it out with adjustments as needed
       --------------------------------------------------------------------------
       IF p_initial_indent = 'FALSE'

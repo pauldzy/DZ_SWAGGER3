@@ -50,8 +50,10 @@ UNDER dz_swagger3_schema_typ_nf(
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
-       p_schema_id            IN  VARCHAR2
-      ,p_versionid            IN  VARCHAR2
+       p_hash_key                IN  VARCHAR2
+      ,p_schema_id               IN  VARCHAR2
+      ,p_required                IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -95,16 +97,16 @@ UNDER dz_swagger3_schema_typ_nf(
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER PROCEDURE addItemsSchema(
-       SELF               IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_items_schema_id  IN  VARCHAR2
-      ,p_versionid        IN  VARCHAR2
+       SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_items_schema_id     IN  VARCHAR2
+      ,p_versionid           IN  VARCHAR2
    )
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER PROCEDURE addProperties(
-       SELF         IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_versionid  IN  VARCHAR2
+       SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_versionid           IN  VARCHAR2
    )
    
    -----------------------------------------------------------------------------
@@ -125,14 +127,14 @@ UNDER dz_swagger3_schema_typ_nf(
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toJSON(
-       p_pretty_print      IN  INTEGER  DEFAULT NULL
-      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE'       
+       p_pretty_print        IN  INTEGER  DEFAULT NULL
+      ,p_jsonschema          IN  VARCHAR2 DEFAULT 'FALSE'       
    ) RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toYAML(
-       p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
