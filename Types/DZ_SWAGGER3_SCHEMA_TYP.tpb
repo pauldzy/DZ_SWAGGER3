@@ -255,7 +255,7 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION isNULL
+   OVERRIDING MEMBER FUNCTION isNULL
    RETURN VARCHAR2
    AS
    BEGIN
@@ -606,8 +606,8 @@ AS
       -- Step 140
       -- Add schema items
       --------------------------------------------------------------------------
-      IF  self.schema_externalDocs IS NOT NULL
-      AND self.schema_externalDocs.isNULL() = 'FALSE'
+      IF  self.schema_items_schema IS NOT NULL
+      AND self.schema_items_schema.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad || dz_json_main.formatted2json(
@@ -935,9 +935,26 @@ AS
          );
       
       END IF;
-
+      
       --------------------------------------------------------------------------
       -- Step 130
+      -- Write the optional externalDocs object
+      --------------------------------------------------------------------------
+      IF  self.schema_items_schema IS NOT NULL
+      AND self.schema_items_schema.isNULL() = 'FALSE'
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'items: ' 
+            ,p_pretty_print
+            ,'  '
+         ) || self.schema_items_schema.toYAML(
+            p_pretty_print + 1
+         );
+         
+      END IF;
+
+      --------------------------------------------------------------------------
+      -- Step 140
       -- Add optional xml object
       --------------------------------------------------------------------------
       IF self.xml_name      IS NOT NULL
@@ -963,7 +980,7 @@ AS
       END IF;
       
       -------------------------------------------------------------------------
-      -- Step 140
+      -- Step 150
       -- Write the properties map
       -------------------------------------------------------------------------
       IF  self.schema_properties IS NOT NULL 
@@ -1003,7 +1020,7 @@ AS
          END LOOP;
          
       --------------------------------------------------------------------------
-      -- Step 140
+      -- Step 160
       -- Add requirements array
       --------------------------------------------------------------------------
          IF boo_check
@@ -1029,7 +1046,7 @@ AS
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 150
+      -- Step 170
       -- Cough it out with adjustments as needed
       --------------------------------------------------------------------------
       IF p_initial_indent = 'FALSE'
