@@ -322,7 +322,7 @@ AS
       RETURN self.toJSON_schema(
           p_pretty_print   => p_pretty_print
          ,p_jsonschema     => p_jsonschema
-      )
+      );
       
    END toJSON;
    
