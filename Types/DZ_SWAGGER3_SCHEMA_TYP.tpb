@@ -318,6 +318,21 @@ AS
       ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS
+   BEGIN
+      RETURN self.toJSON_schema(
+          p_pretty_print   => p_pretty_print
+         ,p_jsonschema     => p_jsonschema
+      )
+      
+   END toJSON;
+   
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   OVERRIDING MEMBER FUNCTION toJSON_schema(
+       p_pretty_print      IN  INTEGER  DEFAULT NULL
+      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
+   ) RETURN CLOB
+   AS
       str_jsonschema   VARCHAR2(4000 Char) := UPPER(p_jsonschema);
       clb_output       CLOB;
       str_pad          VARCHAR2(1 Char);
@@ -752,11 +767,52 @@ AS
       --------------------------------------------------------------------------
       RETURN clb_output;
            
-   END toJSON;
+   END toJSON_schema;
+   
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   OVERRIDING MEMBER FUNCTION toJSON_combine(
+       p_pretty_print      IN  INTEGER  DEFAULT NULL
+      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
+   ) RETURN CLOB
+   AS
+   BEGIN
+      RETURN NULL;
+      
+   END toJSON_combine;
+   
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   OVERRIDING MEMBER FUNCTION toJSON_not(
+       p_pretty_print      IN  INTEGER  DEFAULT NULL
+      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
+   ) RETURN CLOB
+   AS
+   BEGIN
+      RETURN NULL;
+      
+   END toJSON_not;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    OVERRIDING MEMBER FUNCTION toYAML(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS
+   BEGIN
+      RETURN self.toYAML_schema(
+          p_pretty_print    => p_pretty_print
+         ,p_initial_indent  => p_initial_indent
+         ,p_final_linefeed  => p_final_linefeed
+      );
+      
+   END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   OVERRIDING MEMBER FUNCTION toYAML_schema(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
@@ -1063,7 +1119,33 @@ AS
                
       RETURN clb_output;
       
-   END toYAML;
+   END toYAML_schema;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   OVERRIDING MEMBER FUNCTION toYAML_combine(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS
+   BEGIN
+      RETURN NULL;
+      
+   END toYAML_combine;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   OVERRIDING MEMBER FUNCTION toYAML_not(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS
+   BEGIN
+      RETURN NULL;
+      
+   END toYAML_not;
    
 END;
 /
