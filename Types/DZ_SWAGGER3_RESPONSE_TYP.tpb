@@ -81,6 +81,34 @@ AS
       RETURN; 
       
    END dz_swagger3_response_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_response_typ(
+       p_media_type              IN  VARCHAR2
+      ,p_parameters              IN  dz_swagger3_parameters_list
+   ) RETURN SELF AS RESULT
+   AS
+      int_counter PLS_INTEGER;
+      
+   BEGIN
+   
+      self.response_content := dz_swagger3_media();
+      self.response_content.hash_key := p_media_type;
+      self.response_content.media_schema := dz_swagger3_schema();
+      self.response_content.media_schema.schema_type := 'object';
+      self.response_content.media_schema.schema_properties := dz_swagger3_schema_list();
+   
+      FOR i IN 1 .. p_parameters.COUNT
+      LOOP
+         self.response_content.media_schema.schema_properties.EXTEND();
+         self.response_content.media_schema.schema_properties(i) := p_parameters(i).parameter_schema;
+      
+      END LOOP;
+   
+      RETURN;
+      
+   END dz_swagger3_response_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

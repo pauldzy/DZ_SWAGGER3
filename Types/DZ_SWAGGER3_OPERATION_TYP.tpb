@@ -17,7 +17,9 @@ AS
        p_operation_id            IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT
-   AS 
+   AS
+      str_operation_requestBody_id VARCHAR2(255 Char);
+      
    BEGIN 
       
       --------------------------------------------------------------------------
@@ -26,25 +28,28 @@ AS
       --------------------------------------------------------------------------
       BEGIN
          SELECT
-         dz_swagger3_operation_typ(
-             p_hash_key               => a.operation_type
-            ,p_operation_tags         => NULL
-            ,p_operation_summary      => a.operation_summary
-            ,p_operation_description  => a.operation_description
-            ,p_operation_externalDocs => dz_swagger3_extrdocs_typ(
-                p_externaldoc_id      => a.operation_externaldocs_id
-               ,p_versionid           => p_versionid
+          dz_swagger3_operation_typ(
+             p_hash_key                 => a.operation_type
+            ,p_operation_tags           => NULL
+            ,p_operation_summary        => a.operation_summary
+            ,p_operation_description    => a.operation_description
+            ,p_operation_externalDocs   => dz_swagger3_extrdocs_typ(
+                p_externaldoc_id          => a.operation_externaldocs_id
+               ,p_versionid               => p_versionid
              )
-            ,p_operation_operationID  => a.operation_operationID
-            ,p_operation_parameters   => NULL
-            ,p_operation_requestBody  => NULL
-            ,p_operation_responses    => NULL
-            ,p_operation_callbacks    => NULL
-            ,p_operation_deprecated   => a.operation_deprecated
-            ,p_operation_security     => NULL
-            ,p_operation_servers      => NULL
-         )
-         INTO SELF
+            ,p_operation_operationID    => a.operation_operationID
+            ,p_operation_parameters     => NULL
+            ,p_operation_requestBody    => NULL
+            ,p_operation_responses      => NULL
+            ,p_operation_callbacks      => NULL
+            ,p_operation_deprecated     => a.operation_deprecated
+            ,p_operation_security       => NULL
+            ,p_operation_servers        => NULL
+          )
+         ,a.operation_requestBody_id
+         INTO
+          SELF
+         ,str_operation_requestBody_id
          FROM
          dz_swagger3_operation a
          WHERE
@@ -81,32 +86,63 @@ AS
       -- Step 30
       -- Add any parameters
       --------------------------------------------------------------------------
-      SELECT
-      dz_swagger3_parameter_typ(
-          p_parameter_id     => a.parameter_id
-         ,p_versionid        => p_versionid
-      )
-      BULK COLLECT INTO self.operation_parameters
-      FROM
-      dz_swagger3_parameter a
-      JOIN
-      dz_swagger3_parm_parent_map b
-      ON
-          a.versionid = b.versionid
-      AND a.parameter_id = b.parameter_id
-      WHERE
-          b.versionid = p_versionid
-      AND b.parent_id = p_operation_id
-      ORDER BY
-      b.parameter_order;
+      IF self.hash_key IN ('get','post')
+      THEN
+         SELECT
+         dz_swagger3_parameter_typ(
+             p_parameter_id     => a.parameter_id
+            ,p_versionid        => p_versionid
+         )
+         BULK COLLECT INTO self.operation_parameters
+         FROM
+         dz_swagger3_parameter a
+         JOIN
+         dz_swagger3_parm_parent_map b
+         ON
+             a.versionid = b.versionid
+         AND a.parameter_id = b.parameter_id
+         WHERE
+             b.versionid = p_versionid
+         AND b.parent_id = p_operation_id
+         ORDER BY
+         b.parameter_order;
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 40
-      -- Add the requestBody
-      -------------------------------------------------------------------------
+      -- Add the requestBody from parameters
+      --------------------------------------------------------------------------
+      IF self.hash_key = 'get'
+      THEN
+         NULL; -- nothing further needed
       
+      ELSIF self.hash_key = 'post'
+      AND self.operation_parameters IS NOT NULL
+      AND self.operation_parameters.COUNT > 0
+      THEN
+         self.operation_requestBody := dz_swagger3_requestBody_typ(
+             p_media_type => 'application/x-www-form-urlencoded'
+            ,p_parameters => self.operation_parameters
+         );
+         
+         self.operation_parameters := NULL;
+         
       --------------------------------------------------------------------------
       -- Step 50
+      -- Add a normal request body
+      --------------------------------------------------------------------------
+      ELSIF str_operation_requestBody_id IS NOT NULL
+      THEN
+         self.operation_requestBody := dz_swagger3_requestBody_typ(
+             p_requestBody_id          => str_operation_requestBody_id
+            ,p_versionid               => p_versionid
+         );
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 60
       -- Add the responses
       --------------------------------------------------------------------------
       SELECT
@@ -130,17 +166,17 @@ AS
       a.response_order;
       
       --------------------------------------------------------------------------
-      -- Step 60
+      -- Step 70
       -- Add any callbacks
       --------------------------------------------------------------------------
       
       --------------------------------------------------------------------------
-      -- Step 70
+      -- Step 80
       -- Add any security
       --------------------------------------------------------------------------
       
       --------------------------------------------------------------------------
-      -- Step 80
+      -- Step 90
       -- Add any servers
       --------------------------------------------------------------------------
       SELECT
@@ -156,7 +192,7 @@ AS
       AND a.parent_id = p_operation_id;
       
       --------------------------------------------------------------------------
-      -- Step 90
+      -- Step 100
       -- Return the completed object
       --------------------------------------------------------------------------
       RETURN;       

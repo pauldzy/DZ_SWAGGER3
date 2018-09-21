@@ -41,6 +41,9 @@ UNDER dz_swagger3_schema_typ_nf(
    ,xml_attribute            VARCHAR2(5 Char)
    ,xml_wrapped              VARCHAR2(5 Char)
    ,schema_scalar            VARCHAR2(255 Char)
+   -----
+   ,combine_schemas          dz_swagger3_schema_nf_list
+   ,not_schema               dz_swagger3_schema_nf
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

@@ -10,7 +10,76 @@ AS
       RETURN; 
       
    END dz_swagger3_requestbody_typ;
-
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
+       p_requestbody_id          IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+   ) RETURN SELF AS RESULT
+   AS
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Pull the object information
+      -------------------------------------------------------------------------- 
+      BEGIN
+         SELECT
+         dz_swagger3_requestbody_typ(
+             p_hash_key                => p_requestbody_id
+            ,p_requestbody_description => b.requestbody_description
+            ,p_requestbody_content     => NULL
+            ,p_requestbody_required    => b.requestbody_required
+         )
+         INTO SELF
+         FROM
+         dz_swagger3_requestbody a
+         WHERE
+             a.versionid      = p_versionid
+         AND a.requestbody_id = p_requestbody_id;
+         
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Collect the media content
+      -------------------------------------------------------------------------- 
+      SELECT
+      dz_swagger3_media_typ(
+          p_media_id              => b.media_id
+         ,p_media_type            => a.media_type
+         ,p_versionid             => p_versionid
+      )
+      BULK COLLECT INTO self.response_content
+      FROM
+      dz_swagger3_media_parent_map a
+      JOIN
+      dz_swagger3_media b
+      ON
+          a.versionid  = b.versionid
+      AND a.media_id   = b.media_id
+      WHERE
+          a.versionid = p_versionid
+      AND a.parent_id = p_requestbody_id;
+      
+      --------------------------------------------------------------------------
+      -- Step 
+      -- Return the completed object
+      --------------------------------------------------------------------------   
+      RETURN; 
+   
+   END dz_swagger3_requestbody_typ;
+   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
@@ -167,7 +236,6 @@ AS
             clb_hash := dz_json_util.pretty('{',-1);
             
          END IF;
-      
       
          ary_keys := self.requestbody_content_keys();
       

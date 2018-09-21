@@ -319,10 +319,28 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
-      RETURN self.toJSON_schema(
-          p_pretty_print   => p_pretty_print
-         ,p_jsonschema     => p_jsonschema
-      );
+   
+      IF self.hash_key IN ('anyOf','allOf','oneOf')
+      THEN
+         RETURN self.toJSON_combine(
+             p_pretty_print   => p_pretty_print
+            ,p_jsonschema     => p_jsonschema
+         );
+         
+      ELSIF self.hash_key = 'not'
+      THEN
+         RETURN self.toJSON_not(
+             p_pretty_print   => p_pretty_print
+            ,p_jsonschema     => p_jsonschema
+         );
+         
+      ELSE
+         RETURN self.toJSON_schema(
+             p_pretty_print   => p_pretty_print
+            ,p_jsonschema     => p_jsonschema
+         );
+         
+      END IF;
       
    END toJSON;
    
@@ -777,7 +795,107 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
-      RETURN NULL;
+      str_jsonschema   VARCHAR2(4000 Char) := UPPER(p_jsonschema);
+      clb_output       CLOB;
+      str_pad          VARCHAR2(1 Char);
+      str_pad1         VARCHAR2(1 Char);
+      str_pad2         VARCHAR2(1 Char);
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      clb_hash         CLOB;
+      
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Build the wrapper
+      --------------------------------------------------------------------------
+      IF p_pretty_print IS NULL
+      THEN
+         clb_output  := dz_json_util.pretty('{',NULL);
+         str_pad  := '';
+         
+      ELSE
+         clb_output  := dz_json_util.pretty('{',-1);
+         str_pad  := ' ';
+         
+      END IF;
+      
+      str_pad1 := str_pad;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Add base attributes
+      --------------------------------------------------------------------------
+      IF self.schema_type IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'type'
+               ,self.schema_type
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Add the left bracket
+      --------------------------------------------------------------------------
+      str_pad2 := str_pad;
+         
+      IF p_pretty_print IS NULL
+      THEN
+         clb_hash := dz_json_util.pretty('[',NULL);
+         
+      ELSE
+         clb_hash := dz_json_util.pretty('[',-1);
+         
+      END IF;
+   
+      FOR i IN 1 .. combine_schemas.COUNT
+      LOOP
+         clb_hash := clb_hash || dz_json_util.pretty(
+             str_pad2 || self.combine_schemas(i).toJSON(
+               p_pretty_print => p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad2 := ',';
+      
+      END LOOP;
+      
+      clb_hash := clb_hash || dz_json_util.pretty(
+          ']'
+         ,p_pretty_print + 1,NULL,NULL
+      );
+      
+      clb_output := clb_output || dz_json_util.pretty(
+          str_pad1 || dz_json_main.formatted2json(
+              self.hash_key
+             ,clb_hash
+             ,p_pretty_print + 1
+          )
+         ,p_pretty_print + 1
+      );
+      str_pad1 := ',';
+
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Add the left bracket
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty(
+          '}'
+         ,p_pretty_print,NULL,NULL
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Cough it out
+      --------------------------------------------------------------------------
+      RETURN clb_output;
       
    END toJSON_combine;
    
@@ -789,7 +907,75 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
-      RETURN NULL;
+      clb_output       CLOB;
+      str_pad          VARCHAR2(1 Char);
+      str_pad1         VARCHAR2(1 Char);
+      
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Build the wrapper
+      --------------------------------------------------------------------------
+      IF p_pretty_print IS NULL
+      THEN
+         clb_output  := dz_json_util.pretty('{',NULL);
+         str_pad  := '';
+         
+      ELSE
+         clb_output  := dz_json_util.pretty('{',-1);
+         str_pad  := ' ';
+         
+      END IF;
+      
+      str_pad1 := str_pad;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Add not schema item
+      --------------------------------------------------------------------------
+      IF self.schema_type IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'type'
+               ,self.schema_type
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Add not schema item
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty(
+          str_pad || dz_json_main.formatted2json(
+             'not'
+            ,self.not_schema.toJSON(p_pretty_print + 1)
+            ,p_pretty_print + 1
+         )
+         ,p_pretty_print + 1
+      );
+      str_pad := ',';
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Add the left bracket
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty(
+          '}'
+         ,p_pretty_print,NULL,NULL
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Cough it out
+      --------------------------------------------------------------------------
+      RETURN clb_output;
       
    END toJSON_not;
    
@@ -802,11 +988,32 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
-      RETURN self.toYAML_schema(
-          p_pretty_print    => p_pretty_print
-         ,p_initial_indent  => p_initial_indent
-         ,p_final_linefeed  => p_final_linefeed
-      );
+      IF self.hash_key IN ('anyOf','allOf','oneOf')
+      THEN
+         RETURN self.toYAML_combine(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+         
+         
+      ELSIF self.hash_key = 'not'
+      THEN
+         RETURN self.toYAML_not(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+         
+         
+      ELSE
+         RETURN self.toYAML_schema(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+         
+      END IF;
       
    END toYAML;
    
