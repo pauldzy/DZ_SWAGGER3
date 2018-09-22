@@ -31,35 +31,35 @@ AS
             ,p_path_summary           => a.path_summary
             ,p_path_description       => a.path_description
             ,p_path_get_operation     => dz_swagger3_operation_typ(
-                p_operation_id           => a.path_get_operation
+                p_operation_id           => a.path_get_operation_id
                ,p_versionid              => p_versionid
              )
             ,p_path_put_operation     => dz_swagger3_operation_typ(
-                p_operation_id           => a.path_put_operation
+                p_operation_id           => a.path_put_operation_id
                ,p_versionid              => p_versionid
              )
             ,p_path_post_operation    => dz_swagger3_operation_typ(
-                p_operation_id           => a.path_post_operation
+                p_operation_id           => a.path_post_operation_id
                ,p_versionid              => p_versionid
              )
             ,p_path_delete_operation  => dz_swagger3_operation_typ(
-                p_operation_id           => a.path_delete_operation
+                p_operation_id           => a.path_delete_operation_id
                ,p_versionid              => p_versionid
              )
             ,p_path_options_operation => dz_swagger3_operation_typ(
-                p_operation_id           => a.path_options_operation
+                p_operation_id           => a.path_options_operation_id
                ,p_versionid              => p_versionid
              )
             ,p_path_head_operation    => dz_swagger3_operation_typ(
-                p_operation_id           => a.path_head_operation
+                p_operation_id           => a.path_head_operation_id
                ,p_versionid              => p_versionid
              )
             ,p_path_patch_operation   => dz_swagger3_operation_typ(
-                p_operation_id           => a.path_patch_operation
+                p_operation_id           => a.path_patch_operation_id
                ,p_versionid              => p_versionid
              )
             ,p_path_trace_operation   => dz_swagger3_operation_typ(
-                p_operation_id           => a.path_trace_operation
+                p_operation_id           => a.path_trace_operation_id
                ,p_versionid              => p_versionid
              )
             ,p_path_servers           => NULL
@@ -177,6 +177,15 @@ AS
       RETURN self.hash_key;
       
    END key;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION unique_schemas
+   RETURN dz_swagger3_schema_nf_list
+   AS
+   BEGIN
+      NULL;
+   END unique_schemas;
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------

@@ -210,7 +210,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 30
-      -- Add optional description
+      -- Add schema object
       --------------------------------------------------------------------------
       IF self.media_schema IS NULL
       OR self.media_schema.isNULL() = 'TRUE'
@@ -240,7 +240,7 @@ AS
          
       --------------------------------------------------------------------------
       -- Step 40
-      -- Add optional description 
+      -- Add optional example
       --------------------------------------------------------------------------
       IF self.media_example_string IS NOT NULL
       THEN
@@ -270,12 +270,12 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 120
-      -- Add optional variables map
+      -- Add optional examples map
       --------------------------------------------------------------------------
       IF self.media_examples IS NULL 
       OR self.media_examples.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -309,26 +309,26 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
-      END IF;
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'examples'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'examples'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 120
-      -- Add optional variables map
+      -- Add optional encoding map
       --------------------------------------------------------------------------
       IF self.media_encoding IS NULL 
       OR self.media_encoding.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -342,14 +342,13 @@ AS
             
          END IF;
       
-      
          ary_keys := self.media_encoding_keys();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.media_encoding(i).toJSON(
-                  p_pretty_print => p_pretty_print + 2
+                  p_pretty_print => p_pretty_print + 1
                 )
                ,p_pretty_print + 1
             );
@@ -362,17 +361,17 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
-      END IF;
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'encoding'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'encoding'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
+      END IF;
  
       --------------------------------------------------------------------------
       -- Step 60

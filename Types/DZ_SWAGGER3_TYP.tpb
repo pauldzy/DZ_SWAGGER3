@@ -19,9 +19,9 @@ AS
       ,p_versionid           IN  VARCHAR2 DEFAULT NULL
    ) RETURN SELF AS RESULT
    AS
-      str_doc_id          VARCHAR2(4000 Char) := p_doc_id;
-      str_group_id        VARCHAR2(4000 Char) := p_group_id;
-      str_versionid       VARCHAR2(40 Char)   := p_versionid;
+      str_doc_id          VARCHAR2(255 Char) := p_doc_id;
+      str_group_id        VARCHAR2(255 Char) := p_group_id;
+      str_versionid       VARCHAR2(40 Char)  := p_versionid;
       str_externaldocs_id VARCHAR2(255 Char);
 
    BEGIN
@@ -591,12 +591,9 @@ AS
       -- Step 40
       -- Write the server array
       --------------------------------------------------------------------------
-      IF self.servers IS NULL 
-      OR self.servers.COUNT = 0
+      IF  self.servers IS NOT NULL 
+      AND self.servers.COUNT > 0
       THEN
-         NULL;
-         
-      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'servers: '
             ,p_pretty_print
@@ -606,8 +603,8 @@ AS
          FOR i IN 1 .. self.servers.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '- ' || self.servers(i).toYAML(p_pretty_print + 1,'FALSE','FALSE')
-               ,p_pretty_print
+                '- ' || self.servers(i).toYAML(p_pretty_print + 2,'FALSE','FALSE')
+               ,p_pretty_print + 1
                ,'  '
             );
             
@@ -649,11 +646,9 @@ AS
       -- Step 60
       -- Write the components operation
       --------------------------------------------------------------------------
-      IF self.components IS NULL
+      IF  self.components IS NOT NULL
+      AND self.components.isNULL() = 'FALSE'
       THEN
-         NULL;
-         
-      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'components: ' 
             ,p_pretty_print
@@ -668,12 +663,9 @@ AS
       -- Step 70
       -- Write the security array
       --------------------------------------------------------------------------
-      IF self.security IS NULL 
-      OR self.security.COUNT = 0
+      IF  self.security IS NOT NULL 
+      AND self.security.COUNT > 0
       THEN
-         NULL;
-         
-      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'security: '
             ,p_pretty_print
@@ -698,12 +690,9 @@ AS
       -- Step 80
       -- Write the tags array
       --------------------------------------------------------------------------
-      IF self.tags IS NULL 
-      OR self.tags.COUNT = 0
+      IF  self.tags IS NOT NULL 
+      AND self.tags.COUNT > 0
       THEN
-         NULL;
-         
-      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'tags: '
             ,p_pretty_print
@@ -728,11 +717,9 @@ AS
       -- Step 90
       -- Write the externalDocs
       --------------------------------------------------------------------------
-      IF self.externalDocs IS NULL
+      IF  self.externalDocs IS NOT NULL
+      AND self.externalDocs.isNULL() = 'FALSE'
       THEN
-         NULL;
-      
-      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'externalDocs: ' 
             ,p_pretty_print

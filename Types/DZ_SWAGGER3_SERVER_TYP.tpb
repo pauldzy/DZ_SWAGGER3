@@ -206,7 +206,7 @@ AS
       IF self.server_variables IS NULL 
       OR self.server_variables.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -240,18 +240,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
-      END IF;
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'variables'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'variables'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-
+      END IF;
+      
       --------------------------------------------------------------------------
       -- Step 60
       -- Add the left bracket

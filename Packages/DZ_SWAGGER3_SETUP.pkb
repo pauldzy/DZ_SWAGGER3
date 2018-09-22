@@ -306,23 +306,23 @@ AS
       -- Build PATH table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_path('
-              || '    path_id                VARCHAR2(255 Char) NOT NULL '
-              || '   ,path_endpoint          VARCHAR2(255 Char) NOT NULL '
-              || '   ,path_summary           VARCHAR2(4000 Char) '
-              || '   ,path_description       VARCHAR2(4000 Char) '
-              || '   ,path_order             INTEGER NOT NULL '
-              || '   ,path_get_operation     VARCHAR2(255 Char) '
-              || '   ,path_put_operation     VARCHAR2(255 Char) '
-              || '   ,path_post_operation    VARCHAR2(255 Char) '
-              || '   ,path_delete_operation  VARCHAR2(255 Char) '
-              || '   ,path_options_operation VARCHAR2(255 Char) '
-              || '   ,path_head_operation    VARCHAR2(255 Char) '
-              || '   ,path_patch_operation   VARCHAR2(255 Char) '
-              || '   ,path_trace_operation   VARCHAR2(255 Char) '
-              || '   ,path_desc_updated      DATE '
-              || '   ,path_desc_author       VARCHAR2(30 Char) '
-              || '   ,path_desc_notes        VARCHAR2(255 Char) '
-              || '   ,versionid              VARCHAR2(40 Char) NOT NULL '
+              || '    path_id                   VARCHAR2(255 Char) NOT NULL '
+              || '   ,path_endpoint             VARCHAR2(255 Char) NOT NULL '
+              || '   ,path_summary              VARCHAR2(4000 Char) '
+              || '   ,path_description          VARCHAR2(4000 Char) '
+              || '   ,path_order                INTEGER NOT NULL '
+              || '   ,path_get_operation_id     VARCHAR2(255 Char) '
+              || '   ,path_put_operation_id     VARCHAR2(255 Char) '
+              || '   ,path_post_operation_id    VARCHAR2(255 Char) '
+              || '   ,path_delete_operation_id  VARCHAR2(255 Char) '
+              || '   ,path_options_operation_id VARCHAR2(255 Char) '
+              || '   ,path_head_operation_id    VARCHAR2(255 Char) '
+              || '   ,path_patch_operation_id   VARCHAR2(255 Char) '
+              || '   ,path_trace_operation_id   VARCHAR2(255 Char) '
+              || '   ,path_desc_updated         DATE '
+              || '   ,path_desc_author          VARCHAR2(30 Char) '
+              || '   ,path_desc_notes           VARCHAR2(255 Char) '
+              || '   ,versionid                 VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1089,52 +1089,6 @@ AS
       -- Step 220
       -- Build EXAMPLE table
       -------------------------------------------------------------------------
-      str_sql := 'CREATE TABLE dz_swagger3_requestBody('
-              || '    requestBody_id           VARCHAR2(255 Char) NOT NULL '
-              || '   ,requestBody_description  VARCHAR2(4000 Char) '
-              || '   ,requestBody_required     VARCHAR2(5 Char) '
-              || '   ,versionid                VARCHAR2(40 Char) NOT NULL '
-              || ') ';
-              
-      IF p_table_tablespace IS NOT NULL
-      THEN
-         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
-      END IF;
-      
-      EXECUTE IMMEDIATE str_sql;
-      
-      str_sql := 'ALTER TABLE dz_swagger3_requestBody '
-              || 'ADD CONSTRAINT dz_swagger3_requestBody_pk '
-              || 'PRIMARY KEY(versionid,requestBody_id) ';
-              
-      IF p_index_tablespace IS NOT NULL
-      THEN
-         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
-      END IF;
-      
-      EXECUTE IMMEDIATE str_sql;
-      
-      str_sql := 'ALTER TABLE dz_swagger3_requestBody '
-              || 'ADD( '
-              || '    CONSTRAINT dz_swagger3_requestBody_c01 '
-              || '    CHECK (requestBody_id = TRIM(requestBody_id)) '
-              || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_requestBody_c02 '
-              || '    CHECK (requestBody_required IN (''TRUE'',''FALSE'')) '
-              || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_requestBody_c03 '
-              || '    CHECK (versionid = TRIM(versionid)) '
-              || '    ENABLE VALIDATE '
-              || ') ';
-              
-      EXECUTE IMMEDIATE str_sql;
-      
-      -------------------------------------------------------------------------
-      -- Step 230
-      -- Build EXAMPLE table
-      -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_example('
               || '    example_id             VARCHAR2(255 Char) NOT NULL '
               || '   ,example_summary        VARCHAR2(255 Char) '
@@ -1178,7 +1132,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       -------------------------------------------------------------------------
-      -- Step 240
+      -- Step 230
       -- Build ENCODING table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_encoding('
@@ -1229,7 +1183,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       -------------------------------------------------------------------------
-      -- Step 250
+      -- Step 240
       -- Build LINK table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_link('
@@ -1274,7 +1228,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       -------------------------------------------------------------------------
-      -- Step 260
+      -- Step 250
       -- Build HEADER table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_header('
@@ -1343,7 +1297,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       -------------------------------------------------------------------------
-      -- Step 270
+      -- Step 260
       -- Build EXTERNALDOC table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_externaldoc('
@@ -1386,7 +1340,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       -------------------------------------------------------------------------
-      -- Step 280
+      -- Step 270
       -- Build SECURITY SCHEME table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_securityScheme('
@@ -1437,7 +1391,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       -------------------------------------------------------------------------
-      -- Step 290
+      -- Step 280
       -- Build TAG table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_tag('
@@ -1484,7 +1438,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       -------------------------------------------------------------------------
-      -- Step 300
+      -- Step 290
       -- Build CONDENSE table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_condense('
@@ -1573,7 +1527,6 @@ AS
          ,'DZ_SWAGGER3_SCHEMA_PROP_MAP'
          ,'DZ_SWAGGER3_SCHEMA_ENUM_MAP'
          ,'DZ_SWAGGER3_SCHEMA_COMBINE_MAP'
-         ,'DZ_SWAGGER3_REQUESTBODY'
          ,'DZ_SWAGGER3_EXAMPLE'
          ,'DZ_SWAGGER3_ENCODING'
          ,'DZ_SWAGGER3_LINK'

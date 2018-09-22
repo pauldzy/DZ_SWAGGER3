@@ -17,6 +17,13 @@ AS OBJECT (
        p_requestbody_id          IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
+       p_media_type              IN  VARCHAR2
+      ,p_parameters              IN  dz_swagger3_parameter_list
+   ) RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

@@ -81,34 +81,6 @@ AS
       RETURN; 
       
    END dz_swagger3_response_typ;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_response_typ(
-       p_media_type              IN  VARCHAR2
-      ,p_parameters              IN  dz_swagger3_parameters_list
-   ) RETURN SELF AS RESULT
-   AS
-      int_counter PLS_INTEGER;
-      
-   BEGIN
-   
-      self.response_content := dz_swagger3_media();
-      self.response_content.hash_key := p_media_type;
-      self.response_content.media_schema := dz_swagger3_schema();
-      self.response_content.media_schema.schema_type := 'object';
-      self.response_content.media_schema.schema_properties := dz_swagger3_schema_list();
-   
-      FOR i IN 1 .. p_parameters.COUNT
-      LOOP
-         self.response_content.media_schema.schema_properties.EXTEND();
-         self.response_content.media_schema.schema_properties(i) := p_parameters(i).parameter_schema;
-      
-      END LOOP;
-   
-      RETURN;
-      
-   END dz_swagger3_response_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -313,7 +285,7 @@ AS
       IF self.response_headers IS NULL 
       OR self.response_headers.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -346,17 +318,17 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
-      END IF;
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'headers'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'headers'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 50
@@ -365,7 +337,7 @@ AS
       IF self.response_content IS NULL 
       OR self.response_content.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -398,26 +370,26 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'content'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'content'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 60
-      -- Add optional variables map
+      -- Add optional links map
       --------------------------------------------------------------------------
       IF self.response_links IS NULL 
       OR self.response_links.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -450,18 +422,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'links'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'links'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
- 
       --------------------------------------------------------------------------
       -- Step 70
       -- Add the left bracket

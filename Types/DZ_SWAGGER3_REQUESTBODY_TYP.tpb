@@ -28,9 +28,9 @@ AS
          SELECT
          dz_swagger3_requestbody_typ(
              p_hash_key                => p_requestbody_id
-            ,p_requestbody_description => b.requestbody_description
+            ,p_requestbody_description => a.requestbody_description
             ,p_requestbody_content     => NULL
-            ,p_requestbody_required    => b.requestbody_required
+            ,p_requestbody_required    => a.requestbody_required
          )
          INTO SELF
          FROM
@@ -60,7 +60,7 @@ AS
          ,p_media_type            => a.media_type
          ,p_versionid             => p_versionid
       )
-      BULK COLLECT INTO self.response_content
+      BULK COLLECT INTO self.requestbody_content
       FROM
       dz_swagger3_media_parent_map a
       JOIN
@@ -78,6 +78,79 @@ AS
       --------------------------------------------------------------------------   
       RETURN; 
    
+   END dz_swagger3_requestbody_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
+       p_media_type              IN  VARCHAR2
+      ,p_parameters              IN  dz_swagger3_parameter_list
+   ) RETURN SELF AS RESULT
+   AS
+      int_counter PLS_INTEGER;
+      obj_schema  dz_swagger3_schema_typ;
+      
+   BEGIN
+   
+      self.requestbody_content := dz_swagger3_media_list();
+      self.requestbody_content.EXTEND();
+      self.requestbody_content(1) := dz_swagger3_media_typ();
+      self.requestbody_content(1).hash_key := p_media_type;
+      self.requestbody_content(1).media_schema := dz_swagger3_schema_typ();
+      self.requestbody_content(1).media_schema.schema_type := 'object';
+      self.requestbody_content(1).media_schema.schema_properties := dz_swagger3_schema_nf_list();
+      self.requestbody_content(1).media_schema.schema_properties.EXTEND(p_parameters.COUNT);
+      
+      FOR i IN 1 .. p_parameters.COUNT
+      LOOP
+         obj_schema := dz_swagger3_schema_typ(
+             p_schema_id               => p_parameters(i).parameter_schema.schema_id
+            ,p_schema_title            => p_parameters(i).parameter_schema.schema_title
+            ,p_schema_type             => p_parameters(i).parameter_schema.schema_type
+            ,p_schema_description      => p_parameters(i).parameter_schema.schema_description
+            ,p_schema_format           => p_parameters(i).parameter_schema.schema_format
+            ,p_schema_nullable         => p_parameters(i).parameter_schema.schema_nullable
+            ,p_schema_discriminator    => p_parameters(i).parameter_schema.schema_discriminator
+            ,p_schema_readonly         => p_parameters(i).parameter_schema.schema_readonly
+            ,p_schema_writeonly        => p_parameters(i).parameter_schema.schema_writeonly
+            ,p_schema_externalDocs     => p_parameters(i).parameter_schema.schema_externalDocs
+            ,p_schema_example_string   => p_parameters(i).parameter_schema.schema_example_string
+            ,p_schema_example_number   => p_parameters(i).parameter_schema.schema_example_number
+            ,p_schema_deprecated       => p_parameters(i).parameter_schema.schema_deprecated
+            ,p_schema_default_string   => p_parameters(i).parameter_schema.schema_default_string
+            ,p_schema_default_number   => p_parameters(i).parameter_schema.schema_default_number
+            ,p_schema_multipleOf       => p_parameters(i).parameter_schema.schema_multipleOf
+            ,p_schema_minimum          => p_parameters(i).parameter_schema.schema_minimum
+            ,p_schema_exclusiveMinimum => p_parameters(i).parameter_schema.schema_exclusiveMinimum
+            ,p_schema_maximum          => p_parameters(i).parameter_schema.schema_maximum
+            ,p_schema_exclusiveMaximum => p_parameters(i).parameter_schema.schema_exclusiveMaximum
+            ,p_schema_minLength        => p_parameters(i).parameter_schema.schema_minLength
+            ,p_schema_maxLength        => p_parameters(i).parameter_schema.schema_maxLength
+            ,p_schema_pattern          => p_parameters(i).parameter_schema.schema_pattern
+            ,p_schema_minItems         => p_parameters(i).parameter_schema.schema_minItems 
+            ,p_schema_maxItems         => p_parameters(i).parameter_schema.schema_maxItems
+            ,p_schema_uniqueItems      => p_parameters(i).parameter_schema.schema_uniqueItems
+            ,p_schema_minProperties    => p_parameters(i).parameter_schema.schema_minProperties
+            ,p_schema_maxProperties    => p_parameters(i).parameter_schema.schema_maxProperties
+            ,p_xml_name                => p_parameters(i).parameter_schema.xml_name
+            ,p_xml_namespace           => p_parameters(i).parameter_schema.xml_namespace
+            ,p_xml_prefix              => p_parameters(i).parameter_schema.xml_prefix
+            ,p_xml_attribute           => p_parameters(i).parameter_schema.xml_attribute
+            ,p_xml_wrapped             => p_parameters(i).parameter_schema.xml_wrapped
+            ,p_schema_items_schema     => p_parameters(i).parameter_schema.schema_items_schema
+            ,p_schema_properties       => p_parameters(i).parameter_schema.schema_properties
+            ,p_schema_scalar           => p_parameters(i).parameter_schema.schema_scalar
+            ,p_combine_schemas         => p_parameters(i).parameter_schema.combine_schemas
+            ,p_not_schema              => p_parameters(i).parameter_schema.not_schema
+         );
+         
+         obj_schema.hash_key := p_parameters(i).parameter_name;
+         self.requestbody_content(1).media_schema.schema_properties(i) := obj_schema;
+         
+      END LOOP;
+      
+      RETURN;
+      
    END dz_swagger3_requestbody_typ;
    
    -----------------------------------------------------------------------------
@@ -245,7 +318,7 @@ AS
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.requestbody_content(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -344,13 +417,13 @@ AS
          );
          
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 30
       -- Write the yaml media content
       --------------------------------------------------------------------------
-      IF  self.requestbody_content IS NULL 
-      AND self.requestbody_content.COUNT = 0
+      IF  self.requestbody_content IS NOT NULL 
+      AND self.requestbody_content.COUNT > 0
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'content: '

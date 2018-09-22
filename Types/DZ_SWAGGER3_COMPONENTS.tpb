@@ -391,7 +391,7 @@ AS
       IF self.components_schemas IS NULL
       OR self.components_schemas.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
       
       ELSE
          str_pad2 := str_pad;
@@ -424,18 +424,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'schemas'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'schemas'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 40
       -- Add responses map
@@ -443,7 +443,7 @@ AS
       IF self.components_responses IS NULL
       OR self.components_responses.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
       
       ELSE
          str_pad2 := str_pad;
@@ -476,18 +476,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'responses'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'responses'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 50
       -- Add parameters map
@@ -495,7 +495,7 @@ AS
       IF self.components_parameters IS NULL
       OR self.components_parameters.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
       
       ELSE
          str_pad2 := str_pad;
@@ -528,18 +528,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'parameters'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'parameters'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 60
       -- Add examples map
@@ -547,7 +547,7 @@ AS
       IF self.components_examples IS NULL
       OR self.components_examples.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
       
       ELSE
          str_pad2 := str_pad;
@@ -580,18 +580,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'examples'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'examples'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 70
       -- Add requestBodies map
@@ -599,7 +599,7 @@ AS
       IF self.components_requestBodies IS NULL
       OR self.components_requestBodies.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
       
       ELSE
          str_pad2 := str_pad;
@@ -632,18 +632,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'requestBodies'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'requestBodies'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 80
       -- Add headers map
@@ -651,7 +651,7 @@ AS
       IF self.components_headers IS NULL
       OR self.components_headers.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
       
       ELSE
          str_pad2 := str_pad;
@@ -684,18 +684,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'headers'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'headers'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 90
       -- Add headers map
@@ -703,7 +703,7 @@ AS
       IF self.components_securitySchemes IS NULL
       OR self.components_securitySchemes.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
       
       ELSE
          str_pad2 := str_pad;
@@ -736,18 +736,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'securitySchemes'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'securitySchemes'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 100
       -- Add links map
@@ -755,7 +755,7 @@ AS
       IF self.components_links IS NULL
       OR self.components_links.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
       
       ELSE
          str_pad2 := str_pad;
@@ -788,18 +788,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'links'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'links'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 110
       -- Add callbacks map
@@ -807,7 +807,7 @@ AS
       IF self.components_callbacks IS NULL
       OR self.components_callbacks.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
       
       ELSE
          str_pad2 := str_pad;
@@ -840,18 +840,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
-      END IF;
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'callbacks'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'callbacks'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
- 
+      END IF;
+      
       --------------------------------------------------------------------------
       -- Step 120
       -- Add the left bracket
@@ -892,11 +892,7 @@ AS
       IF  self.components_schemas IS NULL 
       OR self.components_schemas.COUNT = 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'schemas: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
          
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -928,11 +924,7 @@ AS
       IF self.components_responses IS NULL 
       OR self.components_responses.COUNT = 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'responses: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
          
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -964,11 +956,7 @@ AS
       IF self.components_parameters IS NULL 
       OR self.components_parameters.COUNT = 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'parameters: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
          
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -1000,11 +988,7 @@ AS
       IF self.components_examples IS NULL 
       OR self.components_examples.COUNT = 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'examples: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
          
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -1036,11 +1020,7 @@ AS
       IF self.components_requestBodies IS NULL 
       OR self.components_requestBodies.COUNT = 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'requestBodies: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
          
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -1072,11 +1052,7 @@ AS
       IF self.components_headers IS NULL 
       OR self.components_headers.COUNT = 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'headers: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
          
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -1108,11 +1084,7 @@ AS
       IF self.components_securitySchemes IS NULL 
       OR self.components_securitySchemes.COUNT = 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'securitySchemes: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
          
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -1144,11 +1116,7 @@ AS
       IF self.components_links IS NULL 
       OR self.components_links.COUNT = 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'links: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
          
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -1180,11 +1148,7 @@ AS
       IF self.components_callbacks IS NULL 
       OR self.components_callbacks.COUNT = 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'callbacks: null'
-            ,p_pretty_print
-            ,'  '
-         );
+         NULL;
          
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(

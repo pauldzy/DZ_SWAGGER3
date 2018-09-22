@@ -19,13 +19,6 @@ AS OBJECT (
       ,p_response_code           IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_response_typ(
-       p_media_type              IN  VARCHAR2
-      ,p_parameters              IN  dz_swagger3_parameters_list
-   ) RETURN SELF AS RESULT
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

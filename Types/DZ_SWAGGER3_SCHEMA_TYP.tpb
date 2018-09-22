@@ -201,6 +201,93 @@ AS
       RETURN; 
       
    END dz_swagger3_schema_typ;
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
+       p_schema_id               IN  VARCHAR2
+      ,p_schema_title            IN  VARCHAR2
+      ,p_schema_type             IN  VARCHAR2
+      ,p_schema_description      IN  VARCHAR2
+      ,p_schema_format           IN  VARCHAR2
+      ,p_schema_nullable         IN  VARCHAR2
+      ,p_schema_discriminator    IN  VARCHAR2
+      ,p_schema_readonly         IN  VARCHAR2
+      ,p_schema_writeonly        IN  VARCHAR2
+      ,p_schema_externalDocs     IN  dz_swagger3_extrdocs_typ
+      ,p_schema_example_string   IN  VARCHAR2
+      ,p_schema_example_number   IN  NUMBER
+      ,p_schema_deprecated       IN  VARCHAR2
+      ,p_schema_default_string   IN  VARCHAR2
+      ,p_schema_default_number   IN  NUMBER 
+      ,p_schema_multipleOf       IN  NUMBER 
+      ,p_schema_minimum          IN  NUMBER 
+      ,p_schema_exclusiveMinimum IN  VARCHAR2
+      ,p_schema_maximum          IN  NUMBER 
+      ,p_schema_exclusiveMaximum IN  VARCHAR2
+      ,p_schema_minLength        IN  INTEGER 
+      ,p_schema_maxLength        IN  INTEGER 
+      ,p_schema_pattern          IN  VARCHAR2
+      ,p_schema_minItems         IN  INTEGER 
+      ,p_schema_maxItems         IN  INTEGER 
+      ,p_schema_uniqueItems      IN  VARCHAR2 
+      ,p_schema_minProperties    IN  INTEGER 
+      ,p_schema_maxProperties    IN  INTEGER
+      ,p_xml_name                IN  VARCHAR2
+      ,p_xml_namespace           IN  VARCHAR2
+      ,p_xml_prefix              IN  VARCHAR2
+      ,p_xml_attribute           IN  VARCHAR2
+      ,p_xml_wrapped             IN  VARCHAR2
+      ,p_schema_items_schema     IN  dz_swagger3_schema_typ_nf
+      ,p_schema_properties       IN  dz_swagger3_schema_nf_list
+      ,p_schema_scalar           IN  VARCHAR2
+      ,p_combine_schemas         IN  dz_swagger3_schema_nf_list
+      ,p_not_schema              IN  dz_swagger3_schema_typ_nf
+   ) RETURN SELF AS RESULT 
+   AS 
+   BEGIN 
+   
+      self.schema_id               := p_schema_id;
+      self.schema_title            := p_schema_title;
+      self.schema_type             := p_schema_type;
+      self.schema_description      := p_schema_description;
+      self.schema_format           := p_schema_format;
+      self.schema_nullable         := p_schema_nullable;
+      self.schema_discriminator    := p_schema_discriminator;
+      self.schema_readonly         := p_schema_readonly;
+      self.schema_writeonly        := p_schema_writeonly;
+      self.schema_externalDocs     := p_schema_externalDocs;
+      self.schema_example_string   := p_schema_example_string;
+      self.schema_deprecated       := p_schema_deprecated;
+      self.schema_default_string   := p_schema_default_string;
+      self.schema_default_number   := p_schema_default_number;
+      self.schema_multipleOf       := p_schema_multipleOf;
+      self.schema_minimum          := p_schema_minimum;
+      self.schema_exclusiveMinimum := p_schema_exclusiveMinimum;
+      self.schema_maximum          := p_schema_maximum;
+      self.schema_exclusiveMaximum := p_schema_exclusiveMaximum;
+      self.schema_minLength        := p_schema_minLength;
+      self.schema_maxLength        := p_schema_maxLength;
+      self.schema_pattern          := p_schema_pattern;
+      self.schema_minItems         := p_schema_minItems;
+      self.schema_maxItems         := p_schema_maxItems;
+      self.schema_uniqueItems      := p_schema_uniqueItems;
+      self.schema_minProperties    := p_schema_minProperties;
+      self.schema_maxProperties    := p_schema_maxProperties;
+      self.xml_name                := p_xml_name;
+      self.xml_namespace           := p_xml_namespace;
+      self.xml_prefix              := p_xml_prefix;
+      self.xml_attribute           := p_xml_attribute;
+      self.xml_wrapped             := p_xml_wrapped;
+      self.schema_items_schema     := p_schema_items_schema;
+      self.schema_properties       := p_schema_properties;
+      self.schema_scalar           := p_schema_scalar;
+      self.combine_schemas         := p_combine_schemas;
+      self.not_schema              := p_not_schema;
+      
+      RETURN; 
+      
+   END dz_swagger3_schema_typ;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -643,14 +730,14 @@ AS
       AND self.schema_items_schema.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.formatted2json(
+             str_pad1 || dz_json_main.formatted2json(
                 'items'
                ,self.schema_items_schema.toJSON(p_pretty_print + 1)
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
          );
-         str_pad := ',';
+         str_pad1 := ',';
 
       END IF;
       
@@ -794,7 +881,6 @@ AS
       ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS
-   BEGIN
       str_jsonschema   VARCHAR2(4000 Char) := UPPER(p_jsonschema);
       clb_output       CLOB;
       str_pad          VARCHAR2(1 Char);
@@ -906,7 +992,6 @@ AS
       ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS
-   BEGIN
       clb_output       CLOB;
       str_pad          VARCHAR2(1 Char);
       str_pad1         VARCHAR2(1 Char);
@@ -1025,7 +1110,7 @@ AS
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
+      clb_output       CLOB := '';
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       ary_required     MDSYS.SDO_STRING2_ARRAY;
       int_counter      PLS_INTEGER;
@@ -1042,7 +1127,7 @@ AS
       -- Step 20
       -- Do the type element
       --------------------------------------------------------------------------
-      clb_output := dz_json_util.pretty_str(
+      clb_output := clb_output || dz_json_util.pretty_str(
           'type: ' || self.schema_type
          ,p_pretty_print
          ,'  '
@@ -1054,7 +1139,7 @@ AS
       --------------------------------------------------------------------------
       IF self.schema_title IS NOT NULL
       THEN
-         clb_output := dz_json_util.pretty_str(
+         clb_output := clb_output || dz_json_util.pretty_str(
              'title: ' || self.schema_title
             ,p_pretty_print
             ,'  '
@@ -1068,8 +1153,11 @@ AS
       --------------------------------------------------------------------------
       IF self.schema_description IS NOT NULL
       THEN
-         clb_output := dz_json_util.pretty_str(
-             'description: ' || self.schema_description
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'description: ' || dz_swagger_util.yaml_text(
+                self.schema_description
+               ,p_pretty_print
+            )
             ,p_pretty_print
             ,'  '
          );
@@ -1082,7 +1170,7 @@ AS
       --------------------------------------------------------------------------
       IF self.schema_format IS NOT NULL
       THEN
-         clb_output := dz_json_util.pretty_str(
+         clb_output := clb_output || dz_json_util.pretty_str(
              'format: ' || self.schema_format
             ,p_pretty_print
             ,'  '
@@ -1096,8 +1184,8 @@ AS
       --------------------------------------------------------------------------
       IF self.schema_nullable IS NOT NULL
       THEN
-         clb_output := dz_json_util.pretty_str(
-             'nullable: ' || LOWER(self.schema_deprecated)
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'nullable: ' || LOWER(self.schema_nullable)
             ,p_pretty_print
             ,'  '
          );
@@ -1110,7 +1198,7 @@ AS
       --------------------------------------------------------------------------
       IF self.schema_discriminator IS NOT NULL
       THEN
-         clb_output := dz_json_util.pretty_str(
+         clb_output := clb_output || dz_json_util.pretty_str(
              'discriminator: ' || self.schema_discriminator
             ,p_pretty_print
             ,'  '
@@ -1124,7 +1212,7 @@ AS
       --------------------------------------------------------------------------
       IF self.schema_readonly IS NOT NULL
       THEN
-         clb_output := dz_json_util.pretty_str(
+         clb_output := clb_output || dz_json_util.pretty_str(
              'readonly: ' || LOWER(self.schema_readonly)
             ,p_pretty_print
             ,'  '
@@ -1138,7 +1226,7 @@ AS
       --------------------------------------------------------------------------
       IF self.schema_writeonly IS NOT NULL
       THEN
-         clb_output := dz_json_util.pretty_str(
+         clb_output := clb_output || dz_json_util.pretty_str(
              'writeonly: ' || LOWER(self.schema_writeonly)
             ,p_pretty_print
             ,'  '
@@ -1255,7 +1343,7 @@ AS
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'properties: '
-            ,p_pretty_print + 1
+            ,p_pretty_print
             ,'  '
          );
          
@@ -1265,10 +1353,10 @@ AS
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 '''' || ary_keys(i) || ''': '
-               ,p_pretty_print + 2
+               ,p_pretty_print + 1
                ,'  '
             ) || self.schema_properties(i).toYAML(
-               p_pretty_print + 3
+               p_pretty_print + 2
             );
             
             IF self.schema_properties(i).schema_required = 'TRUE'
@@ -1290,7 +1378,7 @@ AS
          THEN
             clb_output := clb_output || dz_json_util.pretty_str(
                 'required: '
-               ,p_pretty_print + 1
+               ,p_pretty_print
                ,'  '
             );
             

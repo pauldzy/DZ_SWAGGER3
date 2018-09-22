@@ -461,7 +461,7 @@ AS
       IF self.operation_parameters IS NULL 
       OR self.operation_parameters.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -492,17 +492,17 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'parameters'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+      
       END IF;
-         
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'parameters'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
       
       --------------------------------------------------------------------------
       -- Step 140
@@ -530,7 +530,7 @@ AS
       IF self.operation_responses IS NULL 
       OR self.operation_responses.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -564,18 +564,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'responses'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'responses'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 160
       -- Add operation callbacks map
@@ -583,7 +583,7 @@ AS
       IF self.operation_callbacks IS NULL 
       OR self.operation_callbacks.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -617,18 +617,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'callbacks'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'callbacks'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 170
       -- Add deprecated flag
@@ -663,7 +663,7 @@ AS
       IF self.operation_security IS NULL 
       OR self.operation_security.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -694,18 +694,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'security'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'security'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 190
       -- Add server array
@@ -713,7 +713,7 @@ AS
       IF self.operation_servers IS NULL 
       OR self.operation_servers.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -744,18 +744,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'servers'
+                ,clb_hash
+                ,p_pretty_print + 2
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'servers'
-             ,clb_hash
-             ,p_pretty_print + 2
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
- 
       --------------------------------------------------------------------------
       -- Step 200
       -- Add the left bracket
@@ -806,7 +806,7 @@ AS
          LOOP
             clb_output := clb_output || dz_json_util.pretty_str(
                 '- ' || operation_tags(i)
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
                ,'  '
             );
             
@@ -901,8 +901,9 @@ AS
          FOR i IN 1 .. operation_parameters.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '- ' || self.operation_parameters(i).toYAML(p_pretty_print + 2,'FALSE')
-               ,p_pretty_print
+                '- ' || self.operation_parameters(i).toYAML(p_pretty_print + 3,'FALSE')
+               ,p_pretty_print + 2
+               ,'  '
             );
          
          END LOOP;

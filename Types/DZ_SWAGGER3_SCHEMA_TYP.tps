@@ -43,7 +43,7 @@ UNDER dz_swagger3_schema_typ_nf(
    ,schema_scalar            VARCHAR2(255 Char)
    -----
    ,combine_schemas          dz_swagger3_schema_nf_list
-   ,not_schema               dz_swagger3_schema_nf
+   ,not_schema               dz_swagger3_schema_typ_nf
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -95,6 +95,49 @@ UNDER dz_swagger3_schema_typ_nf(
       ,p_xml_prefix              IN  VARCHAR2
       ,p_xml_attribute           IN  VARCHAR2
       ,p_xml_wrapped             IN  VARCHAR2
+   ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
+       p_schema_id               IN  VARCHAR2
+      ,p_schema_title            IN  VARCHAR2
+      ,p_schema_type             IN  VARCHAR2
+      ,p_schema_description      IN  VARCHAR2
+      ,p_schema_format           IN  VARCHAR2
+      ,p_schema_nullable         IN  VARCHAR2
+      ,p_schema_discriminator    IN  VARCHAR2
+      ,p_schema_readonly         IN  VARCHAR2
+      ,p_schema_writeonly        IN  VARCHAR2
+      ,p_schema_externalDocs     IN  dz_swagger3_extrdocs_typ
+      ,p_schema_example_string   IN  VARCHAR2
+      ,p_schema_example_number   IN  NUMBER
+      ,p_schema_deprecated       IN  VARCHAR2
+      ,p_schema_default_string   IN  VARCHAR2
+      ,p_schema_default_number   IN  NUMBER 
+      ,p_schema_multipleOf       IN  NUMBER 
+      ,p_schema_minimum          IN  NUMBER 
+      ,p_schema_exclusiveMinimum IN  VARCHAR2
+      ,p_schema_maximum          IN  NUMBER 
+      ,p_schema_exclusiveMaximum IN  VARCHAR2
+      ,p_schema_minLength        IN  INTEGER 
+      ,p_schema_maxLength        IN  INTEGER 
+      ,p_schema_pattern          IN  VARCHAR2
+      ,p_schema_minItems         IN  INTEGER 
+      ,p_schema_maxItems         IN  INTEGER 
+      ,p_schema_uniqueItems      IN  VARCHAR2 
+      ,p_schema_minProperties    IN  INTEGER 
+      ,p_schema_maxProperties    IN  INTEGER
+      ,p_xml_name                IN  VARCHAR2
+      ,p_xml_namespace           IN  VARCHAR2
+      ,p_xml_prefix              IN  VARCHAR2
+      ,p_xml_attribute           IN  VARCHAR2
+      ,p_xml_wrapped             IN  VARCHAR2
+      ,p_schema_items_schema     IN  dz_swagger3_schema_typ_nf
+      ,p_schema_properties       IN  dz_swagger3_schema_nf_list
+      ,p_schema_scalar           IN  VARCHAR2
+      ,p_combine_schemas         IN  dz_swagger3_schema_nf_list
+      ,p_not_schema              IN  dz_swagger3_schema_typ_nf
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
