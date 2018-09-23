@@ -34,6 +34,13 @@ AS
        p_versionid    IN  VARCHAR2
       ,p_input        IN  VARCHAR2
    ) RETURN VARCHAR2 DETERMINISTIC;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION a_in_b(
+       p_input_a          IN VARCHAR2
+      ,p_input_b          IN MDSYS.SDO_STRING2_ARRAY
+   ) RETURN VARCHAR2 DETERMINISTIC;
  
  END dz_swagger3_util;
 /

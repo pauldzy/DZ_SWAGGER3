@@ -517,7 +517,7 @@ AS
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_parameters(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          

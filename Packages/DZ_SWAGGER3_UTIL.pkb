@@ -255,6 +255,52 @@ AS
       RETURN str_output;
       
    END dzcondense;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION a_in_b(
+       p_input_a          IN VARCHAR2
+      ,p_input_b          IN MDSYS.SDO_STRING2_ARRAY
+   ) RETURN VARCHAR2 DETERMINISTIC
+   AS
+      boo_check BOOLEAN := FALSE;
+      
+   BEGIN
+   
+      IF p_input_a IS NULL
+      THEN
+         RETURN 'FALSE';
+         
+      END IF;
+
+      IF p_input_b IS NULL
+      OR p_input_b.COUNT = 0
+      THEN
+         RETURN 'FALSE';
+         
+      END IF;
+
+      FOR i IN 1 .. p_input_b.COUNT
+      LOOP
+         IF p_input_a = p_input_b(i)
+         THEN
+            boo_check := TRUE;
+            EXIT;
+            
+         END IF;
+         
+      END LOOP;
+
+      IF boo_check = TRUE
+      THEN
+         RETURN 'TRUE';
+         
+      ELSE
+         RETURN 'FALSE';
+         
+      END IF;
+      
+   END a_in_b;
 
 END dz_swagger3_util;
 /

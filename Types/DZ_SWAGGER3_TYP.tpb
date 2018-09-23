@@ -135,7 +135,8 @@ AS
       -- Step 60
       -- Load the components
       --------------------------------------------------------------------------
-      self.components   := dz_swagger3_components();
+      self.components := dz_swagger3_components();
+      self.components.components_parameters := self.unique_parameters();
       
       --------------------------------------------------------------------------
       -- Step 70
@@ -192,6 +193,74 @@ AS
       RETURN;      
 
    END dz_swagger3_typ;
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION unique_parameters
+   RETURN dz_swagger3_parameter_list
+   AS
+      ary_results   dz_swagger3_parameter_list;
+      ary_working   dz_swagger3_parameter_list;
+      int_results   PLS_INTEGER;
+      ary_x         MDSYS.SDO_STRING2_ARRAY;
+      int_x         PLS_INTEGER;
+   
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Setup for the harvest
+      --------------------------------------------------------------------------
+      int_results := 1;
+      ary_results := dz_swagger3_parameter_list();
+      int_x       := 1;
+      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Pull parameters from the paths
+      --------------------------------------------------------------------------
+      IF self.paths IS NOT NULL
+      AND self.paths.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.paths.COUNT
+         LOOP
+            ary_working := self.paths(i).unique_parameters();
+            
+            IF ary_working.COUNT > 0
+            THEN
+               FOR j IN 1 .. ary_working.COUNT
+               LOOP
+                  IF dz_swagger3_util.a_in_b(
+                      ary_working(j).parameter_id
+                     ,ary_x
+                  ) = 'FALSE'
+                  THEN
+                     ary_results.EXTEND();
+                     ary_results(int_results) := ary_working(j);
+                     int_results := int_results + 1;
+                     
+                     ary_x.EXTEND();
+                     ary_x(int_x) := ary_working(j).parameter_id;
+                     int_x := int_x + 1;
+                     
+                  END IF;
+                  
+               END LOOP;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+   
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Return what we got
+      --------------------------------------------------------------------------
+      RETURN ary_results;
+   
+   END unique_parameters;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -295,7 +364,7 @@ AS
       IF self.servers IS NULL 
       OR self.servers.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -326,18 +395,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'servers'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'servers'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 60
       -- Add paths
@@ -394,7 +463,8 @@ AS
       -- Step 70
       -- Add get operation
       --------------------------------------------------------------------------
-      IF self.components IS NOT NULL
+      IF  self.components IS NOT NULL
+      AND self.components.isNULL() = 'FALSE'
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -415,7 +485,7 @@ AS
       IF self.security IS NULL 
       OR self.security.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -446,18 +516,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
-      END IF;
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'security'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'security'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-
+      END IF;
+      
       --------------------------------------------------------------------------
       -- Step 90
       -- Add tags
@@ -465,7 +535,7 @@ AS
       IF self.tags IS NULL 
       OR self.tags.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -496,18 +566,18 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'tags'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+         
       END IF;
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'tags'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
       --------------------------------------------------------------------------
       -- Step 100
       -- Add externalDocs

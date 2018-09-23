@@ -1,8 +1,8 @@
 CREATE OR REPLACE TYPE BODY dz_swagger3_path_typ
 AS 
 
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_path_typ
    RETURN SELF AS RESULT 
    AS 
@@ -11,8 +11,8 @@ AS
       
    END dz_swagger3_path_typ;
    
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_path_typ(
        p_path_id                 IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
@@ -20,10 +20,10 @@ AS
    AS 
    BEGIN 
    
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 10
       -- Load the path object and operations
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       BEGIN
          SELECT
          dz_swagger3_path_typ(
@@ -83,10 +83,10 @@ AS
             
       END;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 20
       -- Load the server objects on this path
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       SELECT
       dz_swagger3_server_typ(
           p_server_id    => a.server_id
@@ -99,21 +99,39 @@ AS
           a.versionid = p_versionid
       AND a.parent_id = p_path_id;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 30
       -- Load the parameter objects on this path
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
+      SELECT
+      dz_swagger3_parameter_typ(
+          p_parameter_id     => a.parameter_id
+         ,p_versionid        => p_versionid
+      )
+      BULK COLLECT INTO self.path_parameters
+      FROM
+      dz_swagger3_parameter a
+      JOIN
+      dz_swagger3_parm_parent_map b
+      ON
+          a.versionid = b.versionid
+      AND a.parameter_id = b.parameter_id
+      WHERE
+          b.versionid = p_versionid
+      AND b.parent_id = p_path_id
+      ORDER BY
+      b.parameter_order;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 40
       -- Return the object
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       RETURN; 
       
    END dz_swagger3_path_typ;
 
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_path_typ(
        p_hash_key                IN  VARCHAR2
       ,p_path_summary            IN  VARCHAR2
@@ -150,8 +168,8 @@ AS
       
    END dz_swagger3_path_typ;
    
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION isNULL
    RETURN VARCHAR2
    AS
@@ -168,8 +186,8 @@ AS
    
    END isNULL;
    
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION key
    RETURN VARCHAR2
    AS
@@ -180,6 +198,295 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER FUNCTION unique_parameters
+   RETURN dz_swagger3_parameter_list
+   AS
+      ary_results   dz_swagger3_parameter_list;
+      int_results   PLS_INTEGER;
+      ary_x         MDSYS.SDO_STRING2_ARRAY;
+      int_x         PLS_INTEGER;
+      
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Setup for the harvest
+      --------------------------------------------------------------------------
+      int_results := 1;
+      ary_results := dz_swagger3_parameter_list();
+      int_x       := 1;
+      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Pull the parmeters from the path
+      --------------------------------------------------------------------------
+      IF self.path_parameters IS NOT NULL
+      AND self.path_parameters.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_parameters.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_parameters(i).parameter_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_parameters(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_parameters(i).parameter_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+   
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Pull the parmeters from the get operation
+      --------------------------------------------------------------------------
+      IF  self.path_get_operation IS NOT NULL
+      AND self.path_get_operation.operation_parameters IS NOT NULL
+      AND self.path_get_operation.operation_parameters.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_get_operation.operation_parameters.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_get_operation.operation_parameters(i).parameter_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_get_operation.operation_parameters(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_get_operation.operation_parameters(i).parameter_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Pull the parmeters from the put operation
+      --------------------------------------------------------------------------
+      IF  self.path_put_operation IS NOT NULL
+      AND self.path_put_operation.operation_parameters IS NOT NULL
+      AND self.path_put_operation.operation_parameters.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_put_operation.operation_parameters.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_put_operation.operation_parameters(i).parameter_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_put_operation.operation_parameters(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_put_operation.operation_parameters(i).parameter_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Pull the parmeters from the post operation
+      --------------------------------------------------------------------------
+      IF  self.path_post_operation IS NOT NULL
+      AND self.path_post_operation.operation_parameters IS NOT NULL
+      AND self.path_post_operation.operation_parameters.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_post_operation.operation_parameters.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_post_operation.operation_parameters(i).parameter_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_post_operation.operation_parameters(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_post_operation.operation_parameters(i).parameter_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 60
+      -- Pull the parmeters from the delete operation
+      --------------------------------------------------------------------------
+      IF  self.path_delete_operation IS NOT NULL
+      AND self.path_delete_operation.operation_parameters IS NOT NULL
+      AND self.path_delete_operation.operation_parameters.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_delete_operation.operation_parameters.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_delete_operation.operation_parameters(i).parameter_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_delete_operation.operation_parameters(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_delete_operation.operation_parameters(i).parameter_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 70
+      -- Pull the parmeters from the options operation
+      --------------------------------------------------------------------------
+      IF  self.path_options_operation IS NOT NULL
+      AND self.path_options_operation.operation_parameters IS NOT NULL
+      AND self.path_options_operation.operation_parameters.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_options_operation.operation_parameters.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_options_operation.operation_parameters(i).parameter_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_options_operation.operation_parameters(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_options_operation.operation_parameters(i).parameter_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 80
+      -- Pull the parmeters from the head operation
+      --------------------------------------------------------------------------
+      IF  self.path_head_operation IS NOT NULL
+      AND self.path_head_operation.operation_parameters IS NOT NULL
+      AND self.path_head_operation.operation_parameters.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_head_operation.operation_parameters.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_head_operation.operation_parameters(i).parameter_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_head_operation.operation_parameters(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_head_operation.operation_parameters(i).parameter_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 90
+      -- Pull the parmeters from the patch operation
+      --------------------------------------------------------------------------
+      IF  self.path_patch_operation IS NOT NULL
+      AND self.path_patch_operation.operation_parameters IS NOT NULL
+      AND self.path_patch_operation.operation_parameters.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_patch_operation.operation_parameters.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_patch_operation.operation_parameters(i).parameter_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_patch_operation.operation_parameters(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_patch_operation.operation_parameters(i).parameter_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 100
+      -- Pull the parmeters from the trace operation
+      --------------------------------------------------------------------------
+      IF  self.path_trace_operation IS NOT NULL
+      AND self.path_trace_operation.operation_parameters IS NOT NULL
+      AND self.path_trace_operation.operation_parameters.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_trace_operation.operation_parameters.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_trace_operation.operation_parameters(i).parameter_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_trace_operation.operation_parameters(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_trace_operation.operation_parameters(i).parameter_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 110
+      -- Return what we got
+      --------------------------------------------------------------------------
+      RETURN ary_results;
+   
+   END unique_parameters;
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION unique_schemas
    RETURN dz_swagger3_schema_nf_list
    AS
@@ -187,8 +494,8 @@ AS
       NULL;
    END unique_schemas;
    
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION path_parameters_keys
    RETURN MDSYS.SDO_STRING2_ARRAY
    AS
@@ -217,8 +524,8 @@ AS
    
    END path_parameters_keys;
    
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
@@ -232,15 +539,15 @@ AS
       
    BEGIN
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 10
       -- Check incoming parameters
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 20
       -- Build the wrapper
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
@@ -254,10 +561,10 @@ AS
       
       str_pad1 := str_pad;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 30
       -- Add path summary
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              'summary'
@@ -268,10 +575,10 @@ AS
       );
       str_pad1 := ',';
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 40
       -- Add path description 
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              'description'
@@ -282,10 +589,10 @@ AS
       );
       str_pad1 := ',';
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 50
       -- Add get operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_get_operation IS NOT NULL
       AND self.path_get_operation.isNULL() = 'FALSE'
       THEN
@@ -301,10 +608,10 @@ AS
 
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 60
       -- Add put operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_put_operation IS NOT NULL
       AND self.path_put_operation.isNULL() = 'FALSE'
       THEN
@@ -320,10 +627,10 @@ AS
 
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 70
       -- Add post operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_post_operation IS NOT NULL
       AND self.path_post_operation.isNULL() = 'FALSE'
       THEN
@@ -339,10 +646,10 @@ AS
 
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 80
       -- Add delete operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_delete_operation IS NOT NULL
       AND self.path_delete_operation.isNULL() = 'FALSE'
       THEN
@@ -358,10 +665,10 @@ AS
 
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 90
       -- Add options operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_options_operation IS NOT NULL
       AND self.path_options_operation.isNULL() = 'FALSE'
       THEN
@@ -377,10 +684,10 @@ AS
 
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 100
       -- Add head operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_head_operation IS NOT NULL
       AND self.path_head_operation.isNULL() = 'FALSE'
       THEN
@@ -396,10 +703,10 @@ AS
 
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 110
       -- Add patch operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_patch_operation IS NOT NULL
       AND self.path_patch_operation.isNULL() = 'FALSE'
       THEN
@@ -415,10 +722,10 @@ AS
 
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 120
       -- Add trace operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_trace_operation IS NOT NULL
       AND self.path_trace_operation.isNULL() = 'FALSE'
       THEN
@@ -434,10 +741,10 @@ AS
 
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 130
       -- Add servers
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF self.path_servers IS NULL 
       OR self.path_servers.COUNT = 0
       THEN
@@ -484,10 +791,10 @@ AS
          
       END IF;
 
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 140
       -- Add parameters
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF self.path_parameters IS NULL 
       OR self.path_parameters.COUNT = 0
       THEN
@@ -537,25 +844,25 @@ AS
          
       END IF;
 
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 150
       -- Add the left bracket
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
           '}'
          ,p_pretty_print,NULL,NULL
       );
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 160
       -- Cough it out
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       RETURN clb_output;
            
    END toJSON;
    
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
       p_pretty_print      IN  INTEGER   DEFAULT 0
    ) RETURN CLOB
@@ -565,15 +872,15 @@ AS
       
    BEGIN
    
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 10
       -- Check incoming parameters
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 20
       -- Write the summary
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF self.path_summary IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -587,10 +894,10 @@ AS
          
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 30
       -- Write the description
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF self.path_description IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -604,10 +911,10 @@ AS
          
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 40
       -- Write the get operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_get_operation IS NOT NULL
       AND self.path_get_operation.isNULL() = 'FALSE'
       THEN
@@ -621,10 +928,10 @@ AS
          
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 50
       -- Write the get operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_put_operation IS NOT NULL
       AND self.path_put_operation.isNULL() = 'FALSE'
       THEN
@@ -638,10 +945,10 @@ AS
          
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 60
       -- Write the post operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_post_operation IS NOT NULL
       AND self.path_post_operation.isNULL() = 'FALSE'
       THEN
@@ -655,10 +962,10 @@ AS
          
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 70
       -- Write the delete operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_delete_operation IS NOT NULL
       AND self.path_delete_operation.isNULL() = 'FALSE'
       THEN
@@ -672,10 +979,10 @@ AS
          
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 80
       -- Write the options operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_options_operation IS NOT NULL
       AND self.path_options_operation.isNULL() = 'FALSE'
       THEN
@@ -689,10 +996,10 @@ AS
          
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 90
       -- Write the head operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_head_operation IS NOT NULL
       AND self.path_head_operation.isNULL() = 'FALSE'
       THEN
@@ -706,10 +1013,10 @@ AS
          
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 100
       -- Write the patch operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_patch_operation IS NOT NULL
       AND self.path_patch_operation.isNULL() = 'FALSE'
       THEN
@@ -723,10 +1030,10 @@ AS
          
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 110
       -- Write the trace operation
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_trace_operation IS NOT NULL
       AND self.path_trace_operation.isNULL() = 'FALSE'
       THEN
@@ -740,10 +1047,10 @@ AS
          
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 120
       -- Write the server array
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_servers IS NOT NULL 
       AND self.path_servers.COUNT > 0
       THEN
@@ -767,10 +1074,10 @@ AS
          
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 130
       -- Write the parameters map
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       IF  self.path_parameters IS NOT NULL 
       AND self.path_parameters.COUNT > 0
       THEN
@@ -796,10 +1103,10 @@ AS
          
       END IF;
       
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       -- Step 60
       -- Cough it out 
-      -------------------------------------------------------------------------
+      --------------------------------------------------------------------------
       RETURN clb_output;
       
    END toYAML;
