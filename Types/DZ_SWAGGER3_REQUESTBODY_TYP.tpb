@@ -28,6 +28,7 @@ AS
          SELECT
          dz_swagger3_requestbody_typ(
              p_hash_key                => p_requestbody_id
+            ,p_requestbody_id          => p_requestbody_id
             ,p_requestbody_description => a.requestbody_description
             ,p_requestbody_content     => NULL
             ,p_requestbody_required    => a.requestbody_required
@@ -83,7 +84,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
-       p_media_type              IN  VARCHAR2
+       p_requestbody_id          IN  VARCHAR2
+      ,p_media_type              IN  VARCHAR2
       ,p_parameters              IN  dz_swagger3_parameter_list
    ) RETURN SELF AS RESULT
    AS
@@ -92,6 +94,8 @@ AS
       
    BEGIN
    
+      self.hash_key            := p_requestbody_id;
+      self.requestbody_id      := p_requestbody_id;
       self.requestbody_content := dz_swagger3_media_list();
       self.requestbody_content.EXTEND();
       self.requestbody_content(1) := dz_swagger3_media_typ();
@@ -144,7 +148,13 @@ AS
             ,p_not_schema              => p_parameters(i).parameter_schema.not_schema
          );
          
-         obj_schema.hash_key := p_parameters(i).parameter_name;
+         obj_schema.hash_key              := p_parameters(i).parameter_name;
+         obj_schema.schema_description    := p_parameters(i).parameter_description;
+         obj_schema.schema_required       := p_parameters(i).parameter_required;
+         obj_schema.schema_deprecated     := p_parameters(i).parameter_deprecated;
+         obj_schema.schema_example_string := p_parameters(i).parameter_example_string;
+         obj_schema.schema_example_number := p_parameters(i).parameter_example_number;
+
          self.requestbody_content(1).media_schema.schema_properties(i) := obj_schema;
          
       END LOOP;
@@ -157,6 +167,7 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
        p_hash_key                IN  VARCHAR2
+      ,p_requestbody_id          IN  VARCHAR2
       ,p_requestbody_description IN  VARCHAR2
       ,p_requestbody_content     IN  dz_swagger3_media_list
       ,p_requestbody_required    IN  VARCHAR2
@@ -165,6 +176,7 @@ AS
    BEGIN 
    
       self.hash_key                := p_hash_key;
+      self.requestbody_id          := p_requestbody_id;
       self.requestbody_description := p_requestbody_description;
       self.requestbody_content     := p_requestbody_content;
       self.requestbody_required    := p_requestbody_required;
@@ -387,8 +399,75 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER FUNCTION toJSON_ref(
+       p_pretty_print     IN  INTEGER   DEFAULT NULL
+   ) RETURN CLOB
+   AS
+      clb_output       CLOB;
+      str_pad          VARCHAR2(1 Char);
+      str_pad1         VARCHAR2(1 Char);
+      
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Build the wrapper
+      --------------------------------------------------------------------------
+      IF p_pretty_print IS NULL
+      THEN
+         clb_output  := dz_json_util.pretty('{',NULL);
+         str_pad     := '';
+         
+      ELSE
+         clb_output  := dz_json_util.pretty('{',-1);
+         str_pad     := ' ';
+         
+      END IF;
+      
+      str_pad1 := str_pad;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Add optional description
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty(
+          str_pad1 || dz_json_main.value2json(
+             '$ref'
+            ,'#/components/requestBodies/' || self.requestbody_id
+            ,p_pretty_print + 1
+         )
+         ,p_pretty_print + 1
+      );
+      str_pad1 := ',';
+
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Add the left bracket
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty(
+          '}'
+         ,p_pretty_print,NULL,NULL
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Cough it out
+      --------------------------------------------------------------------------
+      RETURN clb_output;
+           
+   END toJSON_ref;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -465,9 +544,72 @@ AS
       -- Step 50
       -- Cough it out 
       --------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+      
+      IF p_final_linefeed = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         
+      END IF;
+               
       RETURN clb_output;
       
    END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toYAML_ref(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS
+      clb_output       CLOB;
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Write the yaml description
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty_str(
+          '$ref: ' || dz_swagger3_util.yaml_text(
+             '#/components/requestBodies/' || self.requestbody_id
+            ,p_pretty_print
+         )
+         ,p_pretty_print
+         ,'  '
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Cough it out 
+      --------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+      
+      IF p_final_linefeed = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         
+      END IF;
+               
+      RETURN clb_output;
+      
+   END toYAML_ref;
    
 END;
 /

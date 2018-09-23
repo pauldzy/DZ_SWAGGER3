@@ -202,11 +202,12 @@ AS
          
       END IF;
       
+      str_pad1 := str_pad;
+      
       --------------------------------------------------------------------------
       -- Step 30
       -- Add optional summary
       --------------------------------------------------------------------------
-      str_pad1 := str_pad;
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              'name'
@@ -522,6 +523,75 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER FUNCTION toJSON_ref(
+       p_pretty_print     IN  INTEGER   DEFAULT NULL
+   ) RETURN CLOB
+   AS
+      clb_output       CLOB;
+      boo_temp         BOOLEAN;
+      str_pad          VARCHAR2(1 Char);
+      str_pad1         VARCHAR2(1 Char);
+      str_pad2         VARCHAR2(1 Char);
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      clb_hash         CLOB;
+      
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Build the wrapper
+      --------------------------------------------------------------------------
+      IF p_pretty_print IS NULL
+      THEN
+         clb_output  := dz_json_util.pretty('{',NULL);
+         str_pad     := '';
+         
+      ELSE
+         clb_output  := dz_json_util.pretty('{',-1);
+         str_pad     := ' ';
+         
+      END IF;
+      
+      str_pad1 := str_pad;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Add  the ref object
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty(
+          str_pad1 || dz_json_main.value2json(
+             '$ref'
+            ,'#/components/parameters/' || self.parameter_id
+            ,p_pretty_print + 1
+         )
+         ,p_pretty_print + 1
+      );
+      str_pad1 := ',';
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Add the left bracket
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty(
+          '}'
+         ,p_pretty_print,NULL,NULL
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Cough it out
+      --------------------------------------------------------------------------
+      RETURN clb_output;
+           
+   END toJSON_ref;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
@@ -761,6 +831,56 @@ AS
       RETURN clb_output;
       
    END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toYAML_ref(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS
+      clb_output       CLOB;
+      
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Write the reference
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty_str(
+          '$ref: ' || dz_swagger3_util.yaml_text(
+             '#/components/parameters/' || self.parameter_id
+            ,p_pretty_print
+         )
+         ,p_pretty_print
+         ,'  '
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Cough it out without final line feed
+      --------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+      
+      IF p_final_linefeed = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         
+      END IF;
+               
+      RETURN clb_output;
+      
+   END toYAML_ref;
    
 END;
 /

@@ -48,7 +48,8 @@ AS
          str_format := 'double';
          
       ELSIF REGEXP_LIKE(p_input,'^[-[:digit:],.]+$')
-      OR LOWER(p_input) IN ('true','false')      
+      OR LOWER(p_input) IN ('true','false') 
+      OR INSTR(p_input,'#') = 1     
       THEN
          str_format := 'single';
          

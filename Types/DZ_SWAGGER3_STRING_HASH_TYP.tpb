@@ -59,7 +59,7 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
    BEGIN
@@ -71,12 +71,30 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
+      clb_output CLOB;
+      
    BEGIN
    
-      RETURN dz_swagger3_util.yaml_text(self.string_value);
+      clb_output :=  dz_swagger3_util.yaml_text(self.string_value);
+      
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+      
+      IF p_final_linefeed = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         
+      END IF;
+               
+      RETURN clb_output;
       
    END toYAML;
    

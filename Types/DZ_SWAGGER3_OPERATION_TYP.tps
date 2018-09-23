@@ -2,6 +2,7 @@ CREATE OR REPLACE TYPE dz_swagger3_operation_typ FORCE
 AUTHID DEFINER
 AS OBJECT (
     hash_key                 VARCHAR2(255 Char)
+   ,operation_id             VARCHAR2(255 Char)
    ,operation_tags           MDSYS.SDO_STRING2_ARRAY
    ,operation_summary        VARCHAR2(255 Char)
    ,operation_description    VARCHAR2(4000 Char)
@@ -31,6 +32,7 @@ AS OBJECT (
    ----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_operation_typ(
        p_hash_key                IN  VARCHAR2
+      ,p_operation_id            IN  VARCHAR2
       ,p_operation_tags          IN  MDSYS.SDO_STRING2_ARRAY
       ,p_operation_summary       IN  VARCHAR2
       ,p_operation_description   IN  VARCHAR2
@@ -57,6 +59,11 @@ AS OBJECT (
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION unique_requestbodies
+    RETURN dz_swagger3_requestbody_list
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    ,MEMBER FUNCTION unique_parameters
     RETURN dz_swagger3_parameter_list
 
@@ -79,7 +86,9 @@ AS OBJECT (
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
 
 );

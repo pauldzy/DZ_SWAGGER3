@@ -2,6 +2,7 @@ CREATE OR REPLACE TYPE dz_swagger3_requestbody_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
     hash_key                 VARCHAR2(255 Char)
+   ,requestbody_id           VARCHAR2(255 Char)
    ,requestbody_description  VARCHAR2(4000 Char)
    ,requestbody_content      dz_swagger3_media_list
    ,requestbody_required     VARCHAR2(5 Char)
@@ -21,7 +22,8 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
-       p_media_type              IN  VARCHAR2
+       p_requestbody_id          IN  VARCHAR2
+      ,p_media_type              IN  VARCHAR2
       ,p_parameters              IN  dz_swagger3_parameter_list
    ) RETURN SELF AS RESULT
     
@@ -29,6 +31,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
        p_hash_key                IN  VARCHAR2
+      ,p_requestbody_id          IN  VARCHAR2
       ,p_requestbody_description IN  VARCHAR2
       ,p_requestbody_content     IN  dz_swagger3_media_list
       ,p_requestbody_required    IN  VARCHAR2
@@ -52,13 +55,29 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
-      p_pretty_print      IN  INTEGER   DEFAULT NULL
+      p_pretty_print         IN  INTEGER   DEFAULT NULL
+    ) RETURN CLOB
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toJSON_ref(
+      p_pretty_print         IN  INTEGER   DEFAULT NULL
     ) RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toYAML_ref(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
 
 );

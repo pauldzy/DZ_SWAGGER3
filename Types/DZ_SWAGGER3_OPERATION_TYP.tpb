@@ -30,6 +30,7 @@ AS
          SELECT
           dz_swagger3_operation_typ(
              p_hash_key                 => a.operation_type
+            ,p_operation_id             => a.operation_id
             ,p_operation_tags           => NULL
             ,p_operation_summary        => a.operation_summary
             ,p_operation_description    => a.operation_description
@@ -122,8 +123,9 @@ AS
       AND self.operation_parameters.COUNT > 0
       THEN
          self.operation_requestBody := dz_swagger3_requestBody_typ(
-             p_media_type => 'application/x-www-form-urlencoded'
-            ,p_parameters => self.operation_parameters
+             p_requestBody_id => self.operation_id || '.requestBody'
+            ,p_media_type     => 'application/x-www-form-urlencoded'
+            ,p_parameters     => self.operation_parameters
          );
          
          self.operation_parameters := NULL;
@@ -203,6 +205,7 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_operation_typ(
        p_hash_key                IN  VARCHAR2
+      ,p_operation_id            IN  VARCHAR2
       ,p_operation_tags          IN  MDSYS.SDO_STRING2_ARRAY
       ,p_operation_summary       IN  VARCHAR2
       ,p_operation_description   IN  VARCHAR2
@@ -220,6 +223,7 @@ AS
    BEGIN 
    
       self.hash_key                := p_hash_key;
+      self.operation_id            := p_operation_id;
       self.operation_tags          := p_operation_tags;
       self.operation_summary       := p_operation_summary;
       self.operation_description   := p_operation_description;
@@ -264,6 +268,31 @@ AS
       RETURN self.hash_key;
       
    END key;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION unique_requestbodies
+   RETURN dz_swagger3_requestbody_list
+   AS
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Pass upwards
+      --------------------------------------------------------------------------
+      IF  self.operation_requestBody IS NOT NULL
+      AND self.operation_requestBody.isNULL() = 'FALSE'
+      THEN
+         RETURN dz_swagger3_requestbody_list(
+            self.operation_requestBody
+         );
+      
+      ELSE
+         RETURN dz_swagger3_requestbody_list();
+         
+      END IF;
+   
+   END unique_requestbodies;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -439,7 +468,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 30
+      -- Step 40
       -- Add optional description 
       --------------------------------------------------------------------------
       IF self.operation_summary IS NOT NULL
@@ -457,7 +486,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 30
+      -- Step 50
       -- Add optional description 
       --------------------------------------------------------------------------
       IF self.operation_description IS NOT NULL
@@ -475,7 +504,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 110
+      -- Step 60
       -- Add optional externalDocs
       --------------------------------------------------------------------------
       IF  self.operation_externalDocs IS NOT NULL
@@ -494,7 +523,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 120
+      -- Step 70
       -- Add optional description 
       --------------------------------------------------------------------------
       IF self.operation_operationId IS NOT NULL
@@ -512,7 +541,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 130
+      -- Step 80
       -- Add parameters array
       --------------------------------------------------------------------------
       IF self.operation_parameters IS NULL 
@@ -535,7 +564,7 @@ AS
          FOR i IN 1 .. operation_parameters.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-               str_pad2 || self.operation_parameters(i).toJSON(
+               str_pad2 || self.operation_parameters(i).toJSON_ref(
                   p_pretty_print => p_pretty_print + 2
                )
                ,p_pretty_print + 2
@@ -562,7 +591,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 140
+      -- Step 90
       -- Add requestBody object
       --------------------------------------------------------------------------
       IF  self.operation_requestBody IS NOT NULL
@@ -571,7 +600,9 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
                 'requestBody'
-               ,self.operation_requestBody.toJSON(p_pretty_print + 1)
+               ,self.operation_requestBody.toJSON_ref(
+                  p_pretty_print + 1
+                )                 
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -581,7 +612,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 150
+      -- Step 100
       -- Add optional variables map
       --------------------------------------------------------------------------
       IF self.operation_responses IS NULL 
@@ -634,7 +665,7 @@ AS
       END IF;
          
       --------------------------------------------------------------------------
-      -- Step 160
+      -- Step 110
       -- Add operation callbacks map
       --------------------------------------------------------------------------
       IF self.operation_callbacks IS NULL 
@@ -687,7 +718,7 @@ AS
       END IF;
          
       --------------------------------------------------------------------------
-      -- Step 170
+      -- Step 120
       -- Add deprecated flag
       --------------------------------------------------------------------------
       IF self.operation_deprecated IS NOT NULL
@@ -714,7 +745,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 180
+      -- Step 130
       -- Add security array
       --------------------------------------------------------------------------
       IF self.operation_security IS NULL 
@@ -764,7 +795,7 @@ AS
       END IF;
          
       --------------------------------------------------------------------------
-      -- Step 190
+      -- Step 140
       -- Add server array
       --------------------------------------------------------------------------
       IF self.operation_servers IS NULL 
@@ -814,7 +845,7 @@ AS
       END IF;
          
       --------------------------------------------------------------------------
-      -- Step 200
+      -- Step 150
       -- Add the left bracket
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
@@ -823,7 +854,7 @@ AS
       );
       
       --------------------------------------------------------------------------
-      -- Step 210
+      -- Step 160
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
@@ -833,7 +864,9 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -958,7 +991,7 @@ AS
          FOR i IN 1 .. operation_parameters.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '- ' || self.operation_parameters(i).toYAML(
+                '- ' || self.operation_parameters(i).toYAML_ref(
                    p_pretty_print + 3
                   ,'FALSE'
                   ,'FALSE'
@@ -982,8 +1015,8 @@ AS
              'requestBody: ' 
             ,p_pretty_print + 1
             ,'  '
-         ) || self.operation_requestBody.toYAML(
-            p_pretty_print + 1
+         ) || self.operation_requestBody.toYAML_ref(
+            p_pretty_print + 2
          );
          
       END IF;
@@ -1132,6 +1165,18 @@ AS
       -- Step 140
       -- Cough it out 
       --------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+      
+      IF p_final_linefeed = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         
+      END IF;
+               
       RETURN clb_output;
       
    END toYAML;

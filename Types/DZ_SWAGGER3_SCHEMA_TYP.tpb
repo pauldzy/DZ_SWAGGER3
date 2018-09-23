@@ -1257,7 +1257,7 @@ AS
       --------------------------------------------------------------------------
       IF self.schema_example_string IS NOT NULL
       THEN
-         clb_output := dz_json_util.pretty_str(
+         clb_output := clb_output || dz_json_util.pretty_str(
              'example: ' || self.schema_example_string
             ,p_pretty_print
             ,'  '
@@ -1265,7 +1265,7 @@ AS
       
       ELSIF self.schema_example_number IS NOT NULL
       THEN
-         clb_output := dz_json_util.pretty_str(
+         clb_output := clb_output || dz_json_util.pretty_str(
              'example: ' || self.schema_example_number
             ,p_pretty_print
             ,'  '
@@ -1279,7 +1279,7 @@ AS
       --------------------------------------------------------------------------
       IF self.schema_deprecated IS NOT NULL
       THEN
-         clb_output := dz_json_util.pretty_str(
+         clb_output := clb_output || dz_json_util.pretty_str(
              'deprecated: ' || LOWER(self.schema_deprecated)
             ,p_pretty_print
             ,'  '

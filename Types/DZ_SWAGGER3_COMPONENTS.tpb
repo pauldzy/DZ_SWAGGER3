@@ -413,7 +413,7 @@ AS
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_schemas(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -465,7 +465,7 @@ AS
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_responses(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -569,7 +569,7 @@ AS
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_examples(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -621,7 +621,7 @@ AS
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_requestBodies(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -673,7 +673,7 @@ AS
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_headers(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -725,7 +725,7 @@ AS
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_securitySchemes(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -777,7 +777,7 @@ AS
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_links(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -829,7 +829,7 @@ AS
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_callbacks(i).toJSON(
                   p_pretty_print => p_pretty_print + 2
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -872,7 +872,9 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  INTEGER  DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -1177,6 +1179,18 @@ AS
       -- Step 110
       -- Cough it out without final line feed
       --------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+      
+      IF p_final_linefeed = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         
+      END IF;
+               
       RETURN clb_output;
       
    END toYAML;

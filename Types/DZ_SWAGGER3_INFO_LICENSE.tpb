@@ -64,7 +64,7 @@ AS
       -- Step 20
       -- Build the wrapper
       --------------------------------------------------------------------------
-      IF num_pretty_print IS NULL
+      IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
          
@@ -83,7 +83,7 @@ AS
             ,self.license_name
             ,p_pretty_print + 1
          )
-         ,num_pretty_print + 1
+         ,p_pretty_print + 1
       );
          
       --------------------------------------------------------------------------
@@ -98,7 +98,7 @@ AS
                ,self.license_url
                ,p_pretty_print + 1
             )
-            ,num_pretty_print + 1
+            ,p_pretty_print + 1
          );
 
       END IF;
@@ -123,7 +123,9 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-      p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;
@@ -169,6 +171,18 @@ AS
       -- Step 110
       -- Cough it out without final line feed
       --------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+      
+      IF p_final_linefeed = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         
+      END IF;
+               
       RETURN clb_output;
       
    END toYAML;
