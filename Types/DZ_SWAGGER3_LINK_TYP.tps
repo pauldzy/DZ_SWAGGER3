@@ -2,6 +2,7 @@ CREATE OR REPLACE TYPE dz_swagger3_link_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
     hash_key            VARCHAR2(255 Char)
+   ,link_id             VARCHAR2(255 Char)
    ,link_operationRef   VARCHAR2(255 Char)
    ,link_operationId    VARCHAR2(255 Char)
    ,link_parameters     dz_swagger3_string_hash_list
@@ -18,6 +19,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_link_typ(
        p_hash_key           IN  VARCHAR2
+      ,p_link_id            IN  VARCHAR2
       ,p_link_operationRef  IN  VARCHAR2
       ,p_link_operationId   IN  VARCHAR2
       ,p_link_parameters    IN  dz_swagger3_string_hash_list

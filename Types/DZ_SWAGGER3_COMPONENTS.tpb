@@ -53,7 +53,7 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_schemas_keys
+   MEMBER FUNCTION components_schemas_ids
    RETURN MDSYS.SDO_STRING2_ARRAY
    AS
       int_index  PLS_INTEGER;
@@ -72,18 +72,18 @@ AS
       FOR i IN 1 .. self.components_schemas.COUNT
       LOOP
          ary_output.EXTEND();
-         ary_output(int_index) := self.components_schemas(i).key();
+         ary_output(int_index) := self.components_schemas(i).schema_id;
          int_index := int_index + 1;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_schemas_keys;
+   END components_schemas_ids;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_responses_keys
+   MEMBER FUNCTION components_responses_ids
    RETURN MDSYS.SDO_STRING2_ARRAY
    AS
       int_index  PLS_INTEGER;
@@ -102,18 +102,18 @@ AS
       FOR i IN 1 .. self.components_responses.COUNT
       LOOP
          ary_output.EXTEND();
-         ary_output(int_index) := self.components_responses(i).hash_key;
+         ary_output(int_index) := self.components_responses(i).response_id;
          int_index := int_index + 1;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_responses_keys;
+   END components_responses_ids;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_parameters_keys
+   MEMBER FUNCTION components_parameters_ids
    RETURN MDSYS.SDO_STRING2_ARRAY
    AS
       int_index  PLS_INTEGER;
@@ -132,18 +132,18 @@ AS
       FOR i IN 1 .. self.components_parameters.COUNT
       LOOP
          ary_output.EXTEND();
-         ary_output(int_index) := self.components_parameters(i).hash_key;
+         ary_output(int_index) := self.components_parameters(i).parameter_id;
          int_index := int_index + 1;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_parameters_keys;
+   END components_parameters_ids;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_examples_keys
+   MEMBER FUNCTION components_examples_ids
    RETURN MDSYS.SDO_STRING2_ARRAY
    AS
       int_index  PLS_INTEGER;
@@ -162,18 +162,18 @@ AS
       FOR i IN 1 .. self.components_examples.COUNT
       LOOP
          ary_output.EXTEND();
-         ary_output(int_index) := self.components_examples(i).hash_key;
+         ary_output(int_index) := self.components_examples(i).example_id;
          int_index := int_index + 1;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_examples_keys;
+   END components_examples_ids;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_requestBodies_keys
+   MEMBER FUNCTION components_requestBodies_ids
    RETURN MDSYS.SDO_STRING2_ARRAY
    AS
       int_index  PLS_INTEGER;
@@ -192,18 +192,18 @@ AS
       FOR i IN 1 .. self.components_requestBodies.COUNT
       LOOP
          ary_output.EXTEND();
-         ary_output(int_index) := self.components_requestBodies(i).hash_key;
+         ary_output(int_index) := self.components_requestBodies(i).requestBody_id;
          int_index := int_index + 1;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_requestBodies_keys;
+   END components_requestBodies_ids;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_headers_keys
+   MEMBER FUNCTION components_headers_ids
    RETURN MDSYS.SDO_STRING2_ARRAY
    AS
       int_index  PLS_INTEGER;
@@ -222,18 +222,18 @@ AS
       FOR i IN 1 .. self.components_headers.COUNT
       LOOP
          ary_output.EXTEND();
-         ary_output(int_index) := self.components_headers(i).hash_key;
+         ary_output(int_index) := self.components_headers(i).header_id;
          int_index := int_index + 1;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_headers_keys;
+   END components_headers_ids;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_securityScheme_keys
+   MEMBER FUNCTION components_securityScheme_ids
    RETURN MDSYS.SDO_STRING2_ARRAY
    AS
       int_index  PLS_INTEGER;
@@ -252,18 +252,18 @@ AS
       FOR i IN 1 .. self.components_securitySchemes.COUNT
       LOOP
          ary_output.EXTEND();
-         ary_output(int_index) := self.components_securitySchemes(i).hash_key;
+         ary_output(int_index) := self.components_securitySchemes(i).scheme_id;
          int_index := int_index + 1;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_securityScheme_keys;
+   END components_securityScheme_ids;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_links_keys
+   MEMBER FUNCTION components_links_ids
    RETURN MDSYS.SDO_STRING2_ARRAY
    AS
       int_index  PLS_INTEGER;
@@ -282,18 +282,18 @@ AS
       FOR i IN 1 .. self.components_links.COUNT
       LOOP
          ary_output.EXTEND();
-         ary_output(int_index) := self.components_links(i).hash_key;
+         ary_output(int_index) := self.components_links(i).link_id;
          int_index := int_index + 1;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_links_keys;
+   END components_links_ids;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_callbacks_keys
+   MEMBER FUNCTION components_callbacks_ids
    RETURN MDSYS.SDO_STRING2_ARRAY
    AS
       int_index  PLS_INTEGER;
@@ -312,14 +312,14 @@ AS
       FOR i IN 1 .. self.components_callbacks.COUNT
       LOOP
          ary_output.EXTEND();
-         ary_output(int_index) := self.components_callbacks(i).hash_key;
+         ary_output(int_index) := self.components_callbacks(i).callback_id;
          int_index := int_index + 1;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_callbacks_keys;
+   END components_callbacks_ids;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -405,7 +405,7 @@ AS
             
          END IF;
       
-         ary_keys := self.components_schemas_keys();
+         ary_keys := self.components_schemas_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -457,7 +457,7 @@ AS
             
          END IF;
       
-         ary_keys := self.components_responses_keys();
+         ary_keys := self.components_responses_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -509,7 +509,7 @@ AS
             
          END IF;
 
-         ary_keys := self.components_parameters_keys();
+         ary_keys := self.components_parameters_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -561,7 +561,7 @@ AS
             
          END IF;
 
-         ary_keys := self.components_examples_keys();
+         ary_keys := self.components_examples_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -613,7 +613,7 @@ AS
             
          END IF;
 
-         ary_keys := self.components_requestBodies_keys();
+         ary_keys := self.components_requestBodies_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -665,7 +665,7 @@ AS
             
          END IF;
 
-         ary_keys := self.components_headers_keys();
+         ary_keys := self.components_headers_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -717,7 +717,7 @@ AS
             
          END IF;
 
-         ary_keys := self.components_securityScheme_keys();
+         ary_keys := self.components_securityScheme_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -769,7 +769,7 @@ AS
             
          END IF;
 
-         ary_keys := self.components_links_keys();
+         ary_keys := self.components_links_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -821,7 +821,7 @@ AS
             
          END IF;
 
-         ary_keys := self.components_callbacks_keys();
+         ary_keys := self.components_callbacks_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -903,7 +903,7 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_schemas_keys();
+         ary_keys := self.components_schemas_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -935,7 +935,7 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_responses_keys();
+         ary_keys := self.components_responses_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -967,7 +967,7 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_parameters_keys();
+         ary_keys := self.components_parameters_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -999,7 +999,7 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_examples_keys();
+         ary_keys := self.components_examples_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -1031,7 +1031,7 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_requestBodies_keys();
+         ary_keys := self.components_requestBodies_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -1063,7 +1063,7 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_headers_keys();
+         ary_keys := self.components_headers_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -1095,7 +1095,7 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_securityScheme_keys();
+         ary_keys := self.components_securityScheme_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -1127,7 +1127,7 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_links_keys();
+         ary_keys := self.components_links_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -1159,7 +1159,7 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_callbacks_keys();
+         ary_keys := self.components_callbacks_ids();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP

@@ -2,6 +2,7 @@ CREATE OR REPLACE TYPE dz_swagger3_response_typ FORCE
 AUTHID DEFINER
 AS OBJECT (
     hash_key                 VARCHAR2(255 Char)
+   ,response_id              VARCHAR2(255 Char)
    ,response_description     VARCHAR2(4000 Char)
    ,response_headers         dz_swagger3_header_list
    ,response_content         dz_swagger3_media_list
@@ -24,6 +25,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_response_typ(
        p_hash_key                IN  VARCHAR2
+      ,p_response_id             IN  VARCHAR2
       ,p_response_description    IN  VARCHAR2
       ,p_response_headers        IN  dz_swagger3_header_list
       ,p_response_content        IN  dz_swagger3_media_list
@@ -60,10 +62,24 @@ AS OBJECT (
    ,MEMBER FUNCTION toJSON(
       p_pretty_print         IN  INTEGER   DEFAULT NULL
     ) RETURN CLOB
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toJSON_ref(
+      p_pretty_print         IN  INTEGER   DEFAULT NULL
+    ) RETURN CLOB
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toYAML_ref(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'

@@ -15,6 +15,7 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_callback_typ(
        p_hash_key                IN  VARCHAR2
+      ,p_callback_id             IN  VARCHAR2
       ,p_path_summary            IN  VARCHAR2
       ,p_path_description        IN  VARCHAR2
       ,p_path_get_operation      IN  dz_swagger3_cboperation_typ
@@ -32,6 +33,7 @@ AS
    BEGIN 
    
       self.hash_key                := p_hash_key;
+      self.callback_id             := p_callback_id;
       self.path_summary            := p_path_summary;
       self.path_description        := p_path_description;
       self.path_get_operation      := p_path_get_operation;

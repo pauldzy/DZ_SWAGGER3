@@ -15,6 +15,7 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_link_typ(
        p_hash_key           IN  VARCHAR2
+      ,p_link_id            IN  VARCHAR2
       ,p_link_operationRef  IN  VARCHAR2
       ,p_link_operationId   IN  VARCHAR2
       ,p_link_parameters    IN  dz_swagger3_string_hash_list
@@ -26,6 +27,7 @@ AS
    BEGIN 
    
       self.hash_key          := p_hash_key;
+      self.link_id           := p_link_id;
       self.link_operationRef := p_link_operationRef;
       self.link_operationId  := p_link_operationId;
       self.link_parameters   := p_link_parameters;

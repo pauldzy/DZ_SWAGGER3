@@ -15,6 +15,7 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_securityScheme_typ(
        p_hash_key                IN  VARCHAR2
+      ,p_scheme_id               IN  VARCHAR2
       ,p_scheme_type             IN  VARCHAR2
       ,p_scheme_description      IN  VARCHAR2
       ,p_scheme_name             IN  VARCHAR2
@@ -28,6 +29,7 @@ AS
    BEGIN 
    
       self.hash_key                := p_hash_key;
+      self.scheme_id               := p_scheme_id;
       self.scheme_type             := p_scheme_type;
       self.scheme_description      := p_scheme_description;
       self.scheme_name             := p_scheme_name;

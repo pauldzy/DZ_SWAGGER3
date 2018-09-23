@@ -2,6 +2,7 @@ CREATE OR REPLACE TYPE dz_swagger3_securityScheme_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
     hash_key                VARCHAR2(255 Char)
+   ,scheme_id               VARCHAR2(255 Char)
    ,scheme_type             VARCHAR2(255 Char)
    ,scheme_description      VARCHAR2(255 Char)
    ,scheme_name             VARCHAR2(255 Char)
@@ -20,6 +21,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_securityScheme_typ(
        p_hash_key                IN  VARCHAR2
+      ,p_scheme_id               IN  VARCHAR2
       ,p_scheme_type             IN  VARCHAR2
       ,p_scheme_description      IN  VARCHAR2
       ,p_scheme_name             IN  VARCHAR2

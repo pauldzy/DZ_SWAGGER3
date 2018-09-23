@@ -138,6 +138,7 @@ AS
       self.components := dz_swagger3_components();
       self.components.components_parameters    := self.unique_parameters();
       self.components.components_requestBodies := self.unique_requestBodies();
+      self.components.components_responses     := self.unique_responses();
       
       --------------------------------------------------------------------------
       -- Step 70
@@ -194,6 +195,74 @@ AS
       RETURN;      
 
    END dz_swagger3_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION unique_responses
+   RETURN dz_swagger3_response_list
+   AS
+      ary_results   dz_swagger3_response_list;
+      ary_working   dz_swagger3_response_list;
+      int_results   PLS_INTEGER;
+      ary_x         MDSYS.SDO_STRING2_ARRAY;
+      int_x         PLS_INTEGER;
+   
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Setup for the harvest
+      --------------------------------------------------------------------------
+      int_results := 1;
+      ary_results := dz_swagger3_response_list();
+      int_x       := 1;
+      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Pull parameters from the paths
+      --------------------------------------------------------------------------
+      IF self.paths IS NOT NULL
+      AND self.paths.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.paths.COUNT
+         LOOP
+            ary_working := self.paths(i).unique_responses();
+            
+            IF ary_working.COUNT > 0
+            THEN
+               FOR j IN 1 .. ary_working.COUNT
+               LOOP
+                  IF dz_swagger3_util.a_in_b(
+                      ary_working(j).response_id
+                     ,ary_x
+                  ) = 'FALSE'
+                  THEN
+                     ary_results.EXTEND();
+                     ary_results(int_results) := ary_working(j);
+                     int_results := int_results + 1;
+                     
+                     ary_x.EXTEND();
+                     ary_x(int_x) := ary_working(j).response_id;
+                     int_x := int_x + 1;
+                     
+                  END IF;
+                  
+               END LOOP;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+   
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Return what we got
+      --------------------------------------------------------------------------
+      RETURN ary_results;
+   
+   END unique_responses;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

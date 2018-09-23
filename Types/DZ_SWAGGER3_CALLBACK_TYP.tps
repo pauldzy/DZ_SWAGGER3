@@ -2,6 +2,7 @@ CREATE OR REPLACE TYPE dz_swagger3_callback_typ FORCE
 AUTHID DEFINER
 AS OBJECT (
     hash_key                 VARCHAR2(255 Char)
+   ,callback_id              VARCHAR2(255 Char)
    ,path_summary             VARCHAR2(255 Char)
    ,path_description         VARCHAR2(4000 Char)
    ,path_get_operation       dz_swagger3_cboperation_typ
@@ -24,6 +25,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_callback_typ(
        p_hash_key                IN  VARCHAR2
+      ,p_callback_id             IN  VARCHAR2
       ,p_path_summary            IN  VARCHAR2
       ,p_path_description        IN  VARCHAR2
       ,p_path_get_operation      IN  dz_swagger3_cboperation_typ

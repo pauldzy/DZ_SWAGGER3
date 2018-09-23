@@ -2,6 +2,7 @@ CREATE OR REPLACE TYPE dz_swagger3_header_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
     hash_key                VARCHAR2(255 Char)
+   ,header_id               VARCHAR2(255 Char)
    ,header_description      VARCHAR2(4000 Char)
    ,header_required         VARCHAR2(5 Char)
    ,header_deprecated       VARCHAR2(5 Char)
@@ -23,6 +24,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_header_typ(
        p_hash_key               IN  VARCHAR2
+      ,p_header_id              IN  VARCHAR2
       ,p_header_description     IN  VARCHAR2
       ,p_header_required        IN  VARCHAR2
       ,p_header_deprecated      IN  VARCHAR2

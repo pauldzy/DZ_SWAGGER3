@@ -32,47 +32,47 @@ AS OBJECT (
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_schemas_keys
+   ,MEMBER FUNCTION components_schemas_ids
     RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_responses_keys
+   ,MEMBER FUNCTION components_responses_ids
     RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_parameters_keys
+   ,MEMBER FUNCTION components_parameters_ids
     RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_examples_keys
+   ,MEMBER FUNCTION components_examples_ids
     RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_requestBodies_keys
+   ,MEMBER FUNCTION components_requestBodies_ids
     RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_headers_keys
+   ,MEMBER FUNCTION components_headers_ids
     RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_securityScheme_keys
+   ,MEMBER FUNCTION components_securityScheme_ids
     RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_links_keys
+   ,MEMBER FUNCTION components_links_ids
     RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_callbacks_keys
+   ,MEMBER FUNCTION components_callbacks_ids
     RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------

@@ -271,6 +271,63 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER FUNCTION unique_responses
+   RETURN dz_swagger3_response_list
+   AS
+      ary_results   dz_swagger3_response_list;
+      int_results   PLS_INTEGER;
+      ary_x         MDSYS.SDO_STRING2_ARRAY;
+      int_x         PLS_INTEGER;
+   
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Setup for the harvest
+      --------------------------------------------------------------------------
+      int_results := 1;
+      ary_results := dz_swagger3_response_list();
+      int_x       := 1;
+      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Pull the parmeters from the operation
+      --------------------------------------------------------------------------
+      IF self.operation_responses IS NOT NULL
+      AND self.operation_responses.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.operation_responses.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.operation_responses(i).response_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.operation_responses(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.operation_responses(i).response_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+   
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Return what we got
+      --------------------------------------------------------------------------
+      RETURN ary_results;
+
+   END unique_responses;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION unique_requestbodies
    RETURN dz_swagger3_requestbody_list
    AS
@@ -638,7 +695,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.operation_responses(i).toJSON(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.operation_responses(i).toJSON_ref(
                   p_pretty_print => p_pretty_print + 2
                 )
                ,p_pretty_print + 2
@@ -1045,7 +1102,7 @@ AS
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 2
                ,'  '
-            ) || self.operation_responses(i).toYAML(
+            ) || self.operation_responses(i).toYAML_ref(
                p_pretty_print + 3
             );
          
@@ -1149,11 +1206,11 @@ AS
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 '- ' || self.operation_servers(i).toYAML(
-                  p_pretty_print + 2
+                  p_pretty_print + 3
                   ,'FALSE'
                   ,'FALSE'
                )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
                ,'  '
             );
          

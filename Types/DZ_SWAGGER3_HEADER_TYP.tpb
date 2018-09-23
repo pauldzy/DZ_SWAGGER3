@@ -15,6 +15,7 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_header_typ(
        p_hash_key               IN  VARCHAR2
+      ,p_header_id              IN  VARCHAR2
       ,p_header_description     IN  VARCHAR2
       ,p_header_required        IN  VARCHAR2
       ,p_header_deprecated      IN  VARCHAR2
@@ -31,6 +32,7 @@ AS
    BEGIN 
    
       self.hash_key               := p_hash_key;
+      self.header_id              := p_header_id;
       self.header_description     := p_header_description;
       self.header_required        := p_header_required;
       self.header_deprecated      := p_header_deprecated;

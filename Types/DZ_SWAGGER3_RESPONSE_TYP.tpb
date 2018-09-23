@@ -29,6 +29,7 @@ AS
          SELECT
          dz_swagger3_response_typ(
              p_hash_key              => p_response_code
+            ,p_response_id           => a.response_id
             ,p_response_description  => a.response_description
             ,p_response_headers      => NULL
             ,p_response_content      => NULL
@@ -86,6 +87,7 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_response_typ(
        p_hash_key                IN  VARCHAR2
+      ,p_response_id             IN  VARCHAR2
       ,p_response_description    IN  VARCHAR2
       ,p_response_headers        IN  dz_swagger3_header_list
       ,p_response_content        IN  dz_swagger3_media_list
@@ -95,6 +97,7 @@ AS
    BEGIN 
    
       self.hash_key                := p_hash_key;
+      self.response_id             := p_response_id;
       self.response_description    := p_response_description;
       self.response_headers        := p_response_headers;
       self.response_content        := p_response_content;
@@ -451,6 +454,71 @@ AS
            
    END toJSON;
    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toJSON_ref(
+       p_pretty_print     IN  INTEGER   DEFAULT NULL
+   ) RETURN CLOB
+   AS
+      clb_output       CLOB;
+      str_pad          VARCHAR2(1 Char);
+      str_pad1         VARCHAR2(1 Char);
+      
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Build the wrapper
+      --------------------------------------------------------------------------
+      IF p_pretty_print IS NULL
+      THEN
+         clb_output  := dz_json_util.pretty('{',NULL);
+         str_pad     := '';
+         
+      ELSE
+         clb_output  := dz_json_util.pretty('{',-1);
+         str_pad     := ' ';
+         
+      END IF;
+      
+      str_pad1 := str_pad;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Add the ref
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty(
+          str_pad1 || dz_json_main.value2json(
+             '$ref'
+            ,'#/components/responses/' || self.response_id
+            ,p_pretty_print + 1
+         )
+         ,p_pretty_print + 1
+      );
+      str_pad1 := ',';
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Add the left bracket
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty(
+          '}'
+         ,p_pretty_print,NULL,NULL
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Cough it out
+      --------------------------------------------------------------------------
+      RETURN clb_output;
+           
+   END toJSON_ref;
+   
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
@@ -592,6 +660,56 @@ AS
       RETURN clb_output;
       
    END toYAML;
+   
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   MEMBER FUNCTION toYAML_ref(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS
+      clb_output       CLOB;
+      
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Write the yaml description
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty_str(
+          '$ref: ' || dz_swagger3_util.yaml_text(
+             '#/components/responses/' || self.response_id
+            ,p_pretty_print
+         )
+         ,p_pretty_print
+         ,'  '
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 60
+      -- Cough it out 
+      --------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+      
+      IF p_final_linefeed = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         
+      END IF;
+               
+      RETURN clb_output;
+      
+   END toYAML_ref;
    
 END;
 /

@@ -198,6 +198,267 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER FUNCTION unique_responses
+   RETURN dz_swagger3_response_list
+   AS
+      ary_results   dz_swagger3_response_list;
+      int_results   PLS_INTEGER;
+      ary_x         MDSYS.SDO_STRING2_ARRAY;
+      int_x         PLS_INTEGER;
+      
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Setup for the harvest
+      --------------------------------------------------------------------------
+      int_results := 1;
+      ary_results := dz_swagger3_response_list();
+      int_x       := 1;
+      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Pull the responses from the get operation
+      --------------------------------------------------------------------------
+      IF  self.path_get_operation IS NOT NULL
+      AND self.path_get_operation.operation_responses IS NOT NULL
+      AND self.path_get_operation.operation_responses.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_get_operation.operation_responses.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_get_operation.operation_responses(i).response_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_get_operation.operation_responses(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_get_operation.operation_responses(i).response_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Pull the parmeters from the put operation
+      --------------------------------------------------------------------------
+      IF  self.path_put_operation IS NOT NULL
+      AND self.path_put_operation.operation_responses IS NOT NULL
+      AND self.path_put_operation.operation_responses.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_put_operation.operation_responses.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_put_operation.operation_responses(i).response_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_put_operation.operation_responses(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_put_operation.operation_responses(i).response_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Pull the parmeters from the post operation
+      --------------------------------------------------------------------------
+      IF  self.path_post_operation IS NOT NULL
+      AND self.path_post_operation.operation_responses IS NOT NULL
+      AND self.path_post_operation.operation_responses.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_post_operation.operation_responses.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_post_operation.operation_responses(i).response_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_post_operation.operation_responses(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_post_operation.operation_responses(i).response_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 60
+      -- Pull the parmeters from the delete operation
+      --------------------------------------------------------------------------
+      IF  self.path_delete_operation IS NOT NULL
+      AND self.path_delete_operation.operation_responses IS NOT NULL
+      AND self.path_delete_operation.operation_responses.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_delete_operation.operation_responses.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_delete_operation.operation_responses(i).response_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_delete_operation.operation_responses(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_delete_operation.operation_responses(i).response_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 70
+      -- Pull the parmeters from the options operation
+      --------------------------------------------------------------------------
+      IF  self.path_options_operation IS NOT NULL
+      AND self.path_options_operation.operation_responses IS NOT NULL
+      AND self.path_options_operation.operation_responses.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_options_operation.operation_responses.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_options_operation.operation_responses(i).response_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_options_operation.operation_responses(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_options_operation.operation_responses(i).response_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 80
+      -- Pull the parmeters from the head operation
+      --------------------------------------------------------------------------
+      IF  self.path_head_operation IS NOT NULL
+      AND self.path_head_operation.operation_responses IS NOT NULL
+      AND self.path_head_operation.operation_responses.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_head_operation.operation_responses.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_head_operation.operation_responses(i).response_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_head_operation.operation_responses(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_head_operation.operation_responses(i).response_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 90
+      -- Pull the parmeters from the patch operation
+      --------------------------------------------------------------------------
+      IF  self.path_patch_operation IS NOT NULL
+      AND self.path_patch_operation.operation_responses IS NOT NULL
+      AND self.path_patch_operation.operation_responses.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_patch_operation.operation_responses.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_patch_operation.operation_responses(i).response_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_patch_operation.operation_responses(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_patch_operation.operation_responses(i).response_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 100
+      -- Pull the parmeters from the trace operation
+      --------------------------------------------------------------------------
+      IF  self.path_trace_operation IS NOT NULL
+      AND self.path_trace_operation.operation_responses IS NOT NULL
+      AND self.path_trace_operation.operation_responses.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_trace_operation.operation_responses.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_trace_operation.operation_responses(i).response_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_trace_operation.operation_responses(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_trace_operation.operation_responses(i).response_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 110
+      -- Return what we got
+      --------------------------------------------------------------------------
+      RETURN ary_results;
+   
+   END unique_responses;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION unique_requestBodies
    RETURN dz_swagger3_requestbody_list
    AS
