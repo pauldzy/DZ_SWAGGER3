@@ -342,6 +342,30 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER PROCEDURE prune(
+       SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
+   )
+   AS
+   BEGIN
+      
+      IF self.schema_items_schema IS NOT NULL
+      AND self.schema_items_schema.doRef() = 'TRUE'
+      THEN
+         self.schema_items_schema := NULL;
+
+      END IF;
+      
+      IF self.not_schema IS NOT NULL
+      AND self.not_schema.doRef() = 'TRUE'
+      THEN
+         self.not_schema := NULL;
+
+      END IF;
+      
+   END prune;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    OVERRIDING MEMBER FUNCTION isNULL
    RETURN VARCHAR2
    AS
@@ -370,13 +394,204 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION doRef
+   OVERRIDING MEMBER FUNCTION doRef
    RETURN VARCHAR2
    AS
    BEGIN
-      RETURN 'FALSE';
+   
+      IF self.schema_type = 'object'
+      THEN
+         RETURN 'TRUE';
+         
+      ELSE
+         RETURN 'FALSE';
+      
+      END IF;
       
    END doRef;
+   
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   MEMBER FUNCTION unique_schemas
+   RETURN dz_swagger3_schema_nf_list
+   AS
+      ary_results   dz_swagger3_schema_nf_list;
+      ary_working   dz_swagger3_schema_nf_list;
+      obj_schema    dz_swagger3_schema_typ;
+      int_results   PLS_INTEGER;
+      ary_x         MDSYS.SDO_STRING2_ARRAY;
+      int_x         PLS_INTEGER;
+   
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Setup for the harvest
+      --------------------------------------------------------------------------
+      int_results := 1;
+      ary_results := dz_swagger3_schema_nf_list();
+      int_x       := 1;
+      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Pull the schemas from the properties
+      --------------------------------------------------------------------------
+      IF self.schema_properties IS NOT NULL
+      AND self.schema_properties.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.schema_properties.COUNT
+         LOOP
+            IF self.schema_properties(i).doRef() = 'TRUE'
+            THEN
+               ary_working := TREAT(
+                  self.schema_properties(i) AS dz_swagger3_schema_typ
+               ).unique_schemas();
+
+               FOR j IN 1 .. ary_working.COUNT
+               LOOP
+                  IF dz_swagger3_util.a_in_b(
+                      ary_working(j).schema_id
+                     ,ary_x
+                  ) = 'FALSE'
+                  THEN
+                     ary_results.EXTEND();
+                     obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
+                     obj_schema.prune();
+                     ary_results(int_results) := obj_schema;
+                     int_results := int_results + 1;
+                     
+                     ary_x.EXTEND();
+                     ary_x(int_x) := ary_working(j).schema_id;
+                     int_x := int_x + 1;
+                     
+                  END IF;
+                  
+               END LOOP;
+               
+               IF dz_swagger3_util.a_in_b(
+                   self.schema_properties(i).schema_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  obj_schema := TREAT(self.schema_properties(i) AS dz_swagger3_schema_typ);
+                  obj_schema.prune();
+                  ary_results(int_results) := obj_schema;
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.schema_properties(i).schema_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Pull the schema from the items
+      --------------------------------------------------------------------------
+      IF self.schema_items_schema IS NOT NULL
+      AND self.schema_items_schema.isNULL() = 'FALSE'
+      THEN
+         IF self.schema_items_schema.doRef() = 'TRUE'
+         THEN
+            IF dz_swagger3_util.a_in_b(
+                self.schema_items_schema.schema_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               obj_schema := TREAT(self.schema_items_schema AS dz_swagger3_schema_typ);
+               obj_schema.prune();
+               ary_results(int_results) := obj_schema;
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.schema_items_schema.schema_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END IF;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Pull the schemas from the combines
+      --------------------------------------------------------------------------
+      IF self.combine_schemas IS NOT NULL
+      AND self.combine_schemas.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.combine_schemas.COUNT
+         LOOP
+            IF self.combine_schemas(i).doRef() = 'TRUE'
+            THEN
+               IF dz_swagger3_util.a_in_b(
+                   self.combine_schemas(i).schema_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  obj_schema := TREAT(self.combine_schemas(i) AS dz_swagger3_schema_typ);
+                  obj_schema.prune();
+                  ary_results(int_results) := obj_schema;
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.combine_schemas(i).schema_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Pull the schema from the items
+      --------------------------------------------------------------------------
+      IF self.not_schema IS NOT NULL
+      AND self.not_schema.isNULL() = 'FALSE'
+      THEN
+         IF self.not_schema.doRef() = 'TRUE'
+         THEN
+            IF dz_swagger3_util.a_in_b(
+                self.not_schema.schema_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               obj_schema := TREAT(self.not_schema AS dz_swagger3_schema_typ);
+               obj_schema.prune();
+               ary_results(int_results) := obj_schema;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.not_schema.schema_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END IF;
+         
+      END IF;
+   
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Return what we got
+      --------------------------------------------------------------------------
+      RETURN ary_results;
+
+   END unique_schemas;
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
@@ -432,10 +647,20 @@ AS
          );
          
       ELSE
-         RETURN self.toJSON_schema(
-             p_pretty_print   => p_pretty_print
-            ,p_jsonschema     => p_jsonschema
-         );
+         IF self.doRef() = 'TRUE'
+         THEN
+            RETURN self.toJSON_ref(
+                p_pretty_print   => p_pretty_print
+               ,p_jsonschema     => p_jsonschema
+            );
+
+         ELSE
+            RETURN self.toJSON_schema(
+                p_pretty_print   => p_pretty_print
+               ,p_jsonschema     => p_jsonschema
+            );
+            
+         END IF;
          
       END IF;
       
@@ -886,6 +1111,79 @@ AS
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
+   OVERRIDING MEMBER FUNCTION toJSON_ref(
+       p_pretty_print      IN  INTEGER  DEFAULT NULL
+      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
+   ) RETURN CLOB
+   AS
+      str_jsonschema   VARCHAR2(4000 Char) := UPPER(p_jsonschema);
+      clb_output       CLOB;
+      str_pad          VARCHAR2(1 Char);
+      str_pad1         VARCHAR2(1 Char);
+      
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      IF str_jsonschema IS NULL
+      OR str_jsonschema NOT IN ('TRUE','FALSE')
+      THEN
+         str_jsonschema := 'FALSE';
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Build the wrapper
+      --------------------------------------------------------------------------
+      IF p_pretty_print IS NULL
+      THEN
+         clb_output  := dz_json_util.pretty('{',NULL);
+         str_pad  := '';
+         
+      ELSE
+         clb_output  := dz_json_util.pretty('{',-1);
+         str_pad  := ' ';
+         
+      END IF;
+      
+      str_pad1 := str_pad;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Add base attributes
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty(
+          str_pad1 || dz_json_main.value2json(
+             '$ref'
+            ,'#/components/schemas/' || self.schema_id
+            ,p_pretty_print + 1
+         )
+         ,p_pretty_print + 1
+      );
+      str_pad1 := ',';
+      
+      --------------------------------------------------------------------------
+      -- Step 180
+      -- Add the left bracket
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty(
+          '}'
+         ,p_pretty_print,NULL,NULL
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 190
+      -- Cough it out
+      --------------------------------------------------------------------------
+      RETURN clb_output;
+           
+   END toJSON_ref;
+   
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
    OVERRIDING MEMBER FUNCTION toJSON_combine(
        p_pretty_print      IN  INTEGER  DEFAULT NULL
       ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
@@ -1102,11 +1400,22 @@ AS
          
          
       ELSE
-         RETURN self.toYAML_schema(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-         );
+         IF self.doRef() = 'TRUE'
+         THEN
+            RETURN self.toYAML_ref(
+                p_pretty_print    => p_pretty_print
+               ,p_initial_indent  => p_initial_indent
+               ,p_final_linefeed  => p_final_linefeed
+            );
+         
+         ELSE
+            RETURN self.toYAML_schema(
+                p_pretty_print    => p_pretty_print
+               ,p_initial_indent  => p_initial_indent
+               ,p_final_linefeed  => p_final_linefeed
+            );
+            
+         END IF;
          
       END IF;
       
@@ -1425,6 +1734,56 @@ AS
       RETURN clb_output;
       
    END toYAML_schema;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   OVERRIDING MEMBER FUNCTION toYAML_ref(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS
+      clb_output       CLOB := '';
+      
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Do the type element
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty_str(
+          '$ref: ' || dz_swagger3_util.yaml_text(
+             '#/components/schemas/' || self.schema_id
+            ,p_pretty_print
+         )
+         ,p_pretty_print
+         ,'  '
+      );
+
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Cough it out with adjustments as needed
+      --------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+      
+      IF p_final_linefeed = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         
+      END IF;
+               
+      RETURN clb_output;
+      
+   END toYAML_ref;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

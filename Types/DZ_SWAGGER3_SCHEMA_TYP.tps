@@ -1,8 +1,7 @@
 CREATE OR REPLACE TYPE dz_swagger3_schema_typ FORCE 
 UNDER dz_swagger3_schema_typ_nf(
     
-    schema_id                VARCHAR2(255 Char)
-   ,schema_title             VARCHAR2(255 Char)
+    schema_title             VARCHAR2(255 Char)
    ,schema_type              VARCHAR2(255 Char)
    ,schema_description       VARCHAR2(4000 Char)
    ,schema_format            VARCHAR2(255 Char)
@@ -157,6 +156,12 @@ UNDER dz_swagger3_schema_typ_nf(
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   ,MEMBER PROCEDURE prune(
+       SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
+   )
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION isNULL
     RETURN VARCHAR2
     
@@ -167,8 +172,13 @@ UNDER dz_swagger3_schema_typ_nf(
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION doRef
+   ,OVERRIDING MEMBER FUNCTION doRef
     RETURN VARCHAR2
+    
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   ,MEMBER FUNCTION unique_schemas
+    RETURN dz_swagger3_schema_nf_list
     
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
@@ -185,6 +195,13 @@ UNDER dz_swagger3_schema_typ_nf(
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toJSON_schema(
+       p_pretty_print        IN  INTEGER  DEFAULT NULL
+      ,p_jsonschema          IN  VARCHAR2 DEFAULT 'FALSE'       
+   ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,OVERRIDING MEMBER FUNCTION toJSON_ref(
        p_pretty_print        IN  INTEGER  DEFAULT NULL
       ,p_jsonschema          IN  VARCHAR2 DEFAULT 'FALSE'       
    ) RETURN CLOB
@@ -214,6 +231,14 @@ UNDER dz_swagger3_schema_typ_nf(
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toYAML_schema(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,OVERRIDING MEMBER FUNCTION toYAML_ref(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'

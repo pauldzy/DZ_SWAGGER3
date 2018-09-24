@@ -2,8 +2,9 @@ CREATE OR REPLACE TYPE dz_swagger3_schema_typ_nf FORCE
 AUTHID DEFINER 
 AS OBJECT (
 
-    hash_key              VARCHAR2(255 Char)
-   ,schema_required       VARCHAR2(5 Char)
+    hash_key                 VARCHAR2(255 Char)
+   ,schema_id                VARCHAR2(255 Char)
+   ,schema_required          VARCHAR2(5 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -17,6 +18,11 @@ AS OBJECT (
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION doRef
+    RETURN VARCHAR2
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER  DEFAULT NULL
       ,p_jsonschema          IN  VARCHAR2 DEFAULT 'FALSE'       
@@ -25,6 +31,13 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON_schema(
+       p_pretty_print        IN  INTEGER  DEFAULT NULL
+      ,p_jsonschema          IN  VARCHAR2 DEFAULT 'FALSE'       
+   ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toJSON_ref(
        p_pretty_print        IN  INTEGER  DEFAULT NULL
       ,p_jsonschema          IN  VARCHAR2 DEFAULT 'FALSE'       
    ) RETURN CLOB
@@ -54,6 +67,14 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML_schema(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toYAML_ref(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'

@@ -23,6 +23,17 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER FUNCTION doRef
+   RETURN VARCHAR2
+   AS
+   BEGIN
+      RAISE_APPLICATION_ERROR(-20001,'err');
+      RETURN NULL;
+      
+   END doRef;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print      IN  INTEGER  DEFAULT NULL
       ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE'       
@@ -44,6 +55,18 @@ AS
       RETURN NULL;
       
    END toJSON_schema;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toJSON_ref(
+       p_pretty_print      IN  INTEGER  DEFAULT NULL
+      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE'       
+   ) RETURN CLOB
+   AS
+   BEGIN
+      RETURN NULL;
+      
+   END toJSON_ref;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -94,6 +117,19 @@ AS
       RETURN NULL;
       
    END toYAML_schema;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toYAML_ref(
+       p_pretty_print      IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS
+   BEGIN
+      RETURN NULL;
+      
+   END toYAML_ref;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

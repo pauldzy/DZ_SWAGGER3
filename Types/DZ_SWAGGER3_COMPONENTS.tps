@@ -1,7 +1,7 @@
 CREATE OR REPLACE TYPE dz_swagger3_components FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    components_schemas          dz_swagger3_schema_list
+    components_schemas          dz_swagger3_schema_nf_list
    ,components_responses        dz_swagger3_response_list
    ,components_parameters       dz_swagger3_parameter_list
    ,components_examples         dz_swagger3_example_list
@@ -19,7 +19,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_components(
-       p_components_schemas           IN  dz_swagger3_schema_list
+       p_components_schemas           IN  dz_swagger3_schema_nf_list
       ,p_components_responses         IN  dz_swagger3_response_list
       ,p_components_parameters        IN  dz_swagger3_parameter_list
       ,p_components_examples          IN  dz_swagger3_example_list

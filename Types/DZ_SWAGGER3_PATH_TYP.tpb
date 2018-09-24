@@ -975,13 +975,308 @@ AS
    
    END unique_parameters;
 
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
    MEMBER FUNCTION unique_schemas
    RETURN dz_swagger3_schema_nf_list
    AS
+      ary_results   dz_swagger3_schema_nf_list;
+      ary_working   dz_swagger3_schema_nf_list;
+      int_results   PLS_INTEGER;
+      ary_x         MDSYS.SDO_STRING2_ARRAY;
+      int_x         PLS_INTEGER;
+   
    BEGIN
-      NULL;
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Setup for the harvest
+      --------------------------------------------------------------------------
+      int_results := 1;
+      ary_results := dz_swagger3_schema_nf_list();
+      int_x       := 1;
+      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Pull the schema from the get operation
+      --------------------------------------------------------------------------
+      IF self.path_get_operation IS NOT NULL
+      AND self.path_get_operation.isNULL() = 'FALSE'
+      THEN
+         ary_working := self.path_get_operation.unique_schemas();
+            
+         FOR j IN 1 .. ary_working.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                ary_working(j).schema_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := ary_working(j);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := ary_working(j).schema_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Pull the schema from the get operation
+      --------------------------------------------------------------------------
+      IF self.path_put_operation IS NOT NULL
+      AND self.path_put_operation.isNULL() = 'FALSE'
+      THEN
+         ary_working := self.path_put_operation.unique_schemas();
+            
+         FOR j IN 1 .. ary_working.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                ary_working(j).schema_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := ary_working(j);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := ary_working(j).schema_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Pull the schema from the post operation
+      --------------------------------------------------------------------------
+      IF self.path_post_operation IS NOT NULL
+      AND self.path_post_operation.isNULL() = 'FALSE'
+      THEN
+         ary_working := self.path_post_operation.unique_schemas();
+            
+         FOR j IN 1 .. ary_working.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                ary_working(j).schema_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := ary_working(j);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := ary_working(j).schema_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Pull the schema from the delete operation
+      --------------------------------------------------------------------------
+      IF self.path_delete_operation IS NOT NULL
+      AND self.path_delete_operation.isNULL() = 'FALSE'
+      THEN
+         ary_working := self.path_delete_operation.unique_schemas();
+            
+         FOR j IN 1 .. ary_working.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                ary_working(j).schema_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := ary_working(j);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := ary_working(j).schema_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Pull the schema from the options operation
+      --------------------------------------------------------------------------
+      IF self.path_options_operation IS NOT NULL
+      AND self.path_options_operation.isNULL() = 'FALSE'
+      THEN
+         ary_working := self.path_options_operation.unique_schemas();
+            
+         FOR j IN 1 .. ary_working.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                ary_working(j).schema_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := ary_working(j);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := ary_working(j).schema_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Pull the schema from the head operation
+      --------------------------------------------------------------------------
+      IF self.path_head_operation IS NOT NULL
+      AND self.path_head_operation.isNULL() = 'FALSE'
+      THEN
+         ary_working := self.path_head_operation.unique_schemas();
+            
+         FOR j IN 1 .. ary_working.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                ary_working(j).schema_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := ary_working(j);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := ary_working(j).schema_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Pull the schema from the get operation
+      --------------------------------------------------------------------------
+      IF self.path_patch_operation IS NOT NULL
+      AND self.path_patch_operation.isNULL() = 'FALSE'
+      THEN
+         ary_working := self.path_patch_operation.unique_schemas();
+            
+         FOR j IN 1 .. ary_working.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                ary_working(j).schema_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := ary_working(j);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := ary_working(j).schema_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Pull the schema from the get operation
+      --------------------------------------------------------------------------
+      IF self.path_trace_operation IS NOT NULL
+      AND self.path_trace_operation.isNULL() = 'FALSE'
+      THEN
+         ary_working := self.path_trace_operation.unique_schemas();
+            
+         FOR j IN 1 .. ary_working.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                ary_working(j).schema_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := ary_working(j);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := ary_working(j).schema_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Pull the schema from the properties
+      --------------------------------------------------------------------------
+      IF self.path_parameters IS NOT NULL
+      AND self.path_parameters.COUNT > 0
+      THEN
+         FOR i IN 1  .. self.path_parameters.COUNT
+         LOOP
+            ary_working := self.path_parameters(i).unique_schemas();
+            
+            FOR j IN 1 .. ary_working.COUNT
+            LOOP
+               IF dz_swagger3_util.a_in_b(
+                   ary_working(j).schema_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := ary_working(j);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := ary_working(j).schema_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
+               
+            END LOOP;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Return what we got
+      --------------------------------------------------------------------------
+      RETURN ary_results;
+
    END unique_schemas;
    
    -----------------------------------------------------------------------------

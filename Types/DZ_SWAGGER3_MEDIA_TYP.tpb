@@ -110,6 +110,85 @@ AS
       
    END key;
    
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   MEMBER FUNCTION unique_schemas
+   RETURN dz_swagger3_schema_nf_list
+   AS
+      ary_results   dz_swagger3_schema_nf_list;
+      ary_working   dz_swagger3_schema_nf_list;
+      int_results   PLS_INTEGER;
+      ary_x         MDSYS.SDO_STRING2_ARRAY;
+      int_x         PLS_INTEGER;
+   
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Setup for the harvest
+      --------------------------------------------------------------------------
+      int_results := 1;
+      ary_results := dz_swagger3_schema_nf_list();
+      int_x       := 1;
+      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Pull the schema from the items
+      --------------------------------------------------------------------------
+      IF self.media_schema IS NOT NULL
+      AND self.media_schema.isNULL() = 'FALSE'
+      THEN
+         IF self.media_schema.doRef() = 'TRUE'
+         THEN
+            ary_working := self.media_schema.unique_schemas();
+            
+            FOR j IN 1 .. ary_working.COUNT
+            LOOP
+               IF dz_swagger3_util.a_in_b(
+                   ary_working(j).schema_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := ary_working(j);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := ary_working(j).schema_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
+               
+            END LOOP;
+            
+            IF dz_swagger3_util.a_in_b(
+                self.media_schema.schema_id
+               ,ary_x
+            ) = 'FALSE'
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.media_schema;
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.media_schema.schema_id;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END IF;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Return what we got
+      --------------------------------------------------------------------------
+      RETURN ary_results;
+
+   END unique_schemas;
+   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION media_examples_keys
