@@ -96,11 +96,15 @@ AS
    
       self.hash_key            := p_requestbody_id;
       self.requestbody_id      := p_requestbody_id;
+      
       self.requestbody_content := dz_swagger3_media_list();
       self.requestbody_content.EXTEND();
+      
       self.requestbody_content(1) := dz_swagger3_media_typ();
       self.requestbody_content(1).hash_key := p_media_type;
+      
       self.requestbody_content(1).media_schema := dz_swagger3_schema_typ();
+      self.requestbody_content(1).media_schema.schema_id := p_requestbody_id || '.Schema';
       self.requestbody_content(1).media_schema.schema_type := 'object';
       self.requestbody_content(1).media_schema.schema_properties := dz_swagger3_schema_nf_list();
       self.requestbody_content(1).media_schema.schema_properties.EXTEND(p_parameters.COUNT);

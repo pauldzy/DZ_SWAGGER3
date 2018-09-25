@@ -351,14 +351,14 @@ AS
       IF self.schema_items_schema IS NOT NULL
       AND self.schema_items_schema.doRef() = 'TRUE'
       THEN
-         self.schema_items_schema := NULL;
+         NULL; --self.schema_items_schema := NULL;
 
       END IF;
       
       IF self.not_schema IS NOT NULL
       AND self.not_schema.doRef() = 'TRUE'
       THEN
-         self.not_schema := NULL;
+         NULL; --self.not_schema := NULL;
 
       END IF;
       
@@ -442,33 +442,78 @@ AS
       THEN
          FOR i IN 1 .. self.schema_properties.COUNT
          LOOP
-            IF self.schema_properties(i).doRef() = 'TRUE'
-            THEN
-               ary_working := TREAT(
-                  self.schema_properties(i) AS dz_swagger3_schema_typ
-               ).unique_schemas();
+            ary_working := TREAT(
+               self.schema_properties(i) AS dz_swagger3_schema_typ
+            ).unique_schemas();
 
-               FOR j IN 1 .. ary_working.COUNT
-               LOOP
+            FOR j IN 1 .. ary_working.COUNT
+            LOOP
+               obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
+               
+               IF obj_schema.doRef() = 'TRUE'
+               THEN
                   IF dz_swagger3_util.a_in_b(
-                      ary_working(j).schema_id
+                      obj_schema.schema_id
                      ,ary_x
                   ) = 'FALSE'
                   THEN
                      ary_results.EXTEND();
-                     obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
                      obj_schema.prune();
-                     ary_results(int_results) := obj_schema;
+                     ary_results(int_results) := dz_swagger3_schema_typ(
+                         p_schema_id               => obj_schema.schema_id
+                        ,p_schema_title            => obj_schema.schema_title
+                        ,p_schema_type             => obj_schema.schema_type
+                        ,p_schema_description      => obj_schema.schema_description
+                        ,p_schema_format           => obj_schema.schema_format
+                        ,p_schema_nullable         => obj_schema.schema_nullable
+                        ,p_schema_discriminator    => obj_schema.schema_discriminator
+                        ,p_schema_readonly         => obj_schema.schema_readonly
+                        ,p_schema_writeonly        => obj_schema.schema_writeonly
+                        ,p_schema_externalDocs     => obj_schema.schema_externalDocs
+                        ,p_schema_example_string   => obj_schema.schema_example_string
+                        ,p_schema_example_number   => obj_schema.schema_example_number
+                        ,p_schema_deprecated       => obj_schema.schema_deprecated
+                        ,p_schema_default_string   => obj_schema.schema_default_string
+                        ,p_schema_default_number   => obj_schema.schema_default_number
+                        ,p_schema_multipleOf       => obj_schema.schema_multipleOf
+                        ,p_schema_minimum          => obj_schema.schema_minimum
+                        ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
+                        ,p_schema_maximum          => obj_schema.schema_maximum
+                        ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
+                        ,p_schema_minLength        => obj_schema.schema_minLength
+                        ,p_schema_maxLength        => obj_schema.schema_maxLength
+                        ,p_schema_pattern          => obj_schema.schema_pattern
+                        ,p_schema_minItems         => obj_schema.schema_minItems
+                        ,p_schema_maxItems         => obj_schema.schema_maxItems
+                        ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
+                        ,p_schema_minProperties    => obj_schema.schema_minProperties
+                        ,p_schema_maxProperties    => obj_schema.schema_maxProperties
+                        ,p_xml_name                => obj_schema.xml_name
+                        ,p_xml_namespace           => obj_schema.xml_namespace
+                        ,p_xml_prefix              => obj_schema.xml_prefix
+                        ,p_xml_attribute           => obj_schema.xml_attribute
+                        ,p_xml_wrapped             => obj_schema.xml_wrapped
+                        ,p_schema_items_schema     => obj_schema.schema_items_schema
+                        ,p_schema_properties       => obj_schema.schema_properties
+                        ,p_schema_scalar           => obj_schema.schema_scalar
+                        ,p_combine_schemas         => obj_schema.combine_schemas
+                        ,p_not_schema              => obj_schema.not_schema
+                     );
+
                      int_results := int_results + 1;
                      
                      ary_x.EXTEND();
                      ary_x(int_x) := ary_working(j).schema_id;
                      int_x := int_x + 1;
-                     
+
                   END IF;
                   
-               END LOOP;
+               END IF;
                
+            END LOOP;
+               
+            IF self.schema_properties(i).doRef() = 'TRUE'
+            THEN
                IF dz_swagger3_util.a_in_b(
                    self.schema_properties(i).schema_id
                   ,ary_x
@@ -477,13 +522,52 @@ AS
                   ary_results.EXTEND();
                   obj_schema := TREAT(self.schema_properties(i) AS dz_swagger3_schema_typ);
                   obj_schema.prune();
-                  ary_results(int_results) := obj_schema;
+                  ary_results(int_results) := dz_swagger3_schema_typ(
+                      p_schema_id               => obj_schema.schema_id
+                     ,p_schema_title            => obj_schema.schema_title
+                     ,p_schema_type             => obj_schema.schema_type
+                     ,p_schema_description      => obj_schema.schema_description
+                     ,p_schema_format           => obj_schema.schema_format
+                     ,p_schema_nullable         => obj_schema.schema_nullable
+                     ,p_schema_discriminator    => obj_schema.schema_discriminator
+                     ,p_schema_readonly         => obj_schema.schema_readonly
+                     ,p_schema_writeonly        => obj_schema.schema_writeonly
+                     ,p_schema_externalDocs     => obj_schema.schema_externalDocs
+                     ,p_schema_example_string   => obj_schema.schema_example_string
+                     ,p_schema_example_number   => obj_schema.schema_example_number
+                     ,p_schema_deprecated       => obj_schema.schema_deprecated
+                     ,p_schema_default_string   => obj_schema.schema_default_string
+                     ,p_schema_default_number   => obj_schema.schema_default_number
+                     ,p_schema_multipleOf       => obj_schema.schema_multipleOf
+                     ,p_schema_minimum          => obj_schema.schema_minimum
+                     ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
+                     ,p_schema_maximum          => obj_schema.schema_maximum
+                     ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
+                     ,p_schema_minLength        => obj_schema.schema_minLength
+                     ,p_schema_maxLength        => obj_schema.schema_maxLength
+                     ,p_schema_pattern          => obj_schema.schema_pattern
+                     ,p_schema_minItems         => obj_schema.schema_minItems
+                     ,p_schema_maxItems         => obj_schema.schema_maxItems
+                     ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
+                     ,p_schema_minProperties    => obj_schema.schema_minProperties
+                     ,p_schema_maxProperties    => obj_schema.schema_maxProperties
+                     ,p_xml_name                => obj_schema.xml_name
+                     ,p_xml_namespace           => obj_schema.xml_namespace
+                     ,p_xml_prefix              => obj_schema.xml_prefix
+                     ,p_xml_attribute           => obj_schema.xml_attribute
+                     ,p_xml_wrapped             => obj_schema.xml_wrapped
+                     ,p_schema_items_schema     => obj_schema.schema_items_schema
+                     ,p_schema_properties       => obj_schema.schema_properties
+                     ,p_schema_scalar           => obj_schema.schema_scalar
+                     ,p_combine_schemas         => obj_schema.combine_schemas
+                     ,p_not_schema              => obj_schema.not_schema
+                  );
                   int_results := int_results + 1;
                   
                   ary_x.EXTEND();
                   ary_x(int_x) := self.schema_properties(i).schema_id;
                   int_x := int_x + 1;
-                  
+
                END IF;
                
             END IF;
@@ -499,6 +583,75 @@ AS
       IF self.schema_items_schema IS NOT NULL
       AND self.schema_items_schema.isNULL() = 'FALSE'
       THEN
+         ary_working := TREAT(
+            self.schema_items_schema AS dz_swagger3_schema_typ
+         ).unique_schemas();
+
+         FOR j IN 1 .. ary_working.COUNT
+         LOOP
+            obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
+            
+            IF obj_schema.doRef() = 'TRUE'
+            THEN            
+               IF dz_swagger3_util.a_in_b(
+                   obj_schema.schema_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  obj_schema.prune();
+                  ary_results(int_results) := dz_swagger3_schema_typ(
+                      p_schema_id               => obj_schema.schema_id
+                     ,p_schema_title            => obj_schema.schema_title
+                     ,p_schema_type             => obj_schema.schema_type
+                     ,p_schema_description      => obj_schema.schema_description
+                     ,p_schema_format           => obj_schema.schema_format
+                     ,p_schema_nullable         => obj_schema.schema_nullable
+                     ,p_schema_discriminator    => obj_schema.schema_discriminator
+                     ,p_schema_readonly         => obj_schema.schema_readonly
+                     ,p_schema_writeonly        => obj_schema.schema_writeonly
+                     ,p_schema_externalDocs     => obj_schema.schema_externalDocs
+                     ,p_schema_example_string   => obj_schema.schema_example_string
+                     ,p_schema_example_number   => obj_schema.schema_example_number
+                     ,p_schema_deprecated       => obj_schema.schema_deprecated
+                     ,p_schema_default_string   => obj_schema.schema_default_string
+                     ,p_schema_default_number   => obj_schema.schema_default_number
+                     ,p_schema_multipleOf       => obj_schema.schema_multipleOf
+                     ,p_schema_minimum          => obj_schema.schema_minimum
+                     ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
+                     ,p_schema_maximum          => obj_schema.schema_maximum
+                     ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
+                     ,p_schema_minLength        => obj_schema.schema_minLength
+                     ,p_schema_maxLength        => obj_schema.schema_maxLength
+                     ,p_schema_pattern          => obj_schema.schema_pattern
+                     ,p_schema_minItems         => obj_schema.schema_minItems
+                     ,p_schema_maxItems         => obj_schema.schema_maxItems
+                     ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
+                     ,p_schema_minProperties    => obj_schema.schema_minProperties
+                     ,p_schema_maxProperties    => obj_schema.schema_maxProperties
+                     ,p_xml_name                => obj_schema.xml_name
+                     ,p_xml_namespace           => obj_schema.xml_namespace
+                     ,p_xml_prefix              => obj_schema.xml_prefix
+                     ,p_xml_attribute           => obj_schema.xml_attribute
+                     ,p_xml_wrapped             => obj_schema.xml_wrapped
+                     ,p_schema_items_schema     => obj_schema.schema_items_schema
+                     ,p_schema_properties       => obj_schema.schema_properties
+                     ,p_schema_scalar           => obj_schema.schema_scalar
+                     ,p_combine_schemas         => obj_schema.combine_schemas
+                     ,p_not_schema              => obj_schema.not_schema
+                  );
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := ary_working(j).schema_id;
+                  int_x := int_x + 1;
+
+               END IF;
+               
+            END IF;
+      
+         END LOOP;
+         
          IF self.schema_items_schema.doRef() = 'TRUE'
          THEN
             IF dz_swagger3_util.a_in_b(
@@ -509,13 +662,52 @@ AS
                ary_results.EXTEND();
                obj_schema := TREAT(self.schema_items_schema AS dz_swagger3_schema_typ);
                obj_schema.prune();
-               ary_results(int_results) := obj_schema;
+               ary_results(int_results) := dz_swagger3_schema_typ(
+                   p_schema_id               => obj_schema.schema_id
+                  ,p_schema_title            => obj_schema.schema_title
+                  ,p_schema_type             => obj_schema.schema_type
+                  ,p_schema_description      => obj_schema.schema_description
+                  ,p_schema_format           => obj_schema.schema_format
+                  ,p_schema_nullable         => obj_schema.schema_nullable
+                  ,p_schema_discriminator    => obj_schema.schema_discriminator
+                  ,p_schema_readonly         => obj_schema.schema_readonly
+                  ,p_schema_writeonly        => obj_schema.schema_writeonly
+                  ,p_schema_externalDocs     => obj_schema.schema_externalDocs
+                  ,p_schema_example_string   => obj_schema.schema_example_string
+                  ,p_schema_example_number   => obj_schema.schema_example_number
+                  ,p_schema_deprecated       => obj_schema.schema_deprecated
+                  ,p_schema_default_string   => obj_schema.schema_default_string
+                  ,p_schema_default_number   => obj_schema.schema_default_number
+                  ,p_schema_multipleOf       => obj_schema.schema_multipleOf
+                  ,p_schema_minimum          => obj_schema.schema_minimum
+                  ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
+                  ,p_schema_maximum          => obj_schema.schema_maximum
+                  ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
+                  ,p_schema_minLength        => obj_schema.schema_minLength
+                  ,p_schema_maxLength        => obj_schema.schema_maxLength
+                  ,p_schema_pattern          => obj_schema.schema_pattern
+                  ,p_schema_minItems         => obj_schema.schema_minItems
+                  ,p_schema_maxItems         => obj_schema.schema_maxItems
+                  ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
+                  ,p_schema_minProperties    => obj_schema.schema_minProperties
+                  ,p_schema_maxProperties    => obj_schema.schema_maxProperties
+                  ,p_xml_name                => obj_schema.xml_name
+                  ,p_xml_namespace           => obj_schema.xml_namespace
+                  ,p_xml_prefix              => obj_schema.xml_prefix
+                  ,p_xml_attribute           => obj_schema.xml_attribute
+                  ,p_xml_wrapped             => obj_schema.xml_wrapped
+                  ,p_schema_items_schema     => obj_schema.schema_items_schema
+                  ,p_schema_properties       => obj_schema.schema_properties
+                  ,p_schema_scalar           => obj_schema.schema_scalar
+                  ,p_combine_schemas         => obj_schema.combine_schemas
+                  ,p_not_schema              => obj_schema.not_schema
+               );
                int_results := int_results + 1;
                
                ary_x.EXTEND();
                ary_x(int_x) := self.schema_items_schema.schema_id;
                int_x := int_x + 1;
-               
+
             END IF;
             
          END IF;
@@ -541,7 +733,46 @@ AS
                   ary_results.EXTEND();
                   obj_schema := TREAT(self.combine_schemas(i) AS dz_swagger3_schema_typ);
                   obj_schema.prune();
-                  ary_results(int_results) := obj_schema;
+                  ary_results(int_results) := dz_swagger3_schema_typ(
+                      p_schema_id               => obj_schema.schema_id
+                     ,p_schema_title            => obj_schema.schema_title
+                     ,p_schema_type             => obj_schema.schema_type
+                     ,p_schema_description      => obj_schema.schema_description
+                     ,p_schema_format           => obj_schema.schema_format
+                     ,p_schema_nullable         => obj_schema.schema_nullable
+                     ,p_schema_discriminator    => obj_schema.schema_discriminator
+                     ,p_schema_readonly         => obj_schema.schema_readonly
+                     ,p_schema_writeonly        => obj_schema.schema_writeonly
+                     ,p_schema_externalDocs     => obj_schema.schema_externalDocs
+                     ,p_schema_example_string   => obj_schema.schema_example_string
+                     ,p_schema_example_number   => obj_schema.schema_example_number
+                     ,p_schema_deprecated       => obj_schema.schema_deprecated
+                     ,p_schema_default_string   => obj_schema.schema_default_string
+                     ,p_schema_default_number   => obj_schema.schema_default_number
+                     ,p_schema_multipleOf       => obj_schema.schema_multipleOf
+                     ,p_schema_minimum          => obj_schema.schema_minimum
+                     ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
+                     ,p_schema_maximum          => obj_schema.schema_maximum
+                     ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
+                     ,p_schema_minLength        => obj_schema.schema_minLength
+                     ,p_schema_maxLength        => obj_schema.schema_maxLength
+                     ,p_schema_pattern          => obj_schema.schema_pattern
+                     ,p_schema_minItems         => obj_schema.schema_minItems
+                     ,p_schema_maxItems         => obj_schema.schema_maxItems
+                     ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
+                     ,p_schema_minProperties    => obj_schema.schema_minProperties
+                     ,p_schema_maxProperties    => obj_schema.schema_maxProperties
+                     ,p_xml_name                => obj_schema.xml_name
+                     ,p_xml_namespace           => obj_schema.xml_namespace
+                     ,p_xml_prefix              => obj_schema.xml_prefix
+                     ,p_xml_attribute           => obj_schema.xml_attribute
+                     ,p_xml_wrapped             => obj_schema.xml_wrapped
+                     ,p_schema_items_schema     => obj_schema.schema_items_schema
+                     ,p_schema_properties       => obj_schema.schema_properties
+                     ,p_schema_scalar           => obj_schema.schema_scalar
+                     ,p_combine_schemas         => obj_schema.combine_schemas
+                     ,p_not_schema              => obj_schema.not_schema
+                  );
                   int_results := int_results + 1;
                   
                   ary_x.EXTEND();
@@ -563,6 +794,75 @@ AS
       IF self.not_schema IS NOT NULL
       AND self.not_schema.isNULL() = 'FALSE'
       THEN
+         ary_working := TREAT(
+            self.not_schema AS dz_swagger3_schema_typ
+         ).unique_schemas();
+
+         FOR j IN 1 .. ary_working.COUNT
+         LOOP
+            obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
+            
+            IF obj_schema.doRef() = 'TRUE'
+            THEN
+               IF dz_swagger3_util.a_in_b(
+                   obj_schema.schema_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  obj_schema.prune();
+                  ary_results(int_results) := dz_swagger3_schema_typ(
+                      p_schema_id               => obj_schema.schema_id
+                     ,p_schema_title            => obj_schema.schema_title
+                     ,p_schema_type             => obj_schema.schema_type
+                     ,p_schema_description      => obj_schema.schema_description
+                     ,p_schema_format           => obj_schema.schema_format
+                     ,p_schema_nullable         => obj_schema.schema_nullable
+                     ,p_schema_discriminator    => obj_schema.schema_discriminator
+                     ,p_schema_readonly         => obj_schema.schema_readonly
+                     ,p_schema_writeonly        => obj_schema.schema_writeonly
+                     ,p_schema_externalDocs     => obj_schema.schema_externalDocs
+                     ,p_schema_example_string   => obj_schema.schema_example_string
+                     ,p_schema_example_number   => obj_schema.schema_example_number
+                     ,p_schema_deprecated       => obj_schema.schema_deprecated
+                     ,p_schema_default_string   => obj_schema.schema_default_string
+                     ,p_schema_default_number   => obj_schema.schema_default_number
+                     ,p_schema_multipleOf       => obj_schema.schema_multipleOf
+                     ,p_schema_minimum          => obj_schema.schema_minimum
+                     ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
+                     ,p_schema_maximum          => obj_schema.schema_maximum
+                     ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
+                     ,p_schema_minLength        => obj_schema.schema_minLength
+                     ,p_schema_maxLength        => obj_schema.schema_maxLength
+                     ,p_schema_pattern          => obj_schema.schema_pattern
+                     ,p_schema_minItems         => obj_schema.schema_minItems
+                     ,p_schema_maxItems         => obj_schema.schema_maxItems
+                     ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
+                     ,p_schema_minProperties    => obj_schema.schema_minProperties
+                     ,p_schema_maxProperties    => obj_schema.schema_maxProperties
+                     ,p_xml_name                => obj_schema.xml_name
+                     ,p_xml_namespace           => obj_schema.xml_namespace
+                     ,p_xml_prefix              => obj_schema.xml_prefix
+                     ,p_xml_attribute           => obj_schema.xml_attribute
+                     ,p_xml_wrapped             => obj_schema.xml_wrapped
+                     ,p_schema_items_schema     => obj_schema.schema_items_schema
+                     ,p_schema_properties       => obj_schema.schema_properties
+                     ,p_schema_scalar           => obj_schema.schema_scalar
+                     ,p_combine_schemas         => obj_schema.combine_schemas
+                     ,p_not_schema              => obj_schema.not_schema
+                  );
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := ary_working(j).schema_id;
+                  int_x := int_x + 1;
+
+               END IF;
+               
+            END IF;
+      
+         END LOOP;      
+
          IF self.not_schema.doRef() = 'TRUE'
          THEN
             IF dz_swagger3_util.a_in_b(
@@ -573,7 +873,46 @@ AS
                ary_results.EXTEND();
                obj_schema := TREAT(self.not_schema AS dz_swagger3_schema_typ);
                obj_schema.prune();
-               ary_results(int_results) := obj_schema;
+               ary_results(int_results) := dz_swagger3_schema_typ(
+                   p_schema_id               => obj_schema.schema_id
+                  ,p_schema_title            => obj_schema.schema_title
+                  ,p_schema_type             => obj_schema.schema_type
+                  ,p_schema_description      => obj_schema.schema_description
+                  ,p_schema_format           => obj_schema.schema_format
+                  ,p_schema_nullable         => obj_schema.schema_nullable
+                  ,p_schema_discriminator    => obj_schema.schema_discriminator
+                  ,p_schema_readonly         => obj_schema.schema_readonly
+                  ,p_schema_writeonly        => obj_schema.schema_writeonly
+                  ,p_schema_externalDocs     => obj_schema.schema_externalDocs
+                  ,p_schema_example_string   => obj_schema.schema_example_string
+                  ,p_schema_example_number   => obj_schema.schema_example_number
+                  ,p_schema_deprecated       => obj_schema.schema_deprecated
+                  ,p_schema_default_string   => obj_schema.schema_default_string
+                  ,p_schema_default_number   => obj_schema.schema_default_number
+                  ,p_schema_multipleOf       => obj_schema.schema_multipleOf
+                  ,p_schema_minimum          => obj_schema.schema_minimum
+                  ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
+                  ,p_schema_maximum          => obj_schema.schema_maximum
+                  ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
+                  ,p_schema_minLength        => obj_schema.schema_minLength
+                  ,p_schema_maxLength        => obj_schema.schema_maxLength
+                  ,p_schema_pattern          => obj_schema.schema_pattern
+                  ,p_schema_minItems         => obj_schema.schema_minItems
+                  ,p_schema_maxItems         => obj_schema.schema_maxItems
+                  ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
+                  ,p_schema_minProperties    => obj_schema.schema_minProperties
+                  ,p_schema_maxProperties    => obj_schema.schema_maxProperties
+                  ,p_xml_name                => obj_schema.xml_name
+                  ,p_xml_namespace           => obj_schema.xml_namespace
+                  ,p_xml_prefix              => obj_schema.xml_prefix
+                  ,p_xml_attribute           => obj_schema.xml_attribute
+                  ,p_xml_wrapped             => obj_schema.xml_wrapped
+                  ,p_schema_items_schema     => obj_schema.schema_items_schema
+                  ,p_schema_properties       => obj_schema.schema_properties
+                  ,p_schema_scalar           => obj_schema.schema_scalar
+                  ,p_combine_schemas         => obj_schema.combine_schemas
+                  ,p_not_schema              => obj_schema.not_schema
+               );
                
                ary_x.EXTEND();
                ary_x(int_x) := self.not_schema.schema_id;

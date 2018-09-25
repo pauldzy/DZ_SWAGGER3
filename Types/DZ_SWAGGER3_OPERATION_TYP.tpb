@@ -455,7 +455,7 @@ AS
                   ary_x.EXTEND();
                   ary_x(int_x) := ary_working(j).schema_id;
                   int_x := int_x + 1;
-                  
+               
                END IF;
                
             END LOOP;

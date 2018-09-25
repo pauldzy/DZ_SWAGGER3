@@ -1020,7 +1020,7 @@ AS
                ary_x.EXTEND();
                ary_x(int_x) := ary_working(j).schema_id;
                int_x := int_x + 1;
-               
+
             END IF;
             
          END LOOP;
@@ -1050,7 +1050,7 @@ AS
                ary_x.EXTEND();
                ary_x(int_x) := ary_working(j).schema_id;
                int_x := int_x + 1;
-               
+
             END IF;
             
          END LOOP;
@@ -1080,7 +1080,7 @@ AS
                ary_x.EXTEND();
                ary_x(int_x) := ary_working(j).schema_id;
                int_x := int_x + 1;
-               
+
             END IF;
             
          END LOOP;
@@ -1209,7 +1209,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 40
-      -- Pull the schema from the get operation
+      -- Pull the schema from the trace operation
       --------------------------------------------------------------------------
       IF self.path_trace_operation IS NOT NULL
       AND self.path_trace_operation.isNULL() = 'FALSE'
@@ -1262,7 +1262,7 @@ AS
                   ary_x.EXTEND();
                   ary_x(int_x) := ary_working(j).schema_id;
                   int_x := int_x + 1;
-                  
+
                END IF;
                
             END LOOP;
