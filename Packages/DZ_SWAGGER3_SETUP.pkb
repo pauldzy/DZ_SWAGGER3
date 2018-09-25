@@ -427,6 +427,7 @@ AS
               || '   ,parameter_content         VARCHAR2(255 Char) '
               || '   ,parameter_sort            INTEGER NOT NULL '
               || '   ,parameter_undocumented    VARCHAR2(5 Char) '
+              || '   ,parameter_force_inline    VARCHAR2(5 Char) '
               || '   ,parameter_desc_updated    DATE '
               || '   ,parameter_desc_author     VARCHAR2(30 Char) '
               || '   ,parameter_desc_notes      VARCHAR2(255 Char) '
@@ -480,6 +481,9 @@ AS
               || '    CHECK (parameter_undocumented IN (''TRUE'',''FALSE'')) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_parameter_c09 '
+              || '    CHECK (parameter_force_inline IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_parameter_c10 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -599,10 +603,11 @@ AS
       -- Build REQUESTBODY table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_requestbody('
-              || '    requestbody_id          VARCHAR2(255 Char) NOT NULL '
-              || '   ,requestbody_description VARCHAR2(4000 Char) '
-              || '   ,requestbody_required    VARCHAR2(5 Char) '
-              || '   ,versionid               VARCHAR2(40 Char) NOT NULL '
+              || '    requestbody_id            VARCHAR2(255 Char) NOT NULL '
+              || '   ,requestbody_description   VARCHAR2(4000 Char) '
+              || '   ,requestbody_required      VARCHAR2(5 Char) '
+              || '   ,requestbody_force_inline  VARCHAR2(5 Char) '
+              || '   ,versionid                 VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -634,6 +639,9 @@ AS
               || '    CHECK (requestbody_required IN (''TRUE'',''FALSE'')) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_requestbody_c03 '
+              || '    CHECK (requestbody_force_inline IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_requestbody_c04 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -696,6 +704,7 @@ AS
       str_sql := 'CREATE TABLE dz_swagger3_response('
               || '    response_id           VARCHAR2(255 Char) NOT NULL '
               || '   ,response_description  VARCHAR2(255 Char) NOT NULL '
+              || '   ,response_force_inline VARCHAR2(5 Char) '
               || '   ,response_desc_updated DATE '
               || '   ,response_desc_author  VARCHAR2(30 Char) '
               || '   ,response_desc_notes   VARCHAR2(255 Char) '
@@ -728,6 +737,9 @@ AS
               || '    CHECK (response_id = TRIM(response_id)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_response_c02 '
+              || '    CHECK (response_force_inline IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_response_c03 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -863,6 +875,7 @@ AS
               || '   ,xml_prefix               VARCHAR2(255 Char) '
               || '   ,xml_attribute            VARCHAR2(5 Char) '
               || '   ,xml_wrapped              VARCHAR2(5 Char) '
+              || '   ,schema_force_inline      VARCHAR2(5 Char) '
               || '   ,schema_desc_updated      DATE '
               || '   ,schema_desc_author       VARCHAR2(30 Char) '
               || '   ,schema_desc_notes        VARCHAR2(255 Char) '
@@ -928,6 +941,9 @@ AS
               || '    CHECK (xml_wrapped IN (''TRUE'',''FALSE'')) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_schema_c13 '
+              || '    CHECK (schema_force_inline IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_schema_c14 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';

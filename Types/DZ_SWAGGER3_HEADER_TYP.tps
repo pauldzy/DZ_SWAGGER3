@@ -50,6 +50,11 @@ AS OBJECT (
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION doRef
+    RETURN VARCHAR2
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    ,MEMBER FUNCTION header_examples_keys
     RETURN MDSYS.SDO_STRING2_ARRAY
     
@@ -61,7 +66,35 @@ AS OBJECT (
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toJSON_schema(
+      p_pretty_print      IN  INTEGER   DEFAULT NULL
+    ) RETURN CLOB
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toJSON_ref(
+      p_pretty_print      IN  INTEGER   DEFAULT NULL
+    ) RETURN CLOB
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toYAML_schema(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toYAML_ref(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'

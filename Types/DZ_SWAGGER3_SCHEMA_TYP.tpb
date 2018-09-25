@@ -67,6 +67,7 @@ AS
             ,p_xml_prefix              => a.xml_prefix
             ,p_xml_attribute           => a.xml_attribute
             ,p_xml_wrapped             => a.xml_wrapped
+            ,p_schema_force_inline     => a.schema_force_inline
           )
          ,a.schema_items_schema_id
          INTO
@@ -160,6 +161,7 @@ AS
       ,p_xml_prefix              IN  VARCHAR2
       ,p_xml_attribute           IN  VARCHAR2
       ,p_xml_wrapped             IN  VARCHAR2
+      ,p_schema_force_inline     IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -197,6 +199,7 @@ AS
       self.xml_prefix              := p_xml_prefix;
       self.xml_attribute           := p_xml_attribute;
       self.xml_wrapped             := p_xml_wrapped;
+      self.schema_force_inline     := p_schema_force_inline;
       
       RETURN; 
       
@@ -240,7 +243,7 @@ AS
       ,p_xml_wrapped             IN  VARCHAR2
       ,p_schema_items_schema     IN  dz_swagger3_schema_typ_nf
       ,p_schema_properties       IN  dz_swagger3_schema_nf_list
-      ,p_schema_scalar           IN  VARCHAR2
+      ,p_schema_force_inline     IN  VARCHAR2
       ,p_combine_schemas         IN  dz_swagger3_schema_nf_list
       ,p_not_schema              IN  dz_swagger3_schema_typ_nf
    ) RETURN SELF AS RESULT 
@@ -279,9 +282,10 @@ AS
       self.xml_prefix              := p_xml_prefix;
       self.xml_attribute           := p_xml_attribute;
       self.xml_wrapped             := p_xml_wrapped;
+      -----
       self.schema_items_schema     := p_schema_items_schema;
       self.schema_properties       := p_schema_properties;
-      self.schema_scalar           := p_schema_scalar;
+      self.schema_force_inline     := p_schema_force_inline;
       self.combine_schemas         := p_combine_schemas;
       self.not_schema              := p_not_schema;
       
@@ -399,7 +403,11 @@ AS
    AS
    BEGIN
    
-      IF self.schema_type = 'object'
+      IF self.schema_force_inline = 'TRUE'
+      THEN
+         RETURN 'FALSE';
+         
+      ELSIF self.schema_type = 'object'
       THEN
          RETURN 'TRUE';
          
@@ -495,7 +503,7 @@ AS
                         ,p_xml_wrapped             => obj_schema.xml_wrapped
                         ,p_schema_items_schema     => obj_schema.schema_items_schema
                         ,p_schema_properties       => obj_schema.schema_properties
-                        ,p_schema_scalar           => obj_schema.schema_scalar
+                        ,p_schema_force_inline     => obj_schema.schema_force_inline
                         ,p_combine_schemas         => obj_schema.combine_schemas
                         ,p_not_schema              => obj_schema.not_schema
                      );
@@ -558,7 +566,7 @@ AS
                      ,p_xml_wrapped             => obj_schema.xml_wrapped
                      ,p_schema_items_schema     => obj_schema.schema_items_schema
                      ,p_schema_properties       => obj_schema.schema_properties
-                     ,p_schema_scalar           => obj_schema.schema_scalar
+                     ,p_schema_force_inline     => obj_schema.schema_force_inline
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
                   );
@@ -636,7 +644,7 @@ AS
                      ,p_xml_wrapped             => obj_schema.xml_wrapped
                      ,p_schema_items_schema     => obj_schema.schema_items_schema
                      ,p_schema_properties       => obj_schema.schema_properties
-                     ,p_schema_scalar           => obj_schema.schema_scalar
+                     ,p_schema_force_inline     => obj_schema.schema_force_inline
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
                   );
@@ -698,7 +706,7 @@ AS
                   ,p_xml_wrapped             => obj_schema.xml_wrapped
                   ,p_schema_items_schema     => obj_schema.schema_items_schema
                   ,p_schema_properties       => obj_schema.schema_properties
-                  ,p_schema_scalar           => obj_schema.schema_scalar
+                  ,p_schema_force_inline     => obj_schema.schema_force_inline
                   ,p_combine_schemas         => obj_schema.combine_schemas
                   ,p_not_schema              => obj_schema.not_schema
                );
@@ -769,7 +777,7 @@ AS
                      ,p_xml_wrapped             => obj_schema.xml_wrapped
                      ,p_schema_items_schema     => obj_schema.schema_items_schema
                      ,p_schema_properties       => obj_schema.schema_properties
-                     ,p_schema_scalar           => obj_schema.schema_scalar
+                     ,p_schema_force_inline     => obj_schema.schema_force_inline
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
                   );
@@ -847,7 +855,7 @@ AS
                      ,p_xml_wrapped             => obj_schema.xml_wrapped
                      ,p_schema_items_schema     => obj_schema.schema_items_schema
                      ,p_schema_properties       => obj_schema.schema_properties
-                     ,p_schema_scalar           => obj_schema.schema_scalar
+                     ,p_schema_force_inline     => obj_schema.schema_force_inline
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
                   );
@@ -909,7 +917,7 @@ AS
                   ,p_xml_wrapped             => obj_schema.xml_wrapped
                   ,p_schema_items_schema     => obj_schema.schema_items_schema
                   ,p_schema_properties       => obj_schema.schema_properties
-                  ,p_schema_scalar           => obj_schema.schema_scalar
+                  ,p_schema_force_inline     => obj_schema.schema_force_inline
                   ,p_combine_schemas         => obj_schema.combine_schemas
                   ,p_not_schema              => obj_schema.not_schema
                );

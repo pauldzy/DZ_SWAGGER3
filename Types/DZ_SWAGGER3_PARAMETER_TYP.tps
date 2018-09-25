@@ -16,6 +16,7 @@ AS OBJECT (
    ,parameter_example_string   VARCHAR2(255 Char)
    ,parameter_example_number   NUMBER
    ,parameter_examples         dz_swagger3_example_list
+   ,parameter_force_inline     VARCHAR2(5 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -47,6 +48,7 @@ AS OBJECT (
       ,p_parameter_example_string  IN  VARCHAR2
       ,p_parameter_example_number  IN  NUMBER
       ,p_parameter_examples        IN  dz_swagger3_example_list
+      ,p_parameter_force_inline    IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -57,6 +59,11 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION isNULL
+    RETURN VARCHAR2
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION doRef
     RETURN VARCHAR2
     
    ----------------------------------------------------------------------------
@@ -75,6 +82,12 @@ AS OBJECT (
       p_pretty_print         IN  INTEGER   DEFAULT NULL
     ) RETURN CLOB
     
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toJSON_schema(
+      p_pretty_print         IN  INTEGER   DEFAULT NULL
+    ) RETURN CLOB
+    
     -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON_ref(
@@ -84,6 +97,14 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toYAML_schema(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'

@@ -43,6 +43,7 @@ AS
             ,p_parameter_example_string  => a.parameter_example_string
             ,p_parameter_example_number  => a.parameter_example_number
             ,p_parameter_examples        => NULL
+            ,p_parameter_force_inline    => a.parameter_force_inline
          )
          INTO SELF
          FROM
@@ -84,6 +85,7 @@ AS
       ,p_parameter_example_string  IN  VARCHAR2
       ,p_parameter_example_number  IN  NUMBER
       ,p_parameter_examples        IN  dz_swagger3_example_list
+      ,p_parameter_force_inline    IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -103,6 +105,7 @@ AS
       self.parameter_example_string  := p_parameter_example_string;
       self.parameter_example_number  := p_parameter_example_number;
       self.parameter_examples        := p_parameter_examples;
+      self.parameter_force_inline    := p_parameter_force_inline;
       
       RETURN; 
       
@@ -135,6 +138,16 @@ AS
       RETURN self.hash_key;
       
    END key;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION doRef
+   RETURN VARCHAR2
+   AS
+   BEGIN
+      RETURN 'TRUE';
+      
+   END doRef;
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
@@ -248,6 +261,29 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
+       p_pretty_print     IN  INTEGER   DEFAULT NULL
+   ) RETURN CLOB
+   AS
+   BEGIN
+   
+      IF self.doREF() = 'TRUE'
+      THEN
+         RETURN toJSON_ref(
+             p_pretty_print  => p_pretty_print
+         );
+   
+      ELSE
+         RETURN toJSON_schema(
+             p_pretty_print  => p_pretty_print
+         );
+      
+      END IF;
+      
+   END toJSON;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toJSON_schema(
        p_pretty_print     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
@@ -598,7 +634,7 @@ AS
       --------------------------------------------------------------------------
       RETURN clb_output;
            
-   END toJSON;
+   END toJSON_schema;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -672,6 +708,35 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS
+   BEGIN
+   
+      IF self.doRef() = 'TRUE'
+      THEN
+         RETURN self.toYAML_ref(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+         
+      ELSE
+         RETURN self.toYAML_schema(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+      
+      END IF;
+
+   END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toYAML_schema(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
@@ -909,7 +974,7 @@ AS
                
       RETURN clb_output;
       
-   END toYAML;
+   END toYAML_schema;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

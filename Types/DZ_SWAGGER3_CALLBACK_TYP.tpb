@@ -81,6 +81,16 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER FUNCTION doRef
+   RETURN VARCHAR2
+   AS
+   BEGIN
+      RETURN 'TRUE';
+      
+   END doRef;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION path_parameters_keys
    RETURN MDSYS.SDO_STRING2_ARRAY
    AS
@@ -112,6 +122,29 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
+       p_pretty_print     IN  INTEGER   DEFAULT NULL
+   ) RETURN CLOB
+   AS
+   BEGIN
+   
+      IF self.doREF() = 'TRUE'
+      THEN
+         RETURN toJSON_ref(
+             p_pretty_print  => p_pretty_print
+         );
+   
+      ELSE
+         RETURN toJSON_schema(
+             p_pretty_print  => p_pretty_print
+         );
+      
+      END IF;
+   
+   END toJSON;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toJSON_schema(
        p_pretty_print     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
@@ -452,11 +485,105 @@ AS
       --------------------------------------------------------------------------
       RETURN clb_output;
            
-   END toJSON;
+   END toJSON_schema;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toJSON_ref(
+       p_pretty_print     IN  INTEGER   DEFAULT NULL
+   ) RETURN CLOB
+   AS
+      clb_output       CLOB;
+      str_pad          VARCHAR2(1 Char);
+      str_pad1         VARCHAR2(1 Char);
+      
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Build the wrapper
+      --------------------------------------------------------------------------
+      IF p_pretty_print IS NULL
+      THEN
+         clb_output  := dz_json_util.pretty('{',NULL);
+         str_pad     := '';
+         
+      ELSE
+         clb_output  := dz_json_util.pretty('{',-1);
+         str_pad     := ' ';
+         
+      END IF;
+      
+      str_pad1 := str_pad;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Add optional description
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty(
+          str_pad1 || dz_json_main.value2json(
+             '$ref'
+            ,'#/components/callbacks/' || self.callback_id
+            ,p_pretty_print + 1
+         )
+         ,p_pretty_print + 1
+      );
+      str_pad1 := ',';
+
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Add the left bracket
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty(
+          '}'
+         ,p_pretty_print,NULL,NULL
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Cough it out
+      --------------------------------------------------------------------------
+      RETURN clb_output;
+           
+   END toJSON_ref;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS      
+   BEGIN
+   
+      IF self.doRef() = 'TRUE'
+      THEN
+         RETURN self.toYAML_ref(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+         
+      ELSE
+         RETURN self.toYAML_schema(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+      
+      END IF;
+   
+   END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toYAML_schema(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
@@ -708,7 +835,58 @@ AS
                
       RETURN clb_output;
       
-   END toYAML;
+   END toYAML_schema;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toYAML_ref(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS
+      clb_output       CLOB;
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Write the yaml description
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty_str(
+          '$ref: ' || dz_swagger3_util.yaml_text(
+             '#/components/callbacks/' || self.callback_id
+            ,p_pretty_print
+         )
+         ,p_pretty_print
+         ,'  '
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Cough it out 
+      --------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+      
+      IF p_final_linefeed = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         
+      END IF;
+               
+      RETURN clb_output;
+      
+   END toYAML_ref;
    
 END;
 /

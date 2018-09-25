@@ -462,7 +462,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_responses(i).toJSON(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_responses(i).toJSON_schema(
                   p_pretty_print => p_pretty_print + 2
                 )
                ,p_pretty_print + 2
@@ -514,7 +514,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_parameters(i).toJSON(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_parameters(i).toJSON_schema(
                   p_pretty_print => p_pretty_print + 2
                 )
                ,p_pretty_print + 2
@@ -566,7 +566,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_examples(i).toJSON(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_examples(i).toJSON_schema(
                   p_pretty_print => p_pretty_print + 2
                 )
                ,p_pretty_print + 2
@@ -618,7 +618,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_requestBodies(i).toJSON(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_requestBodies(i).toJSON_schema(
                   p_pretty_print => p_pretty_print + 2
                 )
                ,p_pretty_print + 2
@@ -670,7 +670,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_headers(i).toJSON(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_headers(i).toJSON_schema(
                   p_pretty_print => p_pretty_print + 2
                 )
                ,p_pretty_print + 2
@@ -722,7 +722,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_securitySchemes(i).toJSON(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_securitySchemes(i).toJSON_schema(
                   p_pretty_print => p_pretty_print + 2
                 )
                ,p_pretty_print + 2
@@ -774,7 +774,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_links(i).toJSON(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_links(i).toJSON_schema(
                   p_pretty_print => p_pretty_print + 2
                 )
                ,p_pretty_print + 2
@@ -826,7 +826,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_callbacks(i).toJSON(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_callbacks(i).toJSON_schema(
                   p_pretty_print => p_pretty_print + 2
                 )
                ,p_pretty_print + 2
@@ -943,7 +943,7 @@ AS
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_responses(i).toYAML(
+            ) || self.components_responses(i).toYAML_schema(
                p_pretty_print + 2
             );
          
@@ -975,7 +975,7 @@ AS
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_parameters(i).toYAML(
+            ) || self.components_parameters(i).toYAML_schema(
                p_pretty_print + 2
             );
          
@@ -1007,7 +1007,7 @@ AS
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_examples(i).toYAML(
+            ) || self.components_examples(i).toYAML_schema(
                p_pretty_print + 2
             );
          
@@ -1039,7 +1039,7 @@ AS
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_requestBodies(i).toYAML(
+            ) || self.components_requestBodies(i).toYAML_schema(
                p_pretty_print + 2
             );
          
@@ -1071,7 +1071,7 @@ AS
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_headers(i).toYAML(
+            ) || self.components_headers(i).toYAML_schema(
                p_pretty_print + 2
             );
          
@@ -1103,7 +1103,7 @@ AS
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_securitySchemes(i).toYAML(
+            ) || self.components_securitySchemes(i).toYAML_schema(
                p_pretty_print + 2
             );
          
@@ -1135,7 +1135,7 @@ AS
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_links(i).toYAML(
+            ) || self.components_links(i).toYAML_schema(
                p_pretty_print + 2
             );
          
@@ -1167,7 +1167,7 @@ AS
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_callbacks(i).toYAML(
+            ) || self.components_callbacks(i).toYAML_schema(
                p_pretty_print + 2
             );
          

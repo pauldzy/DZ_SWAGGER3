@@ -27,11 +27,12 @@ AS
       BEGIN
          SELECT
          dz_swagger3_requestbody_typ(
-             p_hash_key                => p_requestbody_id
-            ,p_requestbody_id          => p_requestbody_id
-            ,p_requestbody_description => a.requestbody_description
-            ,p_requestbody_content     => NULL
-            ,p_requestbody_required    => a.requestbody_required
+             p_hash_key                 => p_requestbody_id
+            ,p_requestbody_id           => p_requestbody_id
+            ,p_requestbody_description  => a.requestbody_description
+            ,p_requestBody_force_inline => a.requestBody_force_inline
+            ,p_requestbody_content      => NULL
+            ,p_requestbody_required     => a.requestbody_required
          )
          INTO SELF
          FROM
@@ -147,7 +148,7 @@ AS
             ,p_xml_wrapped             => p_parameters(i).parameter_schema.xml_wrapped
             ,p_schema_items_schema     => p_parameters(i).parameter_schema.schema_items_schema
             ,p_schema_properties       => p_parameters(i).parameter_schema.schema_properties
-            ,p_schema_scalar           => p_parameters(i).parameter_schema.schema_scalar
+            ,p_schema_force_inline     => p_parameters(i).parameter_schema.schema_force_inline
             ,p_combine_schemas         => p_parameters(i).parameter_schema.combine_schemas
             ,p_not_schema              => p_parameters(i).parameter_schema.not_schema
          );
@@ -170,20 +171,22 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_requestbody_id          IN  VARCHAR2
-      ,p_requestbody_description IN  VARCHAR2
-      ,p_requestbody_content     IN  dz_swagger3_media_list
-      ,p_requestbody_required    IN  VARCHAR2
+       p_hash_key                 IN  VARCHAR2
+      ,p_requestbody_id           IN  VARCHAR2
+      ,p_requestbody_description  IN  VARCHAR2
+      ,p_requestBody_force_inline IN  VARCHAR2
+      ,p_requestbody_content      IN  dz_swagger3_media_list
+      ,p_requestbody_required     IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.hash_key                := p_hash_key;
-      self.requestbody_id          := p_requestbody_id;
-      self.requestbody_description := p_requestbody_description;
-      self.requestbody_content     := p_requestbody_content;
-      self.requestbody_required    := p_requestbody_required;
+      self.hash_key                 := p_hash_key;
+      self.requestbody_id           := p_requestbody_id;
+      self.requestbody_description  := p_requestbody_description;
+      self.requestBody_force_inline := p_requestBody_force_inline;
+      self.requestbody_content      := p_requestbody_content;
+      self.requestbody_required     := p_requestbody_required;
       
       RETURN; 
       
@@ -218,6 +221,23 @@ AS
       RETURN self.hash_key;
       
    END key;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION doRef
+   RETURN VARCHAR2
+   AS
+   BEGIN
+      
+      IF self.requestBody_force_inline = 'TRUE'
+      THEN
+         RETURN 'FALSE';
+         
+      END IF;
+      
+      RETURN 'TRUE';
+      
+   END doRef;
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
@@ -316,6 +336,29 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
+       p_pretty_print     IN  INTEGER   DEFAULT NULL
+   ) RETURN CLOB
+   AS
+   BEGIN
+   
+      IF self.doREF() = 'TRUE'
+      THEN
+         RETURN toJSON_ref(
+             p_pretty_print  => p_pretty_print
+         );
+   
+      ELSE
+         RETURN toJSON_schema(
+             p_pretty_print  => p_pretty_print
+         );
+      
+      END IF;
+   
+   END toJSON;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toJSON_schema(
        p_pretty_print     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
@@ -463,7 +506,7 @@ AS
       --------------------------------------------------------------------------
       RETURN clb_output;
            
-   END toJSON;
+   END toJSON_schema;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -533,6 +576,35 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS      
+   BEGIN
+   
+      IF self.doRef() = 'TRUE'
+      THEN
+         RETURN self.toYAML_ref(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+         
+      ELSE
+         RETURN self.toYAML_schema(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+      
+      END IF;
+   
+   END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toYAML_schema(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
@@ -626,7 +698,7 @@ AS
                
       RETURN clb_output;
       
-   END toYAML;
+   END toYAML_schema;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

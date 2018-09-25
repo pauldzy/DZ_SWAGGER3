@@ -133,13 +133,22 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 60
-      -- Load the components
+      -- Load the components in sorted by id order
       --------------------------------------------------------------------------
       self.components := dz_swagger3_components();
-      self.components.components_parameters    := self.unique_parameters();
-      self.components.components_requestBodies := self.unique_requestBodies();
-      self.components.components_responses     := self.unique_responses();
-      self.components.components_schemas       := self.unique_schemas();
+      
+      self.components.components_parameters    := dz_swagger3_sort.parameters(
+         self.unique_parameters()
+      );
+      self.components.components_requestBodies := dz_swagger3_sort.requestBodies(
+         self.unique_requestBodies()
+      );
+      self.components.components_responses     := dz_swagger3_sort.responses(
+         self.unique_responses()
+      );
+      self.components.components_schemas       := dz_swagger3_sort.schemas(
+         self.unique_schemas()
+      );
       
       --------------------------------------------------------------------------
       -- Step 70

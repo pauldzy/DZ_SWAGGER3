@@ -190,7 +190,7 @@ AS
                      ,p_xml_wrapped             => obj_schema.xml_wrapped
                      ,p_schema_items_schema     => obj_schema.schema_items_schema
                      ,p_schema_properties       => obj_schema.schema_properties
-                     ,p_schema_scalar           => obj_schema.schema_scalar
+                     ,p_schema_force_inline     => obj_schema.schema_force_inline
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
                   );
@@ -246,7 +246,7 @@ AS
                   ,p_xml_wrapped             => self.media_schema.xml_wrapped
                   ,p_schema_items_schema     => self.media_schema.schema_items_schema
                   ,p_schema_properties       => self.media_schema.schema_properties
-                  ,p_schema_scalar           => self.media_schema.schema_scalar
+                  ,p_schema_force_inline     => self.media_schema.schema_force_inline
                   ,p_combine_schemas         => self.media_schema.combine_schemas
                   ,p_not_schema              => self.media_schema.not_schema
                );

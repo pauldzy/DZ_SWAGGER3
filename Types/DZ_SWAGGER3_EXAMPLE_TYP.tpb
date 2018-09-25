@@ -71,7 +71,40 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER FUNCTION doRef
+   RETURN VARCHAR2
+   AS
+   BEGIN
+      RETURN 'TRUE';
+      
+   END doRef;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
+       p_pretty_print     IN  INTEGER   DEFAULT NULL
+   ) RETURN CLOB
+   AS
+   BEGIN
+   
+      IF self.doREF() = 'TRUE'
+      THEN
+         RETURN toJSON_ref(
+             p_pretty_print  => p_pretty_print
+         );
+   
+      ELSE
+         RETURN toJSON_schema(
+             p_pretty_print  => p_pretty_print
+         );
+      
+      END IF;
+   
+   END toJSON;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toJSON_schema(
        p_pretty_print     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
@@ -199,7 +232,7 @@ AS
       --------------------------------------------------------------------------
       RETURN clb_output;
            
-   END toJSON;
+   END toJSON_schema;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -269,6 +302,35 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS      
+   BEGIN
+   
+      IF self.doRef() = 'TRUE'
+      THEN
+         RETURN self.toYAML_ref(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+         
+      ELSE
+         RETURN self.toYAML_schema(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+      
+      END IF;
+   
+   END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toYAML_schema(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
@@ -380,7 +442,7 @@ AS
                
       RETURN clb_output;
    
-   END toYAML;
+   END toYAML_schema;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

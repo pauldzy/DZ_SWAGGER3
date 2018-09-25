@@ -299,18 +299,22 @@ AS
       THEN
          FOR i IN 1 .. self.operation_responses.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.operation_responses(i).response_id
-               ,ary_x
-            ) = 'FALSE'
+            IF self.operation_responses(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.operation_responses(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.operation_responses(i).response_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.operation_responses(i).response_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.operation_responses(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.operation_responses(i).response_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -339,6 +343,7 @@ AS
       --------------------------------------------------------------------------
       IF  self.operation_requestBody IS NOT NULL
       AND self.operation_requestBody.isNULL() = 'FALSE'
+      AND self.operation_requestBody.doRef() = 'TRUE'
       THEN
          RETURN dz_swagger3_requestbody_list(
             self.operation_requestBody
@@ -381,19 +386,23 @@ AS
       THEN
          FOR i IN 1 .. self.operation_parameters.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.operation_parameters(i).parameter_id
-               ,ary_x
-            ) = 'FALSE'
+            IF self.operation_parameters(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.operation_parameters(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.operation_parameters(i).parameter_id;
-               int_x := int_x + 1;
-               
+               IF dz_swagger3_util.a_in_b(
+                   self.operation_parameters(i).parameter_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.operation_parameters(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.operation_parameters(i).parameter_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
+            
             END IF;
             
          END LOOP;
@@ -415,6 +424,7 @@ AS
    AS
       ary_results   dz_swagger3_schema_nf_list;
       ary_working   dz_swagger3_schema_nf_list;
+      obj_schema    dz_swagger3_schema_typ;
       int_results   PLS_INTEGER;
       ary_x         MDSYS.SDO_STRING2_ARRAY;
       int_x         PLS_INTEGER;
@@ -443,18 +453,24 @@ AS
             
             FOR j IN 1 .. ary_working.COUNT
             LOOP
-               IF dz_swagger3_util.a_in_b(
-                   ary_working(j).schema_id
-                  ,ary_x
-               ) = 'FALSE'
+               obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
+               
+               IF obj_schema.doRef() = 'TRUE'
                THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := ary_working(j);
-                  int_results := int_results + 1;
+                  IF dz_swagger3_util.a_in_b(
+                      ary_working(j).schema_id
+                     ,ary_x
+                  ) = 'FALSE'
+                  THEN
+                     ary_results.EXTEND();
+                     ary_results(int_results) := ary_working(j);
+                     int_results := int_results + 1;
+                     
+                     ary_x.EXTEND();
+                     ary_x(int_x) := ary_working(j).schema_id;
+                     int_x := int_x + 1;
                   
-                  ary_x.EXTEND();
-                  ary_x(int_x) := ary_working(j).schema_id;
-                  int_x := int_x + 1;
+                  END IF;
                
                END IF;
                
@@ -477,18 +493,24 @@ AS
             
             FOR j IN 1 .. ary_working.COUNT
             LOOP
-               IF dz_swagger3_util.a_in_b(
-                   ary_working(j).schema_id
-                  ,ary_x
-               ) = 'FALSE'
+               obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
+               
+               IF obj_schema.doRef() = 'TRUE'
                THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := ary_working(j);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := ary_working(j).schema_id;
-                  int_x := int_x + 1;
+                  IF dz_swagger3_util.a_in_b(
+                      ary_working(j).schema_id
+                     ,ary_x
+                  ) = 'FALSE'
+                  THEN
+                     ary_results.EXTEND();
+                     ary_results(int_results) := ary_working(j);
+                     int_results := int_results + 1;
+                     
+                     ary_x.EXTEND();
+                     ary_x(int_x) := ary_working(j).schema_id;
+                     int_x := int_x + 1;
+                     
+                  END IF;
                   
                END IF;
                
@@ -509,18 +531,24 @@ AS
             
          FOR j IN 1 .. ary_working.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                ary_working(j).schema_id
-               ,ary_x
-            ) = 'FALSE'
-            THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := ary_working(j);
-               int_results := int_results + 1;
+            obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
                
-               ary_x.EXTEND();
-               ary_x(int_x) := ary_working(j).schema_id;
-               int_x := int_x + 1;
+            IF obj_schema.doRef() = 'TRUE'
+            THEN
+               IF dz_swagger3_util.a_in_b(
+                   ary_working(j).schema_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := ary_working(j);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := ary_working(j).schema_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             

@@ -227,18 +227,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_get_operation.operation_responses.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_get_operation.operation_responses(i).response_id
-               ,ary_x
-            ) = 'FALSE'
+            IF self.path_get_operation.operation_responses(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_get_operation.operation_responses(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_get_operation.operation_responses(i).response_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_get_operation.operation_responses(i).response_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_get_operation.operation_responses(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_get_operation.operation_responses(i).response_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -256,18 +260,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_put_operation.operation_responses.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_put_operation.operation_responses(i).response_id
-               ,ary_x
-            ) = 'FALSE'
+            IF self.path_put_operation.operation_responses(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_put_operation.operation_responses(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_put_operation.operation_responses(i).response_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_put_operation.operation_responses(i).response_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_put_operation.operation_responses(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_put_operation.operation_responses(i).response_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -285,18 +293,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_post_operation.operation_responses.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_post_operation.operation_responses(i).response_id
-               ,ary_x
-            ) = 'FALSE'
+            IF self.path_post_operation.operation_responses(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_post_operation.operation_responses(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_post_operation.operation_responses(i).response_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_post_operation.operation_responses(i).response_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_post_operation.operation_responses(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_post_operation.operation_responses(i).response_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -314,18 +326,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_delete_operation.operation_responses.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_delete_operation.operation_responses(i).response_id
-               ,ary_x
-            ) = 'FALSE'
+            IF self.path_delete_operation.operation_responses(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_delete_operation.operation_responses(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_delete_operation.operation_responses(i).response_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_delete_operation.operation_responses(i).response_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_delete_operation.operation_responses(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_delete_operation.operation_responses(i).response_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -343,18 +359,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_options_operation.operation_responses.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_options_operation.operation_responses(i).response_id
-               ,ary_x
-            ) = 'FALSE'
+            IF self.path_options_operation.operation_responses(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_options_operation.operation_responses(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_options_operation.operation_responses(i).response_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_options_operation.operation_responses(i).response_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_options_operation.operation_responses(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_options_operation.operation_responses(i).response_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -372,18 +392,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_head_operation.operation_responses.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_head_operation.operation_responses(i).response_id
-               ,ary_x
-            ) = 'FALSE'
+            IF self.path_head_operation.operation_responses(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_head_operation.operation_responses(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_head_operation.operation_responses(i).response_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_head_operation.operation_responses(i).response_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_head_operation.operation_responses(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_head_operation.operation_responses(i).response_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -401,18 +425,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_patch_operation.operation_responses.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_patch_operation.operation_responses(i).response_id
-               ,ary_x
-            ) = 'FALSE'
+            IF self.path_patch_operation.operation_responses(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_patch_operation.operation_responses(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_patch_operation.operation_responses(i).response_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_patch_operation.operation_responses(i).response_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_patch_operation.operation_responses(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_patch_operation.operation_responses(i).response_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -430,18 +458,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_trace_operation.operation_responses.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_trace_operation.operation_responses(i).response_id
-               ,ary_x
-            ) = 'FALSE'
+            IF self.path_trace_operation.operation_responses(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_trace_operation.operation_responses(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_trace_operation.operation_responses(i).response_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_trace_operation.operation_responses(i).response_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_trace_operation.operation_responses(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_trace_operation.operation_responses(i).response_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -485,6 +517,7 @@ AS
       IF  self.path_get_operation IS NOT NULL
       AND self.path_get_operation.operation_requestbody IS NOT NULL
       AND self.path_get_operation.operation_requestbody.isNULL() = 'FALSE'
+      AND self.path_get_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
          IF dz_swagger3_util.a_in_b(
              self.path_get_operation.operation_requestbody.requestBody_id
@@ -510,6 +543,7 @@ AS
       IF  self.path_put_operation IS NOT NULL
       AND self.path_put_operation.operation_requestbody IS NOT NULL
       AND self.path_put_operation.operation_requestbody.isNULL() = 'FALSE'
+      AND self.path_put_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
          IF dz_swagger3_util.a_in_b(
              self.path_put_operation.operation_requestbody.requestBody_id
@@ -535,6 +569,7 @@ AS
       IF  self.path_post_operation IS NOT NULL
       AND self.path_post_operation.operation_requestbody IS NOT NULL
       AND self.path_post_operation.operation_requestbody.isNULL() = 'FALSE'
+      AND self.path_post_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
          IF dz_swagger3_util.a_in_b(
              self.path_post_operation.operation_requestbody.requestBody_id
@@ -560,6 +595,7 @@ AS
       IF  self.path_delete_operation IS NOT NULL
       AND self.path_delete_operation.operation_requestbody IS NOT NULL
       AND self.path_delete_operation.operation_requestbody.isNULL() = 'FALSE'
+      AND self.path_delete_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
          IF dz_swagger3_util.a_in_b(
              self.path_delete_operation.operation_requestbody.requestBody_id
@@ -585,6 +621,7 @@ AS
       IF  self.path_options_operation IS NOT NULL
       AND self.path_options_operation.operation_requestbody IS NOT NULL
       AND self.path_options_operation.operation_requestbody.isNULL() = 'FALSE'
+      AND self.path_options_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
          IF dz_swagger3_util.a_in_b(
              self.path_options_operation.operation_requestbody.requestBody_id
@@ -610,6 +647,7 @@ AS
       IF  self.path_head_operation IS NOT NULL
       AND self.path_head_operation.operation_requestbody IS NOT NULL
       AND self.path_head_operation.operation_requestbody.isNULL() = 'FALSE'
+      AND self.path_head_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
          IF dz_swagger3_util.a_in_b(
              self.path_head_operation.operation_requestbody.requestBody_id
@@ -635,6 +673,7 @@ AS
       IF  self.path_patch_operation IS NOT NULL
       AND self.path_patch_operation.operation_requestbody IS NOT NULL
       AND self.path_patch_operation.operation_requestbody.isNULL() = 'FALSE'
+      AND self.path_patch_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
          IF dz_swagger3_util.a_in_b(
              self.path_patch_operation.operation_requestbody.requestBody_id
@@ -660,6 +699,7 @@ AS
       IF  self.path_trace_operation IS NOT NULL
       AND self.path_trace_operation.operation_requestbody IS NOT NULL
       AND self.path_trace_operation.operation_requestbody.isNULL() = 'FALSE'
+      AND self.path_trace_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
          IF dz_swagger3_util.a_in_b(
              self.path_trace_operation.operation_requestbody.requestBody_id
@@ -716,18 +756,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_parameters.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_parameters(i).parameter_id
-               ,ary_x
-            ) = 'FALSE'
+            IF self.path_parameters(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_parameters(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_parameters(i).parameter_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_parameters(i).parameter_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_parameters(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_parameters(i).parameter_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -737,7 +781,7 @@ AS
    
       --------------------------------------------------------------------------
       -- Step 30
-      -- Pull the parmeters from the get operation
+      -- Pull the parameters from the get operation
       --------------------------------------------------------------------------
       IF  self.path_get_operation IS NOT NULL
       AND self.path_get_operation.operation_parameters IS NOT NULL
@@ -745,18 +789,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_get_operation.operation_parameters.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_get_operation.operation_parameters(i).parameter_id
-               ,ary_x
-            ) = 'FALSE'
+            IF path_get_operation.operation_parameters(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_get_operation.operation_parameters(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_get_operation.operation_parameters(i).parameter_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_get_operation.operation_parameters(i).parameter_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_get_operation.operation_parameters(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_get_operation.operation_parameters(i).parameter_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -774,19 +822,23 @@ AS
       THEN
          FOR i IN 1 .. self.path_put_operation.operation_parameters.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_put_operation.operation_parameters(i).parameter_id
-               ,ary_x
-            ) = 'FALSE'
+            IF path_put_operation.operation_parameters(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_put_operation.operation_parameters(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_put_operation.operation_parameters(i).parameter_id;
-               int_x := int_x + 1;
-               
+               IF dz_swagger3_util.a_in_b(
+                   self.path_put_operation.operation_parameters(i).parameter_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_put_operation.operation_parameters(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_put_operation.operation_parameters(i).parameter_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
+            
             END IF;
             
          END LOOP;
@@ -803,19 +855,23 @@ AS
       THEN
          FOR i IN 1 .. self.path_post_operation.operation_parameters.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_post_operation.operation_parameters(i).parameter_id
-               ,ary_x
-            ) = 'FALSE'
+            IF path_post_operation.operation_parameters(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_post_operation.operation_parameters(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_post_operation.operation_parameters(i).parameter_id;
-               int_x := int_x + 1;
-               
+               IF dz_swagger3_util.a_in_b(
+                   self.path_post_operation.operation_parameters(i).parameter_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_post_operation.operation_parameters(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_post_operation.operation_parameters(i).parameter_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
+            
             END IF;
             
          END LOOP;
@@ -832,18 +888,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_delete_operation.operation_parameters.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_delete_operation.operation_parameters(i).parameter_id
-               ,ary_x
-            ) = 'FALSE'
+            IF path_delete_operation.operation_parameters(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_delete_operation.operation_parameters(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_delete_operation.operation_parameters(i).parameter_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_delete_operation.operation_parameters(i).parameter_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_delete_operation.operation_parameters(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_delete_operation.operation_parameters(i).parameter_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -861,18 +921,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_options_operation.operation_parameters.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_options_operation.operation_parameters(i).parameter_id
-               ,ary_x
-            ) = 'FALSE'
+            IF path_options_operation.operation_parameters(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_options_operation.operation_parameters(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_options_operation.operation_parameters(i).parameter_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_options_operation.operation_parameters(i).parameter_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_options_operation.operation_parameters(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_options_operation.operation_parameters(i).parameter_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -890,18 +954,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_head_operation.operation_parameters.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_head_operation.operation_parameters(i).parameter_id
-               ,ary_x
-            ) = 'FALSE'
+            IF path_head_operation.operation_parameters(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_head_operation.operation_parameters(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_head_operation.operation_parameters(i).parameter_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_head_operation.operation_parameters(i).parameter_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_head_operation.operation_parameters(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_head_operation.operation_parameters(i).parameter_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
@@ -919,19 +987,23 @@ AS
       THEN
          FOR i IN 1 .. self.path_patch_operation.operation_parameters.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_patch_operation.operation_parameters(i).parameter_id
-               ,ary_x
-            ) = 'FALSE'
+            IF path_patch_operation.operation_parameters(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_patch_operation.operation_parameters(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_patch_operation.operation_parameters(i).parameter_id;
-               int_x := int_x + 1;
-               
+               IF dz_swagger3_util.a_in_b(
+                   self.path_patch_operation.operation_parameters(i).parameter_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_patch_operation.operation_parameters(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_patch_operation.operation_parameters(i).parameter_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
+            
             END IF;
             
          END LOOP;
@@ -948,18 +1020,22 @@ AS
       THEN
          FOR i IN 1 .. self.path_trace_operation.operation_parameters.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
-                self.path_trace_operation.operation_parameters(i).parameter_id
-               ,ary_x
-            ) = 'FALSE'
+            IF path_trace_operation.operation_parameters(i).doRef() = 'TRUE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_trace_operation.operation_parameters(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_trace_operation.operation_parameters(i).parameter_id;
-               int_x := int_x + 1;
+               IF dz_swagger3_util.a_in_b(
+                   self.path_trace_operation.operation_parameters(i).parameter_id
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := self.path_trace_operation.operation_parameters(i);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := self.path_trace_operation.operation_parameters(i).parameter_id;
+                  int_x := int_x + 1;
+                  
+               END IF;
                
             END IF;
             
