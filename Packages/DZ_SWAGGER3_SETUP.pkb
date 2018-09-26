@@ -496,7 +496,7 @@ AS
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_operation('
               || '    operation_id              VARCHAR2(255 Char) NOT NULL '
-              || '    operation_type            VARCHAR2(255 Char) NOT NULL '
+              || '   ,operation_type            VARCHAR2(255 Char) NOT NULL '
               || '   ,operation_summary         VARCHAR2(4000 Char) '
               || '   ,operation_description     VARCHAR2(4000 Char) '
               || '   ,operation_externalDocs_id VARCHAR2(255 Char) '
@@ -1453,65 +1453,6 @@ AS
               
       EXECUTE IMMEDIATE str_sql;
       
-      -------------------------------------------------------------------------
-      -- Step 290
-      -- Build CONDENSE table
-      -------------------------------------------------------------------------
-      str_sql := 'CREATE TABLE dz_swagger3_condense('
-              || '    condense_key         VARCHAR2(255 Char) NOT NULL '
-              || '   ,condense_value       VARCHAR2(255 Char) NOT NULL '
-              || '   ,versionid            VARCHAR2(40 Char) NOT NULL '
-              || ') ';
-              
-      IF p_table_tablespace IS NOT NULL
-      THEN
-         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
-      END IF;
-      
-      EXECUTE IMMEDIATE str_sql;
-      
-      str_sql := 'ALTER TABLE dz_swagger3_condense '
-              || 'ADD ( '
-              || '    CONSTRAINT dz_swagger3_condense_pk '
-              || '    PRIMARY KEY(versionid,condense_key,condense_value) ';
-              
-              
-      IF p_index_tablespace IS NOT NULL
-      THEN
-         str_sql := str_sql || '    USING INDEX TABLESPACE ' || p_index_tablespace;
-      
-      END IF;
-      
-      str_sql := str_sql 
-              || '   ,CONSTRAINT dz_swagger3_condense_u01 '
-              || '    UNIQUE(versionid,condense_value) ';
-              
-      IF p_index_tablespace IS NOT NULL
-      THEN
-         str_sql := str_sql || '    USING INDEX TABLESPACE ' || p_index_tablespace;
-      
-      END IF;
-       
-      str_sql := str_sql || ') ';
-      
-      EXECUTE IMMEDIATE str_sql;
-      
-      str_sql := 'ALTER TABLE dz_swagger3_condense '
-              || 'ADD( '
-              || '    CONSTRAINT dz_swagger3_condense_c01 '
-              || '    CHECK (condense_key = TRIM(condense_key)) '
-              || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_condense_c02 '
-              || '    CHECK (condense_value = TRIM(condense_value)) '
-              || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_condense_c03 '
-              || '    CHECK (versionid = TRIM(versionid)) '
-              || '    ENABLE VALIDATE '
-              || ') ';
-              
-      EXECUTE IMMEDIATE str_sql;      
-      
    END create_storage_tables;
    
    ----------------------------------------------------------------------------
@@ -1550,11 +1491,19 @@ AS
          ,'DZ_SWAGGER3_EXTERNALDOC'
          ,'DZ_SWAGGER3_SECURITYSCHEME'
          ,'DZ_SWAGGER3_TAG'
-         ,'DZ_SWAGGER3_CONDENSE'
       );
    
    END dz_swagger3_table_list;
 
 END dz_swagger3_setup;
 /
+
+/*
+BEGIN
+   dz_swagger3_setup.create_storage_tables();
+   
+END;
+/
+
+*/
 

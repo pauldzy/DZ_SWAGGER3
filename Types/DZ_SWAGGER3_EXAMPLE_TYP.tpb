@@ -352,7 +352,7 @@ AS
       IF self.example_summary IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'summary: ' || dz_swagger_util.yaml_text(
+             'summary: ' || dz_swagger3_util.yaml_text(
                 self.example_summary
                ,p_pretty_print
             )
@@ -369,7 +369,7 @@ AS
       IF self.example_description IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'description: ' || dz_swagger_util.yaml_text(
+             'description: ' || dz_swagger3_util.yaml_text(
                 self.example_description
                ,p_pretty_print
             )
@@ -386,7 +386,7 @@ AS
       IF self.example_value_string IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'value: ' || dz_swagger_util.yaml_text(
+             'value: ' || dz_swagger3_util.yaml_text(
                 self.example_value_string
                ,p_pretty_print
             )
@@ -397,7 +397,7 @@ AS
       ELSIF self.example_value_number IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'value: ' || dz_swagger_util.yaml_text(
+             'value: ' || dz_swagger3_util.yaml_text(
                 self.example_value_number
                ,p_pretty_print
             )
@@ -414,7 +414,7 @@ AS
       IF self.example_externalValue IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'externalValue: ' || dz_swagger_util.yaml_text(
+             'externalValue: ' || dz_swagger3_util.yaml_text(
                 self.example_externalValue
                ,p_pretty_print
             )
@@ -466,7 +466,7 @@ AS
       -- Write the yaml summary
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
-          '$ref: ' || dz_swagger_util.yaml_text(
+          '$ref: ' || dz_swagger3_util.yaml_text(
              '#/components/examples/' || self.example_id
             ,p_pretty_print
          )

@@ -99,6 +99,22 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 30
+      -- Collect the enumerations
+      --------------------------------------------------------------------------
+      SELECT
+       a.enum_string
+      ,a.enum_number
+      BULK COLLECT INTO
+       self.schema_enum_string
+      ,self.schema_enum_number
+      FROM
+      dz_swagger3_schema_enum_map a
+      WHERE
+          a.versionid = p_versionid
+      AND a.schema_id = p_schema_id;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
       -- Process object definitions for remaining schema types
       --------------------------------------------------------------------------
       IF self.schema_type = 'object'
@@ -243,6 +259,8 @@ AS
       ,p_xml_wrapped             IN  VARCHAR2
       ,p_schema_items_schema     IN  dz_swagger3_schema_typ_nf
       ,p_schema_properties       IN  dz_swagger3_schema_nf_list
+      ,p_schema_enum_string      IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_schema_enum_number      IN  MDSYS.SDO_NUMBER_ARRAY
       ,p_schema_force_inline     IN  VARCHAR2
       ,p_combine_schemas         IN  dz_swagger3_schema_nf_list
       ,p_not_schema              IN  dz_swagger3_schema_typ_nf
@@ -285,6 +303,8 @@ AS
       -----
       self.schema_items_schema     := p_schema_items_schema;
       self.schema_properties       := p_schema_properties;
+      self.schema_enum_string      := p_schema_enum_string;
+      self.schema_enum_number      := p_schema_enum_number;
       self.schema_force_inline     := p_schema_force_inline;
       self.combine_schemas         := p_combine_schemas;
       self.not_schema              := p_not_schema;
@@ -503,6 +523,8 @@ AS
                         ,p_xml_wrapped             => obj_schema.xml_wrapped
                         ,p_schema_items_schema     => obj_schema.schema_items_schema
                         ,p_schema_properties       => obj_schema.schema_properties
+                        ,p_schema_enum_string      => obj_schema.schema_enum_string
+                        ,p_schema_enum_number      => obj_schema.schema_enum_number
                         ,p_schema_force_inline     => obj_schema.schema_force_inline
                         ,p_combine_schemas         => obj_schema.combine_schemas
                         ,p_not_schema              => obj_schema.not_schema
@@ -566,6 +588,8 @@ AS
                      ,p_xml_wrapped             => obj_schema.xml_wrapped
                      ,p_schema_items_schema     => obj_schema.schema_items_schema
                      ,p_schema_properties       => obj_schema.schema_properties
+                     ,p_schema_enum_string      => obj_schema.schema_enum_string
+                     ,p_schema_enum_number      => obj_schema.schema_enum_number
                      ,p_schema_force_inline     => obj_schema.schema_force_inline
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
@@ -644,6 +668,8 @@ AS
                      ,p_xml_wrapped             => obj_schema.xml_wrapped
                      ,p_schema_items_schema     => obj_schema.schema_items_schema
                      ,p_schema_properties       => obj_schema.schema_properties
+                     ,p_schema_enum_string      => obj_schema.schema_enum_string
+                     ,p_schema_enum_number      => obj_schema.schema_enum_number
                      ,p_schema_force_inline     => obj_schema.schema_force_inline
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
@@ -706,6 +732,8 @@ AS
                   ,p_xml_wrapped             => obj_schema.xml_wrapped
                   ,p_schema_items_schema     => obj_schema.schema_items_schema
                   ,p_schema_properties       => obj_schema.schema_properties
+                  ,p_schema_enum_string      => obj_schema.schema_enum_string
+                  ,p_schema_enum_number      => obj_schema.schema_enum_number
                   ,p_schema_force_inline     => obj_schema.schema_force_inline
                   ,p_combine_schemas         => obj_schema.combine_schemas
                   ,p_not_schema              => obj_schema.not_schema
@@ -777,6 +805,8 @@ AS
                      ,p_xml_wrapped             => obj_schema.xml_wrapped
                      ,p_schema_items_schema     => obj_schema.schema_items_schema
                      ,p_schema_properties       => obj_schema.schema_properties
+                     ,p_schema_enum_string      => obj_schema.schema_enum_string
+                     ,p_schema_enum_number      => obj_schema.schema_enum_number
                      ,p_schema_force_inline     => obj_schema.schema_force_inline
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
@@ -855,6 +885,8 @@ AS
                      ,p_xml_wrapped             => obj_schema.xml_wrapped
                      ,p_schema_items_schema     => obj_schema.schema_items_schema
                      ,p_schema_properties       => obj_schema.schema_properties
+                     ,p_schema_enum_string      => obj_schema.schema_enum_string
+                     ,p_schema_enum_number      => obj_schema.schema_enum_number
                      ,p_schema_force_inline     => obj_schema.schema_force_inline
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
@@ -917,6 +949,8 @@ AS
                   ,p_xml_wrapped             => obj_schema.xml_wrapped
                   ,p_schema_items_schema     => obj_schema.schema_items_schema
                   ,p_schema_properties       => obj_schema.schema_properties
+                  ,p_schema_enum_string      => obj_schema.schema_enum_string
+                  ,p_schema_enum_number      => obj_schema.schema_enum_number
                   ,p_schema_force_inline     => obj_schema.schema_force_inline
                   ,p_combine_schemas         => obj_schema.combine_schemas
                   ,p_not_schema              => obj_schema.not_schema
@@ -1131,6 +1165,38 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 70
+      -- Add optional enum array
+      --------------------------------------------------------------------------
+      IF  self.schema_enum_string IS NOT NULL
+      AND self.schema_enum_string.COUNT > 0
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'enum'
+               ,self.schema_enum_string
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+      
+      ELSIF  self.schema_enum_number IS NOT NULL
+      AND self.schema_enum_number.COUNT > 0
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'enum'
+               ,self.schema_enum_number
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 80
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_nullable IS NOT NULL
@@ -1157,7 +1223,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 80
+      -- Step 90
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_discriminator IS NOT NULL
@@ -1175,7 +1241,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 90
+      -- Step 100
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_readonly IS NOT NULL
@@ -1202,7 +1268,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 100
+      -- Step 110
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_writeonly IS NOT NULL
@@ -1229,7 +1295,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 110
+      -- Step 120
       -- Add optional externalDocs
       --------------------------------------------------------------------------
       IF  self.schema_externalDocs IS NOT NULL
@@ -1248,7 +1314,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 120
+      -- Step 130
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_example_string IS NOT NULL
@@ -1278,7 +1344,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 130
+      -- Step 140
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_deprecated IS NOT NULL
@@ -1305,7 +1371,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 140
+      -- Step 150
       -- Add schema items
       --------------------------------------------------------------------------
       IF  self.schema_items_schema IS NOT NULL
@@ -1324,7 +1390,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 150
+      -- Step 160
       -- Add optional xml object
       --------------------------------------------------------------------------
       IF str_jsonschema = 'FALSE'
@@ -1338,7 +1404,7 @@ AS
             clb_output := clb_output || dz_json_util.pretty(
                 str_pad1 || dz_json_main.formatted2json(
                    'xml'
-                  ,dz_swagger_xml(
+                  ,dz_swagger3_xml(
                       p_xml_name       => self.xml_name
                      ,p_xml_namespace  => self.xml_namespace
                      ,p_xml_prefix     => self.xml_prefix
@@ -1358,7 +1424,7 @@ AS
       END IF;
       
       -------------------------------------------------------------------------
-      -- Step 160
+      -- Step 170
       -- Add parameters
       -------------------------------------------------------------------------
       IF self.schema_properties IS NULL 
@@ -1419,7 +1485,7 @@ AS
          str_pad1 := ',';
          
       -------------------------------------------------------------------------
-      -- Step 170
+      -- Step 180
       -- Add required array
       -------------------------------------------------------------------------
          IF ary_required IS NOT NULL
@@ -1440,7 +1506,7 @@ AS
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 180
+      -- Step 190
       -- Add the left bracket
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
@@ -1449,7 +1515,7 @@ AS
       );
       
       --------------------------------------------------------------------------
-      -- Step 190
+      -- Step 200
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
@@ -1820,7 +1886,7 @@ AS
       IF self.schema_description IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'description: ' || dz_swagger_util.yaml_text(
+             'description: ' || dz_swagger3_util.yaml_text(
                 self.schema_description
                ,p_pretty_print
             )
@@ -1862,6 +1928,50 @@ AS
       -- Step 70
       -- Add optional description object
       --------------------------------------------------------------------------
+      IF  self.schema_enum_string IS NOT NULL
+      AND self.schema_enum_string.COUNT > 0
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'enum: '
+            ,p_pretty_print + 1
+            ,'  '
+         );
+         
+         FOR i IN 1 .. self.schema_enum_string.COUNT
+         LOOP
+            clb_output := clb_output || dz_json_util.pretty_str(
+                '- ' || self.schema_enum_string(i)
+               ,p_pretty_print + 2
+               ,'  '
+            );
+            
+         END LOOP;
+      
+      ELSIF  self.schema_enum_number IS NOT NULL
+      AND self.schema_enum_number.COUNT > 0
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'enum: '
+            ,p_pretty_print + 1
+            ,'  '
+         );
+         
+         FOR i IN 1 .. self.schema_enum_number.COUNT
+         LOOP
+            clb_output := clb_output || dz_json_util.pretty_str(
+                '- ' || self.schema_enum_number(i)
+               ,p_pretty_print + 2
+               ,'  '
+            );
+            
+         END LOOP;
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 80
+      -- Add optional description object
+      --------------------------------------------------------------------------
       IF self.schema_discriminator IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -1873,7 +1983,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 80
+      -- Step 90
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_readonly IS NOT NULL
@@ -1887,7 +1997,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 90
+      -- Step 100
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_writeonly IS NOT NULL
@@ -1901,7 +2011,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 100
+      -- Step 110
       -- Write the optional externalDocs object
       --------------------------------------------------------------------------
       IF  self.schema_externalDocs IS NOT NULL
@@ -1918,7 +2028,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 110
+      -- Step 120
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_example_string IS NOT NULL
@@ -1940,7 +2050,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 120
+      -- Step 130
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_deprecated IS NOT NULL
@@ -1954,7 +2064,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 130
+      -- Step 140
       -- Write the optional externalDocs object
       --------------------------------------------------------------------------
       IF  self.schema_items_schema IS NOT NULL
@@ -1971,7 +2081,7 @@ AS
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 140
+      -- Step 150
       -- Add optional xml object
       --------------------------------------------------------------------------
       IF self.xml_name      IS NOT NULL
@@ -1997,7 +2107,7 @@ AS
       END IF;
       
       -------------------------------------------------------------------------
-      -- Step 150
+      -- Step 160
       -- Write the properties map
       -------------------------------------------------------------------------
       IF  self.schema_properties IS NOT NULL 
@@ -2037,7 +2147,7 @@ AS
          END LOOP;
          
       --------------------------------------------------------------------------
-      -- Step 160
+      -- Step 170
       -- Add requirements array
       --------------------------------------------------------------------------
          IF boo_check
@@ -2063,7 +2173,7 @@ AS
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 170
+      -- Step 180
       -- Cough it out with adjustments as needed
       --------------------------------------------------------------------------
       IF p_initial_indent = 'FALSE'

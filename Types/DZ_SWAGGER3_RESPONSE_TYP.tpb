@@ -670,7 +670,7 @@ AS
       IF self.response_description IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'description: ' || dz_swagger_util.yaml_text(
+             'description: ' || dz_swagger3_util.yaml_text(
                 self.response_description
                ,p_pretty_print
             )

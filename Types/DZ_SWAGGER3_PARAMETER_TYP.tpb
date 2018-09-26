@@ -844,7 +844,7 @@ AS
       IF self.parameter_style IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'style: ' || dz_swagger_util.yaml_text(
+             'style: ' || dz_swagger3_util.yaml_text(
                 self.parameter_style
                ,p_pretty_print
             )

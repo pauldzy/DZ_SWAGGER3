@@ -33,6 +33,8 @@ UNDER dz_swagger3_schema_typ_nf(
    ,schema_maxProperties     INTEGER
    -----
    ,schema_properties        dz_swagger3_schema_nf_list
+   ,schema_enum_string       MDSYS.SDO_STRING2_ARRAY
+   ,schema_enum_number       MDSYS.SDO_NUMBER_ARRAY
    -----
    ,xml_name                 VARCHAR2(255 Char)
    ,xml_namespace            VARCHAR2(2000 Char)
@@ -135,6 +137,8 @@ UNDER dz_swagger3_schema_typ_nf(
       ,p_xml_wrapped             IN  VARCHAR2
       ,p_schema_items_schema     IN  dz_swagger3_schema_typ_nf
       ,p_schema_properties       IN  dz_swagger3_schema_nf_list
+      ,p_schema_enum_string      IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_schema_enum_number      IN  MDSYS.SDO_NUMBER_ARRAY
       ,p_schema_force_inline     IN  VARCHAR2
       ,p_combine_schemas         IN  dz_swagger3_schema_nf_list
       ,p_not_schema              IN  dz_swagger3_schema_typ_nf

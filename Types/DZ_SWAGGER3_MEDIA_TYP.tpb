@@ -190,6 +190,8 @@ AS
                      ,p_xml_wrapped             => obj_schema.xml_wrapped
                      ,p_schema_items_schema     => obj_schema.schema_items_schema
                      ,p_schema_properties       => obj_schema.schema_properties
+                     ,p_schema_enum_string      => obj_schema.schema_enum_string
+                     ,p_schema_enum_number      => obj_schema.schema_enum_number
                      ,p_schema_force_inline     => obj_schema.schema_force_inline
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
@@ -246,6 +248,8 @@ AS
                   ,p_xml_wrapped             => self.media_schema.xml_wrapped
                   ,p_schema_items_schema     => self.media_schema.schema_items_schema
                   ,p_schema_properties       => self.media_schema.schema_properties
+                  ,p_schema_enum_string      => self.media_schema.schema_enum_string
+                  ,p_schema_enum_number      => self.media_schema.schema_enum_number
                   ,p_schema_force_inline     => self.media_schema.schema_force_inline
                   ,p_combine_schemas         => self.media_schema.combine_schemas
                   ,p_not_schema              => self.media_schema.not_schema
@@ -599,7 +603,7 @@ AS
       IF self.media_example_string IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'example: ' || dz_swagger_util.yaml_text(
+             'example: ' || dz_swagger3_util.yaml_text(
                 self.media_example_string
                ,p_pretty_print
             )
@@ -610,7 +614,7 @@ AS
       ELSIF self.media_example_number IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'example: ' || dz_swagger_util.yaml_text(
+             'example: ' || dz_swagger3_util.yaml_text(
                 self.media_example_number
                ,p_pretty_print
             )

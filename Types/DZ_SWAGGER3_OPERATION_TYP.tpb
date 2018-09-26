@@ -1124,7 +1124,7 @@ AS
       IF self.operation_summary IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'summary: ' || dz_swagger_util.yaml_text(
+             'summary: ' || dz_swagger3_util.yaml_text(
                 self.operation_summary
                ,p_pretty_print + 1
             )
@@ -1141,7 +1141,7 @@ AS
       IF self.operation_description IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'description: ' || dz_swagger_util.yaml_text(
+             'description: ' || dz_swagger3_util.yaml_text(
                 self.operation_description
                ,p_pretty_print + 1
             )
@@ -1175,7 +1175,7 @@ AS
       IF self.operation_operationId IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'operationId: ' || dz_swagger_util.yaml_text(
+             'operationId: ' || dz_swagger3_util.yaml_text(
                 self.operation_operationId
                ,p_pretty_print + 1
             )

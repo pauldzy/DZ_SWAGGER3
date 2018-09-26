@@ -148,6 +148,8 @@ AS
             ,p_xml_wrapped             => p_parameters(i).parameter_schema.xml_wrapped
             ,p_schema_items_schema     => p_parameters(i).parameter_schema.schema_items_schema
             ,p_schema_properties       => p_parameters(i).parameter_schema.schema_properties
+            ,p_schema_enum_string      => p_parameters(i).parameter_schema.schema_enum_string
+            ,p_schema_enum_number      => p_parameters(i).parameter_schema.schema_enum_number
             ,p_schema_force_inline     => p_parameters(i).parameter_schema.schema_force_inline
             ,p_combine_schemas         => p_parameters(i).parameter_schema.combine_schemas
             ,p_not_schema              => p_parameters(i).parameter_schema.not_schema
