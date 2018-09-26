@@ -1355,6 +1355,267 @@ AS
 
    END unique_schemas;
    
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   MEMBER FUNCTION unique_tags
+   RETURN dz_swagger3_tag_list
+   AS
+      ary_results   dz_swagger3_tag_list;
+      int_results   PLS_INTEGER;
+      ary_x         MDSYS.SDO_STRING2_ARRAY;
+      int_x         PLS_INTEGER;
+   
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Setup for the harvest
+      --------------------------------------------------------------------------
+      int_results := 1;
+      ary_results := dz_swagger3_tag_list();
+      int_x       := 1;
+      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Pull the tags from the get operation
+      --------------------------------------------------------------------------
+      IF self.path_get_operation.operation_tags IS NOT NULL
+      AND self.path_get_operation.operation_tags.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_get_operation.operation_tags.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_get_operation.operation_tags(i).tag_name
+               ,ary_x
+            ) = 'FALSE'
+            AND self.path_get_operation.operation_tags(i).tag_id IS NOT NULL
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_get_operation.operation_tags(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_get_operation.operation_tags(i).tag_name;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Pull the tags from the put operation
+      --------------------------------------------------------------------------
+      IF self.path_put_operation.operation_tags IS NOT NULL
+      AND self.path_put_operation.operation_tags.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_put_operation.operation_tags.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_put_operation.operation_tags(i).tag_name
+               ,ary_x
+            ) = 'FALSE'
+            AND self.path_put_operation.operation_tags(i).tag_id IS NOT NULL
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_put_operation.operation_tags(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_put_operation.operation_tags(i).tag_name;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Pull the tags from the post operation
+      --------------------------------------------------------------------------
+      IF self.path_post_operation.operation_tags IS NOT NULL
+      AND self.path_post_operation.operation_tags.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_post_operation.operation_tags.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_post_operation.operation_tags(i).tag_name
+               ,ary_x
+            ) = 'FALSE'
+            AND self.path_post_operation.operation_tags(i).tag_id IS NOT NULL
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_post_operation.operation_tags(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_post_operation.operation_tags(i).tag_name;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Pull the tags from the delete operation
+      --------------------------------------------------------------------------
+      IF self.path_delete_operation.operation_tags IS NOT NULL
+      AND self.path_delete_operation.operation_tags.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_delete_operation.operation_tags.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_delete_operation.operation_tags(i).tag_name
+               ,ary_x
+            ) = 'FALSE'
+            AND self.path_delete_operation.operation_tags(i).tag_id IS NOT NULL
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_delete_operation.operation_tags(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_delete_operation.operation_tags(i).tag_name;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 60
+      -- Pull the tags from the options operation
+      --------------------------------------------------------------------------
+      IF self.path_options_operation.operation_tags IS NOT NULL
+      AND self.path_options_operation.operation_tags.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_options_operation.operation_tags.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_options_operation.operation_tags(i).tag_name
+               ,ary_x
+            ) = 'FALSE'
+            AND self.path_options_operation.operation_tags(i).tag_id IS NOT NULL
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_options_operation.operation_tags(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_options_operation.operation_tags(i).tag_name;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 70
+      -- Pull the tags from the head operation
+      --------------------------------------------------------------------------
+      IF self.path_head_operation.operation_tags IS NOT NULL
+      AND self.path_head_operation.operation_tags.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_head_operation.operation_tags.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_head_operation.operation_tags(i).tag_name
+               ,ary_x
+            ) = 'FALSE'
+            AND self.path_head_operation.operation_tags(i).tag_id IS NOT NULL
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_head_operation.operation_tags(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_head_operation.operation_tags(i).tag_name;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 80
+      -- Pull the tags from the patch operation
+      --------------------------------------------------------------------------
+      IF self.path_patch_operation.operation_tags IS NOT NULL
+      AND self.path_patch_operation.operation_tags.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_patch_operation.operation_tags.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_patch_operation.operation_tags(i).tag_name
+               ,ary_x
+            ) = 'FALSE'
+            AND self.path_patch_operation.operation_tags(i).tag_id IS NOT NULL
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_patch_operation.operation_tags(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_patch_operation.operation_tags(i).tag_name;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 90
+      -- Pull the tags from the trace operation
+      --------------------------------------------------------------------------
+      IF self.path_trace_operation.operation_tags IS NOT NULL
+      AND self.path_trace_operation.operation_tags.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.path_trace_operation.operation_tags.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.path_trace_operation.operation_tags(i).tag_name
+               ,ary_x
+            ) = 'FALSE'
+            AND self.path_trace_operation.operation_tags(i).tag_id IS NOT NULL
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_trace_operation.operation_tags(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_trace_operation.operation_tags(i).tag_name;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 100
+      -- Return what we got
+      --------------------------------------------------------------------------
+      RETURN ary_results;
+      
+   END unique_tags;
+   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION path_parameters_keys

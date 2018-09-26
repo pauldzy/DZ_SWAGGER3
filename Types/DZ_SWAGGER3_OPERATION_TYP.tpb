@@ -73,10 +73,23 @@ AS
       -- Add any required tags
       --------------------------------------------------------------------------
       SELECT
-      a.tag_name
+      dz_swagger3_tag_typ(
+          p_tag_id           => a.tag_id
+         ,p_tag_name         => a.tag_name
+         ,p_tag_description  => b.tag_description
+         ,p_tag_externalDocs => dz_swagger3_extrdocs_typ(
+             p_externaldoc_id   => b.tag_externaldocs_id
+            ,p_versionid        => p_versionid
+         )
+      )
       BULK COLLECT INTO self.operation_tags
       FROM
       dz_swagger3_operation_tag_map a
+      LEFT JOIN
+      dz_swagger3_tag b
+      ON
+          a.versionid = b.versionid
+      AND a.tag_id = b.tag_id
       WHERE
           a.versionid    = p_versionid
       AND a.operation_id = p_operation_id
@@ -206,7 +219,7 @@ AS
    CONSTRUCTOR FUNCTION dz_swagger3_operation_typ(
        p_hash_key                IN  VARCHAR2
       ,p_operation_id            IN  VARCHAR2
-      ,p_operation_tags          IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_operation_tags          IN  dz_swagger3_tag_list
       ,p_operation_summary       IN  VARCHAR2
       ,p_operation_description   IN  VARCHAR2
       ,p_operation_externalDocs  IN  dz_swagger3_extrdocs_typ
@@ -268,6 +281,39 @@ AS
       RETURN self.hash_key;
       
    END key;
+   
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   MEMBER FUNCTION tags
+   RETURN MDSYS.SDO_STRING2_ARRAY
+   AS
+      ary_out MDSYS.SDO_STRING2_ARRAY;
+      
+   BEGIN
+   
+      IF self.operation_tags IS NULL
+      OR self.operation_tags.COUNT = 0
+      THEN
+         RETURN NULL;
+         
+      END IF;
+      
+      ary_out := MDSYS.SDO_STRING2_ARRAY();
+      ary_out.EXTEND(self.operation_tags.COUNT);
+
+      FOR i IN 1 .. self.operation_tags.COUNT
+      LOOP
+         IF self.operation_tags(i).tag_id IS NOT NULL
+         THEN
+            ary_out(i) := self.operation_tags(i).tag_name;
+         
+         END IF;
+         
+      END LOOP;
+      
+      RETURN ary_out;
+
+   END tags;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -564,6 +610,64 @@ AS
 
    END unique_schemas;
    
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   MEMBER FUNCTION unique_tags
+   RETURN dz_swagger3_tag_list
+   AS
+      ary_results   dz_swagger3_tag_list;
+      int_results   PLS_INTEGER;
+      ary_x         MDSYS.SDO_STRING2_ARRAY;
+      int_x         PLS_INTEGER;
+   
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Setup for the harvest
+      --------------------------------------------------------------------------
+      int_results := 1;
+      ary_results := dz_swagger3_tag_list();
+      int_x       := 1;
+      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Pull the schema from the requestBody
+      --------------------------------------------------------------------------
+      IF self.operation_tags IS NOT NULL
+      AND self.operation_tags.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.operation_tags.COUNT
+         LOOP
+            IF dz_swagger3_util.a_in_b(
+                self.operation_tags(i).tag_name
+               ,ary_x
+            ) = 'FALSE'
+            AND self.operation_tags(i).tag_id IS NOT NULL
+            THEN
+               ary_results.EXTEND();
+               ary_results(int_results) := self.operation_tags(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.operation_tags(i).tag_name;
+               int_x := int_x + 1;
+               
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Return what we got
+      --------------------------------------------------------------------------
+      RETURN ary_results;
+      
+   END unique_tags;
+   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION operation_responses_keys
@@ -671,7 +775,7 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
                 'tags'
-               ,self.operation_tags
+               ,self.tags()
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -1105,10 +1209,12 @@ AS
             ,'  '
          );
          
-         FOR i IN 1 .. operation_tags.COUNT
+         ary_keys := self.tags();
+         
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty_str(
-                '- ' || operation_tags(i)
+                '- ' || ary_keys(i)
                ,p_pretty_print + 2
                ,'  '
             );

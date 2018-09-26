@@ -3,7 +3,7 @@ AUTHID DEFINER
 AS OBJECT (
     hash_key                 VARCHAR2(255 Char)
    ,operation_id             VARCHAR2(255 Char)
-   ,operation_tags           MDSYS.SDO_STRING2_ARRAY
+   ,operation_tags           dz_swagger3_tag_list
    ,operation_summary        VARCHAR2(255 Char)
    ,operation_description    VARCHAR2(4000 Char)
    ,operation_externalDocs   dz_swagger3_extrdocs_typ
@@ -33,7 +33,7 @@ AS OBJECT (
    ,CONSTRUCTOR FUNCTION dz_swagger3_operation_typ(
        p_hash_key                IN  VARCHAR2
       ,p_operation_id            IN  VARCHAR2
-      ,p_operation_tags          IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_operation_tags          IN  dz_swagger3_tag_list
       ,p_operation_summary       IN  VARCHAR2
       ,p_operation_description   IN  VARCHAR2
       ,p_operation_externalDocs  IN  dz_swagger3_extrdocs_typ
@@ -57,6 +57,11 @@ AS OBJECT (
    ,MEMBER FUNCTION key
     RETURN VARCHAR2
     
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   ,MEMBER FUNCTION tags
+    RETURN MDSYS.SDO_STRING2_ARRAY
+    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION unique_responses
@@ -76,6 +81,11 @@ AS OBJECT (
    ----------------------------------------------------------------------------
    ,MEMBER FUNCTION unique_schemas
     RETURN dz_swagger3_schema_nf_list
+    
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   ,MEMBER FUNCTION unique_tags
+    RETURN dz_swagger3_tag_list
 
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------

@@ -1,7 +1,8 @@
 CREATE OR REPLACE TYPE dz_swagger3_tag_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    tag_name            VARCHAR2(255 Char)
+    tag_id              VARCHAR2(255 Char)
+   ,tag_name            VARCHAR2(255 Char)
    ,tag_description     VARCHAR2(4000 Char)
    ,tag_externalDocs    dz_swagger3_extrdocs_typ
    
@@ -13,7 +14,8 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_tag_typ(
-       p_tag_name           IN  VARCHAR2
+       p_tag_id             IN  VARCHAR2
+      ,p_tag_name           IN  VARCHAR2
       ,p_tag_description    IN  VARCHAR2
       ,p_tag_externalDocs   IN  dz_swagger3_extrdocs_typ
    ) RETURN SELF AS RESULT

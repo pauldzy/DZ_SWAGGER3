@@ -14,13 +14,15 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_tag_typ(
-       p_tag_name           IN  VARCHAR2
+       p_tag_id             IN  VARCHAR2
+      ,p_tag_name           IN  VARCHAR2
       ,p_tag_description    IN  VARCHAR2
       ,p_tag_externalDocs   IN  dz_swagger3_extrdocs_typ
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
+      self.tag_id            := p_tag_id;
       self.tag_name          := p_tag_name;
       self.tag_description   := p_tag_description;
       self.tag_externalDocs  := p_tag_externalDocs;

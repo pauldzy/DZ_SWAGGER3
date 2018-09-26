@@ -160,7 +160,7 @@ AS
       -- Step 80
       -- Load the tags
       --------------------------------------------------------------------------
-      self.tags         := dz_swagger3_tag_list();
+      self.tags := self.unique_tags();
       
       --------------------------------------------------------------------------
       -- Step 90
@@ -477,6 +477,70 @@ AS
       RETURN ary_results;
    
    END unique_schemas;
+   
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   MEMBER FUNCTION unique_tags
+   RETURN dz_swagger3_tag_list
+   AS
+      ary_results   dz_swagger3_tag_list;
+      ary_working   dz_swagger3_tag_list;
+      int_results   PLS_INTEGER;
+      ary_x         MDSYS.SDO_STRING2_ARRAY;
+      int_x         PLS_INTEGER;
+   
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Setup for the harvest
+      --------------------------------------------------------------------------
+      int_results := 1;
+      ary_results := dz_swagger3_tag_list();
+      int_x       := 1;
+      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Pull the schema from the requestBody
+      --------------------------------------------------------------------------
+      IF self.paths IS NOT NULL
+      AND self.paths.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.paths.COUNT
+         LOOP
+            ary_working := self.paths(i).unique_tags();
+            
+            FOR j IN 1 .. ary_working.COUNT
+            LOOP         
+               IF dz_swagger3_util.a_in_b(
+                   ary_working(j).tag_name
+                  ,ary_x
+               ) = 'FALSE'
+               THEN
+                  ary_results.EXTEND();
+                  ary_results(int_results) := ary_working(j);
+                  int_results := int_results + 1;
+                  
+                  ary_x.EXTEND();
+                  ary_x(int_x) := ary_working(j).tag_name;
+                  int_x := int_x + 1;
+                  
+               END IF;
+               
+            END LOOP;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Return what we got
+      --------------------------------------------------------------------------
+      RETURN ary_results;
+      
+   END unique_tags;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
