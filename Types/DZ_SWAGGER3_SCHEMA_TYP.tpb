@@ -431,6 +431,11 @@ AS
       THEN
          RETURN 'TRUE';
          
+      ELSIF self.schema_description IS NOT NULL
+      AND LENGTH(self.schema_description) > 8
+      THEN
+         RETURN 'TRUE';
+         
       ELSE
          RETURN 'FALSE';
       
@@ -2250,8 +2255,61 @@ AS
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
+      clb_output       CLOB := '';
+      
    BEGIN
-      RETURN NULL;
+      
+      -------------------------------------------------------------------------
+      -- Step 20
+      -- Do the type element
+      --------------------------------------------------------------------------
+      IF self.schema_type IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'type: ' || self.schema_type
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Do the not combine schema array
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty_str(
+          self.hash_key || ': '
+         ,p_pretty_print
+         ,'  '
+      );
+      
+      FOR i IN 1 .. self.combine_schemas.COUNT
+      LOOP
+         clb_output := clb_output || dz_json_util.pretty(
+             '- ' || self.combine_schemas(i).toYAML(p_pretty_print + 2,'FALSE','FALSE')
+            ,p_pretty_print + 1
+            ,'  '
+         );
+         
+      END LOOP;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Cough it out with adjustments as needed
+      --------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+      
+      IF p_final_linefeed = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         
+      END IF;
+               
+      RETURN clb_output;
       
    END toYAML_combine;
    
@@ -2263,8 +2321,53 @@ AS
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
+      clb_output       CLOB := '';
+      
    BEGIN
-      RETURN NULL;
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Do the type element
+      --------------------------------------------------------------------------
+      IF self.schema_type IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'type: ' || self.schema_type
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Do the not schema holder element
+      --------------------------------------------------------------------------
+      clb_output := clb_output || dz_json_util.pretty_str(
+          'not: ' 
+         ,p_pretty_print
+         ,'  '
+      ) || self.schema_externalDocs.toYAML(
+         p_pretty_print + 1
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Cough it out with adjustments as needed
+      --------------------------------------------------------------------------
+      IF p_initial_indent = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+       
+      END IF;
+      
+      IF p_final_linefeed = 'FALSE'
+      THEN
+         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         
+      END IF;
+               
+      RETURN clb_output;
       
    END toYAML_not;
    
