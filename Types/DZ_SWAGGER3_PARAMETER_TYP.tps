@@ -17,6 +17,7 @@ AS OBJECT (
    ,parameter_example_number   NUMBER
    ,parameter_examples         dz_swagger3_example_list
    ,parameter_force_inline     VARCHAR2(5 Char)
+   ,parameter_list_hidden      VARCHAR2(5 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -49,6 +50,7 @@ AS OBJECT (
       ,p_parameter_example_number  IN  NUMBER
       ,p_parameter_examples        IN  dz_swagger3_example_list
       ,p_parameter_force_inline    IN  VARCHAR2
+      ,p_parameter_list_hidden     IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------

@@ -44,6 +44,7 @@ AS
             ,p_parameter_example_number  => a.parameter_example_number
             ,p_parameter_examples        => NULL
             ,p_parameter_force_inline    => a.parameter_force_inline
+            ,p_parameter_list_hidden     => a.parameter_list_hidden
          )
          INTO SELF
          FROM
@@ -86,6 +87,7 @@ AS
       ,p_parameter_example_number  IN  NUMBER
       ,p_parameter_examples        IN  dz_swagger3_example_list
       ,p_parameter_force_inline    IN  VARCHAR2
+      ,p_parameter_list_hidden     IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -106,6 +108,7 @@ AS
       self.parameter_example_number  := p_parameter_example_number;
       self.parameter_examples        := p_parameter_examples;
       self.parameter_force_inline    := p_parameter_force_inline;
+      self.parameter_list_hidden     := p_parameter_list_hidden;
       
       RETURN; 
       

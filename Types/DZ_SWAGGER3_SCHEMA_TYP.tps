@@ -41,6 +41,7 @@ UNDER dz_swagger3_schema_typ_nf(
    ,xml_prefix               VARCHAR2(255 Char)
    ,xml_attribute            VARCHAR2(5 Char)
    ,xml_wrapped              VARCHAR2(5 Char)
+   -----
    ,schema_force_inline      VARCHAR2(5 Char)
    -----
    ,combine_schemas          dz_swagger3_schema_nf_list
@@ -97,6 +98,7 @@ UNDER dz_swagger3_schema_typ_nf(
       ,p_xml_attribute           IN  VARCHAR2
       ,p_xml_wrapped             IN  VARCHAR2
       ,p_schema_force_inline     IN  VARCHAR2
+      ,p_property_list_hidden    IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -140,6 +142,7 @@ UNDER dz_swagger3_schema_typ_nf(
       ,p_schema_enum_string      IN  MDSYS.SDO_STRING2_ARRAY
       ,p_schema_enum_number      IN  MDSYS.SDO_NUMBER_ARRAY
       ,p_schema_force_inline     IN  VARCHAR2
+      ,p_property_list_hidden    IN  VARCHAR2
       ,p_combine_schemas         IN  dz_swagger3_schema_nf_list
       ,p_not_schema              IN  dz_swagger3_schema_typ_nf
    ) RETURN SELF AS RESULT

@@ -151,6 +151,7 @@ AS
             ,p_schema_enum_string      => p_parameters(i).parameter_schema.schema_enum_string
             ,p_schema_enum_number      => p_parameters(i).parameter_schema.schema_enum_number
             ,p_schema_force_inline     => p_parameters(i).parameter_schema.schema_force_inline
+            ,p_property_list_hidden    => p_parameters(i).parameter_schema.property_list_hidden
             ,p_combine_schemas         => p_parameters(i).parameter_schema.combine_schemas
             ,p_not_schema              => p_parameters(i).parameter_schema.not_schema
          );

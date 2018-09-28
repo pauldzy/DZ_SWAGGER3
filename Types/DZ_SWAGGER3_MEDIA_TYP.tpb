@@ -193,6 +193,7 @@ AS
                      ,p_schema_enum_string      => obj_schema.schema_enum_string
                      ,p_schema_enum_number      => obj_schema.schema_enum_number
                      ,p_schema_force_inline     => obj_schema.schema_force_inline
+                     ,p_property_list_hidden    => obj_schema.property_list_hidden
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
                   );
@@ -251,6 +252,7 @@ AS
                   ,p_schema_enum_string      => self.media_schema.schema_enum_string
                   ,p_schema_enum_number      => self.media_schema.schema_enum_number
                   ,p_schema_force_inline     => self.media_schema.schema_force_inline
+                  ,p_property_list_hidden    => self.media_schema.property_list_hidden
                   ,p_combine_schemas         => self.media_schema.combine_schemas
                   ,p_not_schema              => self.media_schema.not_schema
                );

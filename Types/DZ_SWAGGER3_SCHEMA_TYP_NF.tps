@@ -5,6 +5,7 @@ AS OBJECT (
     hash_key                 VARCHAR2(255 Char)
    ,schema_id                VARCHAR2(255 Char)
    ,schema_required          VARCHAR2(5 Char)
+   ,property_list_hidden     VARCHAR2(5 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

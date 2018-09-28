@@ -68,6 +68,7 @@ AS
             ,p_xml_attribute           => a.xml_attribute
             ,p_xml_wrapped             => a.xml_wrapped
             ,p_schema_force_inline     => a.schema_force_inline
+            ,p_property_list_hidden    => a.property_list_hidden
           )
          ,a.schema_items_schema_id
          INTO
@@ -178,6 +179,7 @@ AS
       ,p_xml_attribute           IN  VARCHAR2
       ,p_xml_wrapped             IN  VARCHAR2
       ,p_schema_force_inline     IN  VARCHAR2
+      ,p_property_list_hidden    IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -215,7 +217,9 @@ AS
       self.xml_prefix              := p_xml_prefix;
       self.xml_attribute           := p_xml_attribute;
       self.xml_wrapped             := p_xml_wrapped;
+      -----
       self.schema_force_inline     := p_schema_force_inline;
+      self.property_list_hidden    := p_property_list_hidden;
       
       RETURN; 
       
@@ -262,6 +266,7 @@ AS
       ,p_schema_enum_string      IN  MDSYS.SDO_STRING2_ARRAY
       ,p_schema_enum_number      IN  MDSYS.SDO_NUMBER_ARRAY
       ,p_schema_force_inline     IN  VARCHAR2
+      ,p_property_list_hidden    IN  VARCHAR2
       ,p_combine_schemas         IN  dz_swagger3_schema_nf_list
       ,p_not_schema              IN  dz_swagger3_schema_typ_nf
    ) RETURN SELF AS RESULT 
@@ -305,7 +310,10 @@ AS
       self.schema_properties       := p_schema_properties;
       self.schema_enum_string      := p_schema_enum_string;
       self.schema_enum_number      := p_schema_enum_number;
+      -----
       self.schema_force_inline     := p_schema_force_inline;
+      self.property_list_hidden    := p_property_list_hidden;
+      -----
       self.combine_schemas         := p_combine_schemas;
       self.not_schema              := p_not_schema;
       
@@ -531,6 +539,7 @@ AS
                         ,p_schema_enum_string      => obj_schema.schema_enum_string
                         ,p_schema_enum_number      => obj_schema.schema_enum_number
                         ,p_schema_force_inline     => obj_schema.schema_force_inline
+                        ,p_property_list_hidden    => obj_schema.property_list_hidden
                         ,p_combine_schemas         => obj_schema.combine_schemas
                         ,p_not_schema              => obj_schema.not_schema
                      );
@@ -596,6 +605,7 @@ AS
                      ,p_schema_enum_string      => obj_schema.schema_enum_string
                      ,p_schema_enum_number      => obj_schema.schema_enum_number
                      ,p_schema_force_inline     => obj_schema.schema_force_inline
+                     ,p_property_list_hidden    => obj_schema.property_list_hidden
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
                   );
@@ -676,6 +686,7 @@ AS
                      ,p_schema_enum_string      => obj_schema.schema_enum_string
                      ,p_schema_enum_number      => obj_schema.schema_enum_number
                      ,p_schema_force_inline     => obj_schema.schema_force_inline
+                     ,p_property_list_hidden    => obj_schema.property_list_hidden
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
                   );
@@ -740,6 +751,7 @@ AS
                   ,p_schema_enum_string      => obj_schema.schema_enum_string
                   ,p_schema_enum_number      => obj_schema.schema_enum_number
                   ,p_schema_force_inline     => obj_schema.schema_force_inline
+                  ,p_property_list_hidden    => obj_schema.property_list_hidden
                   ,p_combine_schemas         => obj_schema.combine_schemas
                   ,p_not_schema              => obj_schema.not_schema
                );
@@ -813,6 +825,7 @@ AS
                      ,p_schema_enum_string      => obj_schema.schema_enum_string
                      ,p_schema_enum_number      => obj_schema.schema_enum_number
                      ,p_schema_force_inline     => obj_schema.schema_force_inline
+                     ,p_property_list_hidden    => obj_schema.property_list_hidden
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
                   );
@@ -893,6 +906,7 @@ AS
                      ,p_schema_enum_string      => obj_schema.schema_enum_string
                      ,p_schema_enum_number      => obj_schema.schema_enum_number
                      ,p_schema_force_inline     => obj_schema.schema_force_inline
+                     ,p_property_list_hidden    => obj_schema.property_list_hidden
                      ,p_combine_schemas         => obj_schema.combine_schemas
                      ,p_not_schema              => obj_schema.not_schema
                   );
@@ -957,6 +971,7 @@ AS
                   ,p_schema_enum_string      => obj_schema.schema_enum_string
                   ,p_schema_enum_number      => obj_schema.schema_enum_number
                   ,p_schema_force_inline     => obj_schema.schema_force_inline
+                  ,p_property_list_hidden    => obj_schema.property_list_hidden
                   ,p_combine_schemas         => obj_schema.combine_schemas
                   ,p_not_schema              => obj_schema.not_schema
                );
@@ -1456,7 +1471,7 @@ AS
          int_counter := 1;
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            IF self.schema_property(i).properties_list_hidden = 'TRUE'
+            IF self.schema_properties(i).property_list_hidden = 'TRUE'
             THEN
                NULL;
                
@@ -2139,7 +2154,7 @@ AS
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            IF self.schema_property(i).properties_list_hidden = 'TRUE'
+            IF self.schema_properties(i).property_list_hidden = 'TRUE'
             THEN
                NULL;
                
