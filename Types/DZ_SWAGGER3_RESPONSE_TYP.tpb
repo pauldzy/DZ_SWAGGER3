@@ -73,7 +73,10 @@ AS
       AND a.media_id   = b.media_id
       WHERE
           a.versionid = p_versionid
-      AND a.parent_id = p_response_id;
+      AND a.parent_id = p_response_id
+      ORDER BY
+       a.media_order
+      ,a.media_type;
       
       --------------------------------------------------------------------------
       -- Step 

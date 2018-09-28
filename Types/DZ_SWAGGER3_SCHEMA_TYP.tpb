@@ -1456,20 +1456,27 @@ AS
          int_counter := 1;
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.schema_properties(i).toJSON(
-                  p_pretty_print => p_pretty_print + 2
-                )
-               ,p_pretty_print + 2
-            );
-            str_pad2 := ',';
-            
-            IF self.schema_properties(i).schema_required = 'TRUE'
+            IF self.schema_property(i).properties_list_hidden = 'TRUE'
             THEN
-               ary_required.EXTEND();
-               ary_required(int_counter) := self.schema_properties(i).hash_key;
-               int_counter := int_counter + 1;
+               NULL;
+               
+            ELSE
+               clb_hash := clb_hash || dz_json_util.pretty(
+                   str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.schema_properties(i).toJSON(
+                     p_pretty_print => p_pretty_print + 2
+                   )
+                  ,p_pretty_print + 2
+               );
+               str_pad2 := ',';
+               
+               IF self.schema_properties(i).schema_required = 'TRUE'
+               THEN
+                  ary_required.EXTEND();
+                  ary_required(int_counter) := self.schema_properties(i).hash_key;
+                  int_counter := int_counter + 1;
 
+               END IF;
+               
             END IF;
          
          END LOOP;
@@ -2132,21 +2139,28 @@ AS
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
-               ,p_pretty_print + 1
-               ,'  '
-            ) || self.schema_properties(i).toYAML(
-               p_pretty_print + 2
-            );
-            
-            IF self.schema_properties(i).schema_required = 'TRUE'
+            IF self.schema_property(i).properties_list_hidden = 'TRUE'
             THEN
-               ary_required.EXTEND();
-               ary_required(int_counter) := self.schema_properties(i).hash_key;
-               int_counter := int_counter + 1;
-               boo_check   := TRUE;
+               NULL;
+               
+            ELSE
+               clb_output := clb_output || dz_json_util.pretty(
+                   '''' || ary_keys(i) || ''': '
+                  ,p_pretty_print + 1
+                  ,'  '
+               ) || self.schema_properties(i).toYAML(
+                  p_pretty_print + 2
+               );
+               
+               IF self.schema_properties(i).schema_required = 'TRUE'
+               THEN
+                  ary_required.EXTEND();
+                  ary_required(int_counter) := self.schema_properties(i).hash_key;
+                  int_counter := int_counter + 1;
+                  boo_check   := TRUE;
 
+               END IF;
+               
             END IF;
          
          END LOOP;

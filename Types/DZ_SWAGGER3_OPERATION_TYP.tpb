@@ -880,13 +880,20 @@ AS
       
          FOR i IN 1 .. operation_parameters.COUNT
          LOOP
-            clb_hash := clb_hash || dz_json_util.pretty(
-               str_pad2 || self.operation_parameters(i).toJSON_ref(
-                  p_pretty_print => p_pretty_print + 2
-               )
-               ,p_pretty_print + 2
-            );
-            str_pad2 := ',';
+            IF self.operation_parameters(i).parameter_list_hidden = 'TRUE'
+            THEN
+               NULL;
+               
+            ELSE
+               clb_hash := clb_hash || dz_json_util.pretty(
+                  str_pad2 || self.operation_parameters(i).toJSON_ref(
+                     p_pretty_print => p_pretty_print + 2
+                  )
+                  ,p_pretty_print + 2
+               );
+               str_pad2 := ',';
+               
+            END IF;
          
          END LOOP;
          
@@ -1309,15 +1316,22 @@ AS
          
          FOR i IN 1 .. operation_parameters.COUNT
          LOOP
-            clb_output := clb_output || dz_json_util.pretty(
-                '- ' || self.operation_parameters(i).toYAML_ref(
-                   p_pretty_print + 3
-                  ,'FALSE'
-                  ,'FALSE'
-                )
-               ,p_pretty_print + 2
-               ,'  '
-            );
+            IF self.operation_parameters(i).parameter_list_hidden = 'TRUE'
+            THEN
+               NULL;
+               
+            ELSE
+               clb_output := clb_output || dz_json_util.pretty(
+                   '- ' || self.operation_parameters(i).toYAML_ref(
+                      p_pretty_print + 3
+                     ,'FALSE'
+                     ,'FALSE'
+                   )
+                  ,p_pretty_print + 2
+                  ,'  '
+               );
+               
+            END IF;
          
          END LOOP;
          

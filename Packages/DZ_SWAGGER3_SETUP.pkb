@@ -120,10 +120,11 @@ AS
       -- Build DOC table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_group('
-              || '    group_id            VARCHAR2(255 Char) NOT NULL '
-              || '   ,doc_id              VARCHAR2(255 Char) NOT NULL '
-              || '   ,path_id             VARCHAR2(255 Char) NOT NULL '
-              || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
+              || '    group_id                  VARCHAR2(255 Char) NOT NULL '
+              || '   ,doc_id                    VARCHAR2(255 Char) NOT NULL '
+              || '   ,path_id                   VARCHAR2(255 Char) NOT NULL '
+              || '   ,path_order                INTEGER NOT NULL '
+              || '   ,versionid                 VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -310,7 +311,6 @@ AS
               || '   ,path_endpoint             VARCHAR2(255 Char) NOT NULL '
               || '   ,path_summary              VARCHAR2(4000 Char) '
               || '   ,path_description          VARCHAR2(4000 Char) '
-              || '   ,path_order                INTEGER NOT NULL '
               || '   ,path_get_operation_id     VARCHAR2(255 Char) '
               || '   ,path_put_operation_id     VARCHAR2(255 Char) '
               || '   ,path_post_operation_id    VARCHAR2(255 Char) '
@@ -426,8 +426,8 @@ AS
               || '   ,parameter_example_number  NUMBER '
               || '   ,parameter_content         VARCHAR2(255 Char) '
               || '   ,parameter_sort            INTEGER NOT NULL '
-              || '   ,parameter_undocumented    VARCHAR2(5 Char) '
               || '   ,parameter_force_inline    VARCHAR2(5 Char) '
+              || '   ,parameter_list_hidden     VARCHAR2(5 Char) '
               || '   ,parameter_desc_updated    DATE '
               || '   ,parameter_desc_author     VARCHAR2(30 Char) '
               || '   ,parameter_desc_notes      VARCHAR2(255 Char) '
@@ -754,6 +754,7 @@ AS
               || '    parent_id           VARCHAR2(255 Char) NOT NULL '
               || '   ,media_type          VARCHAR2(255 Char) NOT NULL '
               || '   ,media_id            VARCHAR2(255 Char) NOT NULL '
+              || '   ,media_order         INTEGER '
               || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
@@ -876,6 +877,7 @@ AS
               || '   ,xml_attribute            VARCHAR2(5 Char) '
               || '   ,xml_wrapped              VARCHAR2(5 Char) '
               || '   ,schema_force_inline      VARCHAR2(5 Char) '
+              || '   ,property_list_hidden     VARCHAR2(5 Char) '
               || '   ,schema_desc_updated      DATE '
               || '   ,schema_desc_author       VARCHAR2(30 Char) '
               || '   ,schema_desc_notes        VARCHAR2(255 Char) '
