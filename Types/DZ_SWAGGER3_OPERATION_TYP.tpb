@@ -303,7 +303,7 @@ AS
 
       FOR i IN 1 .. self.operation_tags.COUNT
       LOOP
-         IF self.operation_tags(i).tag_id IS NOT NULL
+         IF self.operation_tags(i).tag_name IS NOT NULL
          THEN
             ary_out(i) := self.operation_tags(i).tag_name;
          
@@ -770,7 +770,8 @@ AS
       -- Step 30
       -- Add optional description 
       --------------------------------------------------------------------------
-      IF self.operation_tags IS NOT NULL
+      IF  self.operation_tags IS NOT NULL
+      AND self.operation_tags.COUNT > 0
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(

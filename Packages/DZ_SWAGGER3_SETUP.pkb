@@ -536,12 +536,15 @@ AS
               || '    CHECK (operation_id = TRIM(operation_id)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_operation_c02 '
-              || '    CHECK (operation_operationID = TRIM(operation_operationID)) '
+              || '    CHECK (operation_type IN (''get'',''put'',''post'',''delete'',''options'',''head'',''patch'',''trace'')) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_operation_c03 '
-              || '    CHECK (operation_deprecated IN (''TRUE'',''FALSE'')) '
+              || '    CHECK (operation_operationID = TRIM(operation_operationID)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_operation_c04 '
+              || '    CHECK (operation_deprecated IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_operation_c05 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -768,7 +771,7 @@ AS
       
       str_sql := 'ALTER TABLE dz_swagger3_media_parent_map '
               || 'ADD CONSTRAINT dz_swagger3_media_parent_mappk '
-              || 'PRIMARY KEY(versionid,parent_id,media_id) ';
+              || 'PRIMARY KEY(versionid,parent_id,media_type,media_id) ';
               
       IF p_index_tablespace IS NOT NULL
       THEN
@@ -784,9 +787,12 @@ AS
               || '    CHECK (parent_id = TRIM(parent_id)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_media_parent_mac02 '
-              || '    CHECK (media_id = TRIM(media_id)) '
+              || '    CHECK (media_type = TRIM(media_type)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_media_parent_mac03 '
+              || '    CHECK (media_id = TRIM(media_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_media_parent_mac04 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';

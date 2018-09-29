@@ -77,7 +77,7 @@ AS
       ORDER BY
        a.media_order
       ,a.media_type;
-      
+
       --------------------------------------------------------------------------
       -- Step 
       -- Return the completed object
