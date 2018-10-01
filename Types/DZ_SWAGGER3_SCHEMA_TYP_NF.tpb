@@ -46,6 +46,18 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER FUNCTION toJSON_component(
+       p_pretty_print      IN  INTEGER  DEFAULT NULL
+      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE'       
+   ) RETURN CLOB
+   AS
+   BEGIN
+      RETURN NULL;
+      
+   END toJSON_component;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_schema(
        p_pretty_print      IN  INTEGER  DEFAULT NULL
       ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE'       
@@ -104,6 +116,19 @@ AS
       RETURN NULL;
       
    END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toYAML_component(
+       p_pretty_print      IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS
+   BEGIN
+      RETURN NULL;
+      
+   END toYAML_component;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

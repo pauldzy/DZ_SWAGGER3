@@ -425,7 +425,6 @@ AS
               || '   ,parameter_example_string  VARCHAR2(255 Char) '
               || '   ,parameter_example_number  NUMBER '
               || '   ,parameter_content         VARCHAR2(255 Char) '
-              || '   ,parameter_sort            INTEGER NOT NULL '
               || '   ,parameter_force_inline    VARCHAR2(5 Char) '
               || '   ,parameter_list_hidden     VARCHAR2(5 Char) '
               || '   ,parameter_desc_updated    DATE '
@@ -1066,7 +1065,7 @@ AS
       str_sql := 'CREATE TABLE dz_swagger3_schema_combine_map('
               || '    schema_id                VARCHAR2(255 Char) NOT NULL '
               || '   ,combine_keyword          VARCHAR2(16 Char) NOT NULL '
-              || '   ,combine_schema           VARCHAR2(255 Char) NOT NULL '
+              || '   ,combine_schema_id        VARCHAR2(255 Char) NOT NULL '
               || '   ,combine_order            INTEGER '
               || '   ,versionid                VARCHAR2(40 Char) NOT NULL '
               || ') ';
@@ -1081,7 +1080,7 @@ AS
       
       str_sql := 'ALTER TABLE dz_swagger3_schema_combine_map '
               || 'ADD CONSTRAINT dz_swagger3_schema_combine_mpk '
-              || 'PRIMARY KEY(versionid,combine_keyword,combine_schema) ';
+              || 'PRIMARY KEY(versionid,schema_id,combine_keyword,combine_schema_id) ';
               
       IF p_index_tablespace IS NOT NULL
       THEN
@@ -1100,7 +1099,7 @@ AS
               || '    CHECK (combine_keyword = TRIM(combine_keyword)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_schema_combine_c03 '
-              || '    CHECK (combine_schema = TRIM(combine_schema)) '
+              || '    CHECK (combine_schema_id = TRIM(combine_schema_id)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_schema_combine_c04 '
               || '    CHECK (versionid = TRIM(versionid)) '

@@ -164,6 +164,13 @@ UNDER dz_swagger3_schema_typ_nf(
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   ,MEMBER PROCEDURE addCombined(
+       SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_versionid           IN  VARCHAR2
+   )
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    ,MEMBER PROCEDURE prune(
        SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
    )
@@ -202,6 +209,13 @@ UNDER dz_swagger3_schema_typ_nf(
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   ,OVERRIDING MEMBER FUNCTION toJSON_component(
+       p_pretty_print        IN  INTEGER  DEFAULT NULL
+      ,p_jsonschema          IN  VARCHAR2 DEFAULT 'FALSE'       
+   ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toJSON_schema(
        p_pretty_print        IN  INTEGER  DEFAULT NULL
       ,p_jsonschema          IN  VARCHAR2 DEFAULT 'FALSE'       
@@ -231,6 +245,14 @@ UNDER dz_swagger3_schema_typ_nf(
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toYAML(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,OVERRIDING MEMBER FUNCTION toYAML_component(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'

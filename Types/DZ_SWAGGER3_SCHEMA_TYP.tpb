@@ -103,16 +103,26 @@ AS
       -- Collect the enumerations
       --------------------------------------------------------------------------
       SELECT
-       a.enum_string
-      ,a.enum_number
+      a.enum_string
       BULK COLLECT INTO
-       self.schema_enum_string
-      ,self.schema_enum_number
+      self.schema_enum_string
       FROM
       dz_swagger3_schema_enum_map a
       WHERE
           a.versionid = p_versionid
-      AND a.schema_id = p_schema_id;
+      AND a.schema_id = p_schema_id
+      AND a.enum_string IS NOT NULL;
+      
+      SELECT
+      a.enum_number
+      BULK COLLECT INTO
+      self.schema_enum_number
+      FROM
+      dz_swagger3_schema_enum_map a
+      WHERE
+          a.versionid = p_versionid
+      AND a.schema_id = p_schema_id
+      AND a.enum_number IS NOT NULL;
       
       --------------------------------------------------------------------------
       -- Step 40
@@ -135,7 +145,15 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 50
+      -- Search for combine
+      --------------------------------------------------------------------------
+      self.addCombined(
+         p_versionid  => p_versionid
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 60
       -- Return completed object
       --------------------------------------------------------------------------
       RETURN;
@@ -368,9 +386,53 @@ AS
           a.versionid        = p_versionid
       AND a.parent_schema_id = self.schema_id
       ORDER BY
-      a.property_order;      
+      a.property_order;
+      
+   END addProperties; 
+      
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER PROCEDURE addCombined(
+       SELF         IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_versionid  IN  VARCHAR2
+   )
+   AS
+   BEGIN
+      
+      SELECT
+      dz_swagger3_schema_typ(
+          p_hash_key        => a.combine_keyword
+         ,p_schema_id       => a.combine_schema_id 
+         ,p_required        => NULL
+         ,p_versionid       => p_versionid 
+      )
+      BULK COLLECT INTO self.combine_schemas
+      FROM
+      dz_swagger3_schema_combine_map a
+      JOIN
+      dz_swagger3_schema b
+      ON
+          a.versionid        = b.versionid
+      AND a.schema_id        = b.schema_id
+      WHERE
+          a.versionid        = p_versionid
+      AND a.schema_id        = self.schema_id
+      ORDER BY
+      a.combine_order;
+      
+      IF  self.combine_schemas IS NOT NULL
+      AND self.combine_schemas.COUNT > 0
+      THEN
+         IF self.combine_schemas(1).hash_key = 'not'
+         THEN
+            self.not_schema := self.combine_schemas(1);
+            self.combine_schemas := NULL;
+         
+         END IF;
+      
+      END IF;           
    
-   END addProperties;
+   END addCombined;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -1033,14 +1095,16 @@ AS
    AS
    BEGIN
    
-      IF self.hash_key IN ('anyOf','allOf','oneOf')
+      IF  self.combine_schemas IS NOT NULL
+      AND self.combine_schemas.COUNT > 0
       THEN
          RETURN self.toJSON_combine(
              p_pretty_print   => p_pretty_print
             ,p_jsonschema     => p_jsonschema
          );
          
-      ELSIF self.hash_key = 'not'
+      ELSIF self.not_schema IS NOT NULL
+      AND self.not_schema.isNULL() = 'FALSE'
       THEN
          RETURN self.toJSON_not(
              p_pretty_print   => p_pretty_print
@@ -1066,6 +1130,41 @@ AS
       END IF;
       
    END toJSON;
+   
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   OVERRIDING MEMBER FUNCTION toJSON_component(
+       p_pretty_print      IN  INTEGER  DEFAULT NULL
+      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
+   ) RETURN CLOB
+   AS
+   BEGIN
+   
+      IF  self.combine_schemas IS NOT NULL
+      AND self.combine_schemas.COUNT > 0
+      THEN
+         RETURN self.toJSON_combine(
+             p_pretty_print   => p_pretty_print
+            ,p_jsonschema     => p_jsonschema
+         );
+         
+      ELSIF self.not_schema IS NOT NULL
+      AND self.not_schema.isNULL() = 'FALSE'
+      THEN
+         RETURN self.toJSON_not(
+             p_pretty_print   => p_pretty_print
+            ,p_jsonschema     => p_jsonschema
+         );
+         
+      ELSE
+         RETURN self.toJSON_schema(
+             p_pretty_print   => p_pretty_print
+            ,p_jsonschema     => p_jsonschema
+         );
+         
+      END IF;
+      
+   END toJSON_component;
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
@@ -1708,7 +1807,7 @@ AS
       
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.formatted2json(
-              self.hash_key
+              self.combine_schemas(1).hash_key
              ,clb_hash
              ,p_pretty_print + 1
           )
@@ -1821,7 +1920,8 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
-      IF self.hash_key IN ('anyOf','allOf','oneOf')
+      IF  self.combine_schemas IS NOT NULL
+      AND self.combine_schemas.COUNT > 0
       THEN
          RETURN self.toYAML_combine(
              p_pretty_print    => p_pretty_print
@@ -1829,15 +1929,14 @@ AS
             ,p_final_linefeed  => p_final_linefeed
          );
          
-         
-      ELSIF self.hash_key = 'not'
+      ELSIF self.not_schema IS NOT NULL
+      AND self.not_schema.isNULL() = 'FALSE'
       THEN
          RETURN self.toYAML_not(
              p_pretty_print    => p_pretty_print
             ,p_initial_indent  => p_initial_indent
             ,p_final_linefeed  => p_final_linefeed
          );
-         
          
       ELSE
          IF self.doRef() = 'TRUE'
@@ -1860,6 +1959,44 @@ AS
       END IF;
       
    END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   OVERRIDING MEMBER FUNCTION toYAML_component(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+   AS
+   BEGIN
+      IF  self.combine_schemas IS NOT NULL
+      AND self.combine_schemas.COUNT > 0
+      THEN
+         RETURN self.toYAML_combine(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+         
+      ELSIF self.not_schema IS NOT NULL
+      AND self.not_schema.isNULL() = 'FALSE'
+      THEN
+         RETURN self.toYAML_not(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+         
+      ELSE
+         RETURN self.toYAML_schema(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+         );
+         
+      END IF;
+      
+   END toYAML_component;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -1960,7 +2097,7 @@ AS
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'enum: '
-            ,p_pretty_print + 1
+            ,p_pretty_print
             ,'  '
          );
          
@@ -1968,7 +2105,7 @@ AS
          LOOP
             clb_output := clb_output || dz_json_util.pretty_str(
                 '- ' || self.schema_enum_string(i)
-               ,p_pretty_print + 2
+               ,p_pretty_print + 1
                ,'  '
             );
             
@@ -1979,7 +2116,7 @@ AS
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'enum: '
-            ,p_pretty_print + 1
+            ,p_pretty_print
             ,'  '
          );
          
@@ -1987,7 +2124,7 @@ AS
          LOOP
             clb_output := clb_output || dz_json_util.pretty_str(
                 '- ' || self.schema_enum_number(i)
-               ,p_pretty_print + 2
+               ,p_pretty_print + 1
                ,'  '
             );
             
@@ -2307,7 +2444,7 @@ AS
       -- Do the not combine schema array
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
-          self.hash_key || ': '
+          self.combine_schemas(1).hash_key || ': '
          ,p_pretty_print
          ,'  '
       );
