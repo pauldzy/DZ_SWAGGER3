@@ -32,6 +32,7 @@ AS
          SELECT
           dz_swagger3_schema_typ(
              p_schema_id               => a.schema_id
+            ,p_schema_category         => a.schema_category
             ,p_schema_title            => a.schema_title
             ,p_schema_type             => a.schema_type
             ,p_schema_description      => a.schema_description
@@ -126,15 +127,15 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 40
-      -- Process object definitions for remaining schema types
+      -- Use schema category to more efficiently search for children schemas
       --------------------------------------------------------------------------
-      IF self.schema_type = 'object'
+      IF self.schema_category = 'object'
       THEN
          self.addProperties(
             p_versionid  => p_versionid
          );
       
-      ELSIF self.schema_type = 'array'
+      ELSIF self.schema_category = 'array'
       AND str_items_schema_id IS NOT NULL
       THEN
          self.addItemsSchema(
@@ -142,18 +143,31 @@ AS
             ,p_versionid       => p_versionid
          );
          
+      ELSIF self.schema_category = 'combine'
+      THEN
+         self.addCombined(
+            p_versionid  => p_versionid
+         );
+      
+      ELSIF self.schema_categoy IS NULL
+      THEN
+         self.addProperties(
+            p_versionid  => p_versionid
+         );
+         
+         self.addItemsSchema(
+             p_items_schema_id => str_items_schema_id
+            ,p_versionid       => p_versionid
+         );
+         
+         self.addCombined(
+            p_versionid  => p_versionid
+         );
+      
       END IF;
       
       --------------------------------------------------------------------------
       -- Step 50
-      -- Search for combine
-      --------------------------------------------------------------------------
-      self.addCombined(
-         p_versionid  => p_versionid
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 60
       -- Return completed object
       --------------------------------------------------------------------------
       RETURN;
@@ -164,6 +178,7 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
        p_schema_id               IN  VARCHAR2
+      ,p_schema_category         IN  VARCHAR2
       ,p_schema_title            IN  VARCHAR2
       ,p_schema_type             IN  VARCHAR2
       ,p_schema_description      IN  VARCHAR2
@@ -203,6 +218,7 @@ AS
    BEGIN 
    
       self.schema_id               := p_schema_id;
+      self.schema_category         := p_schema_category;
       self.schema_title            := p_schema_title;
       self.schema_type             := p_schema_type;
       self.schema_description      := p_schema_description;
@@ -247,6 +263,7 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
        p_schema_id               IN  VARCHAR2
+      ,p_schema_category         IN  VARCHAR2
       ,p_schema_title            IN  VARCHAR2
       ,p_schema_type             IN  VARCHAR2
       ,p_schema_description      IN  VARCHAR2
@@ -286,12 +303,12 @@ AS
       ,p_schema_force_inline     IN  VARCHAR2
       ,p_property_list_hidden    IN  VARCHAR2
       ,p_combine_schemas         IN  dz_swagger3_schema_nf_list
-      ,p_not_schema              IN  dz_swagger3_schema_typ_nf
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
       self.schema_id               := p_schema_id;
+      self.schema_category         := p_schema_category;
       self.schema_title            := p_schema_title;
       self.schema_type             := p_schema_type;
       self.schema_description      := p_schema_description;
@@ -333,7 +350,6 @@ AS
       self.property_list_hidden    := p_property_list_hidden;
       -----
       self.combine_schemas         := p_combine_schemas;
-      self.not_schema              := p_not_schema;
       
       RETURN; 
       
@@ -1103,14 +1119,6 @@ AS
             ,p_jsonschema     => p_jsonschema
          );
          
-      ELSIF self.not_schema IS NOT NULL
-      AND self.not_schema.isNULL() = 'FALSE'
-      THEN
-         RETURN self.toJSON_not(
-             p_pretty_print   => p_pretty_print
-            ,p_jsonschema     => p_jsonschema
-         );
-         
       ELSE
          IF self.doRef() = 'TRUE'
          THEN
@@ -1144,14 +1152,6 @@ AS
       AND self.combine_schemas.COUNT > 0
       THEN
          RETURN self.toJSON_combine(
-             p_pretty_print   => p_pretty_print
-            ,p_jsonschema     => p_jsonschema
-         );
-         
-      ELSIF self.not_schema IS NOT NULL
-      AND self.not_schema.isNULL() = 'FALSE'
-      THEN
-         RETURN self.toJSON_not(
              p_pretty_print   => p_pretty_print
             ,p_jsonschema     => p_jsonschema
          );
@@ -1361,11 +1361,11 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 100
-      -- Add optional description object
+      -- Add optional readOnly and writeOnly attributes
       --------------------------------------------------------------------------
-      IF self.schema_readonly IS NOT NULL
+      IF self.schema_readOnly IS NOT NULL
       THEN
-         IF LOWER(self.schema_readonly) = 'true'
+         IF LOWER(self.schema_readOnly) = 'true'
          THEN
             boo_temp := TRUE;
             
@@ -1376,7 +1376,30 @@ AS
       
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
-                'readonly'
+                'readOnly'
+               ,boo_temp
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+      
+      END IF;
+      
+      IF self.schema_writeOnly IS NOT NULL
+      THEN
+         IF LOWER(self.schema_writeOnly) = 'true'
+         THEN
+            boo_temp := TRUE;
+            
+         ELSE
+            boo_temp := FALSE;
+         
+         END IF;
+      
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'writeOnly'
                ,boo_temp
                ,p_pretty_print + 1
             )
@@ -1388,23 +1411,28 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 110
-      -- Add optional description object
+      -- Add optional minItems and MaxItems attribute
       --------------------------------------------------------------------------
-      IF self.schema_writeonly IS NOT NULL
+      IF self.schema_maxItems IS NOT NULL
       THEN
-         IF LOWER(self.schema_writeonly) = 'true'
-         THEN
-            boo_temp := TRUE;
-            
-         ELSE
-            boo_temp := FALSE;
-         
-         END IF;
-      
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
-                'writeonly'
-               ,boo_temp
+                'maxItems'
+               ,self.schema_maxItems
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+      
+      END IF;
+      
+      IF self.schema_minItems IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'minItems'
+               ,self.schema_minItems
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -1735,11 +1763,27 @@ AS
       str_pad2         VARCHAR2(1 Char);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       clb_hash         CLOB;
+      boo_is_not       BOOLEAN := FALSE;
       
    BEGIN
       
       --------------------------------------------------------------------------
       -- Step 10
+      -- Check over object status
+      --------------------------------------------------------------------------
+      IF self.combine_schemas IS NULL
+      OR self.combine_schemas.COUNT = 0
+      THEN
+         RAISE_APPLICATION_ERROR(-20001,'err');
+         
+      ELSIF self.combine_schemas(1).hash_key = 'not'
+      THEN
+         boo_is_not := TRUE;
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
       -- Build the wrapper
       --------------------------------------------------------------------------
       IF p_pretty_print IS NULL
@@ -1756,7 +1800,7 @@ AS
       str_pad1 := str_pad;
       
       --------------------------------------------------------------------------
-      -- Step 20
+      -- Step 30
       -- Add base attributes
       --------------------------------------------------------------------------
       IF self.schema_type IS NOT NULL
@@ -1777,43 +1821,58 @@ AS
       -- Step 40
       -- Add the left bracket
       --------------------------------------------------------------------------
-      str_pad2 := str_pad;
-         
-      IF p_pretty_print IS NULL
+      IF boo_is_not
       THEN
-         clb_hash := dz_json_util.pretty('[',NULL);
-         
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad || dz_json_main.formatted2json(
+                'not'
+               ,self.not_schema.toJSON(p_pretty_print + 1)
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad := ',';
+      
       ELSE
-         clb_hash := dz_json_util.pretty('[',-1);
+         str_pad2 := str_pad;
+            
+         IF p_pretty_print IS NULL
+         THEN
+            clb_hash := dz_json_util.pretty('[',NULL);
+            
+         ELSE
+            clb_hash := dz_json_util.pretty('[',-1);
+            
+         END IF;
+      
+         FOR i IN 1 .. combine_schemas.COUNT
+         LOOP
+            clb_hash := clb_hash || dz_json_util.pretty(
+                str_pad2 || self.combine_schemas(i).toJSON(
+                  p_pretty_print => p_pretty_print + 1
+                )
+               ,p_pretty_print + 1
+            );
+            str_pad2 := ',';
          
-      END IF;
-   
-      FOR i IN 1 .. combine_schemas.COUNT
-      LOOP
+         END LOOP;
+         
          clb_hash := clb_hash || dz_json_util.pretty(
-             str_pad2 || self.combine_schemas(i).toJSON(
-               p_pretty_print => p_pretty_print + 1
+             ']'
+            ,p_pretty_print + 1,NULL,NULL
+         );
+         
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 self.combine_schemas(1).hash_key
+                ,clb_hash
+                ,p_pretty_print + 1
              )
             ,p_pretty_print + 1
          );
-         str_pad2 := ',';
-      
-      END LOOP;
-      
-      clb_hash := clb_hash || dz_json_util.pretty(
-          ']'
-         ,p_pretty_print + 1,NULL,NULL
-      );
-      
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              self.combine_schemas(1).hash_key
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
+         str_pad1 := ',';
+         
+      END IF;
 
       --------------------------------------------------------------------------
       -- Step 40
@@ -1832,85 +1891,6 @@ AS
       
    END toJSON_combine;
    
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   OVERRIDING MEMBER FUNCTION toJSON_not(
-       p_pretty_print      IN  INTEGER  DEFAULT NULL
-      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
-   ) RETURN CLOB
-   AS
-      clb_output       CLOB;
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      
-   BEGIN
-      
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Build the wrapper
-      --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad  := '';
-         
-      ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
-         str_pad  := ' ';
-         
-      END IF;
-      
-      str_pad1 := str_pad;
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Add not schema item
-      --------------------------------------------------------------------------
-      IF self.schema_type IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'type'
-               ,self.schema_type
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Add not schema item
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad || dz_json_main.formatted2json(
-             'not'
-            ,self.not_schema.toJSON(p_pretty_print + 1)
-            ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad := ',';
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Add the left bracket
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Cough it out
-      --------------------------------------------------------------------------
-      RETURN clb_output;
-      
-   END toJSON_not;
-   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    OVERRIDING MEMBER FUNCTION toYAML(
@@ -1924,15 +1904,6 @@ AS
       AND self.combine_schemas.COUNT > 0
       THEN
          RETURN self.toYAML_combine(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-         );
-         
-      ELSIF self.not_schema IS NOT NULL
-      AND self.not_schema.isNULL() = 'FALSE'
-      THEN
-         RETURN self.toYAML_not(
              p_pretty_print    => p_pretty_print
             ,p_initial_indent  => p_initial_indent
             ,p_final_linefeed  => p_final_linefeed
@@ -1973,15 +1944,6 @@ AS
       AND self.combine_schemas.COUNT > 0
       THEN
          RETURN self.toYAML_combine(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-         );
-         
-      ELSIF self.not_schema IS NOT NULL
-      AND self.not_schema.isNULL() = 'FALSE'
-      THEN
-         RETURN self.toYAML_not(
              p_pretty_print    => p_pretty_print
             ,p_initial_indent  => p_initial_indent
             ,p_final_linefeed  => p_final_linefeed
@@ -2148,12 +2110,22 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 90
-      -- Add optional description object
+      -- Add optional readonly and writeonly object
       --------------------------------------------------------------------------
-      IF self.schema_readonly IS NOT NULL
+      IF self.schema_readOnly IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'readonly: ' || LOWER(self.schema_readonly)
+             'readOnly: ' || LOWER(self.schema_readOnly)
+            ,p_pretty_print
+            ,'  '
+         );
+      
+      END IF;
+      
+      IF self.schema_writeOnly IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'writeOnly: ' || LOWER(self.schema_writeOnly)
             ,p_pretty_print
             ,'  '
          );
@@ -2162,12 +2134,22 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 100
-      -- Add optional description object
+      -- Add optional maxitems and minitems
       --------------------------------------------------------------------------
-      IF self.schema_writeonly IS NOT NULL
+      IF self.schema_minItems IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'writeonly: ' || LOWER(self.schema_writeonly)
+             'minItems: ' || self.schema_minItems
+            ,p_pretty_print
+            ,'  '
+         );
+      
+      END IF;
+      
+      IF self.schema_maxItems IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'maxItems: ' || self.schema_maxItems
             ,p_pretty_print
             ,'  '
          );
@@ -2422,10 +2404,26 @@ AS
    ) RETURN CLOB
    AS
       clb_output       CLOB := '';
+      boo_is_not       BOOLEAN := FALSE;
       
    BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check over object status
+      --------------------------------------------------------------------------
+      IF self.combine_schemas IS NULL
+      OR self.combine_schemas.COUNT = 0
+      THEN
+         RAISE_APPLICATION_ERROR(-20001,'err');
+         
+      ELSIF self.combine_schemas(1).hash_key = 'not'
+      THEN
+         boo_is_not := TRUE;
       
-      -------------------------------------------------------------------------
+      END IF;
+      
+      --------------------------------------------------------------------------
       -- Step 20
       -- Do the type element
       --------------------------------------------------------------------------
@@ -2443,21 +2441,33 @@ AS
       -- Step 20
       -- Do the not combine schema array
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty_str(
-          self.combine_schemas(1).hash_key || ': '
-         ,p_pretty_print
-         ,'  '
-      );
+      IF boo_is_not THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'not: ' 
+            ,p_pretty_print
+            ,'  '
+         ) || self.schema_externalDocs.toYAML(
+            p_pretty_print + 1
+         );
       
-      FOR i IN 1 .. self.combine_schemas.COUNT
-      LOOP
-         clb_output := clb_output || dz_json_util.pretty(
-             '- ' || self.combine_schemas(i).toYAML(p_pretty_print + 2,'FALSE','FALSE')
-            ,p_pretty_print + 1
+      ELSE 
+         clb_output := clb_output || dz_json_util.pretty_str(
+             self.combine_schemas(1).hash_key || ': '
+            ,p_pretty_print
             ,'  '
          );
+      
+         FOR i IN 1 .. self.combine_schemas.COUNT
+         LOOP
+            clb_output := clb_output || dz_json_util.pretty(
+                '- ' || self.combine_schemas(i).toYAML(p_pretty_print + 2,'FALSE','FALSE')
+               ,p_pretty_print + 1
+               ,'  '
+            );
+            
+         END LOOP;
          
-      END LOOP;
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 30
@@ -2478,64 +2488,6 @@ AS
       RETURN clb_output;
       
    END toYAML_combine;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   OVERRIDING MEMBER FUNCTION toYAML_not(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-   ) RETURN CLOB
-   AS
-      clb_output       CLOB := '';
-      
-   BEGIN
-      
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Do the type element
-      --------------------------------------------------------------------------
-      IF self.schema_type IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'type: ' || self.schema_type
-            ,p_pretty_print
-            ,'  '
-         );
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Do the not schema holder element
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty_str(
-          'not: ' 
-         ,p_pretty_print
-         ,'  '
-      ) || self.schema_externalDocs.toYAML(
-         p_pretty_print + 1
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Cough it out with adjustments as needed
-      --------------------------------------------------------------------------
-      IF p_initial_indent = 'FALSE'
-      THEN
-         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
-       
-      END IF;
-      
-      IF p_final_linefeed = 'FALSE'
-      THEN
-         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
-         
-      END IF;
-               
-      RETURN clb_output;
-      
-   END toYAML_not;
    
 END;
 /

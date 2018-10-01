@@ -2,6 +2,7 @@ CREATE OR REPLACE TYPE dz_swagger3_schema_typ FORCE
 UNDER dz_swagger3_schema_typ_nf(
     
     schema_title             VARCHAR2(255 Char)
+   ,schema_category          VARCHAR2(255 Char)
    ,schema_type              VARCHAR2(255 Char)
    ,schema_description       VARCHAR2(4000 Char)
    ,schema_format            VARCHAR2(255 Char)
@@ -45,7 +46,6 @@ UNDER dz_swagger3_schema_typ_nf(
    ,schema_force_inline      VARCHAR2(5 Char)
    -----
    ,combine_schemas          dz_swagger3_schema_nf_list
-   ,not_schema               dz_swagger3_schema_typ_nf
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -65,6 +65,7 @@ UNDER dz_swagger3_schema_typ_nf(
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
        p_schema_id               IN  VARCHAR2
+      ,p_schema_category         IN  VARCHAR2
       ,p_schema_title            IN  VARCHAR2
       ,p_schema_type             IN  VARCHAR2
       ,p_schema_description      IN  VARCHAR2
@@ -105,6 +106,7 @@ UNDER dz_swagger3_schema_typ_nf(
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
        p_schema_id               IN  VARCHAR2
+      ,p_schema_category         IN  VARCHAR2
       ,p_schema_title            IN  VARCHAR2
       ,p_schema_type             IN  VARCHAR2
       ,p_schema_description      IN  VARCHAR2
@@ -144,7 +146,6 @@ UNDER dz_swagger3_schema_typ_nf(
       ,p_schema_force_inline     IN  VARCHAR2
       ,p_property_list_hidden    IN  VARCHAR2
       ,p_combine_schemas         IN  dz_swagger3_schema_nf_list
-      ,p_not_schema              IN  dz_swagger3_schema_typ_nf
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -234,13 +235,6 @@ UNDER dz_swagger3_schema_typ_nf(
        p_pretty_print        IN  INTEGER  DEFAULT NULL
       ,p_jsonschema          IN  VARCHAR2 DEFAULT 'FALSE'       
    ) RETURN CLOB
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,OVERRIDING MEMBER FUNCTION toJSON_not(
-       p_pretty_print        IN  INTEGER  DEFAULT NULL
-      ,p_jsonschema          IN  VARCHAR2 DEFAULT 'FALSE'       
-   ) RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -277,14 +271,6 @@ UNDER dz_swagger3_schema_typ_nf(
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toYAML_combine(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-   ) RETURN CLOB
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,OVERRIDING MEMBER FUNCTION toYAML_not(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
