@@ -35,8 +35,9 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print      IN  INTEGER  DEFAULT NULL
-      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE'       
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'       
    ) RETURN CLOB
    AS
    BEGIN
@@ -47,8 +48,9 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_component(
-       p_pretty_print      IN  INTEGER  DEFAULT NULL
-      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE'       
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'       
    ) RETURN CLOB
    AS
    BEGIN
@@ -59,8 +61,9 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_schema(
-       p_pretty_print      IN  INTEGER  DEFAULT NULL
-      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE'       
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'       
    ) RETURN CLOB
    AS
    BEGIN
@@ -71,8 +74,9 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_ref(
-       p_pretty_print      IN  INTEGER  DEFAULT NULL
-      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE'       
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'       
    ) RETURN CLOB
    AS
    BEGIN
@@ -83,8 +87,9 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_combine(
-       p_pretty_print      IN  INTEGER  DEFAULT NULL
-      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE'       
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'       
    ) RETURN CLOB
    AS
    BEGIN
@@ -95,9 +100,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-       p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
    BEGIN
@@ -108,9 +114,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML_component(
-       p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
    BEGIN
@@ -121,9 +128,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML_schema(
-       p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
    BEGIN
@@ -134,9 +142,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML_ref(
-       p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
    BEGIN
@@ -147,9 +156,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML_combine(
-       p_pretty_print      IN  INTEGER   DEFAULT 0
+       p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
    BEGIN

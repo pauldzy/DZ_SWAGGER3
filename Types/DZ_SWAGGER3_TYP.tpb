@@ -575,7 +575,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-      p_pretty_print      IN  INTEGER   DEFAULT NULL
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -630,7 +631,10 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.formatted2json(
               'info'
-             ,self.info.toJSON(p_pretty_print + 1)
+             ,self.info.toJSON(
+                p_pretty_print   => p_pretty_print + 1
+               ,p_force_inline   => p_force_inline
+             )
              ,p_pretty_print + 1
           )
          ,p_pretty_print + 1
@@ -662,7 +666,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || self.servers(i).toJSON(
-                  p_pretty_print => p_pretty_print + 2
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -714,7 +719,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.paths(i).toJSON(
-                  p_pretty_print => p_pretty_print + 2
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -749,7 +755,10 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
                 'components'
-               ,self.components.toJSON(p_pretty_print + 1)
+               ,self.components.toJSON(
+                   p_pretty_print   => p_pretty_print + 1
+                  ,p_force_inline   => p_force_inline
+               )
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -783,7 +792,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || self.security(i).toJSON(
-                  p_pretty_print => p_pretty_print + 1
+                   p_pretty_print   => p_pretty_print + 1
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 1
             );
@@ -833,7 +843,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || self.tags(i).toJSON(
-                  p_pretty_print => p_pretty_print + 1
+                   p_pretty_print   => p_pretty_print + 1
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 1
             );
@@ -868,7 +879,10 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
                 'externalDocs'
-               ,self.externalDocs.toJSON(p_pretty_print + 1)
+               ,self.externalDocs.toJSON(
+                   p_pretty_print   => p_pretty_print + 1
+                  ,p_force_inline   => p_force_inline
+                )
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -900,6 +914,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -937,7 +952,10 @@ AS
           'info: '
          ,p_pretty_print
          ,'  '
-      ) || self.info.toYAML(p_pretty_print + 1);
+      ) || self.info.toYAML(
+          p_pretty_print   => p_pretty_print + 1
+         ,p_force_inline   => p_force_inline
+      );
 
       --------------------------------------------------------------------------
       -- Step 40
@@ -955,7 +973,12 @@ AS
          FOR i IN 1 .. self.servers.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '- ' || self.servers(i).toYAML(p_pretty_print + 2,'FALSE','FALSE')
+                '- ' || self.servers(i).toYAML(
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_initial_indent => 'FALSE'
+                  ,p_final_linefeed => 'FALSE'
+                  ,p_force_inline   => p_force_inline
+                )
                ,p_pretty_print + 1
                ,'  '
             );
@@ -988,7 +1011,10 @@ AS
                 '"' || self.paths(i).hash_key || '": '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.paths(i).toYAML(p_pretty_print + 2);
+            ) || self.paths(i).toYAML(
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline    
+            );
 
          END LOOP;
          
@@ -1006,7 +1032,8 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.components.toYAML(
-            p_pretty_print + 1
+             p_pretty_print   => p_pretty_print + 1
+            ,p_force_inline   => p_force_inline
          );
          
       END IF;
@@ -1031,7 +1058,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.security(i).toYAML(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
             
          END LOOP;
@@ -1058,7 +1086,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.tags(i).toYAML(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
             
          END LOOP;
@@ -1077,7 +1106,8 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.externalDocs.toYAML(
-            p_pretty_print + 1
+             p_pretty_print   => p_pretty_print + 1
+            ,p_force_inline   => p_force_inline
          );
          
       END IF;

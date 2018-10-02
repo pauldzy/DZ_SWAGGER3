@@ -731,7 +731,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -787,7 +788,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 40
-      -- Add optional description 
+      -- Add summary 
       --------------------------------------------------------------------------
       IF self.operation_summary IS NOT NULL
       THEN
@@ -805,7 +806,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 50
-      -- Add optional description 
+      -- Add description 
       --------------------------------------------------------------------------
       IF self.operation_description IS NOT NULL
       THEN
@@ -831,7 +832,10 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
                 'externalDocs'
-               ,self.operation_externalDocs.toJSON(p_pretty_print + 1)
+               ,self.operation_externalDocs.toJSON(
+                   p_pretty_print =>  p_pretty_print + 1
+                  ,p_force_inline =>  p_force_inline   
+                )
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -842,7 +846,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 70
-      -- Add optional description 
+      -- Add optional operationId 
       --------------------------------------------------------------------------
       IF self.operation_operationId IS NOT NULL
       THEN
@@ -887,8 +891,9 @@ AS
                
             ELSE
                clb_hash := clb_hash || dz_json_util.pretty(
-                  str_pad2 || self.operation_parameters(i).toJSON_ref(
-                     p_pretty_print => p_pretty_print + 2
+                  str_pad2 || self.operation_parameters(i).toJSON(
+                      p_pretty_print  => p_pretty_print + 2
+                     ,p_force_inline  => p_force_inline
                   )
                   ,p_pretty_print + 2
                );
@@ -926,7 +931,8 @@ AS
              str_pad1 || dz_json_main.formatted2json(
                 'requestBody'
                ,self.operation_requestBody.toJSON_ref(
-                  p_pretty_print + 1
+                   p_pretty_print  => p_pretty_print + 1
+                  ,p_force_inline  => p_force_inline
                 )                 
                ,p_pretty_print + 1
             )
@@ -964,7 +970,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.operation_responses(i).toJSON_ref(
-                  p_pretty_print => p_pretty_print + 2
+                   p_pretty_print  => p_pretty_print + 2
+                  ,p_force_inline  => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -1017,7 +1024,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.operation_callbacks(i).toJSON(
-                  p_pretty_print => p_pretty_print + 2
+                   p_pretty_print  => p_pretty_print + 2
+                  ,p_force_inline  => p_force_inline
                 )
                ,p_pretty_print + 1
             );
@@ -1094,7 +1102,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                str_pad2 || self.operation_security(i).toJSON(
-                  p_pretty_print => p_pretty_print + 1
+                   p_pretty_print  => p_pretty_print + 1
+                  ,p_force_inline  => p_force_inline
                )
                ,p_pretty_print + 1
             );
@@ -1144,7 +1153,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                str_pad2 || self.operation_servers(i).toJSON(
-                  p_pretty_print => p_pretty_print + 2
+                   p_pretty_print  => p_pretty_print + 2
+                  ,p_force_inline  => p_force_inline
                )
                ,p_pretty_print + 2
             );
@@ -1192,6 +1202,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -1267,7 +1278,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 50
-      -- Write the description
+      -- Write the externalDoc object
       --------------------------------------------------------------------------
       IF  self.operation_externalDocs IS NOT NULL
       AND self.operation_externalDocs.isNULL() = 'FALSE'
@@ -1277,7 +1288,8 @@ AS
             ,p_pretty_print + 1
             ,'  '
          ) || self.operation_externalDocs.toYAML(
-            p_pretty_print + 1
+             p_pretty_print  => p_pretty_print + 1
+            ,p_force_inline  => p_force_inline
          );
          
       END IF;
@@ -1324,9 +1336,10 @@ AS
             ELSE
                clb_output := clb_output || dz_json_util.pretty(
                    '- ' || self.operation_parameters(i).toYAML_ref(
-                      p_pretty_print + 3
-                     ,'FALSE'
-                     ,'FALSE'
+                      p_pretty_print   => p_pretty_print + 3
+                     ,p_initial_indent => 'FALSE'
+                     ,p_final_linefeed => 'FALSE'
+                     ,p_force_inline   => p_force_inline
                    )
                   ,p_pretty_print + 2
                   ,'  '
@@ -1350,7 +1363,8 @@ AS
             ,p_pretty_print + 1
             ,'  '
          ) || self.operation_requestBody.toYAML_ref(
-            p_pretty_print + 2
+             p_pretty_print   => p_pretty_print + 2
+            ,p_force_inline   => p_force_inline
          );
          
       END IF;
@@ -1380,7 +1394,8 @@ AS
                ,p_pretty_print + 2
                ,'  '
             ) || self.operation_responses(i).toYAML_ref(
-               p_pretty_print + 3
+                p_pretty_print   => p_pretty_print + 3
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -1412,7 +1427,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.operation_callbacks(i).toYAML(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -1456,7 +1472,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.operation_security(i).toYAML(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -1483,9 +1500,10 @@ AS
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 '- ' || self.operation_servers(i).toYAML(
-                  p_pretty_print + 3
-                  ,'FALSE'
-                  ,'FALSE'
+                   p_pretty_print   => p_pretty_print + 3
+                  ,p_initial_indent => 'FALSE'
+                  ,p_final_linefeed => 'FALSE'
+                  ,p_force_inline   => p_force_inline
                )
                ,p_pretty_print + 2
                ,'  '

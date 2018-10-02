@@ -339,7 +339,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -395,7 +396,10 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
                 'schema'
-               ,self.media_schema.toJSON(p_pretty_print + 1)
+               ,self.media_schema.toJSON(
+                   p_pretty_print  => p_pretty_print + 1
+                  ,p_force_inline  => p_force_inline
+                )
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -462,7 +466,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.media_examples(i).toJSON(
-                  p_pretty_print => p_pretty_print + 2
+                   p_pretty_print  => p_pretty_print + 2
+                  ,p_force_inline  => p_force_inline
                 )
                ,p_pretty_print + 1
             );

@@ -943,8 +943,9 @@ AS
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    OVERRIDING MEMBER FUNCTION toJSON(
-       p_pretty_print      IN  INTEGER  DEFAULT NULL
-      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS
    BEGIN
@@ -954,20 +955,24 @@ AS
       THEN
          RETURN self.toJSON_combine(
              p_pretty_print   => p_pretty_print
+            ,p_force_inline   => p_force_inline
             ,p_jsonschema     => p_jsonschema
          );
          
       ELSE
-         IF self.doRef() = 'TRUE'
+         IF  self.doRef() = 'TRUE'
+         AND p_force_inline <> 'TRUE'
          THEN
             RETURN self.toJSON_ref(
                 p_pretty_print   => p_pretty_print
+               ,p_force_inline   => p_force_inline
                ,p_jsonschema     => p_jsonschema
             );
 
          ELSE
             RETURN self.toJSON_schema(
                 p_pretty_print   => p_pretty_print
+               ,p_force_inline   => p_force_inline
                ,p_jsonschema     => p_jsonschema
             );
             
@@ -980,8 +985,9 @@ AS
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    OVERRIDING MEMBER FUNCTION toJSON_component(
-       p_pretty_print      IN  INTEGER  DEFAULT NULL
-      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS
    BEGIN
@@ -991,12 +997,14 @@ AS
       THEN
          RETURN self.toJSON_combine(
              p_pretty_print   => p_pretty_print
+            ,p_force_inline   => p_force_inline
             ,p_jsonschema     => p_jsonschema
          );
          
       ELSE
          RETURN self.toJSON_schema(
              p_pretty_print   => p_pretty_print
+            ,p_force_inline   => p_force_inline
             ,p_jsonschema     => p_jsonschema
          );
          
@@ -1007,8 +1015,9 @@ AS
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    OVERRIDING MEMBER FUNCTION toJSON_schema(
-       p_pretty_print      IN  INTEGER  DEFAULT NULL
-      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS
       str_jsonschema   VARCHAR2(4000 Char) := UPPER(p_jsonschema);
@@ -1365,7 +1374,10 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
                 'items'
-               ,self.schema_items_schema.toJSON(p_pretty_print + 1)
+               ,self.schema_items_schema.toJSON(
+                   p_pretty_print   => p_pretty_print + 1
+                  ,p_force_inline   => p_force_inline   
+                )
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -1443,7 +1455,8 @@ AS
             ELSE
                clb_hash := clb_hash || dz_json_util.pretty(
                    str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.schema_properties(i).toJSON(
-                     p_pretty_print => p_pretty_print + 2
+                      p_pretty_print   => p_pretty_print + 2
+                     ,p_force_inline   => p_force_inline
                    )
                   ,p_pretty_print + 2
                );
@@ -1517,8 +1530,9 @@ AS
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    OVERRIDING MEMBER FUNCTION toJSON_ref(
-       p_pretty_print      IN  INTEGER  DEFAULT NULL
-      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS
       str_jsonschema   VARCHAR2(4000 Char) := UPPER(p_jsonschema);
@@ -1590,8 +1604,9 @@ AS
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    OVERRIDING MEMBER FUNCTION toJSON_combine(
-       p_pretty_print      IN  INTEGER  DEFAULT NULL
-      ,p_jsonschema        IN  VARCHAR2 DEFAULT 'FALSE' 
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS
       str_jsonschema   VARCHAR2(4000 Char) := UPPER(p_jsonschema);
@@ -1664,7 +1679,10 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad || dz_json_main.formatted2json(
                 'not'
-               ,self.combine_schemas(1).toJSON(p_pretty_print + 1)
+               ,self.combine_schemas(1).toJSON(
+                   p_pretty_print   => p_pretty_print + 1
+                  ,p_force_inline   => p_force_inline
+                )
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -1687,7 +1705,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || self.combine_schemas(i).toJSON(
-                  p_pretty_print => p_pretty_print + 1
+                   p_pretty_print   => p_pretty_print + 1
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 1
             );
@@ -1735,6 +1754,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
    BEGIN
@@ -1745,15 +1765,18 @@ AS
              p_pretty_print    => p_pretty_print
             ,p_initial_indent  => p_initial_indent
             ,p_final_linefeed  => p_final_linefeed
+            ,p_force_inline    => p_force_inline
          );
          
       ELSE
-         IF self.doRef() = 'TRUE'
+         IF  self.doRef() = 'TRUE'
+         AND p_force_inline <> 'TRUE'
          THEN
             RETURN self.toYAML_ref(
                 p_pretty_print    => p_pretty_print
                ,p_initial_indent  => p_initial_indent
                ,p_final_linefeed  => p_final_linefeed
+               ,p_force_inline    => p_force_inline
             );
          
          ELSE
@@ -1761,6 +1784,7 @@ AS
                 p_pretty_print    => p_pretty_print
                ,p_initial_indent  => p_initial_indent
                ,p_final_linefeed  => p_final_linefeed
+               ,p_force_inline    => p_force_inline
             );
             
          END IF;
@@ -1775,6 +1799,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
    BEGIN
@@ -1785,6 +1810,7 @@ AS
              p_pretty_print    => p_pretty_print
             ,p_initial_indent  => p_initial_indent
             ,p_final_linefeed  => p_final_linefeed
+            ,p_force_inline    => p_force_inline
          );
          
       ELSE
@@ -1792,6 +1818,7 @@ AS
              p_pretty_print    => p_pretty_print
             ,p_initial_indent  => p_initial_indent
             ,p_final_linefeed  => p_final_linefeed
+            ,p_force_inline    => p_force_inline
          );
          
       END IF;
@@ -1804,6 +1831,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB := '';
@@ -2059,7 +2087,8 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.schema_items_schema.toYAML(
-            p_pretty_print + 1
+             p_pretty_print   => p_pretty_print + 1
+            ,p_force_inline   => p_force_inline
          );
          
       END IF;
@@ -2121,7 +2150,8 @@ AS
                   ,p_pretty_print + 1
                   ,'  '
                ) || self.schema_properties(i).toYAML(
-                  p_pretty_print + 2
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                );
                
                IF self.schema_properties(i).schema_required = 'TRUE'
@@ -2189,6 +2219,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB := '';
@@ -2239,6 +2270,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB := '';
@@ -2279,13 +2311,15 @@ AS
       -- Step 20
       -- Do the not combine schema array
       --------------------------------------------------------------------------
-      IF boo_is_not THEN
+      IF boo_is_not 
+      THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'not: ' 
             ,p_pretty_print
             ,'  '
-         ) || self.schema_externalDocs.toYAML(
-            p_pretty_print + 1
+         ) || self.combine_schemas(1).toYAML(
+             p_pretty_print   => p_pretty_print + 1
+            ,p_force_inline   => p_force_inline
          );
       
       ELSE 
@@ -2298,7 +2332,12 @@ AS
          FOR i IN 1 .. self.combine_schemas.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '- ' || self.combine_schemas(i).toYAML(p_pretty_print + 2,'FALSE','FALSE')
+                '- ' || self.combine_schemas(i).toYAML(
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_initial_indent => 'FALSE'
+                  ,p_final_linefeed => 'FALSE'
+                  ,p_force_inline   => p_force_inline   
+               )
                ,p_pretty_print + 1
                ,'  '
             );

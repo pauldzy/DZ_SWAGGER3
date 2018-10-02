@@ -138,7 +138,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -220,14 +221,14 @@ AS
             
          END IF;
       
-      
          ary_keys := self.server_variables_keys();
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.server_variables(i).toJSON(
-                  p_pretty_print => p_pretty_print + 2
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -275,6 +276,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;
@@ -345,7 +347,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.server_variables(i).toYAML(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;

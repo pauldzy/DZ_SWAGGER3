@@ -96,7 +96,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -131,7 +132,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 30
-      -- Add optional summary
+      -- Add optional contentType
       --------------------------------------------------------------------------
       str_pad1 := str_pad;
       IF self.encoding_contentType IS NOT NULL
@@ -150,12 +151,12 @@ AS
          
       --------------------------------------------------------------------------
       -- Step 40
-      -- Add optional description 
+      -- Add optional encoding headers
       --------------------------------------------------------------------------
       IF  self.encoding_headers IS NULL 
       AND self.encoding_headers.COUNT = 0
       THEN
-         clb_hash := 'null';
+         NULL;
          
       ELSE
          str_pad2 := str_pad;
@@ -176,7 +177,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.encoding_headers(i).toJSON(
-                  p_pretty_print => p_pretty_print + 2
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 1
             );
@@ -203,7 +205,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 50
-      -- Add optional summary
+      -- Add optional encoding style
       --------------------------------------------------------------------------
       IF self.encoding_style IS NOT NULL
       THEN
@@ -221,7 +223,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 60
-      -- Add optional externalValue
+      -- Add optional explode boolean
       --------------------------------------------------------------------------
       IF self.encoding_explode IS NOT NULL
       THEN
@@ -248,7 +250,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 70
-      -- Add optional externalValue
+      -- Add optional encoding allowReserved
       --------------------------------------------------------------------------
       IF self.encoding_allowReserved IS NOT NULL
       THEN
@@ -296,6 +298,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -347,7 +350,8 @@ AS
                ,p_pretty_print + 2
                ,'  '
             ) || self.encoding_headers(i).toYAML(
-               p_pretty_print + 3
+                p_pretty_print   => p_pretty_print + 3
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -356,7 +360,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 40
-      -- Write the optional license url
+      -- Write the optional encoding style element
       --------------------------------------------------------------------------
       IF self.encoding_style IS NOT NULL
       THEN
@@ -373,7 +377,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 50
-      -- Write the optional license url
+      -- Write the optional encoding explode element
       --------------------------------------------------------------------------
       IF self.encoding_explode IS NOT NULL
       THEN
@@ -387,7 +391,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 60
-      -- Write the optional license url
+      -- Write the optional allowReserved element
       --------------------------------------------------------------------------
       IF self.encoding_allowReserved IS NOT NULL
       THEN

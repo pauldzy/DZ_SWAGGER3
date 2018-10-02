@@ -82,20 +82,24 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
    BEGIN
    
       IF self.doREF() = 'TRUE'
+      AND p_force_inline <> 'TRUE'
       THEN
          RETURN toJSON_ref(
              p_pretty_print  => p_pretty_print
+            ,p_force_inline  => p_force_inline
          );
    
       ELSE
          RETURN toJSON_schema(
              p_pretty_print  => p_pretty_print
+            ,p_force_inline  => p_force_inline
          );
       
       END IF;
@@ -105,7 +109,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_schema(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -237,7 +242,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_ref(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -255,7 +261,8 @@ AS
       -- Step 20
       -- Build the wrapper
       --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
+      IF  p_pretty_print IS NULL
+      AND p_force_inline <> 'TRUE'
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
          str_pad     := '';
@@ -305,6 +312,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS      
    BEGIN
@@ -315,6 +323,7 @@ AS
              p_pretty_print    => p_pretty_print
             ,p_initial_indent  => p_initial_indent
             ,p_final_linefeed  => p_final_linefeed
+            ,p_force_inline    => p_force_inline
          );
          
       ELSE
@@ -322,6 +331,7 @@ AS
              p_pretty_print    => p_pretty_print
             ,p_initial_indent  => p_initial_indent
             ,p_final_linefeed  => p_final_linefeed
+            ,p_force_inline    => p_force_inline
          );
       
       END IF;
@@ -334,6 +344,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;
@@ -450,6 +461,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;

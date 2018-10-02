@@ -52,7 +52,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -122,7 +123,10 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad || dz_json_main.formatted2json(
                 'externalDocs'
-               ,self.tag_externalDocs.toJSON(p_pretty_print + 1)
+               ,self.tag_externalDocs.toJSON(
+                   p_pretty_print   => p_pretty_print + 1
+                  ,p_force_inline   => p_force_inline
+                )
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -154,6 +158,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;
@@ -207,7 +212,8 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.tag_externalDocs.toYAML(
-            p_pretty_print + 1
+             p_pretty_print   => p_pretty_print + 1
+            ,p_force_inline   => p_force_inline
          );
          
       END IF;

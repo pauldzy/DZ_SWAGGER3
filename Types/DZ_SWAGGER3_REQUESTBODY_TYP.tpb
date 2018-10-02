@@ -339,20 +339,24 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print         IN  INTEGER   DEFAULT NULL
+      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS
    BEGIN
    
       IF self.doREF() = 'TRUE'
+      AND p_force_inline <> 'TRUE'
       THEN
          RETURN toJSON_ref(
              p_pretty_print  => p_pretty_print
+            ,p_force_inline  => p_force_inline
          );
    
       ELSE
          RETURN toJSON_schema(
              p_pretty_print  => p_pretty_print
+            ,p_force_inline  => p_force_inline
          );
       
       END IF;
@@ -362,7 +366,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_schema(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print         IN  INTEGER   DEFAULT NULL
+      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -442,7 +447,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.requestbody_content(i).toJSON(
-                  p_pretty_print => p_pretty_print + 2
+                   p_pretty_print  => p_pretty_print + 2
+                  ,p_force_inline  => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -514,7 +520,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_ref(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print         IN  INTEGER   DEFAULT NULL
+      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -579,19 +586,22 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+       p_pretty_print         IN  INTEGER   DEFAULT 0
+      ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS      
    BEGIN
    
       IF self.doRef() = 'TRUE'
+      AND p_force_inline <> 'TRUE'
       THEN
          RETURN self.toYAML_ref(
              p_pretty_print    => p_pretty_print
             ,p_initial_indent  => p_initial_indent
             ,p_final_linefeed  => p_final_linefeed
+            ,p_force_inline    => p_force_inline
          );
          
       ELSE
@@ -599,6 +609,7 @@ AS
              p_pretty_print    => p_pretty_print
             ,p_initial_indent  => p_initial_indent
             ,p_final_linefeed  => p_final_linefeed
+            ,p_force_inline    => p_force_inline
          );
       
       END IF;
@@ -608,9 +619,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML_schema(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+       p_pretty_print         IN  INTEGER   DEFAULT 0
+      ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -662,7 +674,8 @@ AS
                ,p_pretty_print + 2
                ,'  '
             ) || self.requestbody_content(i).toYAML(
-               p_pretty_print + 3
+                p_pretty_print   => p_pretty_print + 3
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -706,9 +719,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML_ref(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+       p_pretty_print         IN  INTEGER   DEFAULT 0
+      ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE' 
    ) RETURN CLOB
    AS
       clb_output       CLOB;

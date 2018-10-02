@@ -350,7 +350,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print     IN  INTEGER  DEFAULT NULL
+       p_pretty_print        IN  INTEGER  DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -390,6 +391,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_schemas IS NULL
       OR self.components_schemas.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
       
@@ -442,6 +444,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_responses IS NULL
       OR self.components_responses.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
       
@@ -494,6 +497,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_parameters IS NULL
       OR self.components_parameters.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
       
@@ -546,6 +550,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_examples IS NULL
       OR self.components_examples.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
       
@@ -598,6 +603,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_requestBodies IS NULL
       OR self.components_requestBodies.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
       
@@ -650,6 +656,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_headers IS NULL
       OR self.components_headers.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
       
@@ -702,6 +709,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_securitySchemes IS NULL
       OR self.components_securitySchemes.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
       
@@ -754,6 +762,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_links IS NULL
       OR self.components_links.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
       
@@ -806,6 +815,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_callbacks IS NULL
       OR self.components_callbacks.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
       
@@ -875,6 +885,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -893,6 +904,7 @@ AS
       --------------------------------------------------------------------------
       IF  self.components_schemas IS NULL 
       OR self.components_schemas.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
          
@@ -925,6 +937,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_responses IS NULL 
       OR self.components_responses.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
          
@@ -957,6 +970,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_parameters IS NULL 
       OR self.components_parameters.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
          
@@ -989,6 +1003,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_examples IS NULL 
       OR self.components_examples.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
          
@@ -1021,6 +1036,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_requestBodies IS NULL 
       OR self.components_requestBodies.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
          
@@ -1053,6 +1069,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_headers IS NULL 
       OR self.components_headers.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
          
@@ -1085,6 +1102,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_securitySchemes IS NULL 
       OR self.components_securitySchemes.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
          
@@ -1117,6 +1135,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_links IS NULL 
       OR self.components_links.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
          
@@ -1149,6 +1168,7 @@ AS
       --------------------------------------------------------------------------
       IF self.components_callbacks IS NULL 
       OR self.components_callbacks.COUNT = 0
+      OR p_force_inline = 'TRUE'
       THEN
          NULL;
          

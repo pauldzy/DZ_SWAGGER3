@@ -112,20 +112,24 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
    BEGIN
    
-      IF self.doREF() = 'TRUE'
+      IF  self.doREF() = 'TRUE'
+      AND p_force_inline <> 'TRUE'
       THEN
          RETURN toJSON_ref(
-             p_pretty_print  => p_pretty_print
+             p_pretty_print    => p_pretty_print
+            ,p_force_inline    => p_force_inline
          );
    
       ELSE
          RETURN toJSON_schema(
-             p_pretty_print  => p_pretty_print
+             p_pretty_print    => p_pretty_print
+            ,p_force_inline    => p_force_inline
          );
       
       END IF;
@@ -135,7 +139,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_schema(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -232,7 +237,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.link_parameters(i).toJSON(
-                  p_pretty_print => p_pretty_print + 2
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 1
             );
@@ -303,7 +309,10 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
                 'server'
-               ,self.link_server.toJSON(p_pretty_print + 1)
+               ,self.link_server.toJSON(
+                   p_pretty_print    => p_pretty_print + 1
+                  ,p_force_inline    => p_force_inline 
+                )
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -332,7 +341,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_ref(
-       p_pretty_print     IN  INTEGER   DEFAULT NULL
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -400,16 +410,19 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS      
    BEGIN
    
       IF self.doRef() = 'TRUE'
+      AND p_force_inline <> 'TRUE'
       THEN
          RETURN self.toYAML_ref(
              p_pretty_print    => p_pretty_print
             ,p_initial_indent  => p_initial_indent
             ,p_final_linefeed  => p_final_linefeed
+            ,p_force_inline    => p_force_inline
          );
          
       ELSE
@@ -417,6 +430,7 @@ AS
              p_pretty_print    => p_pretty_print
             ,p_initial_indent  => p_initial_indent
             ,p_final_linefeed  => p_final_linefeed
+            ,p_force_inline    => p_force_inline
          );
       
       END IF;
@@ -429,6 +443,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -500,7 +515,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 50
-      -- Write the optional operationId
+      -- Write the optional requestBody
       --------------------------------------------------------------------------
       IF self.link_requestBody IS NOT NULL
       THEN
@@ -544,7 +559,8 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.link_server.toYAML(
-            p_pretty_print + 1
+             p_pretty_print   => p_pretty_print + 1
+            ,p_force_inline   => p_force_inline
          );
          
       END IF;
@@ -575,6 +591,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
