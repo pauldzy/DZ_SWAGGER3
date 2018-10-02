@@ -156,6 +156,7 @@ AS
                   obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
                   ary_results(int_results) := dz_swagger3_schema_typ(
                       p_schema_id               => obj_schema.schema_id
+                     ,p_schema_category         => obj_schema.schema_category
                      ,p_schema_title            => obj_schema.schema_title
                      ,p_schema_type             => obj_schema.schema_type
                      ,p_schema_description      => obj_schema.schema_description
@@ -195,7 +196,6 @@ AS
                      ,p_schema_force_inline     => obj_schema.schema_force_inline
                      ,p_property_list_hidden    => obj_schema.property_list_hidden
                      ,p_combine_schemas         => obj_schema.combine_schemas
-                     ,p_not_schema              => obj_schema.not_schema
                   );
                   int_results := int_results + 1;
                   
@@ -215,6 +215,7 @@ AS
                ary_results.EXTEND();
                ary_results(int_results) := dz_swagger3_schema_typ(
                    p_schema_id               => self.media_schema.schema_id
+                  ,p_schema_category         => self.media_schema.schema_category
                   ,p_schema_title            => self.media_schema.schema_title
                   ,p_schema_type             => self.media_schema.schema_type
                   ,p_schema_description      => self.media_schema.schema_description
@@ -254,7 +255,6 @@ AS
                   ,p_schema_force_inline     => self.media_schema.schema_force_inline
                   ,p_property_list_hidden    => self.media_schema.property_list_hidden
                   ,p_combine_schemas         => self.media_schema.combine_schemas
-                  ,p_not_schema              => self.media_schema.not_schema
                );
                int_results := int_results + 1;
                

@@ -114,6 +114,7 @@ AS
       LOOP
          obj_schema := dz_swagger3_schema_typ(
              p_schema_id               => p_parameters(i).parameter_schema.schema_id
+            ,p_schema_category         => p_parameters(i).parameter_schema.schema_category
             ,p_schema_title            => p_parameters(i).parameter_schema.schema_title
             ,p_schema_type             => p_parameters(i).parameter_schema.schema_type
             ,p_schema_description      => p_parameters(i).parameter_schema.schema_description
@@ -153,7 +154,6 @@ AS
             ,p_schema_force_inline     => p_parameters(i).parameter_schema.schema_force_inline
             ,p_property_list_hidden    => p_parameters(i).parameter_schema.property_list_hidden
             ,p_combine_schemas         => p_parameters(i).parameter_schema.combine_schemas
-            ,p_not_schema              => p_parameters(i).parameter_schema.not_schema
          );
          
          obj_schema.hash_key              := p_parameters(i).parameter_name;
