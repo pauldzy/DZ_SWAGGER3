@@ -119,7 +119,8 @@ AS
              b.versionid = p_versionid
          AND b.parent_id = p_operation_id
          ORDER BY
-         b.parameter_order;
+          b.parameter_order
+         ,a.parameter_name;
          
       END IF;
       
@@ -930,7 +931,7 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
                 'requestBody'
-               ,self.operation_requestBody.toJSON_ref(
+               ,self.operation_requestBody.toJSON(
                    p_pretty_print  => p_pretty_print + 1
                   ,p_force_inline  => p_force_inline
                 )                 
@@ -969,7 +970,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.operation_responses(i).toJSON_ref(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.operation_responses(i).toJSON(
                    p_pretty_print  => p_pretty_print + 2
                   ,p_force_inline  => p_force_inline
                 )
@@ -1335,7 +1336,7 @@ AS
                
             ELSE
                clb_output := clb_output || dz_json_util.pretty(
-                   '- ' || self.operation_parameters(i).toYAML_ref(
+                   '- ' || self.operation_parameters(i).toYAML(
                       p_pretty_print   => p_pretty_print + 3
                      ,p_initial_indent => 'FALSE'
                      ,p_final_linefeed => 'FALSE'
@@ -1362,7 +1363,7 @@ AS
              'requestBody: ' 
             ,p_pretty_print + 1
             ,'  '
-         ) || self.operation_requestBody.toYAML_ref(
+         ) || self.operation_requestBody.toYAML(
              p_pretty_print   => p_pretty_print + 2
             ,p_force_inline   => p_force_inline
          );
@@ -1393,7 +1394,7 @@ AS
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 2
                ,'  '
-            ) || self.operation_responses(i).toYAML_ref(
+            ) || self.operation_responses(i).toYAML(
                 p_pretty_print   => p_pretty_print + 3
                ,p_force_inline   => p_force_inline
             );
@@ -1520,7 +1521,7 @@ AS
       IF p_initial_indent = 'FALSE'
       THEN
          clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
-       
+
       END IF;
       
       IF p_final_linefeed = 'FALSE'

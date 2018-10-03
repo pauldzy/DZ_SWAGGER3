@@ -129,7 +129,10 @@ AS
       AND a.path_id   = b.path_id
       WHERE
           a.versionid = str_versionid
-      AND a.group_id  = str_group_id;
+      AND a.group_id  = str_group_id
+      ORDER BY
+       a.path_order
+      ,b.path_endpoint;
       
       --------------------------------------------------------------------------
       -- Step 60
@@ -1024,9 +1027,16 @@ AS
       -- Step 60
       -- Write the components operation
       --------------------------------------------------------------------------
-      IF  self.components IS NOT NULL
-      AND self.components.isNULL() = 'FALSE'
+      IF self.components IS NULL
+      OR self.components.isNULL() = 'FALSE'
       THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'components: {}' 
+            ,p_pretty_print
+            ,'  '
+         );
+         
+      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'components: ' 
             ,p_pretty_print

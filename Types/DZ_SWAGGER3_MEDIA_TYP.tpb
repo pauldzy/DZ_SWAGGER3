@@ -519,7 +519,8 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.media_encoding(i).toJSON(
-                  p_pretty_print => p_pretty_print + 1
+                   p_pretty_print   => p_pretty_print + 1
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 1
             );
@@ -567,6 +568,7 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -598,7 +600,8 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.media_schema.toYAML(
-            p_pretty_print + 1
+             p_pretty_print   => p_pretty_print + 1
+            ,p_force_inline   => p_force_inline
          );
          
       END IF;
@@ -653,7 +656,8 @@ AS
                ,p_pretty_print + 2
                ,'  '
             ) || self.media_examples(i).toYAML(
-               p_pretty_print + 3
+                p_pretty_print   => p_pretty_print + 3
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -682,7 +686,8 @@ AS
                ,p_pretty_print + 2
                ,'  '
             ) || self.media_encoding(i).toYAML(
-               p_pretty_print + 3
+                p_pretty_print   => p_pretty_print + 3
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;

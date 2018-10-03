@@ -729,7 +729,8 @@ AS
    AS
    BEGIN
    
-      IF self.doRef() = 'TRUE'
+      IF  self.doRef() = 'TRUE'
+      AND p_force_inline <> 'TRUE'
       THEN
          RETURN self.toYAML_ref(
              p_pretty_print    => p_pretty_print

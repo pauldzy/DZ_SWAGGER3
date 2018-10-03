@@ -120,7 +120,8 @@ AS
           b.versionid = p_versionid
       AND b.parent_id = p_path_id
       ORDER BY
-      b.parameter_order;
+       b.parameter_order
+      ,a.parameter_name;
       
       --------------------------------------------------------------------------
       -- Step 40

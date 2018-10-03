@@ -680,7 +680,7 @@ AS
          ) || self.path_get_operation.toYAML(
              p_pretty_print   => p_pretty_print + 1
             ,p_force_inline   => p_force_inline
-         ;
+         );
          
       END IF;
       
@@ -697,7 +697,7 @@ AS
          ) || self.path_put_operation.toYAML(
              p_pretty_print   => p_pretty_print + 1
             ,p_force_inline   => p_force_inline
-         ;
+         );
          
       END IF;
       
@@ -714,7 +714,7 @@ AS
          ) || self.path_post_operation.toYAML(
              p_pretty_print   => p_pretty_print + 1
             ,p_force_inline   => p_force_inline
-         ;
+         );
          
       END IF;
       
@@ -731,7 +731,7 @@ AS
          ) || self.path_delete_operation.toYAML(
              p_pretty_print   => p_pretty_print + 1
             ,p_force_inline   => p_force_inline
-         ;
+         );
          
       END IF;
       
@@ -748,7 +748,7 @@ AS
          ) || self.path_options_operation.toYAML(
              p_pretty_print   => p_pretty_print + 1
             ,p_force_inline   => p_force_inline
-         ;
+         );
          
       END IF;
       
@@ -765,7 +765,7 @@ AS
          ) || self.path_head_operation.toYAML(
              p_pretty_print   => p_pretty_print + 1
             ,p_force_inline   => p_force_inline
-         ;
+         );
          
       END IF;
       
@@ -782,7 +782,7 @@ AS
          ) || self.path_patch_operation.toYAML(
              p_pretty_print   => p_pretty_print + 1
             ,p_force_inline   => p_force_inline
-         ;
+         );
          
       END IF;
       
