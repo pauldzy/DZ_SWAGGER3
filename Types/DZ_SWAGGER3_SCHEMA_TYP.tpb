@@ -1059,12 +1059,30 @@ AS
          
       END IF;
       
+      str_pad1 := str_pad;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Add optional title object
+      --------------------------------------------------------------------------
+      IF str_jsonschema = 'TRUE'
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                '$schema'
+               ,'http://json-schema.org/draft-04/schema#'
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+      
+      END IF;
+      
       --------------------------------------------------------------------------
       -- Step 30
       -- Add base attributes
       --------------------------------------------------------------------------
-      str_pad1 := str_pad;
-      
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              'type'
@@ -1165,7 +1183,8 @@ AS
       -- Step 80
       -- Add optional description object
       --------------------------------------------------------------------------
-      IF self.schema_nullable IS NOT NULL
+      IF  self.schema_nullable IS NOT NULL
+      AND str_jsonschema <> 'TRUE'
       THEN
          IF LOWER(self.schema_nullable) = 'true'
          THEN
@@ -1193,6 +1212,7 @@ AS
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_discriminator IS NOT NULL
+      AND str_jsonschema <> 'TRUE'
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
@@ -1211,6 +1231,7 @@ AS
       -- Add optional readOnly and writeOnly attributes
       --------------------------------------------------------------------------
       IF self.schema_readOnly IS NOT NULL
+      AND str_jsonschema <> 'TRUE'
       THEN
          IF LOWER(self.schema_readOnly) = 'true'
          THEN
@@ -1234,6 +1255,7 @@ AS
       END IF;
       
       IF self.schema_writeOnly IS NOT NULL
+      AND str_jsonschema <> 'TRUE'
       THEN
          IF LOWER(self.schema_writeOnly) = 'true'
          THEN
@@ -1294,6 +1316,7 @@ AS
       --------------------------------------------------------------------------
       IF  self.schema_externalDocs IS NOT NULL
       AND self.schema_externalDocs.isNULL() = 'FALSE'
+      AND str_jsonschema <> 'TRUE'
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad || dz_json_main.formatted2json(
@@ -1312,6 +1335,7 @@ AS
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_example_string IS NOT NULL
+      AND str_jsonschema <> 'TRUE'
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
@@ -1324,6 +1348,7 @@ AS
          str_pad1 := ',';
       
       ELSIF self.schema_example_number IS NOT NULL
+      AND str_jsonschema <> 'TRUE'
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
@@ -1342,6 +1367,7 @@ AS
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_deprecated IS NOT NULL
+      AND str_jsonschema <> 'TRUE'
       THEN
          IF LOWER(self.schema_deprecated) = 'true'
          THEN
@@ -1705,10 +1731,10 @@ AS
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || self.combine_schemas(i).toJSON(
-                   p_pretty_print   => p_pretty_print + 1
+                   p_pretty_print   => p_pretty_print + 2
                   ,p_force_inline   => p_force_inline
                 )
-               ,p_pretty_print + 1
+               ,p_pretty_print + 2
             );
             str_pad2 := ',';
          

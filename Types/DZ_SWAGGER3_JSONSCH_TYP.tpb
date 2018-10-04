@@ -22,11 +22,28 @@ AS
       ,p_versionid            IN  VARCHAR2 DEFAULT NULL
    ) RETURN SELF AS RESULT
    AS    
+      str_versionid     VARCHAR2(255 Char);
       str_operation_id  VARCHAR2(255 Char);
       str_response_id   VARCHAR2(255 Char);
       str_media_id      VARCHAR2(255 Char);
       
    BEGIN
+   
+      IF p_versionid IS NULL
+      THEN
+         SELECT
+         a.versionid
+         INTO str_versionid
+         FROM
+         dz_swagger3_vers a
+         WHERE
+             a.is_default = 'TRUE'
+         AND rownum <= 1;
+
+      ELSE
+         str_versionid  := p_versionid;
+         
+      END IF;
    
       IF LOWER(p_http_method) = 'get'
       THEN
@@ -37,7 +54,7 @@ AS
          FROM
          dz_swagger3_path a
          WHERE
-             a.versionid = p_versionid
+             a.versionid = str_versionid
          AND a.path_id = p_path_id;
          
       ELSIF LOWER(p_http_method) = 'put'
@@ -49,7 +66,7 @@ AS
          FROM
          dz_swagger3_path a
          WHERE
-             a.versionid = p_versionid
+             a.versionid = str_versionid
          AND a.path_id = p_path_id;
          
       ELSIF LOWER(p_http_method) = 'post'
@@ -61,7 +78,7 @@ AS
          FROM
          dz_swagger3_path a
          WHERE
-             a.versionid = p_versionid
+             a.versionid = str_versionid
          AND a.path_id = p_path_id;
          
       ELSIF LOWER(p_http_method) = 'delete'
@@ -73,7 +90,7 @@ AS
          FROM
          dz_swagger3_path a
          WHERE
-             a.versionid = p_versionid
+             a.versionid = str_versionid
          AND a.path_id = p_path_id;
          
       ELSIF LOWER(p_http_method) = 'options'
@@ -85,7 +102,7 @@ AS
          FROM
          dz_swagger3_path a
          WHERE
-             a.versionid = p_versionid
+             a.versionid = str_versionid
          AND a.path_id = p_path_id;
          
       ELSIF LOWER(p_http_method) = 'head'
@@ -97,7 +114,7 @@ AS
          FROM
          dz_swagger3_path a
          WHERE
-             a.versionid = p_versionid
+             a.versionid = str_versionid
          AND a.path_id = p_path_id;
          
       ELSIF LOWER(p_http_method) = 'patch'
@@ -109,7 +126,7 @@ AS
          FROM
          dz_swagger3_path a
          WHERE
-             a.versionid = p_versionid
+             a.versionid = str_versionid
          AND a.path_id = p_path_id;
          
       ELSIF LOWER(p_http_method) = 'trace'
@@ -121,7 +138,7 @@ AS
          FROM
          dz_swagger3_path a
          WHERE
-             a.versionid = p_versionid
+             a.versionid = str_versionid
          AND a.path_id = p_path_id;
          
       ELSE
@@ -136,7 +153,7 @@ AS
       FROM
       dz_swagger3_operation_resp_map a
       WHERE
-          a.versionid = p_versionid
+          a.versionid = str_versionid
       AND a.operation_id = str_operation_id
       AND a.response_code = p_response_code;
       
@@ -147,8 +164,8 @@ AS
       FROM
       dz_swagger3_media_parent_map a
       WHERE
-         a.versionid = p_versionid
-      AND a.response_id = str_response_id
+         a.versionid = str_versionid
+      AND a.parent_id = str_response_id
       AND a.media_type = p_media_type;
             
       SELECT
@@ -156,15 +173,15 @@ AS
           p_hash_key     => 'jsonschema'
          ,p_schema_id    => a.media_schema_id
          ,p_required     => NULL
-         ,p_versionid    => p_versionid
+         ,p_versionid    => str_versionid
       )
       INTO
       self.schema_obj
       FROM
       dz_swagger3_media a
       WHERE
-         a.versionid = p_versionid
-      AND a.media_id = str_media_id
+         a.versionid = str_versionid
+      AND a.media_id = str_media_id;
       
       IF p_title IS NULL
       THEN
@@ -174,6 +191,8 @@ AS
          self.schema_obj.schema_title := p_title;
       
       END IF;
+      
+      RETURN;
       
    EXCEPTION
    
@@ -185,7 +204,7 @@ AS
       THEN
          RAISE;
    
-   END dz_swagger_jsonsch_typ;
+   END dz_swagger3_jsonsch_typ;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -213,6 +232,7 @@ AS
       RETURN self.schema_obj.toJSON(
           p_pretty_print   => p_pretty_print
          ,p_force_inline   => 'TRUE'
+         ,p_jsonschema     => 'TRUE'
       );
            
    END toJSON;
