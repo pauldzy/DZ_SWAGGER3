@@ -30,6 +30,14 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   FUNCTION utl_url_escape(
+       p_input_url       IN VARCHAR2 CHARACTER SET ANY_CS
+      ,p_escape_reserved IN VARCHAR2 DEFAULT NULL
+      ,p_url_charset     IN VARCHAR2 DEFAULT NULL
+   )  RETURN VARCHAR2 CHARACTER SET p_input_url%CHARSET;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    FUNCTION a_in_b(
        p_input_a          IN VARCHAR2
       ,p_input_b          IN MDSYS.SDO_STRING2_ARRAY

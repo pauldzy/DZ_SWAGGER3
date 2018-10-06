@@ -183,6 +183,59 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   FUNCTION utl_url_escape(
+       p_input_url       IN VARCHAR2 CHARACTER SET ANY_CS
+      ,p_escape_reserved IN VARCHAR2 DEFAULT NULL
+      ,p_url_charset     IN VARCHAR2 DEFAULT NULL
+   )  RETURN VARCHAR2 CHARACTER SET p_input_url%CHARSET
+   AS
+      str_escape_reserved VARCHAR2(4000 Char) := UPPER(p_escape_reserved);
+      boo_escape_reserved BOOLEAN;
+      str_url_charset     VARCHAR2(4000 Char) := p_url_charset;
+      
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check over incoming parameters
+      --------------------------------------------------------------------------
+      IF str_escape_reserved IS NULL
+      THEN
+         boo_escape_reserved := FALSE;
+         
+      ELSIF str_escape_reserved = 'TRUE'
+      THEN
+         boo_escape_reserved := TRUE;
+         
+      ELSIF str_escape_reserved = 'FALSE'
+      THEN
+         boo_escape_reserved := FALSE;
+         
+      ELSE
+         RAISE_APPLICATION_ERROR(-20001,'boolean error');
+         
+      END IF;
+      
+      IF str_url_charset IS NULL
+      THEN
+         str_url_charset := utl_http.get_body_charset;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Return results
+      --------------------------------------------------------------------------
+      RETURN SYS.UTL_URL.ESCAPE(
+          p_input_url
+         ,boo_escape_reserved
+         ,str_url_charset
+      );
+      
+   END utl_url_escape;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    FUNCTION a_in_b(
        p_input_a          IN VARCHAR2
       ,p_input_b          IN MDSYS.SDO_STRING2_ARRAY
