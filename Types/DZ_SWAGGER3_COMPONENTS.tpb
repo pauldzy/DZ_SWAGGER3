@@ -897,17 +897,17 @@ AS
       -- Step 10
       -- Check incoming parameters
       --------------------------------------------------------------------------
-      
+
       --------------------------------------------------------------------------
       -- Step 20
       -- Write the component schemas
       --------------------------------------------------------------------------
-      IF  self.components_schemas IS NULL 
+      IF self.components_schemas IS NULL 
       OR self.components_schemas.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
-         
+
       ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'schemas: '
@@ -924,7 +924,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.components_schemas(i).toYAML_component(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -957,7 +958,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.components_responses(i).toYAML_schema(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -990,7 +992,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.components_parameters(i).toYAML_schema(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -1023,7 +1026,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.components_examples(i).toYAML_schema(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -1056,7 +1060,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.components_requestBodies(i).toYAML_schema(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -1089,7 +1094,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.components_headers(i).toYAML_schema(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -1122,7 +1128,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.components_securitySchemes(i).toYAML_schema(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -1155,7 +1162,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.components_links(i).toYAML_schema(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;
@@ -1188,7 +1196,8 @@ AS
                ,p_pretty_print + 1
                ,'  '
             ) || self.components_callbacks(i).toYAML_schema(
-               p_pretty_print + 2
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
             );
          
          END LOOP;

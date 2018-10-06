@@ -1028,7 +1028,7 @@ AS
       -- Write the components operation
       --------------------------------------------------------------------------
       IF self.components IS NULL
-      OR self.components.isNULL() = 'FALSE'
+      OR self.components.isNULL() = 'TRUE'
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'components: {}' 
