@@ -228,22 +228,18 @@ AS
       THEN
          FOR i IN 1 .. self.path_get_operation.operation_responses.COUNT
          LOOP
-            IF self.path_get_operation.operation_responses(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_b(
+                self.path_get_operation.operation_responses(i).response_id
+               ,ary_x
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_get_operation.operation_responses(i).response_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_get_operation.operation_responses(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_get_operation.operation_responses(i).response_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_get_operation.operation_responses(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_get_operation.operation_responses(i).response_id;
+               int_x := int_x + 1;
                
             END IF;
             
@@ -518,7 +514,6 @@ AS
       IF  self.path_get_operation IS NOT NULL
       AND self.path_get_operation.operation_requestbody IS NOT NULL
       AND self.path_get_operation.operation_requestbody.isNULL() = 'FALSE'
-      AND self.path_get_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
          IF dz_swagger3_util.a_in_b(
              self.path_get_operation.operation_requestbody.requestBody_id
@@ -757,22 +752,18 @@ AS
       THEN
          FOR i IN 1 .. self.path_parameters.COUNT
          LOOP
-            IF self.path_parameters(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_b(
+                self.path_parameters(i).parameter_id
+               ,ary_x
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_parameters(i).parameter_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_parameters(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_parameters(i).parameter_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_parameters(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_parameters(i).parameter_id;
+               int_x := int_x + 1;
                
             END IF;
             

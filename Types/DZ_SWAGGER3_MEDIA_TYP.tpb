@@ -141,129 +141,125 @@ AS
       IF self.media_schema IS NOT NULL
       AND self.media_schema.isNULL() = 'FALSE'
       THEN
-         IF self.media_schema.doRef() = 'TRUE'
-         THEN
-            ary_working := self.media_schema.unique_schemas();
+         ary_working := self.media_schema.unique_schemas();
             
-            FOR j IN 1 .. ary_working.COUNT
-            LOOP
-               IF dz_swagger3_util.a_in_b(
-                   ary_working(j).schema_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
-                  ary_results(int_results) := dz_swagger3_schema_typ(
-                      p_schema_id               => obj_schema.schema_id
-                     ,p_schema_category         => obj_schema.schema_category
-                     ,p_schema_title            => obj_schema.schema_title
-                     ,p_schema_type             => obj_schema.schema_type
-                     ,p_schema_description      => obj_schema.schema_description
-                     ,p_schema_format           => obj_schema.schema_format
-                     ,p_schema_nullable         => obj_schema.schema_nullable
-                     ,p_schema_discriminator    => obj_schema.schema_discriminator
-                     ,p_schema_readonly         => obj_schema.schema_readonly
-                     ,p_schema_writeonly        => obj_schema.schema_writeonly
-                     ,p_schema_externalDocs     => obj_schema.schema_externalDocs
-                     ,p_schema_example_string   => obj_schema.schema_example_string
-                     ,p_schema_example_number   => obj_schema.schema_example_number
-                     ,p_schema_deprecated       => obj_schema.schema_deprecated
-                     ,p_schema_default_string   => obj_schema.schema_default_string
-                     ,p_schema_default_number   => obj_schema.schema_default_number
-                     ,p_schema_multipleOf       => obj_schema.schema_multipleOf
-                     ,p_schema_minimum          => obj_schema.schema_minimum
-                     ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
-                     ,p_schema_maximum          => obj_schema.schema_maximum
-                     ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
-                     ,p_schema_minLength        => obj_schema.schema_minLength
-                     ,p_schema_maxLength        => obj_schema.schema_maxLength
-                     ,p_schema_pattern          => obj_schema.schema_pattern
-                     ,p_schema_minItems         => obj_schema.schema_minItems
-                     ,p_schema_maxItems         => obj_schema.schema_maxItems
-                     ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
-                     ,p_schema_minProperties    => obj_schema.schema_minProperties
-                     ,p_schema_maxProperties    => obj_schema.schema_maxProperties
-                     ,p_xml_name                => obj_schema.xml_name
-                     ,p_xml_namespace           => obj_schema.xml_namespace
-                     ,p_xml_prefix              => obj_schema.xml_prefix
-                     ,p_xml_attribute           => obj_schema.xml_attribute
-                     ,p_xml_wrapped             => obj_schema.xml_wrapped
-                     ,p_schema_items_schema     => obj_schema.schema_items_schema
-                     ,p_schema_properties       => obj_schema.schema_properties
-                     ,p_schema_enum_string      => obj_schema.schema_enum_string
-                     ,p_schema_enum_number      => obj_schema.schema_enum_number
-                     ,p_schema_force_inline     => obj_schema.schema_force_inline
-                     ,p_property_list_hidden    => obj_schema.property_list_hidden
-                     ,p_combine_schemas         => obj_schema.combine_schemas
-                  );
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := ary_working(j).schema_id;
-                  int_x := int_x + 1;
-
-               END IF;
-               
-            END LOOP;
-
+         FOR j IN 1 .. ary_working.COUNT
+         LOOP
             IF dz_swagger3_util.a_in_b(
-                self.media_schema.schema_id
+                ary_working(j).schema_id
                ,ary_x
             ) = 'FALSE'
             THEN
                ary_results.EXTEND();
+               obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
                ary_results(int_results) := dz_swagger3_schema_typ(
-                   p_schema_id               => self.media_schema.schema_id
-                  ,p_schema_category         => self.media_schema.schema_category
-                  ,p_schema_title            => self.media_schema.schema_title
-                  ,p_schema_type             => self.media_schema.schema_type
-                  ,p_schema_description      => self.media_schema.schema_description
-                  ,p_schema_format           => self.media_schema.schema_format
-                  ,p_schema_nullable         => self.media_schema.schema_nullable
-                  ,p_schema_discriminator    => self.media_schema.schema_discriminator
-                  ,p_schema_readonly         => self.media_schema.schema_readonly
-                  ,p_schema_writeonly        => self.media_schema.schema_writeonly
-                  ,p_schema_externalDocs     => self.media_schema.schema_externalDocs
-                  ,p_schema_example_string   => self.media_schema.schema_example_string
-                  ,p_schema_example_number   => self.media_schema.schema_example_number
-                  ,p_schema_deprecated       => self.media_schema.schema_deprecated
-                  ,p_schema_default_string   => self.media_schema.schema_default_string
-                  ,p_schema_default_number   => self.media_schema.schema_default_number
-                  ,p_schema_multipleOf       => self.media_schema.schema_multipleOf
-                  ,p_schema_minimum          => self.media_schema.schema_minimum
-                  ,p_schema_exclusiveMinimum => self.media_schema.schema_exclusiveMinimum
-                  ,p_schema_maximum          => self.media_schema.schema_maximum
-                  ,p_schema_exclusiveMaximum => self.media_schema.schema_exclusiveMaximum
-                  ,p_schema_minLength        => self.media_schema.schema_minLength
-                  ,p_schema_maxLength        => self.media_schema.schema_maxLength
-                  ,p_schema_pattern          => self.media_schema.schema_pattern
-                  ,p_schema_minItems         => self.media_schema.schema_minItems
-                  ,p_schema_maxItems         => self.media_schema.schema_maxItems
-                  ,p_schema_uniqueItems      => self.media_schema.schema_uniqueItems
-                  ,p_schema_minProperties    => self.media_schema.schema_minProperties
-                  ,p_schema_maxProperties    => self.media_schema.schema_maxProperties
-                  ,p_xml_name                => self.media_schema.xml_name
-                  ,p_xml_namespace           => self.media_schema.xml_namespace
-                  ,p_xml_prefix              => self.media_schema.xml_prefix
-                  ,p_xml_attribute           => self.media_schema.xml_attribute
-                  ,p_xml_wrapped             => self.media_schema.xml_wrapped
-                  ,p_schema_items_schema     => self.media_schema.schema_items_schema
-                  ,p_schema_properties       => self.media_schema.schema_properties
-                  ,p_schema_enum_string      => self.media_schema.schema_enum_string
-                  ,p_schema_enum_number      => self.media_schema.schema_enum_number
-                  ,p_schema_force_inline     => self.media_schema.schema_force_inline
-                  ,p_property_list_hidden    => self.media_schema.property_list_hidden
-                  ,p_combine_schemas         => self.media_schema.combine_schemas
+                   p_schema_id               => obj_schema.schema_id
+                  ,p_schema_category         => obj_schema.schema_category
+                  ,p_schema_title            => obj_schema.schema_title
+                  ,p_schema_type             => obj_schema.schema_type
+                  ,p_schema_description      => obj_schema.schema_description
+                  ,p_schema_format           => obj_schema.schema_format
+                  ,p_schema_nullable         => obj_schema.schema_nullable
+                  ,p_schema_discriminator    => obj_schema.schema_discriminator
+                  ,p_schema_readonly         => obj_schema.schema_readonly
+                  ,p_schema_writeonly        => obj_schema.schema_writeonly
+                  ,p_schema_externalDocs     => obj_schema.schema_externalDocs
+                  ,p_schema_example_string   => obj_schema.schema_example_string
+                  ,p_schema_example_number   => obj_schema.schema_example_number
+                  ,p_schema_deprecated       => obj_schema.schema_deprecated
+                  ,p_schema_default_string   => obj_schema.schema_default_string
+                  ,p_schema_default_number   => obj_schema.schema_default_number
+                  ,p_schema_multipleOf       => obj_schema.schema_multipleOf
+                  ,p_schema_minimum          => obj_schema.schema_minimum
+                  ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
+                  ,p_schema_maximum          => obj_schema.schema_maximum
+                  ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
+                  ,p_schema_minLength        => obj_schema.schema_minLength
+                  ,p_schema_maxLength        => obj_schema.schema_maxLength
+                  ,p_schema_pattern          => obj_schema.schema_pattern
+                  ,p_schema_minItems         => obj_schema.schema_minItems
+                  ,p_schema_maxItems         => obj_schema.schema_maxItems
+                  ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
+                  ,p_schema_minProperties    => obj_schema.schema_minProperties
+                  ,p_schema_maxProperties    => obj_schema.schema_maxProperties
+                  ,p_xml_name                => obj_schema.xml_name
+                  ,p_xml_namespace           => obj_schema.xml_namespace
+                  ,p_xml_prefix              => obj_schema.xml_prefix
+                  ,p_xml_attribute           => obj_schema.xml_attribute
+                  ,p_xml_wrapped             => obj_schema.xml_wrapped
+                  ,p_schema_items_schema     => obj_schema.schema_items_schema
+                  ,p_schema_properties       => obj_schema.schema_properties
+                  ,p_schema_enum_string      => obj_schema.schema_enum_string
+                  ,p_schema_enum_number      => obj_schema.schema_enum_number
+                  ,p_schema_force_inline     => obj_schema.schema_force_inline
+                  ,p_property_list_hidden    => obj_schema.property_list_hidden
+                  ,p_combine_schemas         => obj_schema.combine_schemas
                );
                int_results := int_results + 1;
                
                ary_x.EXTEND();
-               ary_x(int_x) := self.media_schema.schema_id;
+               ary_x(int_x) := ary_working(j).schema_id;
                int_x := int_x + 1;
-     
-            END IF;
 
+            END IF;
+            
+         END LOOP;
+
+         IF dz_swagger3_util.a_in_b(
+             self.media_schema.schema_id
+            ,ary_x
+         ) = 'FALSE'
+         THEN
+            ary_results.EXTEND();
+            ary_results(int_results) := dz_swagger3_schema_typ(
+                p_schema_id               => self.media_schema.schema_id
+               ,p_schema_category         => self.media_schema.schema_category
+               ,p_schema_title            => self.media_schema.schema_title
+               ,p_schema_type             => self.media_schema.schema_type
+               ,p_schema_description      => self.media_schema.schema_description
+               ,p_schema_format           => self.media_schema.schema_format
+               ,p_schema_nullable         => self.media_schema.schema_nullable
+               ,p_schema_discriminator    => self.media_schema.schema_discriminator
+               ,p_schema_readonly         => self.media_schema.schema_readonly
+               ,p_schema_writeonly        => self.media_schema.schema_writeonly
+               ,p_schema_externalDocs     => self.media_schema.schema_externalDocs
+               ,p_schema_example_string   => self.media_schema.schema_example_string
+               ,p_schema_example_number   => self.media_schema.schema_example_number
+               ,p_schema_deprecated       => self.media_schema.schema_deprecated
+               ,p_schema_default_string   => self.media_schema.schema_default_string
+               ,p_schema_default_number   => self.media_schema.schema_default_number
+               ,p_schema_multipleOf       => self.media_schema.schema_multipleOf
+               ,p_schema_minimum          => self.media_schema.schema_minimum
+               ,p_schema_exclusiveMinimum => self.media_schema.schema_exclusiveMinimum
+               ,p_schema_maximum          => self.media_schema.schema_maximum
+               ,p_schema_exclusiveMaximum => self.media_schema.schema_exclusiveMaximum
+               ,p_schema_minLength        => self.media_schema.schema_minLength
+               ,p_schema_maxLength        => self.media_schema.schema_maxLength
+               ,p_schema_pattern          => self.media_schema.schema_pattern
+               ,p_schema_minItems         => self.media_schema.schema_minItems
+               ,p_schema_maxItems         => self.media_schema.schema_maxItems
+               ,p_schema_uniqueItems      => self.media_schema.schema_uniqueItems
+               ,p_schema_minProperties    => self.media_schema.schema_minProperties
+               ,p_schema_maxProperties    => self.media_schema.schema_maxProperties
+               ,p_xml_name                => self.media_schema.xml_name
+               ,p_xml_namespace           => self.media_schema.xml_namespace
+               ,p_xml_prefix              => self.media_schema.xml_prefix
+               ,p_xml_attribute           => self.media_schema.xml_attribute
+               ,p_xml_wrapped             => self.media_schema.xml_wrapped
+               ,p_schema_items_schema     => self.media_schema.schema_items_schema
+               ,p_schema_properties       => self.media_schema.schema_properties
+               ,p_schema_enum_string      => self.media_schema.schema_enum_string
+               ,p_schema_enum_number      => self.media_schema.schema_enum_number
+               ,p_schema_force_inline     => self.media_schema.schema_force_inline
+               ,p_property_list_hidden    => self.media_schema.property_list_hidden
+               ,p_combine_schemas         => self.media_schema.combine_schemas
+            );
+            int_results := int_results + 1;
+            
+            ary_x.EXTEND();
+            ary_x(int_x) := self.media_schema.schema_id;
+            int_x := int_x + 1;
+  
          END IF;
          
       END IF;

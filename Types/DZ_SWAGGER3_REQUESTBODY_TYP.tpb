@@ -85,9 +85,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
-       p_requestbody_id          IN  VARCHAR2
-      ,p_media_type              IN  VARCHAR2
-      ,p_parameters              IN  dz_swagger3_parameter_list
+       p_requestbody_id           IN  VARCHAR2
+      ,p_media_type               IN  VARCHAR2
+      ,p_parameters               IN  dz_swagger3_parameter_list
+      ,p_inline_rb                IN  VARCHAR2
    ) RETURN SELF AS RESULT
    AS
       int_counter PLS_INTEGER;
@@ -97,6 +98,7 @@ AS
    
       self.hash_key            := p_requestbody_id;
       self.requestbody_id      := p_requestbody_id;
+      self.requestBody_inline  := p_inline_rb;
       
       self.requestbody_content := dz_swagger3_media_list();
       self.requestbody_content.EXTEND();
@@ -234,6 +236,7 @@ AS
    BEGIN
       
       IF self.requestBody_force_inline = 'TRUE'
+      OR self.requestBody_inline = 'TRUE'
       THEN
          RETURN 'FALSE';
          
@@ -560,7 +563,7 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              '$ref'
-            ,'#/components/requestBodies/' || self.requestbody_id
+            ,'#/components/requestBodies/' || dz_swagger3_util.utl_url_escape(self.requestbody_id) 
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1

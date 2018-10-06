@@ -53,11 +53,11 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_schemas_ids
-   RETURN MDSYS.SDO_STRING2_ARRAY
+   MEMBER FUNCTION get_components_schemas
+   RETURN dz_swagger3_schema_nf_list
    AS
       int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
+      ary_output dz_swagger3_schema_nf_list;
       
    BEGIN
       IF self.components_schemas IS NULL
@@ -68,26 +68,30 @@ AS
       END IF;
       
       int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
+      ary_output := dz_swagger3_schema_nf_list();
       FOR i IN 1 .. self.components_schemas.COUNT
       LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.components_schemas(i).schema_id;
-         int_index := int_index + 1;
+         IF self.components_schemas(i).doRef() = 'TRUE'
+         THEN
+            ary_output.EXTEND();
+            ary_output(int_index) := self.components_schemas(i);
+            int_index := int_index + 1;
+            
+         END IF;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_schemas_ids;
+   END get_components_schemas;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_responses_ids
-   RETURN MDSYS.SDO_STRING2_ARRAY
+   MEMBER FUNCTION get_components_responses
+   RETURN dz_swagger3_response_list
    AS
       int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
+      ary_output dz_swagger3_response_list;
       
    BEGIN
       IF self.components_responses IS NULL
@@ -98,26 +102,30 @@ AS
       END IF;
       
       int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
+      ary_output := dz_swagger3_response_list();
       FOR i IN 1 .. self.components_responses.COUNT
       LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.components_responses(i).response_id;
-         int_index := int_index + 1;
+         IF self.components_responses(i).doREF() = 'TRUE'
+         THEN
+            ary_output.EXTEND();
+            ary_output(int_index) := self.components_responses(i);
+            int_index := int_index + 1;
+            
+         END IF;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_responses_ids;
+   END get_components_responses;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_parameters_ids
-   RETURN MDSYS.SDO_STRING2_ARRAY
+   MEMBER FUNCTION get_components_parameters
+   RETURN dz_swagger3_parameter_list
    AS
       int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
+      ary_output dz_swagger3_parameter_list;
       
    BEGIN
       IF self.components_parameters IS NULL
@@ -128,26 +136,30 @@ AS
       END IF;
       
       int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
+      ary_output := dz_swagger3_parameter_list();
       FOR i IN 1 .. self.components_parameters.COUNT
       LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.components_parameters(i).parameter_id;
-         int_index := int_index + 1;
+         IF self.components_parameters(i).doREF() = 'TRUE'
+         THEN
+            ary_output.EXTEND();
+            ary_output(int_index) := self.components_parameters(i);
+            int_index := int_index + 1;
+           
+         END IF;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_parameters_ids;
+   END get_components_parameters;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_examples_ids
-   RETURN MDSYS.SDO_STRING2_ARRAY
+   MEMBER FUNCTION get_components_examples
+   RETURN dz_swagger3_example_list
    AS
       int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
+      ary_output dz_swagger3_example_list;
       
    BEGIN
       IF self.components_examples IS NULL
@@ -158,26 +170,30 @@ AS
       END IF;
       
       int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
+      ary_output := dz_swagger3_example_list();
       FOR i IN 1 .. self.components_examples.COUNT
       LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.components_examples(i).example_id;
-         int_index := int_index + 1;
+         IF self.components_examples(i).doREF() = 'TRUE'
+         THEN
+            ary_output.EXTEND();
+            ary_output(int_index) := self.components_examples(i);
+            int_index := int_index + 1;
+            
+         END IF;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_examples_ids;
+   END get_components_examples;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_requestBodies_ids
-   RETURN MDSYS.SDO_STRING2_ARRAY
+   MEMBER FUNCTION get_components_requestBodies
+   RETURN dz_swagger3_requestBody_list
    AS
       int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
+      ary_output dz_swagger3_requestBody_list;
       
    BEGIN
       IF self.components_requestBodies IS NULL
@@ -188,26 +204,30 @@ AS
       END IF;
       
       int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
+      ary_output := dz_swagger3_requestBody_list();
       FOR i IN 1 .. self.components_requestBodies.COUNT
       LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.components_requestBodies(i).requestBody_id;
-         int_index := int_index + 1;
+         IF self.components_requestBodies(i).doREF() = 'TRUE'
+         THEN
+            ary_output.EXTEND();
+            ary_output(int_index) := self.components_requestBodies(i);
+            int_index := int_index + 1;
+         
+         END IF;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_requestBodies_ids;
+   END get_components_requestBodies;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_headers_ids
-   RETURN MDSYS.SDO_STRING2_ARRAY
+   MEMBER FUNCTION get_components_headers
+   RETURN dz_swagger3_header_list
    AS
       int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
+      ary_output dz_swagger3_header_list;
       
    BEGIN
       IF self.components_headers IS NULL
@@ -218,26 +238,30 @@ AS
       END IF;
       
       int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
+      ary_output := dz_swagger3_header_list();
       FOR i IN 1 .. self.components_headers.COUNT
       LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.components_headers(i).header_id;
-         int_index := int_index + 1;
+         IF self.components_headers(i).doREF() = 'TRUE'
+         THEN
+            ary_output.EXTEND();
+            ary_output(int_index) := self.components_headers(i);
+            int_index := int_index + 1;
+           
+         END IF;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_headers_ids;
+   END get_components_headers;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_securityScheme_ids
-   RETURN MDSYS.SDO_STRING2_ARRAY
+   MEMBER FUNCTION get_components_securitySchemes
+   RETURN dz_swagger3_securitySchem_list
    AS
       int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
+      ary_output dz_swagger3_securitySchem_list;
       
    BEGIN
       IF self.components_securitySchemes IS NULL
@@ -248,26 +272,30 @@ AS
       END IF;
       
       int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
+      ary_output := dz_swagger3_securitySchem_list();
       FOR i IN 1 .. self.components_securitySchemes.COUNT
       LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.components_securitySchemes(i).scheme_id;
-         int_index := int_index + 1;
+         IF self.components_securitySchemes(i).doREF() = 'TRUE'
+         THEN
+            ary_output.EXTEND();
+            ary_output(int_index) := self.components_securitySchemes(i);
+            int_index := int_index + 1;
+            
+         END IF;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_securityScheme_ids;
+   END get_components_securitySchemes;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_links_ids
-   RETURN MDSYS.SDO_STRING2_ARRAY
+   MEMBER FUNCTION get_components_links
+   RETURN dz_swagger3_link_list
    AS
       int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
+      ary_output dz_swagger3_link_list;
       
    BEGIN
       IF self.components_links IS NULL
@@ -278,26 +306,30 @@ AS
       END IF;
       
       int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
+      ary_output := dz_swagger3_link_list();
       FOR i IN 1 .. self.components_links.COUNT
       LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.components_links(i).link_id;
-         int_index := int_index + 1;
+         IF self.components_links(i).doREF() = 'TRUE'
+         THEN
+            ary_output.EXTEND();
+            ary_output(int_index) := self.components_links(i);
+            int_index := int_index + 1;
+            
+         END IF;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_links_ids;
+   END get_components_links;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION components_callbacks_ids
-   RETURN MDSYS.SDO_STRING2_ARRAY
+   MEMBER FUNCTION get_components_callbacks
+   RETURN dz_swagger3_callback_list
    AS
       int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
+      ary_output dz_swagger3_callback_list;
       
    BEGIN
       IF self.components_callbacks IS NULL
@@ -308,18 +340,22 @@ AS
       END IF;
       
       int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
+      ary_output := dz_swagger3_callback_list();
       FOR i IN 1 .. self.components_callbacks.COUNT
       LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.components_callbacks(i).callback_id;
-         int_index := int_index + 1;
+         IF self.components_callbacks(i).doREF() = 'TRUE'
+         THEN
+            ary_output.EXTEND();
+            ary_output(int_index) := self.components_callbacks(i);
+            int_index := int_index + 1;
+            
+         END IF;
          
       END LOOP;
       
       RETURN ary_output;
    
-   END components_callbacks_ids;
+   END get_components_callbacks;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -354,12 +390,20 @@ AS
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
-      clb_hash         CLOB;
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      str_pad2         VARCHAR2(1 Char);
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      clb_output        CLOB;
+      clb_hash          CLOB;
+      str_pad           VARCHAR2(1 Char);
+      str_pad1          VARCHAR2(1 Char);
+      str_pad2          VARCHAR2(1 Char);
+      ary_schemas       dz_swagger3_schema_nf_list;
+      ary_responses     dz_swagger3_response_list;
+      ary_parameters    dz_swagger3_parameter_list;
+      ary_examples      dz_swagger3_example_list;
+      ary_requestBodies dz_swagger3_requestBody_list;
+      ary_headers       dz_swagger3_header_list;
+      ary_schemes       dz_swagger3_securitySchem_list;
+      ary_links         dz_swagger3_link_list;
+      ary_callbacks     dz_swagger3_callback_list;
       
    BEGIN
       
@@ -367,6 +411,16 @@ AS
       -- Step 10
       -- Check incoming parameters
       --------------------------------------------------------------------------
+      ary_schemas       := self.get_components_schemas();
+      ary_responses     := self.get_components_responses();
+      ary_parameters    := self.get_components_parameters();
+      ary_examples      := self.get_components_examples();
+      ary_requestBodies := self.get_components_requestBodies();
+      ary_headers       := self.get_components_headers();
+      ary_schemes       := self.get_components_securitySchemes();
+      ary_links         := self.get_components_links();
+      ary_callbacks     := self.get_components_callbacks(); 
+
       
       --------------------------------------------------------------------------
       -- Step 20
@@ -389,8 +443,8 @@ AS
       -- Step 30
       -- Add schemas map
       --------------------------------------------------------------------------
-      IF self.components_schemas IS NULL
-      OR self.components_schemas.COUNT = 0
+      IF ary_schemas IS NULL
+      OR ary_schemas.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -407,13 +461,12 @@ AS
             
          END IF;
       
-         ary_keys := self.components_schemas_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_schemas.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_schemas(i).toJSON_component(
-                  p_pretty_print => p_pretty_print + 2
+                str_pad2 || '"' || ary_schemas(i).schema_id || '":' || str_pad || ary_schemas(i).toJSON_component(
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -442,8 +495,8 @@ AS
       -- Step 40
       -- Add responses map
       --------------------------------------------------------------------------
-      IF self.components_responses IS NULL
-      OR self.components_responses.COUNT = 0
+      IF ary_responses IS NULL
+      OR ary_responses.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -460,13 +513,12 @@ AS
             
          END IF;
       
-         ary_keys := self.components_responses_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_responses.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_responses(i).toJSON_schema(
-                  p_pretty_print => p_pretty_print + 2
+                str_pad2 || '"' || ary_responses(i).response_id || '":' || str_pad || ary_responses(i).toJSON_schema(
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -495,8 +547,8 @@ AS
       -- Step 50
       -- Add parameters map
       --------------------------------------------------------------------------
-      IF self.components_parameters IS NULL
-      OR self.components_parameters.COUNT = 0
+      IF ary_parameters IS NULL
+      OR ary_parameters.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -512,14 +564,13 @@ AS
             clb_hash := dz_json_util.pretty('{',-1);
             
          END IF;
-
-         ary_keys := self.components_parameters_ids();
       
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_parameters.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_parameters(i).toJSON_schema(
-                  p_pretty_print => p_pretty_print + 2
+                str_pad2 || '"' || ary_parameters(i).parameter_id || '":' || str_pad || ary_parameters(i).toJSON_schema(
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -548,8 +599,8 @@ AS
       -- Step 60
       -- Add examples map
       --------------------------------------------------------------------------
-      IF self.components_examples IS NULL
-      OR self.components_examples.COUNT = 0
+      IF ary_examples IS NULL
+      OR ary_examples.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -566,13 +617,12 @@ AS
             
          END IF;
 
-         ary_keys := self.components_examples_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_examples.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_examples(i).toJSON_schema(
-                  p_pretty_print => p_pretty_print + 2
+                str_pad2 || '"' || ary_examples(i).example_id || '":' || str_pad || ary_examples(i).toJSON_schema(
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -601,8 +651,8 @@ AS
       -- Step 70
       -- Add requestBodies map
       --------------------------------------------------------------------------
-      IF self.components_requestBodies IS NULL
-      OR self.components_requestBodies.COUNT = 0
+      IF ary_requestBodies IS NULL
+      OR ary_requestBodies.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -619,13 +669,12 @@ AS
             
          END IF;
 
-         ary_keys := self.components_requestBodies_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_requestBodies.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_requestBodies(i).toJSON_schema(
-                  p_pretty_print => p_pretty_print + 2
+                str_pad2 || '"' || ary_requestBodies(i).requestBody_id || '":' || str_pad || ary_requestBodies(i).toJSON_schema(
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -654,8 +703,8 @@ AS
       -- Step 80
       -- Add headers map
       --------------------------------------------------------------------------
-      IF self.components_headers IS NULL
-      OR self.components_headers.COUNT = 0
+      IF ary_headers IS NULL
+      OR ary_headers.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -672,13 +721,12 @@ AS
             
          END IF;
 
-         ary_keys := self.components_headers_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_headers.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_headers(i).toJSON_schema(
-                  p_pretty_print => p_pretty_print + 2
+                str_pad2 || '"' || ary_headers(i).header_id || '":' || str_pad || ary_headers(i).toJSON_schema(
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -707,8 +755,8 @@ AS
       -- Step 90
       -- Add headers map
       --------------------------------------------------------------------------
-      IF self.components_securitySchemes IS NULL
-      OR self.components_securitySchemes.COUNT = 0
+      IF ary_schemes IS NULL
+      OR ary_schemes.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -725,13 +773,12 @@ AS
             
          END IF;
 
-         ary_keys := self.components_securityScheme_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_schemes.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_securitySchemes(i).toJSON_schema(
-                  p_pretty_print => p_pretty_print + 2
+                str_pad2 || '"' || ary_schemes(i).scheme_id || '":' || str_pad || ary_schemes(i).toJSON_schema(
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -760,8 +807,8 @@ AS
       -- Step 100
       -- Add links map
       --------------------------------------------------------------------------
-      IF self.components_links IS NULL
-      OR self.components_links.COUNT = 0
+      IF ary_links IS NULL
+      OR ary_links.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -778,13 +825,12 @@ AS
             
          END IF;
 
-         ary_keys := self.components_links_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_links.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_links(i).toJSON_schema(
-                  p_pretty_print => p_pretty_print + 2
+                str_pad2 || '"' || ary_links(i).link_id || '":' || str_pad || ary_links(i).toJSON_schema(
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -813,8 +859,8 @@ AS
       -- Step 110
       -- Add callbacks map
       --------------------------------------------------------------------------
-      IF self.components_callbacks IS NULL
-      OR self.components_callbacks.COUNT = 0
+      IF ary_callbacks IS NULL
+      OR ary_callbacks.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -831,13 +877,12 @@ AS
             
          END IF;
 
-         ary_keys := self.components_callbacks_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_callbacks.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.components_callbacks(i).toJSON_schema(
-                  p_pretty_print => p_pretty_print + 2
+                str_pad2 || '"' || ary_callbacks(i).callback_id || '":' || str_pad || ary_callbacks(i).toJSON_schema(
+                   p_pretty_print   => p_pretty_print + 2
+                  ,p_force_inline   => p_force_inline
                 )
                ,p_pretty_print + 2
             );
@@ -889,21 +934,38 @@ AS
    ) RETURN CLOB
    AS
       clb_output       CLOB;
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      ary_schemas       dz_swagger3_schema_nf_list;
+      ary_responses     dz_swagger3_response_list;
+      ary_parameters    dz_swagger3_parameter_list;
+      ary_examples      dz_swagger3_example_list;
+      ary_requestBodies dz_swagger3_requestBody_list;
+      ary_headers       dz_swagger3_header_list;
+      ary_schemes       dz_swagger3_securitySchem_list;
+      ary_links         dz_swagger3_link_list;
+      ary_callbacks     dz_swagger3_callback_list;
       
    BEGIN
-   
+      
       --------------------------------------------------------------------------
       -- Step 10
       -- Check incoming parameters
       --------------------------------------------------------------------------
+      ary_schemas       := self.get_components_schemas();
+      ary_responses     := self.get_components_responses();
+      ary_parameters    := self.get_components_parameters();
+      ary_examples      := self.get_components_examples();
+      ary_requestBodies := self.get_components_requestBodies();
+      ary_headers       := self.get_components_headers();
+      ary_schemes       := self.get_components_securitySchemes();
+      ary_links         := self.get_components_links();
+      ary_callbacks     := self.get_components_callbacks(); 
 
       --------------------------------------------------------------------------
       -- Step 20
       -- Write the component schemas
       --------------------------------------------------------------------------
-      IF self.components_schemas IS NULL 
-      OR self.components_schemas.COUNT = 0
+      IF ary_schemas IS NULL 
+      OR ary_schemas.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -915,15 +977,13 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_schemas_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_schemas.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
+                '''' || ary_schemas(i).schema_id || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_schemas(i).toYAML_component(
+            ) || ary_schemas(i).toYAML_component(
                 p_pretty_print   => p_pretty_print + 2
                ,p_force_inline   => p_force_inline
             );
@@ -936,8 +996,8 @@ AS
       -- Step 30
       -- Write the component responses
       --------------------------------------------------------------------------
-      IF self.components_responses IS NULL 
-      OR self.components_responses.COUNT = 0
+      IF ary_responses IS NULL 
+      OR ary_responses.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -949,15 +1009,13 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_responses_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_responses.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
+                '''' || ary_responses(i).response_id || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_responses(i).toYAML_schema(
+            ) || ary_responses(i).toYAML_schema(
                 p_pretty_print   => p_pretty_print + 2
                ,p_force_inline   => p_force_inline
             );
@@ -970,8 +1028,8 @@ AS
       -- Step 40
       -- Write the component parameters
       --------------------------------------------------------------------------
-      IF self.components_parameters IS NULL 
-      OR self.components_parameters.COUNT = 0
+      IF ary_parameters IS NULL 
+      OR ary_parameters.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -983,15 +1041,13 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_parameters_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_parameters.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
+                '''' || ary_parameters(i).parameter_id || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_parameters(i).toYAML_schema(
+            ) || ary_parameters(i).toYAML_schema(
                 p_pretty_print   => p_pretty_print + 2
                ,p_force_inline   => p_force_inline
             );
@@ -1004,8 +1060,8 @@ AS
       -- Step 50
       -- Write the component examples
       --------------------------------------------------------------------------
-      IF self.components_examples IS NULL 
-      OR self.components_examples.COUNT = 0
+      IF ary_examples IS NULL 
+      OR ary_examples.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -1017,15 +1073,13 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_examples_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_examples.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
+                '''' || ary_examples(i).example_id || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_examples(i).toYAML_schema(
+            ) || ary_examples(i).toYAML_schema(
                 p_pretty_print   => p_pretty_print + 2
                ,p_force_inline   => p_force_inline
             );
@@ -1038,8 +1092,8 @@ AS
       -- Step 60
       -- Write the component requestBodies
       --------------------------------------------------------------------------
-      IF self.components_requestBodies IS NULL 
-      OR self.components_requestBodies.COUNT = 0
+      IF ary_requestBodies IS NULL 
+      OR ary_requestBodies.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -1051,15 +1105,13 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_requestBodies_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_requestBodies.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
+                '''' || ary_requestBodies(i).requestBody_id || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_requestBodies(i).toYAML_schema(
+            ) || ary_requestBodies(i).toYAML_schema(
                 p_pretty_print   => p_pretty_print + 2
                ,p_force_inline   => p_force_inline
             );
@@ -1072,8 +1124,8 @@ AS
       -- Step 70
       -- Write the component headers
       --------------------------------------------------------------------------
-      IF self.components_headers IS NULL 
-      OR self.components_headers.COUNT = 0
+      IF ary_headers IS NULL 
+      OR ary_headers.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -1085,15 +1137,13 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_headers_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_headers.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
+                '''' || ary_headers(i).header_id || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_headers(i).toYAML_schema(
+            ) || ary_headers(i).toYAML_schema(
                 p_pretty_print   => p_pretty_print + 2
                ,p_force_inline   => p_force_inline
             );
@@ -1106,8 +1156,8 @@ AS
       -- Step 80
       -- Write the component securitySchemes
       --------------------------------------------------------------------------
-      IF self.components_securitySchemes IS NULL 
-      OR self.components_securitySchemes.COUNT = 0
+      IF ary_schemes IS NULL 
+      OR ary_schemes.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -1119,15 +1169,13 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_securityScheme_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_schemes.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
+                '''' || ary_schemes(i).scheme_id || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_securitySchemes(i).toYAML_schema(
+            ) || ary_schemes(i).toYAML_schema(
                 p_pretty_print   => p_pretty_print + 2
                ,p_force_inline   => p_force_inline
             );
@@ -1140,8 +1188,8 @@ AS
       -- Step 90
       -- Write the component links
       --------------------------------------------------------------------------
-      IF self.components_links IS NULL 
-      OR self.components_links.COUNT = 0
+      IF ary_links IS NULL 
+      OR ary_links.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -1153,15 +1201,13 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_links_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_links.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
+                '''' || ary_links(i).link_id || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_links(i).toYAML_schema(
+            ) || ary_links(i).toYAML_schema(
                 p_pretty_print   => p_pretty_print + 2
                ,p_force_inline   => p_force_inline
             );
@@ -1174,8 +1220,8 @@ AS
       -- Step 100
       -- Write the component callbacks
       --------------------------------------------------------------------------
-      IF self.components_callbacks IS NULL 
-      OR self.components_callbacks.COUNT = 0
+      IF ary_callbacks IS NULL 
+      OR ary_callbacks.COUNT = 0
       OR p_force_inline = 'TRUE'
       THEN
          NULL;
@@ -1187,15 +1233,13 @@ AS
             ,'  '
          );
          
-         ary_keys := self.components_callbacks_ids();
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_callbacks.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
+                '''' || ary_callbacks(i).callback_id || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_callbacks(i).toYAML_schema(
+            ) || ary_callbacks(i).toYAML_schema(
                 p_pretty_print   => p_pretty_print + 2
                ,p_force_inline   => p_force_inline
             );

@@ -604,7 +604,7 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              '$ref'
-            ,'#/components/responses/' || self.response_id
+            ,'#/components/responses/' || dz_swagger3_util.utl_url_escape(self.response_id)
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1

@@ -181,43 +181,39 @@ AS
       IF self.parameter_schema IS NOT NULL
       AND self.parameter_schema.isNULL() = 'FALSE'
       THEN
-         IF self.parameter_schema.doRef() = 'TRUE'
-         THEN
-            ary_working := self.parameter_schema.unique_schemas();
+         ary_working := self.parameter_schema.unique_schemas();
             
-            FOR j IN 1 .. ary_working.COUNT
-            LOOP
-               IF dz_swagger3_util.a_in_b(
-                   ary_working(j).schema_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := ary_working(j);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := ary_working(j).schema_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
-               
-            END LOOP;
-            
+         FOR j IN 1 .. ary_working.COUNT
+         LOOP
             IF dz_swagger3_util.a_in_b(
-                self.parameter_schema.schema_id
+                ary_working(j).schema_id
                ,ary_x
             ) = 'FALSE'
             THEN
                ary_results.EXTEND();
-               ary_results(int_results) := self.parameter_schema;
+               ary_results(int_results) := ary_working(j);
                int_results := int_results + 1;
                
                ary_x.EXTEND();
-               ary_x(int_x) := self.parameter_schema.schema_id;
+               ary_x(int_x) := ary_working(j).schema_id;
                int_x := int_x + 1;
                
             END IF;
+            
+         END LOOP;
+         
+         IF dz_swagger3_util.a_in_b(
+             self.parameter_schema.schema_id
+            ,ary_x
+         ) = 'FALSE'
+         THEN
+            ary_results.EXTEND();
+            ary_results(int_results) := self.parameter_schema;
+            int_results := int_results + 1;
+            
+            ary_x.EXTEND();
+            ary_x(int_x) := self.parameter_schema.schema_id;
+            int_x := int_x + 1;
             
          END IF;
          
@@ -694,7 +690,7 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              '$ref'
-            ,'#/components/parameters/' || self.parameter_id
+            ,'#/components/parameters/' || dz_swagger3_util.utl_url_escape(self.parameter_id)
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1
