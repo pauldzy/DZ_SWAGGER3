@@ -493,6 +493,11 @@ AS
       IF self.schema_force_inline = 'TRUE'
       THEN
          RETURN 'FALSE';
+
+      --ELSIF self.schema_type = 'object'
+      --AND SUBSTR(LOWER(self.schema_id),-5) IN ('.root')
+      --THEN
+      --   RETURN 'FALSE';
          
       ELSIF self.schema_type = 'object'
       THEN
