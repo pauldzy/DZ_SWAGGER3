@@ -1011,7 +1011,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty_str(
-                '"' || self.paths(i).hash_key || '": '
+                dz_swagger3_util.yamlq(self.paths(i).hash_key) || ': '
                ,p_pretty_print + 1
                ,'  '
             ) || self.paths(i).toYAML(

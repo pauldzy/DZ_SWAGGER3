@@ -800,7 +800,10 @@ AS
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'description: ' || dz_swagger3_util.yaml_text(
-                self.parameter_description
+                REGEXP_REPLACE(
+                   self.parameter_description
+                  ,CHR(10) || '$'
+                  ,'')
                ,p_pretty_print
             )
             ,p_pretty_print

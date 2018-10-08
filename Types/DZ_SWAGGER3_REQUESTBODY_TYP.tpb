@@ -111,62 +111,69 @@ AS
       self.requestbody_content(1).media_schema.schema_type := 'object';
       self.requestbody_content(1).media_schema.schema_force_inline := 'TRUE';
       self.requestbody_content(1).media_schema.schema_properties := dz_swagger3_schema_nf_list();
-      self.requestbody_content(1).media_schema.schema_properties.EXTEND(p_parameters.COUNT);
       
+      int_counter := 1;
       FOR i IN 1 .. p_parameters.COUNT
       LOOP
-         obj_schema := dz_swagger3_schema_typ(
-             p_schema_id               => p_parameters(i).parameter_schema.schema_id
-            ,p_schema_category         => p_parameters(i).parameter_schema.schema_category
-            ,p_schema_title            => p_parameters(i).parameter_schema.schema_title
-            ,p_schema_type             => p_parameters(i).parameter_schema.schema_type
-            ,p_schema_description      => p_parameters(i).parameter_schema.schema_description
-            ,p_schema_format           => p_parameters(i).parameter_schema.schema_format
-            ,p_schema_nullable         => p_parameters(i).parameter_schema.schema_nullable
-            ,p_schema_discriminator    => p_parameters(i).parameter_schema.schema_discriminator
-            ,p_schema_readonly         => p_parameters(i).parameter_schema.schema_readonly
-            ,p_schema_writeonly        => p_parameters(i).parameter_schema.schema_writeonly
-            ,p_schema_externalDocs     => p_parameters(i).parameter_schema.schema_externalDocs
-            ,p_schema_example_string   => p_parameters(i).parameter_schema.schema_example_string
-            ,p_schema_example_number   => p_parameters(i).parameter_schema.schema_example_number
-            ,p_schema_deprecated       => p_parameters(i).parameter_schema.schema_deprecated
-            ,p_schema_default_string   => p_parameters(i).parameter_schema.schema_default_string
-            ,p_schema_default_number   => p_parameters(i).parameter_schema.schema_default_number
-            ,p_schema_multipleOf       => p_parameters(i).parameter_schema.schema_multipleOf
-            ,p_schema_minimum          => p_parameters(i).parameter_schema.schema_minimum
-            ,p_schema_exclusiveMinimum => p_parameters(i).parameter_schema.schema_exclusiveMinimum
-            ,p_schema_maximum          => p_parameters(i).parameter_schema.schema_maximum
-            ,p_schema_exclusiveMaximum => p_parameters(i).parameter_schema.schema_exclusiveMaximum
-            ,p_schema_minLength        => p_parameters(i).parameter_schema.schema_minLength
-            ,p_schema_maxLength        => p_parameters(i).parameter_schema.schema_maxLength
-            ,p_schema_pattern          => p_parameters(i).parameter_schema.schema_pattern
-            ,p_schema_minItems         => p_parameters(i).parameter_schema.schema_minItems 
-            ,p_schema_maxItems         => p_parameters(i).parameter_schema.schema_maxItems
-            ,p_schema_uniqueItems      => p_parameters(i).parameter_schema.schema_uniqueItems
-            ,p_schema_minProperties    => p_parameters(i).parameter_schema.schema_minProperties
-            ,p_schema_maxProperties    => p_parameters(i).parameter_schema.schema_maxProperties
-            ,p_xml_name                => p_parameters(i).parameter_schema.xml_name
-            ,p_xml_namespace           => p_parameters(i).parameter_schema.xml_namespace
-            ,p_xml_prefix              => p_parameters(i).parameter_schema.xml_prefix
-            ,p_xml_attribute           => p_parameters(i).parameter_schema.xml_attribute
-            ,p_xml_wrapped             => p_parameters(i).parameter_schema.xml_wrapped
-            ,p_schema_items_schema     => p_parameters(i).parameter_schema.schema_items_schema
-            ,p_schema_properties       => p_parameters(i).parameter_schema.schema_properties
-            ,p_schema_enum_string      => p_parameters(i).parameter_schema.schema_enum_string
-            ,p_schema_enum_number      => p_parameters(i).parameter_schema.schema_enum_number
-            ,p_schema_force_inline     => p_parameters(i).parameter_schema.schema_force_inline
-            ,p_property_list_hidden    => p_parameters(i).parameter_schema.property_list_hidden
-            ,p_combine_schemas         => p_parameters(i).parameter_schema.combine_schemas
-         );
-         
-         obj_schema.hash_key              := p_parameters(i).parameter_name;
-         obj_schema.schema_description    := p_parameters(i).parameter_description;
-         obj_schema.schema_required       := p_parameters(i).parameter_required;
-         obj_schema.schema_deprecated     := p_parameters(i).parameter_deprecated;
-         obj_schema.schema_example_string := p_parameters(i).parameter_example_string;
-         obj_schema.schema_example_number := p_parameters(i).parameter_example_number;
+         IF p_parameters(i).parameter_list_hidden <> 'TRUE'
+         THEN
+            self.requestbody_content(1).media_schema.schema_properties.EXTEND();
+            
+            obj_schema := dz_swagger3_schema_typ(
+                p_schema_id               => p_parameters(i).parameter_schema.schema_id
+               ,p_schema_category         => p_parameters(i).parameter_schema.schema_category
+               ,p_schema_title            => p_parameters(i).parameter_schema.schema_title
+               ,p_schema_type             => p_parameters(i).parameter_schema.schema_type
+               ,p_schema_description      => p_parameters(i).parameter_schema.schema_description
+               ,p_schema_format           => p_parameters(i).parameter_schema.schema_format
+               ,p_schema_nullable         => p_parameters(i).parameter_schema.schema_nullable
+               ,p_schema_discriminator    => p_parameters(i).parameter_schema.schema_discriminator
+               ,p_schema_readonly         => p_parameters(i).parameter_schema.schema_readonly
+               ,p_schema_writeonly        => p_parameters(i).parameter_schema.schema_writeonly
+               ,p_schema_externalDocs     => p_parameters(i).parameter_schema.schema_externalDocs
+               ,p_schema_example_string   => p_parameters(i).parameter_schema.schema_example_string
+               ,p_schema_example_number   => p_parameters(i).parameter_schema.schema_example_number
+               ,p_schema_deprecated       => p_parameters(i).parameter_schema.schema_deprecated
+               ,p_schema_default_string   => p_parameters(i).parameter_schema.schema_default_string
+               ,p_schema_default_number   => p_parameters(i).parameter_schema.schema_default_number
+               ,p_schema_multipleOf       => p_parameters(i).parameter_schema.schema_multipleOf
+               ,p_schema_minimum          => p_parameters(i).parameter_schema.schema_minimum
+               ,p_schema_exclusiveMinimum => p_parameters(i).parameter_schema.schema_exclusiveMinimum
+               ,p_schema_maximum          => p_parameters(i).parameter_schema.schema_maximum
+               ,p_schema_exclusiveMaximum => p_parameters(i).parameter_schema.schema_exclusiveMaximum
+               ,p_schema_minLength        => p_parameters(i).parameter_schema.schema_minLength
+               ,p_schema_maxLength        => p_parameters(i).parameter_schema.schema_maxLength
+               ,p_schema_pattern          => p_parameters(i).parameter_schema.schema_pattern
+               ,p_schema_minItems         => p_parameters(i).parameter_schema.schema_minItems 
+               ,p_schema_maxItems         => p_parameters(i).parameter_schema.schema_maxItems
+               ,p_schema_uniqueItems      => p_parameters(i).parameter_schema.schema_uniqueItems
+               ,p_schema_minProperties    => p_parameters(i).parameter_schema.schema_minProperties
+               ,p_schema_maxProperties    => p_parameters(i).parameter_schema.schema_maxProperties
+               ,p_xml_name                => p_parameters(i).parameter_schema.xml_name
+               ,p_xml_namespace           => p_parameters(i).parameter_schema.xml_namespace
+               ,p_xml_prefix              => p_parameters(i).parameter_schema.xml_prefix
+               ,p_xml_attribute           => p_parameters(i).parameter_schema.xml_attribute
+               ,p_xml_wrapped             => p_parameters(i).parameter_schema.xml_wrapped
+               ,p_schema_items_schema     => p_parameters(i).parameter_schema.schema_items_schema
+               ,p_schema_properties       => p_parameters(i).parameter_schema.schema_properties
+               ,p_schema_enum_string      => p_parameters(i).parameter_schema.schema_enum_string
+               ,p_schema_enum_number      => p_parameters(i).parameter_schema.schema_enum_number
+               ,p_schema_force_inline     => p_parameters(i).parameter_schema.schema_force_inline
+               ,p_property_list_hidden    => p_parameters(i).parameter_schema.property_list_hidden
+               ,p_combine_schemas         => p_parameters(i).parameter_schema.combine_schemas
+            );
+            
+            obj_schema.hash_key              := p_parameters(i).parameter_name;
+            obj_schema.schema_description    := p_parameters(i).parameter_description;
+            obj_schema.schema_required       := p_parameters(i).parameter_required;
+            obj_schema.schema_deprecated     := p_parameters(i).parameter_deprecated;
+            obj_schema.schema_example_string := p_parameters(i).parameter_example_string;
+            obj_schema.schema_example_number := p_parameters(i).parameter_example_number;
 
-         self.requestbody_content(1).media_schema.schema_properties(i) := obj_schema;
+            self.requestbody_content(1).media_schema.schema_properties(int_counter) := obj_schema;
+            int_counter := int_counter + 1;            
+
+         END IF;
          
       END LOOP;
       
@@ -674,7 +681,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
+                dz_swagger3_util.yamlq(ary_keys(i)) || ': '
                ,p_pretty_print + 2
                ,'  '
             ) || self.requestbody_content(i).toYAML(

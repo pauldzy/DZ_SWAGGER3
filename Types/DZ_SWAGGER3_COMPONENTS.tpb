@@ -140,6 +140,7 @@ AS
       FOR i IN 1 .. self.components_parameters.COUNT
       LOOP
          IF self.components_parameters(i).doREF() = 'TRUE'
+         AND self.components_parameters(i).parameter_list_hidden <> 'TRUE'
          THEN
             ary_output.EXTEND();
             ary_output(int_index) := self.components_parameters(i);
@@ -980,7 +981,7 @@ AS
          FOR i IN 1 .. ary_schemas.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_schemas(i).schema_id || ''': '
+                dz_swagger3_util.yamlq(ary_schemas(i).schema_id) || ': '
                ,p_pretty_print + 1
                ,'  '
             ) || ary_schemas(i).toYAML_component(
@@ -1012,7 +1013,7 @@ AS
          FOR i IN 1 .. ary_responses.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_responses(i).response_id || ''': '
+                dz_swagger3_util.yamlq(ary_responses(i).response_id) || ': '
                ,p_pretty_print + 1
                ,'  '
             ) || ary_responses(i).toYAML_schema(
@@ -1044,7 +1045,7 @@ AS
          FOR i IN 1 .. ary_parameters.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_parameters(i).parameter_id || ''': '
+                dz_swagger3_util.yamlq(ary_parameters(i).parameter_id) || ': '
                ,p_pretty_print + 1
                ,'  '
             ) || ary_parameters(i).toYAML_schema(
@@ -1076,7 +1077,7 @@ AS
          FOR i IN 1 .. ary_examples.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_examples(i).example_id || ''': '
+                dz_swagger3_util.yamlq(ary_examples(i).example_id) || ': '
                ,p_pretty_print + 1
                ,'  '
             ) || ary_examples(i).toYAML_schema(
@@ -1108,7 +1109,7 @@ AS
          FOR i IN 1 .. ary_requestBodies.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_requestBodies(i).requestBody_id || ''': '
+                dz_swagger3_util.yamlq(ary_requestBodies(i).requestBody_id) || ': '
                ,p_pretty_print + 1
                ,'  '
             ) || ary_requestBodies(i).toYAML_schema(
@@ -1140,7 +1141,7 @@ AS
          FOR i IN 1 .. ary_headers.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_headers(i).header_id || ''': '
+                dz_swagger3_util.yamlq(ary_headers(i).header_id) || ': '
                ,p_pretty_print + 1
                ,'  '
             ) || ary_headers(i).toYAML_schema(
@@ -1172,7 +1173,7 @@ AS
          FOR i IN 1 .. ary_schemes.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_schemes(i).scheme_id || ''': '
+                dz_swagger3_util.yamlq(ary_schemes(i).scheme_id) || ': '
                ,p_pretty_print + 1
                ,'  '
             ) || ary_schemes(i).toYAML_schema(
@@ -1204,7 +1205,7 @@ AS
          FOR i IN 1 .. ary_links.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_links(i).link_id || ''': '
+                dz_swagger3_util.yamlq(ary_links(i).link_id) || ': '
                ,p_pretty_print + 1
                ,'  '
             ) || ary_links(i).toYAML_schema(
@@ -1236,7 +1237,7 @@ AS
          FOR i IN 1 .. ary_callbacks.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_callbacks(i).callback_id || ''': '
+                dz_swagger3_util.yamlq(ary_callbacks(i).callback_id) || ': '
                ,p_pretty_print + 1
                ,'  '
             ) || ary_callbacks(i).toYAML_schema(

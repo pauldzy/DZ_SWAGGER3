@@ -1680,29 +1680,37 @@ AS
       -- Step 30
       -- Add path summary
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.value2json(
-             'summary'
-            ,self.path_summary
+      IF self.path_summary IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'summary'
+               ,self.path_summary
+               ,p_pretty_print + 1
+            )
             ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
+         );
+         str_pad1 := ',';
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 40
       -- Add path description 
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.value2json(
-             'description'
-            ,self.path_description
+      IF self.path_description IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'description'
+               ,self.path_description
+               ,p_pretty_print + 1
+            )
             ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
+         );
+         str_pad1 := ',';
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 50

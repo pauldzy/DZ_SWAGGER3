@@ -84,7 +84,8 @@ AS
       EXCEPTION
          WHEN NO_DATA_FOUND
          THEN
-             RETURN;
+            RAISE_APPLICATION_ERROR(-20001,'missing ' || p_schema_id);
+            --RETURN;
              
          WHEN OTHERS
          THEN
@@ -550,7 +551,7 @@ AS
             ary_working := TREAT(
                self.schema_properties(i) AS dz_swagger3_schema_typ
             ).unique_schemas();
-
+            
             FOR j IN 1 .. ary_working.COUNT
             LOOP
                obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
@@ -2224,7 +2225,7 @@ AS
                
             ELSE
                clb_output := clb_output || dz_json_util.pretty(
-                   '''' || ary_keys(i) || ''': '
+                   dz_swagger3_util.yamlq(ary_keys(i)) || ': '
                   ,p_pretty_print + 1
                   ,'  '
                ) || self.schema_properties(i).toYAML(
