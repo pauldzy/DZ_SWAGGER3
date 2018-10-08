@@ -23,6 +23,71 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   FUNCTION yaml_quote(
+       p_input        IN  VARCHAR2
+   ) RETURN VARCHAR2
+   AS
+   BEGIN
+   
+      IF INSTR(p_input,CHR(10)) > 0
+      OR INSTR(p_input,CHR(13)) > 0
+      THEN
+         RETURN 'multiline';
+         
+      ELSIF REGEXP_LIKE(p_input,'\:|\?|\]|\[|\"|\''|\&|\%|\$')
+      THEN
+         RETURN 'double';
+         
+      ELSIF REGEXP_LIKE(p_input,'^[-[:digit:],.]+$')
+      OR LOWER(p_input) IN ('true','false') 
+      OR INSTR(p_input,'#') = 1     
+      THEN
+         RETURN 'single';
+         
+      ELSE
+         RETURN 'bare';
+         
+      END IF;
+   
+   END yaml_quote;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION yaml_key(
+       p_input        IN  VARCHAR2
+   ) RETURN VARCHAR2
+   AS
+      str_format  VARCHAR2(4000 Char);
+      
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10 
+      -- Determine what format to use
+      --------------------------------------------------------------------------
+      str_format := yaml_quote(p_input);
+      
+      --------------------------------------------------------------------------
+      -- Step 20 
+      -- Return with or without quotes as needed
+      --------------------------------------------------------------------------
+      IF str_format = 'single'
+      THEN
+         RETURN '''' || p_input || '''';
+         
+      ELSIF str_format = 'double'
+      THEN
+         RETURN '"' || p_input || '"';
+         
+      ELSE
+         RETURN p_input;
+      
+      END IF;
+   
+   END yaml_key;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    FUNCTION yaml_text(
        p_input        IN  VARCHAR2 
       ,p_pretty_print IN  NUMBER DEFAULT 0
@@ -38,25 +103,7 @@ AS
       -- Step 10 
       -- Determine what format to use
       --------------------------------------------------------------------------
-      IF INSTR(p_input,CHR(10)) > 0
-      OR INSTR(p_input,CHR(13)) > 0
-      THEN
-         str_format := 'multiline';
-         
-      ELSIF REGEXP_LIKE(p_input,'\:|\?|\]|\[|\"|\''|\&|\%|\$')
-      THEN
-         str_format := 'double';
-         
-      ELSIF REGEXP_LIKE(p_input,'^[-[:digit:],.]+$')
-      OR LOWER(p_input) IN ('true','false') 
-      OR INSTR(p_input,'#') = 1     
-      THEN
-         str_format := 'single';
-         
-      ELSE
-         str_format := 'bare';
-         
-      END IF;
+      str_format := yaml_quote(p_input);
       
       --------------------------------------------------------------------------
       -- Step 20 
