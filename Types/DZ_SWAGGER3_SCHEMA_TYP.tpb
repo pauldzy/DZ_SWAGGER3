@@ -438,24 +438,7 @@ AS
       a.combine_order;          
    
    END addCombined;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER PROCEDURE prune(
-       SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
-   )
-   AS
-   BEGIN
-      
-      IF self.schema_items_schema IS NOT NULL
-      AND self.schema_items_schema.doRef() = 'TRUE'
-      THEN
-         NULL; --self.schema_items_schema := NULL;
 
-      END IF;
-      
-   END prune;
-   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    OVERRIDING MEMBER FUNCTION isNULL
@@ -495,10 +478,10 @@ AS
       THEN
          RETURN 'FALSE';
 
-      --ELSIF self.schema_type = 'object'
-      --AND SUBSTR(LOWER(self.schema_id),-5) IN ('.root')
-      --THEN
-      --   RETURN 'FALSE';
+      ELSIF self.schema_type = 'object'
+      AND SUBSTR(LOWER(self.schema_id),-5) IN ('.root')
+      THEN
+         RETURN 'FALSE';
          
       ELSIF self.schema_type = 'object'
       THEN
@@ -518,15 +501,11 @@ AS
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_schemas
-   RETURN dz_swagger3_schema_nf_list
+   MEMBER PROCEDURE unique_schemas(
+      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
+   )
    AS
-      ary_results   dz_swagger3_schema_nf_list;
-      ary_working   dz_swagger3_schema_nf_list;
       obj_schema    dz_swagger3_schema_typ;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
    
    BEGIN
    
@@ -534,11 +513,12 @@ AS
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_schema_nf_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
-      
+      IF p_schemas IS NULL
+      THEN
+         p_schemas := dz_swagger3_schema_nf_list();
+         
+      END IF;
+
       --------------------------------------------------------------------------
       -- Step 20
       -- Pull the schemas from the properties
@@ -548,130 +528,17 @@ AS
       THEN
          FOR i IN 1 .. self.schema_properties.COUNT
          LOOP
-            ary_working := TREAT(
-               self.schema_properties(i) AS dz_swagger3_schema_typ
-            ).unique_schemas();
-            
-            FOR j IN 1 .. ary_working.COUNT
-            LOOP
-               obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
-               
-               IF dz_swagger3_util.a_in_b(
-                   obj_schema.schema_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  obj_schema.prune();
-                  ary_results(int_results) := dz_swagger3_schema_typ(
-                      p_schema_id               => obj_schema.schema_id
-                     ,p_schema_category         => obj_schema.schema_category
-                     ,p_schema_title            => obj_schema.schema_title
-                     ,p_schema_type             => obj_schema.schema_type
-                     ,p_schema_description      => obj_schema.schema_description
-                     ,p_schema_format           => obj_schema.schema_format
-                     ,p_schema_nullable         => obj_schema.schema_nullable
-                     ,p_schema_discriminator    => obj_schema.schema_discriminator
-                     ,p_schema_readonly         => obj_schema.schema_readonly
-                     ,p_schema_writeonly        => obj_schema.schema_writeonly
-                     ,p_schema_externalDocs     => obj_schema.schema_externalDocs
-                     ,p_schema_example_string   => obj_schema.schema_example_string
-                     ,p_schema_example_number   => obj_schema.schema_example_number
-                     ,p_schema_deprecated       => obj_schema.schema_deprecated
-                     ,p_schema_default_string   => obj_schema.schema_default_string
-                     ,p_schema_default_number   => obj_schema.schema_default_number
-                     ,p_schema_multipleOf       => obj_schema.schema_multipleOf
-                     ,p_schema_minimum          => obj_schema.schema_minimum
-                     ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
-                     ,p_schema_maximum          => obj_schema.schema_maximum
-                     ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
-                     ,p_schema_minLength        => obj_schema.schema_minLength
-                     ,p_schema_maxLength        => obj_schema.schema_maxLength
-                     ,p_schema_pattern          => obj_schema.schema_pattern
-                     ,p_schema_minItems         => obj_schema.schema_minItems
-                     ,p_schema_maxItems         => obj_schema.schema_maxItems
-                     ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
-                     ,p_schema_minProperties    => obj_schema.schema_minProperties
-                     ,p_schema_maxProperties    => obj_schema.schema_maxProperties
-                     ,p_xml_name                => obj_schema.xml_name
-                     ,p_xml_namespace           => obj_schema.xml_namespace
-                     ,p_xml_prefix              => obj_schema.xml_prefix
-                     ,p_xml_attribute           => obj_schema.xml_attribute
-                     ,p_xml_wrapped             => obj_schema.xml_wrapped
-                     ,p_schema_items_schema     => obj_schema.schema_items_schema
-                     ,p_schema_properties       => obj_schema.schema_properties
-                     ,p_schema_enum_string      => obj_schema.schema_enum_string
-                     ,p_schema_enum_number      => obj_schema.schema_enum_number
-                     ,p_schema_force_inline     => obj_schema.schema_force_inline
-                     ,p_property_list_hidden    => obj_schema.property_list_hidden
-                     ,p_combine_schemas         => obj_schema.combine_schemas
-                  );
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := obj_schema.schema_id;
-                  int_x := int_x + 1;
-
-               END IF;
-               
-            END LOOP;
-               
-            IF dz_swagger3_util.a_in_b(
-                self.schema_properties(i).schema_id
-               ,ary_x
+            obj_schema := TREAT(self.schema_properties(i) AS dz_swagger3_schema_typ);
+  
+            IF dz_swagger3_util.a_in_schemas(
+                obj_schema.schema_id
+               ,p_schemas
             ) = 'FALSE'
             THEN
-               ary_results.EXTEND();
-               obj_schema := TREAT(self.schema_properties(i) AS dz_swagger3_schema_typ);
-               obj_schema.prune();
-               ary_results(int_results) := dz_swagger3_schema_typ(
-                   p_schema_id               => obj_schema.schema_id
-                  ,p_schema_category         => obj_schema.schema_category
-                  ,p_schema_title            => obj_schema.schema_title
-                  ,p_schema_type             => obj_schema.schema_type
-                  ,p_schema_description      => obj_schema.schema_description
-                  ,p_schema_format           => obj_schema.schema_format
-                  ,p_schema_nullable         => obj_schema.schema_nullable
-                  ,p_schema_discriminator    => obj_schema.schema_discriminator
-                  ,p_schema_readonly         => obj_schema.schema_readonly
-                  ,p_schema_writeonly        => obj_schema.schema_writeonly
-                  ,p_schema_externalDocs     => obj_schema.schema_externalDocs
-                  ,p_schema_example_string   => obj_schema.schema_example_string
-                  ,p_schema_example_number   => obj_schema.schema_example_number
-                  ,p_schema_deprecated       => obj_schema.schema_deprecated
-                  ,p_schema_default_string   => obj_schema.schema_default_string
-                  ,p_schema_default_number   => obj_schema.schema_default_number
-                  ,p_schema_multipleOf       => obj_schema.schema_multipleOf
-                  ,p_schema_minimum          => obj_schema.schema_minimum
-                  ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
-                  ,p_schema_maximum          => obj_schema.schema_maximum
-                  ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
-                  ,p_schema_minLength        => obj_schema.schema_minLength
-                  ,p_schema_maxLength        => obj_schema.schema_maxLength
-                  ,p_schema_pattern          => obj_schema.schema_pattern
-                  ,p_schema_minItems         => obj_schema.schema_minItems
-                  ,p_schema_maxItems         => obj_schema.schema_maxItems
-                  ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
-                  ,p_schema_minProperties    => obj_schema.schema_minProperties
-                  ,p_schema_maxProperties    => obj_schema.schema_maxProperties
-                  ,p_xml_name                => obj_schema.xml_name
-                  ,p_xml_namespace           => obj_schema.xml_namespace
-                  ,p_xml_prefix              => obj_schema.xml_prefix
-                  ,p_xml_attribute           => obj_schema.xml_attribute
-                  ,p_xml_wrapped             => obj_schema.xml_wrapped
-                  ,p_schema_items_schema     => obj_schema.schema_items_schema
-                  ,p_schema_properties       => obj_schema.schema_properties
-                  ,p_schema_enum_string      => obj_schema.schema_enum_string
-                  ,p_schema_enum_number      => obj_schema.schema_enum_number
-                  ,p_schema_force_inline     => obj_schema.schema_force_inline
-                  ,p_property_list_hidden    => obj_schema.property_list_hidden
-                  ,p_combine_schemas         => obj_schema.combine_schemas
-               );
-               int_results := int_results + 1;
+               obj_schema.unique_schemas(p_schemas);
                
-               ary_x.EXTEND();
-               ary_x(int_x) := obj_schema.schema_id;
-               int_x := int_x + 1;
+               p_schemas.EXTEND();
+               p_schemas(p_schemas.COUNT) := obj_schema;
                
             END IF;
             
@@ -686,130 +553,17 @@ AS
       IF self.schema_items_schema IS NOT NULL
       AND self.schema_items_schema.isNULL() = 'FALSE'
       THEN
-         ary_working := TREAT(
-            self.schema_items_schema AS dz_swagger3_schema_typ
-         ).unique_schemas();
-
-         FOR j IN 1 .. ary_working.COUNT
-         LOOP
-            obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
-            
-            IF dz_swagger3_util.a_in_b(
-                obj_schema.schema_id
-               ,ary_x
-            ) = 'FALSE'
-            THEN
-               ary_results.EXTEND();
-               obj_schema.prune();
-               ary_results(int_results) := dz_swagger3_schema_typ(
-                   p_schema_id               => obj_schema.schema_id
-                  ,p_schema_category         => obj_schema.schema_category
-                  ,p_schema_title            => obj_schema.schema_title
-                  ,p_schema_type             => obj_schema.schema_type
-                  ,p_schema_description      => obj_schema.schema_description
-                  ,p_schema_format           => obj_schema.schema_format
-                  ,p_schema_nullable         => obj_schema.schema_nullable
-                  ,p_schema_discriminator    => obj_schema.schema_discriminator
-                  ,p_schema_readonly         => obj_schema.schema_readonly
-                  ,p_schema_writeonly        => obj_schema.schema_writeonly
-                  ,p_schema_externalDocs     => obj_schema.schema_externalDocs
-                  ,p_schema_example_string   => obj_schema.schema_example_string
-                  ,p_schema_example_number   => obj_schema.schema_example_number
-                  ,p_schema_deprecated       => obj_schema.schema_deprecated
-                  ,p_schema_default_string   => obj_schema.schema_default_string
-                  ,p_schema_default_number   => obj_schema.schema_default_number
-                  ,p_schema_multipleOf       => obj_schema.schema_multipleOf
-                  ,p_schema_minimum          => obj_schema.schema_minimum
-                  ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
-                  ,p_schema_maximum          => obj_schema.schema_maximum
-                  ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
-                  ,p_schema_minLength        => obj_schema.schema_minLength
-                  ,p_schema_maxLength        => obj_schema.schema_maxLength
-                  ,p_schema_pattern          => obj_schema.schema_pattern
-                  ,p_schema_minItems         => obj_schema.schema_minItems
-                  ,p_schema_maxItems         => obj_schema.schema_maxItems
-                  ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
-                  ,p_schema_minProperties    => obj_schema.schema_minProperties
-                  ,p_schema_maxProperties    => obj_schema.schema_maxProperties
-                  ,p_xml_name                => obj_schema.xml_name
-                  ,p_xml_namespace           => obj_schema.xml_namespace
-                  ,p_xml_prefix              => obj_schema.xml_prefix
-                  ,p_xml_attribute           => obj_schema.xml_attribute
-                  ,p_xml_wrapped             => obj_schema.xml_wrapped
-                  ,p_schema_items_schema     => obj_schema.schema_items_schema
-                  ,p_schema_properties       => obj_schema.schema_properties
-                  ,p_schema_enum_string      => obj_schema.schema_enum_string
-                  ,p_schema_enum_number      => obj_schema.schema_enum_number
-                  ,p_schema_force_inline     => obj_schema.schema_force_inline
-                  ,p_property_list_hidden    => obj_schema.property_list_hidden
-                  ,p_combine_schemas         => obj_schema.combine_schemas
-               );
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := obj_schema.schema_id;
-               int_x := int_x + 1;
-
-            END IF;
-      
-         END LOOP;
+         obj_schema := TREAT(self.schema_items_schema AS dz_swagger3_schema_typ);
          
-         IF dz_swagger3_util.a_in_b(
-             self.schema_items_schema.schema_id
-            ,ary_x
+         IF dz_swagger3_util.a_in_schemas(
+             obj_schema.schema_id
+            ,p_schemas
          ) = 'FALSE'
          THEN
-            ary_results.EXTEND();
-            obj_schema := TREAT(self.schema_items_schema AS dz_swagger3_schema_typ);
-            obj_schema.prune();
-            ary_results(int_results) := dz_swagger3_schema_typ(
-                p_schema_id               => obj_schema.schema_id
-               ,p_schema_category         => obj_schema.schema_category
-               ,p_schema_title            => obj_schema.schema_title
-               ,p_schema_type             => obj_schema.schema_type
-               ,p_schema_description      => obj_schema.schema_description
-               ,p_schema_format           => obj_schema.schema_format
-               ,p_schema_nullable         => obj_schema.schema_nullable
-               ,p_schema_discriminator    => obj_schema.schema_discriminator
-               ,p_schema_readonly         => obj_schema.schema_readonly
-               ,p_schema_writeonly        => obj_schema.schema_writeonly
-               ,p_schema_externalDocs     => obj_schema.schema_externalDocs
-               ,p_schema_example_string   => obj_schema.schema_example_string
-               ,p_schema_example_number   => obj_schema.schema_example_number
-               ,p_schema_deprecated       => obj_schema.schema_deprecated
-               ,p_schema_default_string   => obj_schema.schema_default_string
-               ,p_schema_default_number   => obj_schema.schema_default_number
-               ,p_schema_multipleOf       => obj_schema.schema_multipleOf
-               ,p_schema_minimum          => obj_schema.schema_minimum
-               ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
-               ,p_schema_maximum          => obj_schema.schema_maximum
-               ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
-               ,p_schema_minLength        => obj_schema.schema_minLength
-               ,p_schema_maxLength        => obj_schema.schema_maxLength
-               ,p_schema_pattern          => obj_schema.schema_pattern
-               ,p_schema_minItems         => obj_schema.schema_minItems
-               ,p_schema_maxItems         => obj_schema.schema_maxItems
-               ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
-               ,p_schema_minProperties    => obj_schema.schema_minProperties
-               ,p_schema_maxProperties    => obj_schema.schema_maxProperties
-               ,p_xml_name                => obj_schema.xml_name
-               ,p_xml_namespace           => obj_schema.xml_namespace
-               ,p_xml_prefix              => obj_schema.xml_prefix
-               ,p_xml_attribute           => obj_schema.xml_attribute
-               ,p_xml_wrapped             => obj_schema.xml_wrapped
-               ,p_schema_items_schema     => obj_schema.schema_items_schema
-               ,p_schema_properties       => obj_schema.schema_properties
-               ,p_schema_enum_string      => obj_schema.schema_enum_string
-               ,p_schema_enum_number      => obj_schema.schema_enum_number
-               ,p_schema_force_inline     => obj_schema.schema_force_inline
-               ,p_property_list_hidden    => obj_schema.property_list_hidden
-               ,p_combine_schemas         => obj_schema.combine_schemas
-            );
-            int_results := int_results + 1;
+            obj_schema.unique_schemas(p_schemas);
             
-            ary_x.EXTEND();
-            ary_x(int_x) := obj_schema.schema_id;
-            int_x := int_x + 1;
+            p_schemas.EXTEND();
+            p_schemas(p_schemas.COUNT) := obj_schema;
             
          END IF;
          
@@ -824,130 +578,17 @@ AS
       THEN
          FOR i IN 1 .. self.combine_schemas.COUNT
          LOOP
-            ary_working := TREAT(
-               self.combine_schemas(i) AS dz_swagger3_schema_typ
-            ).unique_schemas();
-
-            FOR j IN 1 .. ary_working.COUNT
-            LOOP
-               obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
-               
-               IF dz_swagger3_util.a_in_b(
-                   obj_schema.schema_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  obj_schema.prune();
-                  ary_results(int_results) := dz_swagger3_schema_typ(
-                      p_schema_id               => obj_schema.schema_id
-                     ,p_schema_category         => obj_schema.schema_category
-                     ,p_schema_title            => obj_schema.schema_title
-                     ,p_schema_type             => obj_schema.schema_type
-                     ,p_schema_description      => obj_schema.schema_description
-                     ,p_schema_format           => obj_schema.schema_format
-                     ,p_schema_nullable         => obj_schema.schema_nullable
-                     ,p_schema_discriminator    => obj_schema.schema_discriminator
-                     ,p_schema_readonly         => obj_schema.schema_readonly
-                     ,p_schema_writeonly        => obj_schema.schema_writeonly
-                     ,p_schema_externalDocs     => obj_schema.schema_externalDocs
-                     ,p_schema_example_string   => obj_schema.schema_example_string
-                     ,p_schema_example_number   => obj_schema.schema_example_number
-                     ,p_schema_deprecated       => obj_schema.schema_deprecated
-                     ,p_schema_default_string   => obj_schema.schema_default_string
-                     ,p_schema_default_number   => obj_schema.schema_default_number
-                     ,p_schema_multipleOf       => obj_schema.schema_multipleOf
-                     ,p_schema_minimum          => obj_schema.schema_minimum
-                     ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
-                     ,p_schema_maximum          => obj_schema.schema_maximum
-                     ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
-                     ,p_schema_minLength        => obj_schema.schema_minLength
-                     ,p_schema_maxLength        => obj_schema.schema_maxLength
-                     ,p_schema_pattern          => obj_schema.schema_pattern
-                     ,p_schema_minItems         => obj_schema.schema_minItems
-                     ,p_schema_maxItems         => obj_schema.schema_maxItems
-                     ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
-                     ,p_schema_minProperties    => obj_schema.schema_minProperties
-                     ,p_schema_maxProperties    => obj_schema.schema_maxProperties
-                     ,p_xml_name                => obj_schema.xml_name
-                     ,p_xml_namespace           => obj_schema.xml_namespace
-                     ,p_xml_prefix              => obj_schema.xml_prefix
-                     ,p_xml_attribute           => obj_schema.xml_attribute
-                     ,p_xml_wrapped             => obj_schema.xml_wrapped
-                     ,p_schema_items_schema     => obj_schema.schema_items_schema
-                     ,p_schema_properties       => obj_schema.schema_properties
-                     ,p_schema_enum_string      => obj_schema.schema_enum_string
-                     ,p_schema_enum_number      => obj_schema.schema_enum_number
-                     ,p_schema_force_inline     => obj_schema.schema_force_inline
-                     ,p_property_list_hidden    => obj_schema.property_list_hidden
-                     ,p_combine_schemas         => obj_schema.combine_schemas
-                  );
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := obj_schema.schema_id;
-                  int_x := int_x + 1;
-
-               END IF;
-         
-            END LOOP;
-               
-            IF dz_swagger3_util.a_in_b(
-                self.combine_schemas(i).schema_id
-               ,ary_x
+            obj_schema := TREAT(self.combine_schemas(i) AS dz_swagger3_schema_typ);
+            
+            IF dz_swagger3_util.a_in_schemas(
+                obj_schema.schema_id
+               ,p_schemas
             ) = 'FALSE'
             THEN
-               ary_results.EXTEND();
-               obj_schema := TREAT(self.combine_schemas(i) AS dz_swagger3_schema_typ);
-               obj_schema.prune();
-               ary_results(int_results) := dz_swagger3_schema_typ(
-                   p_schema_id               => obj_schema.schema_id
-                  ,p_schema_category         => obj_schema.schema_category
-                  ,p_schema_title            => obj_schema.schema_title
-                  ,p_schema_type             => obj_schema.schema_type
-                  ,p_schema_description      => obj_schema.schema_description
-                  ,p_schema_format           => obj_schema.schema_format
-                  ,p_schema_nullable         => obj_schema.schema_nullable
-                  ,p_schema_discriminator    => obj_schema.schema_discriminator
-                  ,p_schema_readonly         => obj_schema.schema_readonly
-                  ,p_schema_writeonly        => obj_schema.schema_writeonly
-                  ,p_schema_externalDocs     => obj_schema.schema_externalDocs
-                  ,p_schema_example_string   => obj_schema.schema_example_string
-                  ,p_schema_example_number   => obj_schema.schema_example_number
-                  ,p_schema_deprecated       => obj_schema.schema_deprecated
-                  ,p_schema_default_string   => obj_schema.schema_default_string
-                  ,p_schema_default_number   => obj_schema.schema_default_number
-                  ,p_schema_multipleOf       => obj_schema.schema_multipleOf
-                  ,p_schema_minimum          => obj_schema.schema_minimum
-                  ,p_schema_exclusiveMinimum => obj_schema.schema_exclusiveMinimum
-                  ,p_schema_maximum          => obj_schema.schema_maximum
-                  ,p_schema_exclusiveMaximum => obj_schema.schema_exclusiveMaximum
-                  ,p_schema_minLength        => obj_schema.schema_minLength
-                  ,p_schema_maxLength        => obj_schema.schema_maxLength
-                  ,p_schema_pattern          => obj_schema.schema_pattern
-                  ,p_schema_minItems         => obj_schema.schema_minItems
-                  ,p_schema_maxItems         => obj_schema.schema_maxItems
-                  ,p_schema_uniqueItems      => obj_schema.schema_uniqueItems
-                  ,p_schema_minProperties    => obj_schema.schema_minProperties
-                  ,p_schema_maxProperties    => obj_schema.schema_maxProperties
-                  ,p_xml_name                => obj_schema.xml_name
-                  ,p_xml_namespace           => obj_schema.xml_namespace
-                  ,p_xml_prefix              => obj_schema.xml_prefix
-                  ,p_xml_attribute           => obj_schema.xml_attribute
-                  ,p_xml_wrapped             => obj_schema.xml_wrapped
-                  ,p_schema_items_schema     => obj_schema.schema_items_schema
-                  ,p_schema_properties       => obj_schema.schema_properties
-                  ,p_schema_enum_string      => obj_schema.schema_enum_string
-                  ,p_schema_enum_number      => obj_schema.schema_enum_number
-                  ,p_schema_force_inline     => obj_schema.schema_force_inline
-                  ,p_property_list_hidden    => obj_schema.property_list_hidden
-                  ,p_combine_schemas         => obj_schema.combine_schemas
-               );
-               int_results := int_results + 1;
+               obj_schema.unique_schemas(p_schemas);
                
-               ary_x.EXTEND();
-               ary_x(int_x) := obj_schema.schema_id;
-               int_x := int_x + 1;
+               p_schemas.EXTEND();
+               p_schemas(p_schemas.COUNT) := obj_schema;
                
             END IF;
             
@@ -955,12 +596,6 @@ AS
          
       END IF;
       
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
-
    END unique_schemas;
    
    ----------------------------------------------------------------------------
@@ -1118,7 +753,7 @@ AS
       -- Step 40
       -- Add optional title object
       --------------------------------------------------------------------------
-      IF str_jsonschema = 'TRUE'
+      IF self.inject_jsonschema = 'TRUE'
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
@@ -1136,15 +771,31 @@ AS
       -- Step 30
       -- Add base attributes
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.value2json(
-             'type'
-            ,self.schema_type
+      IF str_jsonschema = 'TRUE'
+      AND self.schema_nullable = 'TRUE'
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'type'
+               ,MDSYS.SDO_STRING2_ARRAY(self.schema_type,'null')
+               ,p_pretty_print + 1
+            )
             ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
+         );
+         str_pad1 := ',';
+      
+      ELSE
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'type'
+               ,self.schema_type
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+      
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 40
@@ -1374,7 +1025,10 @@ AS
          clb_output := clb_output || dz_json_util.pretty(
              str_pad || dz_json_main.formatted2json(
                 'externalDocs'
-               ,self.schema_externalDocs.toJSON(p_pretty_print + 1)
+               ,self.schema_externalDocs.toJSON(
+                   p_pretty_print   => p_pretty_print + 1
+                  ,p_force_inline   => p_force_inline
+                )
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -1455,7 +1109,8 @@ AS
                 'items'
                ,self.schema_items_schema.toJSON(
                    p_pretty_print   => p_pretty_print + 1
-                  ,p_force_inline   => p_force_inline   
+                  ,p_force_inline   => p_force_inline
+                  ,p_jsonschema     => p_jsonschema
                 )
                ,p_pretty_print + 1
             )
@@ -1487,7 +1142,8 @@ AS
                      ,p_xml_attribute  => self.xml_attribute
                      ,p_xml_wrapped    => self.xml_wrapped
                    ).toJSON(
-                     p_pretty_print => p_pretty_print + 1
+                      p_pretty_print   => p_pretty_print + 1
+                     ,p_force_inline   => p_force_inline
                    )
                   ,p_pretty_print + 1
                 )
@@ -1536,6 +1192,7 @@ AS
                    str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.schema_properties(i).toJSON(
                       p_pretty_print   => p_pretty_print + 2
                      ,p_force_inline   => p_force_inline
+                     ,p_jsonschema     => p_jsonschema
                    )
                   ,p_pretty_print + 2
                );
@@ -1761,6 +1418,7 @@ AS
                ,self.combine_schemas(1).toJSON(
                    p_pretty_print   => p_pretty_print + 1
                   ,p_force_inline   => p_force_inline
+                  ,p_jsonschema     => p_jsonschema
                 )
                ,p_pretty_print + 1
             )
@@ -1786,6 +1444,7 @@ AS
                 str_pad2 || self.combine_schemas(i).toJSON(
                    p_pretty_print   => p_pretty_print + 2
                   ,p_force_inline   => p_force_inline
+                  ,p_jsonschema     => p_jsonschema
                 )
                ,p_pretty_print + 2
             );
@@ -1943,7 +1602,7 @@ AS
       IF self.schema_title IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'title: ' || self.schema_title
+             'title: ' || dz_swagger3_util.yamlq(self.schema_title)
             ,p_pretty_print
             ,'  '
          );
@@ -1958,7 +1617,7 @@ AS
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'description: ' || dz_swagger3_util.yaml_text(
-                self.schema_description
+                REGEXP_REPLACE(self.schema_description,CHR(10) || '$','')
                ,p_pretty_print
             )
             ,p_pretty_print
@@ -2113,7 +1772,8 @@ AS
             ,p_pretty_print
             ,'  '
          ) || self.schema_externalDocs.toYAML(
-            p_pretty_print + 1
+             p_pretty_print   => p_pretty_print + 1
+            ,p_force_inline   => p_force_inline
          );
          
       END IF;
@@ -2125,7 +1785,7 @@ AS
       IF self.schema_example_string IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
-             'example: ' || self.schema_example_string
+             'example: ' || dz_swagger3_util.yamlq(self.schema_example_string)
             ,p_pretty_print
             ,'  '
          );
@@ -2193,7 +1853,8 @@ AS
             ,p_xml_attribute => self.xml_attribute
             ,p_xml_wrapped   => self.xml_wrapped
          ).toYAML(
-            p_pretty_print + 1
+             p_pretty_print   => p_pretty_print + 1
+            ,p_force_inline   => p_force_inline
          );
       
       END IF;
@@ -2261,7 +1922,7 @@ AS
             FOR i IN 1 .. ary_required.COUNT
             LOOP
                clb_output := clb_output || dz_json_util.pretty_str(
-                   '- ' || ary_required(i)
+                   '- ' || dz_swagger3_util.yamlq(ary_required(i))
                   ,p_pretty_print + 1
                   ,'  '
                );

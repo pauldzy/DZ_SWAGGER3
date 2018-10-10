@@ -82,7 +82,7 @@ AS
       ,p_parameter_style           IN  VARCHAR2
       ,p_parameter_explode         IN  VARCHAR2
       ,p_parameter_allowReserved   IN  VARCHAR2
-      ,p_parameter_schema          IN  dz_swagger3_schema_typ
+      ,p_parameter_schema          IN  dz_swagger3_schema_typ_nf
       ,p_parameter_example_string  IN  VARCHAR2
       ,p_parameter_example_number  IN  NUMBER
       ,p_parameter_examples        IN  dz_swagger3_example_list
@@ -154,26 +154,24 @@ AS
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_schemas
-   RETURN dz_swagger3_schema_nf_list
+   MEMBER PROCEDURE unique_schemas(
+      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
+   )
    AS
-      ary_results   dz_swagger3_schema_nf_list;
-      ary_working   dz_swagger3_schema_nf_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-   
+      obj_schema dz_swagger3_schema_typ;
+      
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_schema_nf_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
-      
+      IF p_schemas IS NULL
+      THEN
+         p_schemas := dz_swagger3_schema_nf_list();
+         
+      END IF;
+
       --------------------------------------------------------------------------
       -- Step 20
       -- Pull the schema from the items
@@ -181,49 +179,23 @@ AS
       IF self.parameter_schema IS NOT NULL
       AND self.parameter_schema.isNULL() = 'FALSE'
       THEN
-         ary_working := self.parameter_schema.unique_schemas();
+         obj_schema := TREAT(
+            self.parameter_schema AS dz_swagger3_schema_typ
+         );
             
-         FOR j IN 1 .. ary_working.COUNT
-         LOOP
-            IF dz_swagger3_util.a_in_b(
-                ary_working(j).schema_id
-               ,ary_x
-            ) = 'FALSE'
-            THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := ary_working(j);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := ary_working(j).schema_id;
-               int_x := int_x + 1;
-               
-            END IF;
-            
-         END LOOP;
-         
-         IF dz_swagger3_util.a_in_b(
+         IF dz_swagger3_util.a_in_schemas(
              self.parameter_schema.schema_id
-            ,ary_x
+            ,p_schemas
          ) = 'FALSE'
          THEN
-            ary_results.EXTEND();
-            ary_results(int_results) := self.parameter_schema;
-            int_results := int_results + 1;
+            obj_schema.unique_schemas(p_schemas);
             
-            ary_x.EXTEND();
-            ary_x(int_x) := self.parameter_schema.schema_id;
-            int_x := int_x + 1;
+            p_schemas.EXTEND();
+            p_schemas(p_schemas.COUNT) := self.parameter_schema;
             
          END IF;
          
       END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
 
    END unique_schemas;
    

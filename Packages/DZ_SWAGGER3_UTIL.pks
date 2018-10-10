@@ -48,6 +48,13 @@ AS
        p_input_a          IN VARCHAR2
       ,p_input_b          IN MDSYS.SDO_STRING2_ARRAY
    ) RETURN VARCHAR2 DETERMINISTIC;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION a_in_schemas(
+       p_input_a          IN VARCHAR2
+      ,p_input_b          IN dz_swagger3_schema_nf_list
+   ) RETURN VARCHAR2 DETERMINISTIC;
  
  END dz_swagger3_util;
 /

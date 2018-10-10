@@ -2,7 +2,7 @@ CREATE OR REPLACE TYPE dz_swagger3_media_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
     hash_key                 VARCHAR2(255 Char)
-   ,media_schema             dz_swagger3_schema_typ
+   ,media_schema             dz_swagger3_schema_typ_nf
    ,media_example_string     VARCHAR2(4000 Char)
    ,media_example_number     NUMBER
    ,media_examples           dz_swagger3_example_list
@@ -25,7 +25,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_media_typ(
        p_hash_key                IN  VARCHAR2
-      ,p_media_schema            IN  dz_swagger3_schema_typ
+      ,p_media_schema            IN  dz_swagger3_schema_typ_nf
       ,p_media_example_string    IN  VARCHAR2
       ,p_media_example_number    IN  NUMBER
       ,p_media_examples          IN  dz_swagger3_example_list
@@ -44,8 +44,9 @@ AS OBJECT (
     
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   ,MEMBER FUNCTION unique_schemas
-    RETURN dz_swagger3_schema_nf_list
+   ,MEMBER PROCEDURE unique_schemas(
+      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

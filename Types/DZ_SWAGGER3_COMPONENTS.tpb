@@ -58,6 +58,7 @@ AS
    AS
       int_index  PLS_INTEGER;
       ary_output dz_swagger3_schema_nf_list;
+      obj_schema dz_swagger3_schema_typ;
       
    BEGIN
       IF self.components_schemas IS NULL
@@ -71,10 +72,14 @@ AS
       ary_output := dz_swagger3_schema_nf_list();
       FOR i IN 1 .. self.components_schemas.COUNT
       LOOP
-         IF self.components_schemas(i).doRef() = 'TRUE'
+         obj_schema := TREAT(
+            self.components_schemas(i) AS dz_swagger3_schema_typ
+         );
+         
+         IF obj_schema.doRef() = 'TRUE'
          THEN
             ary_output.EXTEND();
-            ary_output(int_index) := self.components_schemas(i);
+            ary_output(int_index) := obj_schema;
             int_index := int_index + 1;
             
          END IF;
