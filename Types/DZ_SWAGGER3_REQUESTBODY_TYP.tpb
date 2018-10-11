@@ -127,7 +127,7 @@ AS
          IF p_parameters(i).parameter_list_hidden <> 'TRUE'
          THEN
             obj_schema := TREAT(p_parameters(i).parameter_schema AS dz_swagger3_schema_typ);
-            obj_schema.schema_id             := 'requestbody.' || p_parameters(i).parameter_name;
+            obj_schema.schema_id             := 'requestbody.' || p_parameters(i).parameter_id;
             obj_schema.hash_key              := p_parameters(i).parameter_name;
             obj_schema.schema_description    := p_parameters(i).parameter_description;
             obj_schema.schema_required       := p_parameters(i).parameter_required;

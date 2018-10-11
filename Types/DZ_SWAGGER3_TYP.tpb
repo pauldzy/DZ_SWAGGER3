@@ -110,7 +110,7 @@ AS
       WHERE
           a.versionid = str_versionid
       AND a.parent_id = str_doc_id;
-      
+
       --------------------------------------------------------------------------
       -- Step 50
       -- Load the paths
@@ -134,7 +134,7 @@ AS
       ORDER BY
        a.path_order
       ,b.path_endpoint;
-      
+
       --------------------------------------------------------------------------
       -- Step 60
       -- Load the components in sorted by id order
@@ -150,12 +150,12 @@ AS
       self.components.components_responses     := dz_swagger3_sort.responses(
          self.unique_responses()
       );
-      
+
       self.unique_schemas(ary_schemas);
       self.components.components_schemas       := dz_swagger3_sort.schemas(
          ary_schemas
       );
-      
+
       --------------------------------------------------------------------------
       -- Step 70
       -- Load the security
@@ -167,7 +167,7 @@ AS
       -- Load the tags
       --------------------------------------------------------------------------
       self.tags := self.unique_tags();
-      
+
       --------------------------------------------------------------------------
       -- Step 90
       -- Return the completed object
