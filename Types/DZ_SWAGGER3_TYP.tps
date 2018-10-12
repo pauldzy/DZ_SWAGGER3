@@ -69,6 +69,17 @@ AS OBJECT (
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   ,STATIC PROCEDURE startup_defaults(
+       p_doc_id              IN  VARCHAR2
+      ,p_group_id            IN  VARCHAR2 DEFAULT NULL
+      ,p_versionid           IN  VARCHAR2 DEFAULT NULL
+      ,out_doc_id            OUT VARCHAR2
+      ,out_group_id          OUT VARCHAR2
+      ,out_versionid         OUT VARCHAR2
+    )
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'

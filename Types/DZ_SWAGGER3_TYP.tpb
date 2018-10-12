@@ -31,36 +31,19 @@ AS
       -- Step 10
       -- Check over incoming parameters
       --------------------------------------------------------------------------
-      IF str_group_id IS NULL
-      THEN
-         str_group_id := str_doc_id;
-
-      END IF;
 
       --------------------------------------------------------------------------
       -- Step 20     
       -- Determine the default version if not provided
       --------------------------------------------------------------------------
-      IF str_versionid IS NULL
-      THEN
-         BEGIN
-            SELECT
-            a.versionid
-            INTO str_versionid
-            FROM
-            dz_swagger3_vers a
-            WHERE
-                a.is_default = 'TRUE'
-            AND rownum <= 1;
-
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               RAISE;
-
-         END;
-
-      END IF;
+      dz_swagger3_typ.defaults(
+          p_doc_id        => p_doc_id
+         ,p_group_id      => p_group_id
+         ,p_versionid     => p_versionid
+         ,out_doc_id      => str_doc_id
+         ,out_group_id    => str_group_id
+         ,out_versionid   => str_versionid
+      );
 
       --------------------------------------------------------------------------
       -- Step 30
@@ -113,27 +96,61 @@ AS
 
       --------------------------------------------------------------------------
       -- Step 50
-      -- Load the paths
+      -- Load the paths account for MOA
       --------------------------------------------------------------------------
-      SELECT
-      dz_swagger3_path_typ(
-          p_path_id    => b.path_id
-         ,p_versionid  => str_versionid
-      )
-      BULK COLLECT INTO self.paths
-      FROM
-      dz_swagger3_group a
-      JOIN
-      dz_swagger3_path b
-      ON
-          a.versionid = b.versionid
-      AND a.path_id   = b.path_id
-      WHERE
-          a.versionid = str_versionid
-      AND a.group_id  = str_group_id
-      ORDER BY
-       a.path_order
-      ,b.path_endpoint;
+      IF str_group_id = 'MOA'
+      THEN
+         SELECT
+         dz_swagger3_path_typ(
+             p_path_id    => b.path_id
+            ,p_versionid  => str_versionid
+         )
+         BULK COLLECT INTO self.paths
+         FROM (
+            SELECT
+             aa.path_id
+            ,aa.versionid
+            FROM
+            dz_swagger3_group aa
+            WHERE
+            aa.versionid = str_versionid
+            GROUP BY
+             aa.path_id
+            ,aa.versionid
+         ) a
+         JOIN
+         dz_swagger3_path b
+         ON
+             a.versionid = b.versionid
+         AND a.path_id   = b.path_id
+         WHERE
+         a.versionid = str_versionid
+         ORDER BY
+          a.path_order
+         ,b.path_endpoint;
+         
+      ELSE
+         SELECT
+         dz_swagger3_path_typ(
+             p_path_id    => b.path_id
+            ,p_versionid  => str_versionid
+         )
+         BULK COLLECT INTO self.paths
+         FROM
+         dz_swagger3_group a
+         JOIN
+         dz_swagger3_path b
+         ON
+             a.versionid = b.versionid
+         AND a.path_id   = b.path_id
+         WHERE
+             a.versionid = str_versionid
+         AND a.group_id  = str_group_id
+         ORDER BY
+          a.path_order
+         ,b.path_endpoint;
+         
+      END IF;
 
       --------------------------------------------------------------------------
       -- Step 60
@@ -544,6 +561,78 @@ AS
       RETURN ary_output;
    
    END paths_keys;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   STATIC PROCEDURE startup_defaults(
+       p_doc_id              IN  VARCHAR2
+      ,p_group_id            IN  VARCHAR2 DEFAULT NULL
+      ,p_versionid           IN  VARCHAR2 DEFAULT NULL
+      ,out_doc_id            OUT VARCHAR2
+      ,out_group_id          OUT VARCHAR2
+      ,out_versionid         OUT VARCHAR2
+   )
+   AS
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check over incoming parameters
+      --------------------------------------------------------------------------
+      out_doc_id        := p_doc_id;
+      out_group_id      := p_group_id;
+      out_versionid     := p_versionid;
+      
+      IF out_group_id IS NULL
+      THEN
+         out_group_id := out_doc_id;
+         
+      END IF;
+
+      --------------------------------------------------------------------------
+      -- Step 20     
+      -- Determine the default version if not provided
+      --------------------------------------------------------------------------
+      IF out_versionid IS NULL
+      THEN
+         BEGIN
+            SELECT
+            a.versionid
+            INTO out_versionid
+            FROM
+            dz_swagger3_vers a
+            WHERE
+                a.is_default = 'TRUE'
+            AND rownum <= 1;
+
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               RAISE;
+
+         END;
+
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20     
+      -- Handle MOA special case
+      --------------------------------------------------------------------------
+      IF p_doc_id = 'MOA'
+      THEN
+         SELECT
+         a.doc_id
+         INTO
+         out_doc_id
+         FROM
+         dz_swagger3_doc a
+         WHERE
+         a.versionid = out_versionid
+         AND rownum = 1;
+         
+      END IF;
+
+   END startup_defaults;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
