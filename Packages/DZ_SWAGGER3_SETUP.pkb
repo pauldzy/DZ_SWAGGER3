@@ -66,21 +66,22 @@ AS
       -- Build DOC table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_doc('
-              || '    doc_id              VARCHAR2(255 Char) NOT NULL '
-              || '   ,info_title          VARCHAR2(255 Char) NOT NULL '
-              || '   ,info_description    VARCHAR2(4000 Char) '
-              || '   ,info_termsofservice VARCHAR2(255 Char) '
-              || '   ,info_contact_name   VARCHAR2(255 Char) '
-              || '   ,info_contact_url    VARCHAR2(255 Char) '
-              || '   ,info_contact_email  VARCHAR2(255 Char) '
-              || '   ,info_license_name   VARCHAR2(255 Char) '
-              || '   ,info_license_url    VARCHAR2(255 Char) '
-              || '   ,info_version        VARCHAR2(255 Char) NOT NULL '
-              || '   ,info_desc_updated   DATE '
-              || '   ,info_desc_author    VARCHAR2(30 Char) '
-              || '   ,info_desc_notes     VARCHAR2(255 Char) '
-              || '   ,doc_externalDocs_id VARCHAR2(255 Char) '
-              || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
+              || '    doc_id               VARCHAR2(255 Char) NOT NULL '
+              || '   ,info_title           VARCHAR2(255 Char) NOT NULL '
+              || '   ,info_description     VARCHAR2(4000 Char) '
+              || '   ,info_termsofservice  VARCHAR2(255 Char) '
+              || '   ,info_contact_name    VARCHAR2(255 Char) '
+              || '   ,info_contact_url     VARCHAR2(255 Char) '
+              || '   ,info_contact_email   VARCHAR2(255 Char) '
+              || '   ,info_license_name    VARCHAR2(255 Char) '
+              || '   ,info_license_url     VARCHAR2(255 Char) '
+              || '   ,info_version         VARCHAR2(255 Char) NOT NULL '
+              || '   ,info_desc_updated    DATE '
+              || '   ,info_desc_author     VARCHAR2(30 Char) '
+              || '   ,info_desc_notes      VARCHAR2(255 Char) '
+              || '   ,doc_externalDocs_id  VARCHAR2(255 Char) '
+              || '   ,is_default           VARCHAR2(5 Char) NOT NULL '
+              || '   ,versionid            VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -109,6 +110,9 @@ AS
               || '    CHECK (doc_id = TRIM(doc_id)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_doc_c02 '
+              || '    CHECK (is_default IN (''TRUE'',''FALSE'')) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_doc_c03 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -1464,6 +1468,40 @@ AS
               
       EXECUTE IMMEDIATE str_sql;
       
+      -------------------------------------------------------------------------
+      -- Step 290
+      -- Build CACHE table
+      -------------------------------------------------------------------------
+      str_sql := 'CREATE TABLE dz_swagger3_cache('
+              || '    doc_id               VARCHAR2(255 Char) NOT NULL '
+              || '   ,group_id             VARCHAR2(255 Char) NOT NULL '
+              || '   ,json_payload         CLOB '
+              || '   ,json_pretty_payload  CLOB '
+              || '   ,yaml_payload         CLOB '
+              || '   ,extraction_timestamp TIMESTAMP '
+              || '   ,versionid            VARCHAR2(40 Char) NOT NULL '
+              || ') ';
+              
+      IF p_table_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_cache '
+              || 'ADD CONSTRAINT dz_swagger3_cache_pk '
+              || 'PRIMARY KEY(versionid,doc_id,group_id) ';
+              
+      IF p_index_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
    END create_storage_tables;
    
    ----------------------------------------------------------------------------
@@ -1502,6 +1540,7 @@ AS
          ,'DZ_SWAGGER3_EXTERNALDOC'
          ,'DZ_SWAGGER3_SECURITYSCHEME'
          ,'DZ_SWAGGER3_TAG'
+         ,'DZ_SWAGGER3_CACHE'
       );
    
    END dz_swagger3_table_list;
