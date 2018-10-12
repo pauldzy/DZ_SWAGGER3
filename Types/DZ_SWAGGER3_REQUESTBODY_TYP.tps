@@ -4,6 +4,7 @@ AS OBJECT (
     hash_key                 VARCHAR2(255 Char)
    ,requestBody_id           VARCHAR2(255 Char)
    ,requestBody_description  VARCHAR2(4000 Char)
+   ,requestBody_inline       VARCHAR2(5 Char)
    ,requestBody_force_inline VARCHAR2(5 Char)
    ,requestBody_content      dz_swagger3_media_list
    ,requestBody_required     VARCHAR2(5 Char)
@@ -16,16 +17,17 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
-       p_requestbody_id          IN  VARCHAR2
-      ,p_versionid               IN  VARCHAR2
+       p_requestbody_id           IN  VARCHAR2
+      ,p_versionid                IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
-       p_requestbody_id          IN  VARCHAR2
-      ,p_media_type              IN  VARCHAR2
-      ,p_parameters              IN  dz_swagger3_parameter_list
+       p_requestbody_id           IN  VARCHAR2
+      ,p_media_type               IN  VARCHAR2
+      ,p_parameters               IN  dz_swagger3_parameter_list
+      ,p_inline_rb                IN  VARCHAR2
    ) RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
@@ -56,8 +58,9 @@ AS OBJECT (
     
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   ,MEMBER FUNCTION unique_schemas
-    RETURN dz_swagger3_schema_nf_list
+   ,MEMBER PROCEDURE unique_schemas(
+      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

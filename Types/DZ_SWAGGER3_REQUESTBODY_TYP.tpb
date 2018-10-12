@@ -85,18 +85,22 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
-       p_requestbody_id          IN  VARCHAR2
-      ,p_media_type              IN  VARCHAR2
-      ,p_parameters              IN  dz_swagger3_parameter_list
+       p_requestbody_id           IN  VARCHAR2
+      ,p_media_type               IN  VARCHAR2
+      ,p_parameters               IN  dz_swagger3_parameter_list
+      ,p_inline_rb                IN  VARCHAR2
    ) RETURN SELF AS RESULT
    AS
       int_counter PLS_INTEGER;
+      obj_parent  dz_swagger3_schema_typ;
       obj_schema  dz_swagger3_schema_typ;
+      str_check   VARCHAR2(255 Char);
       
    BEGIN
    
       self.hash_key            := p_requestbody_id;
       self.requestbody_id      := p_requestbody_id;
+      self.requestBody_inline  := p_inline_rb;
       
       self.requestbody_content := dz_swagger3_media_list();
       self.requestbody_content.EXTEND();
@@ -104,69 +108,56 @@ AS
       self.requestbody_content(1) := dz_swagger3_media_typ();
       self.requestbody_content(1).hash_key := p_media_type;
       
-      self.requestbody_content(1).media_schema := dz_swagger3_schema_typ();
-      self.requestbody_content(1).media_schema.schema_id := p_requestbody_id || '.Schema';
-      self.requestbody_content(1).media_schema.schema_type := 'object';
-      self.requestbody_content(1).media_schema.schema_force_inline := 'TRUE';
-      self.requestbody_content(1).media_schema.schema_properties := dz_swagger3_schema_nf_list();
-      self.requestbody_content(1).media_schema.schema_properties.EXTEND(p_parameters.COUNT);
+      obj_parent                     := dz_swagger3_schema_typ();
+      obj_parent.schema_id           := p_requestbody_id || '.Schema';
+      obj_parent.schema_category     := 'object';
+      obj_parent.schema_type         := 'object';
+      obj_parent.schema_force_inline := 'TRUE';
+      obj_parent.schema_properties   := dz_swagger3_schema_nf_list();
+       
+      IF obj_parent.schema_category IS NULL
+      THEN
+         RAISE_APPLICATION_ERROR(-20001,'err');
+         
+      END IF;
       
+      int_counter := 1;
       FOR i IN 1 .. p_parameters.COUNT
       LOOP
-         obj_schema := dz_swagger3_schema_typ(
-             p_schema_id               => p_parameters(i).parameter_schema.schema_id
-            ,p_schema_category         => p_parameters(i).parameter_schema.schema_category
-            ,p_schema_title            => p_parameters(i).parameter_schema.schema_title
-            ,p_schema_type             => p_parameters(i).parameter_schema.schema_type
-            ,p_schema_description      => p_parameters(i).parameter_schema.schema_description
-            ,p_schema_format           => p_parameters(i).parameter_schema.schema_format
-            ,p_schema_nullable         => p_parameters(i).parameter_schema.schema_nullable
-            ,p_schema_discriminator    => p_parameters(i).parameter_schema.schema_discriminator
-            ,p_schema_readonly         => p_parameters(i).parameter_schema.schema_readonly
-            ,p_schema_writeonly        => p_parameters(i).parameter_schema.schema_writeonly
-            ,p_schema_externalDocs     => p_parameters(i).parameter_schema.schema_externalDocs
-            ,p_schema_example_string   => p_parameters(i).parameter_schema.schema_example_string
-            ,p_schema_example_number   => p_parameters(i).parameter_schema.schema_example_number
-            ,p_schema_deprecated       => p_parameters(i).parameter_schema.schema_deprecated
-            ,p_schema_default_string   => p_parameters(i).parameter_schema.schema_default_string
-            ,p_schema_default_number   => p_parameters(i).parameter_schema.schema_default_number
-            ,p_schema_multipleOf       => p_parameters(i).parameter_schema.schema_multipleOf
-            ,p_schema_minimum          => p_parameters(i).parameter_schema.schema_minimum
-            ,p_schema_exclusiveMinimum => p_parameters(i).parameter_schema.schema_exclusiveMinimum
-            ,p_schema_maximum          => p_parameters(i).parameter_schema.schema_maximum
-            ,p_schema_exclusiveMaximum => p_parameters(i).parameter_schema.schema_exclusiveMaximum
-            ,p_schema_minLength        => p_parameters(i).parameter_schema.schema_minLength
-            ,p_schema_maxLength        => p_parameters(i).parameter_schema.schema_maxLength
-            ,p_schema_pattern          => p_parameters(i).parameter_schema.schema_pattern
-            ,p_schema_minItems         => p_parameters(i).parameter_schema.schema_minItems 
-            ,p_schema_maxItems         => p_parameters(i).parameter_schema.schema_maxItems
-            ,p_schema_uniqueItems      => p_parameters(i).parameter_schema.schema_uniqueItems
-            ,p_schema_minProperties    => p_parameters(i).parameter_schema.schema_minProperties
-            ,p_schema_maxProperties    => p_parameters(i).parameter_schema.schema_maxProperties
-            ,p_xml_name                => p_parameters(i).parameter_schema.xml_name
-            ,p_xml_namespace           => p_parameters(i).parameter_schema.xml_namespace
-            ,p_xml_prefix              => p_parameters(i).parameter_schema.xml_prefix
-            ,p_xml_attribute           => p_parameters(i).parameter_schema.xml_attribute
-            ,p_xml_wrapped             => p_parameters(i).parameter_schema.xml_wrapped
-            ,p_schema_items_schema     => p_parameters(i).parameter_schema.schema_items_schema
-            ,p_schema_properties       => p_parameters(i).parameter_schema.schema_properties
-            ,p_schema_enum_string      => p_parameters(i).parameter_schema.schema_enum_string
-            ,p_schema_enum_number      => p_parameters(i).parameter_schema.schema_enum_number
-            ,p_schema_force_inline     => p_parameters(i).parameter_schema.schema_force_inline
-            ,p_property_list_hidden    => p_parameters(i).parameter_schema.property_list_hidden
-            ,p_combine_schemas         => p_parameters(i).parameter_schema.combine_schemas
-         );
-         
-         obj_schema.hash_key              := p_parameters(i).parameter_name;
-         obj_schema.schema_description    := p_parameters(i).parameter_description;
-         obj_schema.schema_required       := p_parameters(i).parameter_required;
-         obj_schema.schema_deprecated     := p_parameters(i).parameter_deprecated;
-         obj_schema.schema_example_string := p_parameters(i).parameter_example_string;
-         obj_schema.schema_example_number := p_parameters(i).parameter_example_number;
+         IF p_parameters(i).parameter_list_hidden <> 'TRUE'
+         THEN
+            obj_schema := TREAT(p_parameters(i).parameter_schema AS dz_swagger3_schema_typ);
+            obj_schema.schema_id             := 'requestbody.' || p_parameters(i).parameter_id;
+            obj_schema.hash_key              := p_parameters(i).parameter_name;
+            obj_schema.schema_description    := p_parameters(i).parameter_description;
+            obj_schema.schema_required       := p_parameters(i).parameter_required;
+            obj_schema.schema_deprecated     := p_parameters(i).parameter_deprecated;
+            obj_schema.schema_example_string := p_parameters(i).parameter_example_string;
+            obj_schema.schema_example_number := p_parameters(i).parameter_example_number;
+            
+            IF obj_schema.schema_category IS NULL
+            THEN
+               RAISE_APPLICATION_ERROR(-20001,'err');
+               
+            END IF;
 
-         self.requestbody_content(1).media_schema.schema_properties(i) := obj_schema;
+            obj_parent.schema_properties.EXTEND();
+            obj_parent.schema_properties(int_counter) := obj_schema;
+            int_counter := int_counter + 1;            
+
+         END IF;
          
       END LOOP;
+
+      self.requestbody_content(1).media_schema := obj_parent;
+      
+      IF TREAT(
+         self.requestbody_content(1).media_schema AS dz_swagger3_schema_typ
+      ).schema_category IS NULL
+      THEN
+         RAISE_APPLICATION_ERROR(-20001,'err');
+         
+      END IF;
       
       RETURN;
       
@@ -234,6 +225,7 @@ AS
    BEGIN
       
       IF self.requestBody_force_inline = 'TRUE'
+      OR self.requestBody_inline = 'TRUE'
       THEN
          RETURN 'FALSE';
          
@@ -245,26 +237,22 @@ AS
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_schemas
-   RETURN dz_swagger3_schema_nf_list
+   MEMBER PROCEDURE unique_schemas(
+      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
+   )
    AS
-      ary_results   dz_swagger3_schema_nf_list;
-      ary_working   dz_swagger3_schema_nf_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-   
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_schema_nf_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
-      
+      IF p_schemas IS NULL
+      THEN
+         p_schemas := dz_swagger3_schema_nf_list();
+         
+      END IF;
+
       --------------------------------------------------------------------------
       -- Step 20
       -- Pull the schema from the items
@@ -274,36 +262,11 @@ AS
       THEN
          FOR i IN 1 .. self.requestbody_content.COUNT
          LOOP
-            ary_working := self.requestbody_content(i).unique_schemas();
-            
-            FOR j IN 1 .. ary_working.COUNT
-            LOOP
-               IF dz_swagger3_util.a_in_b(
-                   ary_working(j).schema_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := ary_working(j);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := ary_working(j).schema_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
-               
-            END LOOP;
+            self.requestbody_content(i).unique_schemas(p_schemas);
             
          END LOOP;
          
       END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
 
    END unique_schemas;
    
@@ -560,7 +523,7 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              '$ref'
-            ,'#/components/requestBodies/' || self.requestbody_id
+            ,'#/components/requestBodies/' || dz_swagger3_util.utl_url_escape(self.requestbody_id) 
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1
@@ -662,7 +625,7 @@ AS
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'content: '
-            ,p_pretty_print + 1
+            ,p_pretty_print
             ,'  '
          );
          
@@ -671,11 +634,11 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
-               ,p_pretty_print + 2
+                dz_swagger3_util.yamlq(ary_keys(i)) || ': '
+               ,p_pretty_print + 1
                ,'  '
             ) || self.requestbody_content(i).toYAML(
-                p_pretty_print   => p_pretty_print + 3
+                p_pretty_print   => p_pretty_print + 2
                ,p_force_inline   => p_force_inline
             );
          

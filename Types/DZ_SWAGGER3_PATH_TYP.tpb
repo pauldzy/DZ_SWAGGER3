@@ -228,22 +228,18 @@ AS
       THEN
          FOR i IN 1 .. self.path_get_operation.operation_responses.COUNT
          LOOP
-            IF self.path_get_operation.operation_responses(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_b(
+                self.path_get_operation.operation_responses(i).response_id
+               ,ary_x
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_get_operation.operation_responses(i).response_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_get_operation.operation_responses(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_get_operation.operation_responses(i).response_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_get_operation.operation_responses(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_get_operation.operation_responses(i).response_id;
+               int_x := int_x + 1;
                
             END IF;
             
@@ -518,7 +514,6 @@ AS
       IF  self.path_get_operation IS NOT NULL
       AND self.path_get_operation.operation_requestbody IS NOT NULL
       AND self.path_get_operation.operation_requestbody.isNULL() = 'FALSE'
-      AND self.path_get_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
          IF dz_swagger3_util.a_in_b(
              self.path_get_operation.operation_requestbody.requestBody_id
@@ -757,22 +752,18 @@ AS
       THEN
          FOR i IN 1 .. self.path_parameters.COUNT
          LOOP
-            IF self.path_parameters(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_b(
+                self.path_parameters(i).parameter_id
+               ,ary_x
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_parameters(i).parameter_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_parameters(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_parameters(i).parameter_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               ary_results.EXTEND();
+               ary_results(int_results) := self.path_parameters(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.path_parameters(i).parameter_id;
+               int_x := int_x + 1;
                
             END IF;
             
@@ -1054,25 +1045,21 @@ AS
 
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_schemas
-   RETURN dz_swagger3_schema_nf_list
+   MEMBER PROCEDURE unique_schemas(
+      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
+   )
    AS
-      ary_results   dz_swagger3_schema_nf_list;
-      ary_working   dz_swagger3_schema_nf_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-   
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_schema_nf_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      IF p_schemas IS NULL
+      THEN
+         p_schemas := dz_swagger3_schema_nf_list();
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 40
@@ -1081,27 +1068,8 @@ AS
       IF self.path_get_operation IS NOT NULL
       AND self.path_get_operation.isNULL() = 'FALSE'
       THEN
-         ary_working := self.path_get_operation.unique_schemas();
+         self.path_get_operation.unique_schemas(p_schemas);
             
-         FOR j IN 1 .. ary_working.COUNT
-         LOOP
-            IF dz_swagger3_util.a_in_b(
-                ary_working(j).schema_id
-               ,ary_x
-            ) = 'FALSE'
-            THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := ary_working(j);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := ary_working(j).schema_id;
-               int_x := int_x + 1;
-
-            END IF;
-            
-         END LOOP;
-         
       END IF;
       
       --------------------------------------------------------------------------
@@ -1111,26 +1079,7 @@ AS
       IF self.path_put_operation IS NOT NULL
       AND self.path_put_operation.isNULL() = 'FALSE'
       THEN
-         ary_working := self.path_put_operation.unique_schemas();
-            
-         FOR j IN 1 .. ary_working.COUNT
-         LOOP
-            IF dz_swagger3_util.a_in_b(
-                ary_working(j).schema_id
-               ,ary_x
-            ) = 'FALSE'
-            THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := ary_working(j);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := ary_working(j).schema_id;
-               int_x := int_x + 1;
-
-            END IF;
-            
-         END LOOP;
+         self.path_put_operation.unique_schemas(p_schemas);
          
       END IF;
       
@@ -1141,26 +1090,7 @@ AS
       IF self.path_post_operation IS NOT NULL
       AND self.path_post_operation.isNULL() = 'FALSE'
       THEN
-         ary_working := self.path_post_operation.unique_schemas();
-            
-         FOR j IN 1 .. ary_working.COUNT
-         LOOP
-            IF dz_swagger3_util.a_in_b(
-                ary_working(j).schema_id
-               ,ary_x
-            ) = 'FALSE'
-            THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := ary_working(j);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := ary_working(j).schema_id;
-               int_x := int_x + 1;
-
-            END IF;
-            
-         END LOOP;
+         self.path_post_operation.unique_schemas(p_schemas);
          
       END IF;
       
@@ -1171,26 +1101,7 @@ AS
       IF self.path_delete_operation IS NOT NULL
       AND self.path_delete_operation.isNULL() = 'FALSE'
       THEN
-         ary_working := self.path_delete_operation.unique_schemas();
-            
-         FOR j IN 1 .. ary_working.COUNT
-         LOOP
-            IF dz_swagger3_util.a_in_b(
-                ary_working(j).schema_id
-               ,ary_x
-            ) = 'FALSE'
-            THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := ary_working(j);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := ary_working(j).schema_id;
-               int_x := int_x + 1;
-               
-            END IF;
-            
-         END LOOP;
+         self.path_delete_operation.unique_schemas(p_schemas);
          
       END IF;
       
@@ -1201,26 +1112,7 @@ AS
       IF self.path_options_operation IS NOT NULL
       AND self.path_options_operation.isNULL() = 'FALSE'
       THEN
-         ary_working := self.path_options_operation.unique_schemas();
-            
-         FOR j IN 1 .. ary_working.COUNT
-         LOOP
-            IF dz_swagger3_util.a_in_b(
-                ary_working(j).schema_id
-               ,ary_x
-            ) = 'FALSE'
-            THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := ary_working(j);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := ary_working(j).schema_id;
-               int_x := int_x + 1;
-               
-            END IF;
-            
-         END LOOP;
+         self.path_options_operation.unique_schemas(p_schemas);
          
       END IF;
       
@@ -1231,27 +1123,8 @@ AS
       IF self.path_head_operation IS NOT NULL
       AND self.path_head_operation.isNULL() = 'FALSE'
       THEN
-         ary_working := self.path_head_operation.unique_schemas();
+         self.path_head_operation.unique_schemas(p_schemas);
             
-         FOR j IN 1 .. ary_working.COUNT
-         LOOP
-            IF dz_swagger3_util.a_in_b(
-                ary_working(j).schema_id
-               ,ary_x
-            ) = 'FALSE'
-            THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := ary_working(j);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := ary_working(j).schema_id;
-               int_x := int_x + 1;
-               
-            END IF;
-            
-         END LOOP;
-         
       END IF;
       
       --------------------------------------------------------------------------
@@ -1261,27 +1134,8 @@ AS
       IF self.path_patch_operation IS NOT NULL
       AND self.path_patch_operation.isNULL() = 'FALSE'
       THEN
-         ary_working := self.path_patch_operation.unique_schemas();
+         self.path_patch_operation.unique_schemas(p_schemas);
             
-         FOR j IN 1 .. ary_working.COUNT
-         LOOP
-            IF dz_swagger3_util.a_in_b(
-                ary_working(j).schema_id
-               ,ary_x
-            ) = 'FALSE'
-            THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := ary_working(j);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := ary_working(j).schema_id;
-               int_x := int_x + 1;
-               
-            END IF;
-            
-         END LOOP;
-         
       END IF;
       
       --------------------------------------------------------------------------
@@ -1291,27 +1145,8 @@ AS
       IF self.path_trace_operation IS NOT NULL
       AND self.path_trace_operation.isNULL() = 'FALSE'
       THEN
-         ary_working := self.path_trace_operation.unique_schemas();
-            
-         FOR j IN 1 .. ary_working.COUNT
-         LOOP
-            IF dz_swagger3_util.a_in_b(
-                ary_working(j).schema_id
-               ,ary_x
-            ) = 'FALSE'
-            THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := ary_working(j);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := ary_working(j).schema_id;
-               int_x := int_x + 1;
-               
-            END IF;
-            
-         END LOOP;
-         
+         self.path_trace_operation.unique_schemas(p_schemas);
+          
       END IF;
       
       --------------------------------------------------------------------------
@@ -1323,37 +1158,12 @@ AS
       THEN
          FOR i IN 1  .. self.path_parameters.COUNT
          LOOP
-            ary_working := self.path_parameters(i).unique_schemas();
-            
-            FOR j IN 1 .. ary_working.COUNT
-            LOOP
-               IF dz_swagger3_util.a_in_b(
-                   ary_working(j).schema_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := ary_working(j);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := ary_working(j).schema_id;
-                  int_x := int_x + 1;
-
-               END IF;
-               
-            END LOOP;
+            self.path_parameters(i).unique_schemas(p_schemas);
             
          END LOOP;
          
       END IF;
       
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
-
    END unique_schemas;
    
    ----------------------------------------------------------------------------
@@ -1689,29 +1499,37 @@ AS
       -- Step 30
       -- Add path summary
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.value2json(
-             'summary'
-            ,self.path_summary
+      IF self.path_summary IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'summary'
+               ,self.path_summary
+               ,p_pretty_print + 1
+            )
             ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
+         );
+         str_pad1 := ',';
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 40
       -- Add path description 
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.value2json(
-             'description'
-            ,self.path_description
+      IF self.path_description IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'description'
+               ,self.path_description
+               ,p_pretty_print + 1
+            )
             ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
+         );
+         str_pad1 := ',';
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 50

@@ -17,6 +17,7 @@ AS
    RETURN VARCHAR2
    AS
    BEGIN
+      RAISE_APPLICATION_ERROR(-20001,'err');
       RETURN NULL;
       
    END isNULL;
@@ -41,6 +42,7 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
+      RAISE_APPLICATION_ERROR(-20001,'err');
       RETURN NULL;
       
    END toJSON;
@@ -54,6 +56,7 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
+      RAISE_APPLICATION_ERROR(-20001,'err');
       RETURN NULL;
       
    END toJSON_component;
@@ -67,6 +70,7 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
+      RAISE_APPLICATION_ERROR(-20001,'err');
       RETURN NULL;
       
    END toJSON_schema;
@@ -80,6 +84,7 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
+      RAISE_APPLICATION_ERROR(-20001,'err');
       RETURN NULL;
       
    END toJSON_ref;
@@ -93,6 +98,7 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
+      RAISE_APPLICATION_ERROR(-20001,'err');
       RETURN NULL;
       
    END toJSON_combine;
@@ -107,6 +113,7 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
+      RAISE_APPLICATION_ERROR(-20001,'err');
       RETURN NULL;
       
    END toYAML;
@@ -121,6 +128,7 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
+      RAISE_APPLICATION_ERROR(-20001,'err');
       RETURN NULL;
       
    END toYAML_component;
@@ -135,6 +143,7 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
+      RAISE_APPLICATION_ERROR(-20001,'err');
       RETURN NULL;
       
    END toYAML_schema;
@@ -149,6 +158,7 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
+      RAISE_APPLICATION_ERROR(-20001,'err');
       RETURN NULL;
       
    END toYAML_ref;
@@ -163,6 +173,7 @@ AS
    ) RETURN CLOB
    AS
    BEGIN
+      RAISE_APPLICATION_ERROR(-20001,'err');
       RETURN NULL;
       
    END toYAML_combine;

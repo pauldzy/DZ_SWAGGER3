@@ -192,6 +192,8 @@ AS
       
       END IF;
       
+      self.schema_obj.inject_jsonschema := 'TRUE';
+      
       RETURN;
       
    EXCEPTION

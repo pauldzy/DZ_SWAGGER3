@@ -23,6 +23,71 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   FUNCTION yaml_quote(
+       p_input        IN  VARCHAR2
+   ) RETURN VARCHAR2
+   AS
+   BEGIN
+   
+      IF INSTR(p_input,CHR(10)) > 0
+      OR INSTR(p_input,CHR(13)) > 0
+      THEN
+         RETURN 'multiline';
+         
+      ELSIF REGEXP_LIKE(p_input,'\:|\?|\]|\[|\"|\''|\&|\%|\$')
+      THEN
+         RETURN 'double';
+         
+      ELSIF REGEXP_LIKE(p_input,'^[-[:digit:],.]+$')
+      OR LOWER(p_input) IN ('true','false') 
+      OR INSTR(p_input,'#') = 1     
+      THEN
+         RETURN 'single';
+         
+      ELSE
+         RETURN 'bare';
+         
+      END IF;
+   
+   END yaml_quote;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION yamlq(
+       p_input        IN  VARCHAR2
+   ) RETURN VARCHAR2
+   AS
+      str_format  VARCHAR2(4000 Char);
+      
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10 
+      -- Determine what format to use
+      --------------------------------------------------------------------------
+      str_format := yaml_quote(p_input);
+      
+      --------------------------------------------------------------------------
+      -- Step 20 
+      -- Return with or without quotes as needed
+      --------------------------------------------------------------------------
+      IF str_format = 'single'
+      THEN
+         RETURN '''' || p_input || '''';
+         
+      ELSIF str_format = 'double'
+      THEN
+         RETURN '"' || p_input || '"';
+         
+      ELSE
+         RETURN p_input;
+      
+      END IF;
+   
+   END yamlq;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    FUNCTION yaml_text(
        p_input        IN  VARCHAR2 
       ,p_pretty_print IN  NUMBER DEFAULT 0
@@ -38,25 +103,7 @@ AS
       -- Step 10 
       -- Determine what format to use
       --------------------------------------------------------------------------
-      IF INSTR(p_input,CHR(10)) > 0
-      OR INSTR(p_input,CHR(13)) > 0
-      THEN
-         str_format := 'multiline';
-         
-      ELSIF REGEXP_LIKE(p_input,'\:|\?|\]|\[|\"|\''|\&|\%|\$')
-      THEN
-         str_format := 'double';
-         
-      ELSIF REGEXP_LIKE(p_input,'^[-[:digit:],.]+$')
-      OR LOWER(p_input) IN ('true','false') 
-      OR INSTR(p_input,'#') = 1     
-      THEN
-         str_format := 'single';
-         
-      ELSE
-         str_format := 'bare';
-         
-      END IF;
+      str_format := yaml_quote(p_input);
       
       --------------------------------------------------------------------------
       -- Step 20 
@@ -95,6 +142,12 @@ AS
       ELSIF str_format = 'multiline'
       THEN
          str_output := REGEXP_REPLACE(str_output,CHR(13),'');
+         
+         str_output := REGEXP_REPLACE(
+             str_output
+            ,CHR(10) || CHR(10)
+            ,CHR(10) || ' ' || CHR(10)
+         );
          
          ary_strings := dz_json_util.gz_split(
              str_output
@@ -279,6 +332,52 @@ AS
       END IF;
       
    END a_in_b;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION a_in_schemas(
+       p_input_a          IN VARCHAR2
+      ,p_input_b          IN dz_swagger3_schema_nf_list
+   ) RETURN VARCHAR2 DETERMINISTIC
+   AS
+      boo_check BOOLEAN := FALSE;
+      
+   BEGIN
+   
+      IF p_input_a IS NULL
+      THEN
+         RAISE_APPLICATION_ERROR(-20001,'err');
+         
+      END IF;
+
+      IF p_input_b IS NULL
+      OR p_input_b.COUNT = 0
+      THEN
+         RETURN 'FALSE';
+         
+      END IF;
+
+      FOR i IN 1 .. p_input_b.COUNT
+      LOOP
+         IF p_input_a = p_input_b(i).schema_id
+         THEN
+            boo_check := TRUE;
+            EXIT;
+            
+         END IF;
+         
+      END LOOP;
+
+      IF boo_check = TRUE
+      THEN
+         RETURN 'TRUE';
+         
+      ELSE
+         RETURN 'FALSE';
+         
+      END IF;
+   
+   END a_in_schemas;
 
 END dz_swagger3_util;
 /

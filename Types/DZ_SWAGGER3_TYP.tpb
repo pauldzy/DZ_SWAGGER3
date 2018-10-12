@@ -23,6 +23,7 @@ AS
       str_group_id        VARCHAR2(255 Char) := p_group_id;
       str_versionid       VARCHAR2(40 Char)  := p_versionid;
       str_externaldocs_id VARCHAR2(255 Char);
+      ary_schemas         dz_swagger3_schema_nf_list;
 
    BEGIN
 
@@ -109,7 +110,7 @@ AS
       WHERE
           a.versionid = str_versionid
       AND a.parent_id = str_doc_id;
-      
+
       --------------------------------------------------------------------------
       -- Step 50
       -- Load the paths
@@ -133,7 +134,7 @@ AS
       ORDER BY
        a.path_order
       ,b.path_endpoint;
-      
+
       --------------------------------------------------------------------------
       -- Step 60
       -- Load the components in sorted by id order
@@ -149,10 +150,12 @@ AS
       self.components.components_responses     := dz_swagger3_sort.responses(
          self.unique_responses()
       );
+
+      self.unique_schemas(ary_schemas);
       self.components.components_schemas       := dz_swagger3_sort.schemas(
-         self.unique_schemas()
+         ary_schemas
       );
-      
+
       --------------------------------------------------------------------------
       -- Step 70
       -- Load the security
@@ -164,7 +167,7 @@ AS
       -- Load the tags
       --------------------------------------------------------------------------
       self.tags := self.unique_tags();
-      
+
       --------------------------------------------------------------------------
       -- Step 90
       -- Return the completed object
@@ -413,27 +416,23 @@ AS
    
    END unique_parameters;
    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_schemas
-   RETURN dz_swagger3_schema_nf_list
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   MEMBER PROCEDURE unique_schemas(
+      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
+   )
    AS
-      ary_results   dz_swagger3_schema_nf_list;
-      ary_working   dz_swagger3_schema_nf_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-   
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_schema_nf_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      IF p_schemas IS NULL
+      THEN
+         p_schemas := dz_swagger3_schema_nf_list();
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 20
@@ -444,40 +443,11 @@ AS
       THEN
          FOR i IN 1 .. self.paths.COUNT
          LOOP
-            ary_working := self.paths(i).unique_schemas();
-            
-            IF ary_working.COUNT > 0
-            THEN
-               FOR j IN 1 .. ary_working.COUNT
-               LOOP
-                  IF dz_swagger3_util.a_in_b(
-                      ary_working(j).schema_id
-                     ,ary_x
-                  ) = 'FALSE'
-                  THEN
-                     ary_results.EXTEND();
-                     ary_results(int_results) := ary_working(j);
-                     int_results := int_results + 1;
-                     
-                     ary_x.EXTEND();
-                     ary_x(int_x) := ary_working(j).schema_id;
-                     int_x := int_x + 1;
-                     
-                  END IF;
-                  
-               END LOOP;
-               
-            END IF;
+            self.paths(i).unique_schemas(p_schemas);
             
          END LOOP;
          
       END IF;
-   
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
    
    END unique_schemas;
    
@@ -1011,7 +981,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty_str(
-                '"' || self.paths(i).hash_key || '": '
+                dz_swagger3_util.yamlq(self.paths(i).hash_key) || ': '
                ,p_pretty_print + 1
                ,'  '
             ) || self.paths(i).toYAML(

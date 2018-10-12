@@ -29,23 +29,24 @@ AS
       BEGIN
          SELECT
           dz_swagger3_operation_typ(
-             p_hash_key                 => a.operation_type
-            ,p_operation_id             => a.operation_id
-            ,p_operation_tags           => NULL
-            ,p_operation_summary        => a.operation_summary
-            ,p_operation_description    => a.operation_description
-            ,p_operation_externalDocs   => dz_swagger3_extrdocs_typ(
-                p_externaldoc_id          => a.operation_externaldocs_id
-               ,p_versionid               => p_versionid
+             p_hash_key                  => a.operation_type
+            ,p_operation_id              => a.operation_id
+            ,p_operation_tags            => NULL
+            ,p_operation_summary         => a.operation_summary
+            ,p_operation_description     => a.operation_description
+            ,p_operation_externalDocs    => dz_swagger3_extrdocs_typ(
+                p_externaldoc_id           => a.operation_externaldocs_id
+               ,p_versionid                => p_versionid
              )
-            ,p_operation_operationID    => a.operation_operationID
-            ,p_operation_parameters     => NULL
-            ,p_operation_requestBody    => NULL
-            ,p_operation_responses      => NULL
-            ,p_operation_callbacks      => NULL
-            ,p_operation_deprecated     => a.operation_deprecated
-            ,p_operation_security       => NULL
-            ,p_operation_servers        => NULL
+            ,p_operation_operationID     => a.operation_operationID
+            ,p_operation_parameters      => NULL
+            ,p_operation_requestBody     => NULL
+            ,p_operation_responses       => NULL
+            ,p_operation_callbacks       => NULL
+            ,p_operation_inline_rb       => a.operation_inline_rb
+            ,p_operation_deprecated      => a.operation_deprecated
+            ,p_operation_security        => NULL
+            ,p_operation_servers         => NULL
           )
          ,a.operation_requestBody_id
          INTO
@@ -140,6 +141,7 @@ AS
              p_requestBody_id => self.operation_id || '.requestBody'
             ,p_media_type     => 'application/x-www-form-urlencoded'
             ,p_parameters     => self.operation_parameters
+            ,p_inline_rb      => self.operation_inline_rb
          );
          
          self.operation_parameters := NULL;
@@ -218,38 +220,40 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_operation_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_operation_id            IN  VARCHAR2
-      ,p_operation_tags          IN  dz_swagger3_tag_list
-      ,p_operation_summary       IN  VARCHAR2
-      ,p_operation_description   IN  VARCHAR2
-      ,p_operation_externalDocs  IN  dz_swagger3_extrdocs_typ
-      ,p_operation_operationId   IN  VARCHAR2
-      ,p_operation_parameters    IN  dz_swagger3_parameter_list
-      ,p_operation_requestBody   IN  dz_swagger3_requestbody_typ
-      ,p_operation_responses     IN  dz_swagger3_response_list
-      ,p_operation_callbacks     IN  dz_swagger3_callback_list
-      ,p_operation_deprecated    IN  VARCHAR2
-      ,p_operation_security      IN  dz_swagger3_security_req_list
-      ,p_operation_servers       IN  dz_swagger3_server_list
+       p_hash_key                  IN  VARCHAR2
+      ,p_operation_id              IN  VARCHAR2
+      ,p_operation_tags            IN  dz_swagger3_tag_list
+      ,p_operation_summary         IN  VARCHAR2
+      ,p_operation_description     IN  VARCHAR2
+      ,p_operation_externalDocs    IN  dz_swagger3_extrdocs_typ
+      ,p_operation_operationId     IN  VARCHAR2
+      ,p_operation_parameters      IN  dz_swagger3_parameter_list
+      ,p_operation_requestBody     IN  dz_swagger3_requestbody_typ
+      ,p_operation_responses       IN  dz_swagger3_response_list
+      ,p_operation_callbacks       IN  dz_swagger3_callback_list
+      ,p_operation_inline_rb       IN  VARCHAR2
+      ,p_operation_deprecated      IN  VARCHAR2
+      ,p_operation_security        IN  dz_swagger3_security_req_list
+      ,p_operation_servers         IN  dz_swagger3_server_list
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.hash_key                := p_hash_key;
-      self.operation_id            := p_operation_id;
-      self.operation_tags          := p_operation_tags;
-      self.operation_summary       := p_operation_summary;
-      self.operation_description   := p_operation_description;
-      self.operation_externalDocs  := p_operation_externalDocs;
-      self.operation_operationId   := p_operation_operationId;
-      self.operation_parameters    := p_operation_parameters;
-      self.operation_requestBody   := p_operation_requestBody;
-      self.operation_responses     := p_operation_responses;
-      self.operation_callbacks     := p_operation_callbacks;
-      self.operation_deprecated    := p_operation_deprecated;
-      self.operation_security      := p_operation_security;
-      self.operation_servers       := p_operation_servers;
+      self.hash_key                  := p_hash_key;
+      self.operation_id              := p_operation_id;
+      self.operation_tags            := p_operation_tags;
+      self.operation_summary         := p_operation_summary;
+      self.operation_description     := p_operation_description;
+      self.operation_externalDocs    := p_operation_externalDocs;
+      self.operation_operationId     := p_operation_operationId;
+      self.operation_parameters      := p_operation_parameters;
+      self.operation_requestBody     := p_operation_requestBody;
+      self.operation_responses       := p_operation_responses;
+      self.operation_callbacks       := p_operation_callbacks;
+      self.operation_inline_rb       := p_operation_inline_rb;
+      self.operation_deprecated      := p_operation_deprecated;
+      self.operation_security        := p_operation_security;
+      self.operation_servers         := p_operation_servers;
       
       RETURN; 
       
@@ -346,22 +350,18 @@ AS
       THEN
          FOR i IN 1 .. self.operation_responses.COUNT
          LOOP
-            IF self.operation_responses(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_b(
+                self.operation_responses(i).response_id
+               ,ary_x
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.operation_responses(i).response_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.operation_responses(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.operation_responses(i).response_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               ary_results.EXTEND();
+               ary_results(int_results) := self.operation_responses(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.operation_responses(i).response_id;
+               int_x := int_x + 1;
                
             END IF;
             
@@ -390,7 +390,6 @@ AS
       --------------------------------------------------------------------------
       IF  self.operation_requestBody IS NOT NULL
       AND self.operation_requestBody.isNULL() = 'FALSE'
-      AND self.operation_requestBody.doRef() = 'TRUE'
       THEN
          RETURN dz_swagger3_requestbody_list(
             self.operation_requestBody
@@ -433,23 +432,19 @@ AS
       THEN
          FOR i IN 1 .. self.operation_parameters.COUNT
          LOOP
-            IF self.operation_parameters(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_b(
+                self.operation_parameters(i).parameter_id
+               ,ary_x
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.operation_parameters(i).parameter_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.operation_parameters(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.operation_parameters(i).parameter_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
-            
+               ary_results.EXTEND();
+               ary_results(int_results) := self.operation_parameters(i);
+               int_results := int_results + 1;
+               
+               ary_x.EXTEND();
+               ary_x(int_x) := self.operation_parameters(i).parameter_id;
+               int_x := int_x + 1;
+               
             END IF;
             
          END LOOP;
@@ -466,26 +461,21 @@ AS
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_schemas
-   RETURN dz_swagger3_schema_nf_list
+   MEMBER PROCEDURE unique_schemas(
+      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
+   )
    AS
-      ary_results   dz_swagger3_schema_nf_list;
-      ary_working   dz_swagger3_schema_nf_list;
-      obj_schema    dz_swagger3_schema_typ;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-   
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_schema_nf_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      IF p_schemas IS NULL
+      THEN
+         p_schemas := dz_swagger3_schema_nf_list();
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 20
@@ -496,32 +486,7 @@ AS
       THEN
          FOR i IN 1  .. self.operation_responses.COUNT
          LOOP
-            ary_working := self.operation_responses(i).unique_schemas();
-            
-            FOR j IN 1 .. ary_working.COUNT
-            LOOP
-               obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
-               
-               IF obj_schema.doRef() = 'TRUE'
-               THEN
-                  IF dz_swagger3_util.a_in_b(
-                      ary_working(j).schema_id
-                     ,ary_x
-                  ) = 'FALSE'
-                  THEN
-                     ary_results.EXTEND();
-                     ary_results(int_results) := ary_working(j);
-                     int_results := int_results + 1;
-                     
-                     ary_x.EXTEND();
-                     ary_x(int_x) := ary_working(j).schema_id;
-                     int_x := int_x + 1;
-                  
-                  END IF;
-               
-               END IF;
-               
-            END LOOP;
+            self.operation_responses(i).unique_schemas(p_schemas);
             
          END LOOP;
          
@@ -536,37 +501,12 @@ AS
       THEN
          FOR i IN 1  .. self.operation_parameters.COUNT
          LOOP
-            ary_working := self.operation_parameters(i).unique_schemas();
-            
-            FOR j IN 1 .. ary_working.COUNT
-            LOOP
-               obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
-               
-               IF obj_schema.doRef() = 'TRUE'
-               THEN
-                  IF dz_swagger3_util.a_in_b(
-                      ary_working(j).schema_id
-                     ,ary_x
-                  ) = 'FALSE'
-                  THEN
-                     ary_results.EXTEND();
-                     ary_results(int_results) := ary_working(j);
-                     int_results := int_results + 1;
-                     
-                     ary_x.EXTEND();
-                     ary_x(int_x) := ary_working(j).schema_id;
-                     int_x := int_x + 1;
-                     
-                  END IF;
-                  
-               END IF;
-               
-            END LOOP;
-            
+            self.operation_parameters(i).unique_schemas(p_schemas);
+
          END LOOP;
          
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 40
       -- Pull the schema from the requestBody
@@ -574,40 +514,9 @@ AS
       IF self.operation_requestBody IS NOT NULL
       AND self.operation_requestBody.isNULL() = 'FALSE'
       THEN
-         ary_working := self.operation_requestBody.unique_schemas();
-            
-         FOR j IN 1 .. ary_working.COUNT
-         LOOP
-            obj_schema := TREAT(ary_working(j) AS dz_swagger3_schema_typ);
-               
-            IF obj_schema.doRef() = 'TRUE'
-            THEN
-               IF dz_swagger3_util.a_in_b(
-                   ary_working(j).schema_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := ary_working(j);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := ary_working(j).schema_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
-               
-            END IF;
-            
-         END LOOP;
+         self.operation_requestBody.unique_schemas(p_schemas);
          
       END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
 
    END unique_schemas;
    
@@ -1391,7 +1300,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
+                dz_swagger3_util.yamlq(ary_keys(i)) || ': '
                ,p_pretty_print + 2
                ,'  '
             ) || self.operation_responses(i).toYAML(
@@ -1424,7 +1333,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
+                dz_swagger3_util.yamlq(ary_keys(i)) || ': '
                ,p_pretty_print + 1
                ,'  '
             ) || self.operation_callbacks(i).toYAML(

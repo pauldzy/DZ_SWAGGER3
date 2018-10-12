@@ -32,48 +32,48 @@ AS OBJECT (
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_schemas_ids
-    RETURN MDSYS.SDO_STRING2_ARRAY
+   ,MEMBER FUNCTION get_components_schemas
+    RETURN dz_swagger3_schema_nf_list
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_responses_ids
-    RETURN MDSYS.SDO_STRING2_ARRAY
+   ,MEMBER FUNCTION get_components_responses
+    RETURN dz_swagger3_response_list
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_parameters_ids
-    RETURN MDSYS.SDO_STRING2_ARRAY
+   ,MEMBER FUNCTION get_components_parameters
+    RETURN dz_swagger3_parameter_list
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_examples_ids
-    RETURN MDSYS.SDO_STRING2_ARRAY
+   ,MEMBER FUNCTION get_components_examples
+    RETURN dz_swagger3_example_list
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_requestBodies_ids
-    RETURN MDSYS.SDO_STRING2_ARRAY
+   ,MEMBER FUNCTION get_components_requestBodies
+    RETURN dz_swagger3_requestBody_list
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_headers_ids
-    RETURN MDSYS.SDO_STRING2_ARRAY
+   ,MEMBER FUNCTION get_components_headers
+    RETURN dz_swagger3_header_list
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_securityScheme_ids
-    RETURN MDSYS.SDO_STRING2_ARRAY
+   ,MEMBER FUNCTION get_components_securitySchemes
+    RETURN dz_swagger3_securitySchem_list
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_links_ids
-    RETURN MDSYS.SDO_STRING2_ARRAY
+   ,MEMBER FUNCTION get_components_links
+    RETURN dz_swagger3_link_list
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION components_callbacks_ids
-    RETURN MDSYS.SDO_STRING2_ARRAY
+   ,MEMBER FUNCTION get_components_callbacks
+    RETURN dz_swagger3_callback_list
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

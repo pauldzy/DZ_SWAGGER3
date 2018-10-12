@@ -12,7 +12,7 @@ AS OBJECT (
    ,parameter_style            VARCHAR2(255 Char)
    ,parameter_explode          VARCHAR2(5 Char)
    ,parameter_allowReserved    VARCHAR2(5 Char)
-   ,parameter_schema           dz_swagger3_schema_typ
+   ,parameter_schema           dz_swagger3_schema_typ_nf
    ,parameter_example_string   VARCHAR2(255 Char)
    ,parameter_example_number   NUMBER
    ,parameter_examples         dz_swagger3_example_list
@@ -45,7 +45,7 @@ AS OBJECT (
       ,p_parameter_style           IN  VARCHAR2
       ,p_parameter_explode         IN  VARCHAR2
       ,p_parameter_allowReserved   IN  VARCHAR2
-      ,p_parameter_schema          IN  dz_swagger3_schema_typ
+      ,p_parameter_schema          IN  dz_swagger3_schema_typ_nf
       ,p_parameter_example_string  IN  VARCHAR2
       ,p_parameter_example_number  IN  NUMBER
       ,p_parameter_examples        IN  dz_swagger3_example_list
@@ -70,8 +70,9 @@ AS OBJECT (
     
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   ,MEMBER FUNCTION unique_schemas
-    RETURN dz_swagger3_schema_nf_list
+   ,MEMBER PROCEDURE unique_schemas(
+      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
