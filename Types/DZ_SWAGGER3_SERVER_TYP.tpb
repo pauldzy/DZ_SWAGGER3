@@ -18,18 +18,14 @@ AS
       ,p_versionid           IN  VARCHAR2 DEFAULT NULL
    ) RETURN SELF AS RESULT
    AS 
-      str_url         VARCHAR2(255 Char);
-      str_description VARCHAR2(255 Char);
-      ary_variables   dz_swagger3_server_var_list;
-      
    BEGIN 
    
       SELECT
        a.server_url
       ,a.server_description
       INTO
-       str_url
-      ,str_description
+       self.server_url
+      ,self.server_description
       FROM
       dz_swagger3_server a
       WHERE
@@ -47,7 +43,7 @@ AS
          ,p_default_value  => a.server_var_default
          ,p_description    => a.server_var_description
       )
-      BULK COLLECT INTO ary_variables
+      BULK COLLECT INTO self.server_variables
       FROM
       dz_swagger3_server_variable a
       WHERE
@@ -56,14 +52,6 @@ AS
       ORDER BY
        a.server_var_order
       ,a.server_var_name;
-      
-      SELECT dz_swagger3_server_typ(
-          p_server_url         => str_url
-         ,p_server_description => str_description
-         ,p_server_variables   => ary_variables
-      )
-      INTO SELF
-      FROM dual;
       
       RETURN;
       
@@ -76,7 +64,7 @@ AS
       ,p_server_description IN  VARCHAR2
       ,p_server_variables   IN  dz_swagger3_server_var_list
    ) RETURN SELF AS RESULT 
-   AS 
+   AS
    BEGIN 
    
       self.server_url         := p_server_url;
