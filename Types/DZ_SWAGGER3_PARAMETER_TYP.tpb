@@ -190,8 +190,12 @@ AS
          THEN
             obj_schema.unique_schemas(p_schemas);
             
-            p_schemas.EXTEND();
-            p_schemas(p_schemas.COUNT) := self.parameter_schema;
+            IF obj_schema.doREF() = 'TRUE'
+            THEN
+               p_schemas.EXTEND();
+               p_schemas(p_schemas.COUNT) := self.parameter_schema;
+              
+            END IF;
             
          END IF;
          

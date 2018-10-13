@@ -438,6 +438,95 @@ AS
       a.combine_order;          
    
    END addCombined;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER PROCEDURE pruneRefChildren(
+       SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
+   )
+   AS
+     obj_schema  dz_swagger3_schema_typ;
+     
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check through the properties
+      --------------------------------------------------------------------------
+      IF self.schema_properties IS NOT NULL
+      AND self.schema_properties.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.schema_properties.COUNT
+         LOOP
+            obj_schema := TREAT(
+               self.schema_properties(i) AS dz_swagger3_schema_typ
+            );
+            
+            IF obj_schema.doREF() = 'TRUE'
+            THEN
+               obj_schema.schema_properties   := NULL;
+               obj_schema.schema_items_schema := NULL;
+               obj_schema.combine_schemas     := NULL;
+               
+               self.schema_properties(i) := obj_schema;
+            
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Check the array items
+      --------------------------------------------------------------------------
+      IF self.schema_items_schema IS NOT NULL
+      AND self.schema_items_schema.isNULL() = 'FALSE'
+      THEN
+         obj_schema := TREAT(
+            self.schema_items_schema AS dz_swagger3_schema_typ
+         );
+            
+         IF obj_schema.doREF() = 'TRUE'
+         THEN
+            obj_schema.schema_properties   := NULL;
+            obj_schema.schema_items_schema := NULL;
+            obj_schema.combine_schemas     := NULL;
+            
+            self.schema_items_schema := obj_schema;
+         
+         END IF;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Check through the combines
+      --------------------------------------------------------------------------
+      IF self.combine_schemas IS NOT NULL
+      AND self.combine_schemas.COUNT > 0
+      THEN
+         FOR i IN 1 .. self.combine_schemas.COUNT
+         LOOP
+            obj_schema := TREAT(
+               self.combine_schemas(i) AS dz_swagger3_schema_typ
+            );
+            
+            IF obj_schema.doREF() = 'TRUE'
+            THEN
+               obj_schema.schema_properties   := NULL;
+               obj_schema.schema_items_schema := NULL;
+               obj_schema.combine_schemas     := NULL;
+               
+               self.combine_schemas(i) := obj_schema;
+            
+            END IF;
+            
+         END LOOP;
+         
+      END IF;
+
+   END pruneRefChildren;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -528,7 +617,9 @@ AS
       THEN
          FOR i IN 1 .. self.schema_properties.COUNT
          LOOP
-            obj_schema := TREAT(self.schema_properties(i) AS dz_swagger3_schema_typ);
+            obj_schema := TREAT(
+               self.schema_properties(i) AS dz_swagger3_schema_typ
+            );
   
             IF dz_swagger3_util.a_in_schemas(
                 obj_schema.schema_id
@@ -537,8 +628,13 @@ AS
             THEN
                obj_schema.unique_schemas(p_schemas);
                
-               p_schemas.EXTEND();
-               p_schemas(p_schemas.COUNT) := obj_schema;
+               IF obj_schema.doREF() = 'TRUE'
+               THEN
+                  p_schemas.EXTEND();
+                  obj_schema.pruneRefChildren();
+                  p_schemas(p_schemas.COUNT) := obj_schema;
+               
+               END IF;
                
             END IF;
             
@@ -561,9 +657,14 @@ AS
          ) = 'FALSE'
          THEN
             obj_schema.unique_schemas(p_schemas);
-            
-            p_schemas.EXTEND();
-            p_schemas(p_schemas.COUNT) := obj_schema;
+               
+            IF obj_schema.doREF() = 'TRUE'
+            THEN
+               p_schemas.EXTEND();
+               obj_schema.pruneRefChildren();
+               p_schemas(p_schemas.COUNT) := obj_schema;
+               
+            END IF;
             
          END IF;
          
@@ -586,9 +687,14 @@ AS
             ) = 'FALSE'
             THEN
                obj_schema.unique_schemas(p_schemas);
+                  
+               IF obj_schema.doREF() = 'TRUE'
+               THEN
+                  p_schemas.EXTEND();
+                  obj_schema.pruneRefChildren();
+                  p_schemas(p_schemas.COUNT) := obj_schema;
                
-               p_schemas.EXTEND();
-               p_schemas(p_schemas.COUNT) := obj_schema;
+               END IF;
                
             END IF;
             

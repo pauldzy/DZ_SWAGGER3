@@ -235,7 +235,7 @@ AS
             THEN
                p_responses.EXTEND();
                p_responses(p_responses.COUNT) := self.path_get_operation.operation_responses(i);
-               
+
             END IF;
             
          END LOOP;
@@ -259,7 +259,7 @@ AS
             THEN
                p_responses.EXTEND();
                p_responses(p_responses.COUNT) := self.path_put_operation.operation_responses(i);
-               
+
             END IF;
             
          END LOOP;
@@ -283,7 +283,7 @@ AS
             THEN
                p_responses.EXTEND();
                p_responses(p_responses.COUNT) := self.path_post_operation.operation_responses(i);
-               
+
             END IF;
             
          END LOOP;
@@ -379,7 +379,7 @@ AS
             THEN
                p_responses.EXTEND();
                p_responses(p_responses.COUNT) := self.path_patch_operation.operation_responses(i);
-               
+                  
             END IF;
             
          END LOOP;
@@ -403,7 +403,7 @@ AS
             THEN
                p_responses.EXTEND();
                p_responses(p_responses.COUNT) := self.path_trace_operation.operation_responses(i);
-               
+                  
             END IF;
             
          END LOOP;
@@ -443,8 +443,12 @@ AS
             ,p_requestbodies
          ) = 'FALSE'
          THEN
-            p_requestbodies.EXTEND();
-            p_requestbodies(p_requestbodies.COUNT) := self.path_get_operation.operation_requestbody;
+            IF self.path_get_operation.operation_requestbody.doREF() = 'TRUE'
+            THEN
+               p_requestbodies.EXTEND();
+               p_requestbodies(p_requestbodies.COUNT) := self.path_get_operation.operation_requestbody;
+               
+            END IF;
             
          END IF;
          
@@ -464,8 +468,12 @@ AS
             ,p_requestbodies
          ) = 'FALSE'
          THEN
-            p_requestbodies.EXTEND();
-            p_requestbodies(p_requestbodies.COUNT) := self.path_put_operation.operation_requestbody;
+            IF self.path_put_operation.operation_requestbody.doREF() = 'TRUE'
+            THEN
+               p_requestbodies.EXTEND();
+               p_requestbodies(p_requestbodies.COUNT) := self.path_put_operation.operation_requestbody;
+               
+            END IF;
             
          END IF;
          
@@ -485,8 +493,12 @@ AS
             ,p_requestbodies
          ) = 'FALSE'
          THEN
-            p_requestbodies.EXTEND();
-            p_requestbodies(p_requestbodies.COUNT) := self.path_post_operation.operation_requestbody;
+            IF self.path_post_operation.operation_requestbody.doREF() = 'TRUE'
+            THEN
+               p_requestbodies.EXTEND();
+               p_requestbodies(p_requestbodies.COUNT) := self.path_post_operation.operation_requestbody;
+               
+            END IF;
             
          END IF;
          
@@ -506,8 +518,12 @@ AS
             ,p_requestbodies
          ) = 'FALSE'
          THEN
-            p_requestbodies.EXTEND();
-            p_requestbodies(p_requestbodies.COUNT) := self.path_delete_operation.operation_requestbody;
+            IF self.path_delete_operation.operation_requestbody.doREF() = 'TRUE'
+            THEN
+               p_requestbodies.EXTEND();
+               p_requestbodies(p_requestbodies.COUNT) := self.path_delete_operation.operation_requestbody;
+               
+            END IF;
             
          END IF;
          
@@ -527,8 +543,12 @@ AS
             ,p_requestbodies
          ) = 'FALSE'
          THEN
-            p_requestbodies.EXTEND();
-            p_requestbodies(p_requestbodies.COUNT) := self.path_options_operation.operation_requestbody;
+            IF self.path_options_operation.operation_requestbody.doREF() = 'TRUE'
+            THEN
+               p_requestbodies.EXTEND();
+               p_requestbodies(p_requestbodies.COUNT) := self.path_options_operation.operation_requestbody;
+               
+            END IF;
             
          END IF;
          
@@ -548,8 +568,12 @@ AS
             ,p_requestbodies
          ) = 'FALSE'
          THEN
-            p_requestbodies.EXTEND();
-            p_requestbodies(p_requestbodies.COUNT) := self.path_head_operation.operation_requestbody;
+            IF self.path_head_operation.operation_requestbody.doREF() = 'TRUE'
+            THEN
+               p_requestbodies.EXTEND();
+               p_requestbodies(p_requestbodies.COUNT) := self.path_head_operation.operation_requestbody;
+               
+            END IF;
             
          END IF;
          
@@ -569,8 +593,12 @@ AS
             ,p_requestbodies
          ) = 'FALSE'
          THEN
-            p_requestbodies.EXTEND();
-            p_requestbodies(p_requestbodies.COUNT) := self.path_patch_operation.operation_requestbody;
+            IF self.path_patch_operation.operation_requestbody.doREF() = 'TRUE'
+            THEN
+               p_requestbodies.EXTEND();
+               p_requestbodies(p_requestbodies.COUNT) := self.path_patch_operation.operation_requestbody;
+               
+            END IF;
             
          END IF;
          
@@ -590,8 +618,12 @@ AS
             ,p_requestbodies
          ) = 'FALSE'
          THEN
-            p_requestbodies.EXTEND();
-            p_requestbodies(p_requestbodies.COUNT) := self.path_trace_operation.operation_requestbody;
+            IF self.path_trace_operation.operation_requestbody.doREF() = 'TRUE'
+            THEN
+               p_requestbodies.EXTEND();
+               p_requestbodies(p_requestbodies.COUNT) := self.path_trace_operation.operation_requestbody;
+               
+            END IF;
             
          END IF;
          
@@ -631,8 +663,12 @@ AS
                ,p_parameters
             ) = 'FALSE'
             THEN
-               p_parameters.EXTEND();
-               p_parameters(p_parameters.COUNT) := self.path_parameters(i);
+               IF self.path_parameters(i).doREF() = 'TRUE'
+               THEN
+                  p_parameters.EXTEND();
+                  p_parameters(p_parameters.COUNT) := self.path_parameters(i);
+                  
+               END IF;
                
             END IF;
             
@@ -655,8 +691,12 @@ AS
                ,p_parameters
             ) = 'FALSE'
             THEN
-               p_parameters.EXTEND();
-               p_parameters(p_parameters.COUNT) := self.path_get_operation.operation_parameters(i);
+               IF self.path_get_operation.operation_parameters(i).doREF() = 'TRUE'
+               THEN
+                  p_parameters.EXTEND();
+                  p_parameters(p_parameters.COUNT) := self.path_get_operation.operation_parameters(i);
+                  
+               END IF;
                
             END IF;
             
@@ -679,8 +719,12 @@ AS
                ,p_parameters
             ) = 'FALSE'
             THEN
-               p_parameters.EXTEND();
-               p_parameters(p_parameters.COUNT) := self.path_put_operation.operation_parameters(i);
+               IF self.path_put_operation.operation_parameters(i).doREF() = 'TRUE'
+               THEN
+                  p_parameters.EXTEND();
+                  p_parameters(p_parameters.COUNT) := self.path_put_operation.operation_parameters(i);
+                  
+               END IF;
                
             END IF;
             
@@ -703,8 +747,12 @@ AS
                ,p_parameters
             ) = 'FALSE'
             THEN
-               p_parameters.EXTEND();
-               p_parameters(p_parameters.COUNT) := self.path_post_operation.operation_parameters(i);
+               IF self.path_post_operation.operation_parameters(i).doREF() = 'TRUE'
+               THEN
+                  p_parameters.EXTEND();
+                  p_parameters(p_parameters.COUNT) := self.path_post_operation.operation_parameters(i);
+                  
+               END IF;
                
             END IF;
             
@@ -727,8 +775,12 @@ AS
                ,p_parameters
             ) = 'FALSE'
             THEN
-               p_parameters.EXTEND();
-               p_parameters(p_parameters.COUNT) := self.path_delete_operation.operation_parameters(i);
+               IF self.path_delete_operation.operation_parameters(i).doREF() = 'TRUE'
+               THEN
+                  p_parameters.EXTEND();
+                  p_parameters(p_parameters.COUNT) := self.path_delete_operation.operation_parameters(i);
+                  
+               END IF;
                
             END IF;
             
@@ -751,8 +803,12 @@ AS
                ,p_parameters
             ) = 'FALSE'
             THEN
-               p_parameters.EXTEND();
-               p_parameters(p_parameters.COUNT) := self.path_options_operation.operation_parameters(i);
+               IF self.path_options_operation.operation_parameters(i).doREF() = 'TRUE'
+               THEN
+                  p_parameters.EXTEND();
+                  p_parameters(p_parameters.COUNT) := self.path_options_operation.operation_parameters(i);
+                  
+               END IF;
                
             END IF;
             
@@ -775,8 +831,12 @@ AS
                ,p_parameters
             ) = 'FALSE'
             THEN
-               p_parameters.EXTEND();
-               p_parameters(p_parameters.COUNT) := self.path_head_operation.operation_parameters(i);
+               IF self.path_head_operation.operation_parameters(i).doREF() = 'TRUE'
+               THEN
+                  p_parameters.EXTEND();
+                  p_parameters(p_parameters.COUNT) := self.path_head_operation.operation_parameters(i);
+                  
+               END IF;
                
             END IF;
             
@@ -799,8 +859,12 @@ AS
                ,p_parameters
             ) = 'FALSE'
             THEN
-               p_parameters.EXTEND();
-               p_parameters(p_parameters.COUNT) := self.path_patch_operation.operation_parameters(i);
+               IF self.path_patch_operation.operation_parameters(i).doREF() = 'TRUE'
+               THEN
+                  p_parameters.EXTEND();
+                  p_parameters(p_parameters.COUNT) := self.path_patch_operation.operation_parameters(i);
+                  
+               END IF;
                
             END IF;
             
@@ -823,8 +887,12 @@ AS
                ,p_parameters
             ) = 'FALSE'
             THEN
-               p_parameters.EXTEND();
-               p_parameters(p_parameters.COUNT) := self.path_trace_operation.operation_parameters(i);
+               IF self.path_trace_operation.operation_parameters(i).doREF() = 'TRUE'
+               THEN
+                  p_parameters.EXTEND();
+                  p_parameters(p_parameters.COUNT) := self.path_trace_operation.operation_parameters(i);
+                  
+               END IF;
                
             END IF;
             

@@ -144,6 +144,12 @@ AS
    RETURN VARCHAR2
    AS
    BEGIN
+      IF self.response_force_inline = 'TRUE'
+      THEN
+         RETURN 'FALSE';
+         
+      END IF;
+      
       RETURN 'TRUE';
       
    END doRef;

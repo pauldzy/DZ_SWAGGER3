@@ -354,7 +354,7 @@ AS
             THEN
                p_responses.EXTEND();
                p_responses(p_responses.COUNT) := self.operation_responses(i);
-               
+                           
             END IF;
             
          END LOOP;
@@ -393,9 +393,13 @@ AS
             ,p_requestbodies
          ) = 'FALSE'
          THEN
-            p_requestbodies.EXTEND();
-            p_requestbodies(p_requestbodies.COUNT) := self.operation_requestBody;
-            
+            IF self.operation_requestBody.doREF() = 'TRUE'
+            THEN
+               p_requestbodies.EXTEND();
+               p_requestbodies(p_requestbodies.COUNT) := self.operation_requestBody;
+               
+            END IF;
+
          END IF;
          
       END IF;
@@ -434,8 +438,12 @@ AS
                ,p_parameters
             ) = 'FALSE'
             THEN
-               p_parameters.EXTEND();
-               p_parameters(p_parameters.COUNT) := self.operation_parameters(i);
+               IF self.operation_parameters(i).doREF() = 'TRUE'
+               THEN
+                  p_parameters.EXTEND();
+                  p_parameters(p_parameters.COUNT) := self.operation_parameters(i);
+               
+               END IF;
                
             END IF;
             

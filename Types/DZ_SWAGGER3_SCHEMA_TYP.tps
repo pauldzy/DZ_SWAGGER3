@@ -43,8 +43,6 @@ UNDER dz_swagger3_schema_typ_nf(
    ,xml_attribute            VARCHAR2(5 Char)
    ,xml_wrapped              VARCHAR2(5 Char)
    -----
-   ,schema_force_inline      VARCHAR2(5 Char)
-   -----
    ,combine_schemas          dz_swagger3_schema_nf_list
    -----
    ,inject_jsonschema        VARCHAR2(5 Char)
@@ -170,6 +168,12 @@ UNDER dz_swagger3_schema_typ_nf(
    ,MEMBER PROCEDURE addCombined(
        SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
       ,p_versionid           IN  VARCHAR2
+   )
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER PROCEDURE pruneRefChildren(
+       SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
    )
    
    -----------------------------------------------------------------------------

@@ -164,8 +164,13 @@ AS
          THEN
             obj_schema.unique_schemas(p_schemas);
             
-            p_schemas.EXTEND();
-            p_schemas(p_schemas.COUNT) := obj_schema;
+            IF obj_schema.doREF() = 'TRUE'
+            THEN
+               p_schemas.EXTEND();
+               obj_schema.pruneRefChildren();
+               p_schemas(p_schemas.COUNT) := obj_schema;
+               
+            END IF;
             
          END IF;
          

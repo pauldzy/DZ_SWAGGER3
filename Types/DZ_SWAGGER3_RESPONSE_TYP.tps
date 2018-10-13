@@ -7,6 +7,7 @@ AS OBJECT (
    ,response_headers         dz_swagger3_header_list
    ,response_content         dz_swagger3_media_list
    ,response_links           dz_swagger3_link_list
+   ,response_force_inline    VARCHAR2(5 Char)
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
