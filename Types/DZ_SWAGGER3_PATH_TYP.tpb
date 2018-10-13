@@ -28,6 +28,7 @@ AS
          SELECT
          dz_swagger3_path_typ(
              p_hash_key               => a.path_endpoint
+            ,p_path_id                => a.path_id
             ,p_path_summary           => a.path_summary
             ,p_path_description       => a.path_description
             ,p_path_get_operation     => dz_swagger3_operation_typ(
@@ -135,6 +136,7 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_path_typ(
        p_hash_key                IN  VARCHAR2
+      ,p_path_id                 IN  VARCHAR2
       ,p_path_summary            IN  VARCHAR2
       ,p_path_description        IN  VARCHAR2
       ,p_path_get_operation      IN  dz_swagger3_operation_typ
@@ -152,6 +154,7 @@ AS
    BEGIN 
    
       self.hash_key                := p_hash_key;
+      self.path_id                 := p_path_id;
       self.path_summary            := p_path_summary;
       self.path_description        := p_path_description;
       self.path_get_operation      := p_path_get_operation;
@@ -199,24 +202,21 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_responses
-   RETURN dz_swagger3_response_list
+   MEMBER PROCEDURE unique_responses(
+      p_responses IN OUT NOCOPY dz_swagger3_response_list
+   )
    AS
-      ary_results   dz_swagger3_response_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-      
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_response_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      IF p_responses IS NULL
+      THEN
+         p_responses := dz_swagger3_response_list();
+         
+      END IF;
 
       --------------------------------------------------------------------------
       -- Step 20
@@ -228,18 +228,13 @@ AS
       THEN
          FOR i IN 1 .. self.path_get_operation.operation_responses.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
+            IF dz_swagger3_util.a_in_responses(
                 self.path_get_operation.operation_responses(i).response_id
-               ,ary_x
+               ,p_responses
             ) = 'FALSE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_get_operation.operation_responses(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_get_operation.operation_responses(i).response_id;
-               int_x := int_x + 1;
+               p_responses.EXTEND();
+               p_responses(p_responses.COUNT) := self.path_get_operation.operation_responses(i);
                
             END IF;
             
@@ -257,22 +252,13 @@ AS
       THEN
          FOR i IN 1 .. self.path_put_operation.operation_responses.COUNT
          LOOP
-            IF self.path_put_operation.operation_responses(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_responses(
+                self.path_put_operation.operation_responses(i).response_id
+               ,p_responses
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_put_operation.operation_responses(i).response_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_put_operation.operation_responses(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_put_operation.operation_responses(i).response_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               p_responses.EXTEND();
+               p_responses(p_responses.COUNT) := self.path_put_operation.operation_responses(i);
                
             END IF;
             
@@ -290,22 +276,13 @@ AS
       THEN
          FOR i IN 1 .. self.path_post_operation.operation_responses.COUNT
          LOOP
-            IF self.path_post_operation.operation_responses(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_responses(
+                self.path_post_operation.operation_responses(i).response_id
+               ,p_responses
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_post_operation.operation_responses(i).response_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_post_operation.operation_responses(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_post_operation.operation_responses(i).response_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               p_responses.EXTEND();
+               p_responses(p_responses.COUNT) := self.path_post_operation.operation_responses(i);
                
             END IF;
             
@@ -323,22 +300,13 @@ AS
       THEN
          FOR i IN 1 .. self.path_delete_operation.operation_responses.COUNT
          LOOP
-            IF self.path_delete_operation.operation_responses(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_responses(
+                self.path_delete_operation.operation_responses(i).response_id
+               ,p_responses
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_delete_operation.operation_responses(i).response_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_delete_operation.operation_responses(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_delete_operation.operation_responses(i).response_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               p_responses.EXTEND();
+               p_responses(p_responses.COUNT) := self.path_delete_operation.operation_responses(i);
                
             END IF;
             
@@ -356,22 +324,13 @@ AS
       THEN
          FOR i IN 1 .. self.path_options_operation.operation_responses.COUNT
          LOOP
-            IF self.path_options_operation.operation_responses(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_responses(
+                self.path_options_operation.operation_responses(i).response_id
+               ,p_responses
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_options_operation.operation_responses(i).response_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_options_operation.operation_responses(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_options_operation.operation_responses(i).response_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               p_responses.EXTEND();
+               p_responses(p_responses.COUNT) := self.path_options_operation.operation_responses(i);
                
             END IF;
             
@@ -389,22 +348,13 @@ AS
       THEN
          FOR i IN 1 .. self.path_head_operation.operation_responses.COUNT
          LOOP
-            IF self.path_head_operation.operation_responses(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_responses(
+                self.path_head_operation.operation_responses(i).response_id
+               ,p_responses
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_head_operation.operation_responses(i).response_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_head_operation.operation_responses(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_head_operation.operation_responses(i).response_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               p_responses.EXTEND();
+               p_responses(p_responses.COUNT) := self.path_head_operation.operation_responses(i);
                
             END IF;
             
@@ -422,22 +372,13 @@ AS
       THEN
          FOR i IN 1 .. self.path_patch_operation.operation_responses.COUNT
          LOOP
-            IF self.path_patch_operation.operation_responses(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_responses(
+                self.path_patch_operation.operation_responses(i).response_id
+               ,p_responses
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_patch_operation.operation_responses(i).response_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_patch_operation.operation_responses(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_patch_operation.operation_responses(i).response_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               p_responses.EXTEND();
+               p_responses(p_responses.COUNT) := self.path_patch_operation.operation_responses(i);
                
             END IF;
             
@@ -455,57 +396,39 @@ AS
       THEN
          FOR i IN 1 .. self.path_trace_operation.operation_responses.COUNT
          LOOP
-            IF self.path_trace_operation.operation_responses(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_responses(
+                self.path_trace_operation.operation_responses(i).response_id
+               ,p_responses
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_trace_operation.operation_responses(i).response_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_trace_operation.operation_responses(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_trace_operation.operation_responses(i).response_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               p_responses.EXTEND();
+               p_responses(p_responses.COUNT) := self.path_trace_operation.operation_responses(i);
                
             END IF;
             
          END LOOP;
          
       END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 110
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
    
    END unique_responses;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_requestBodies
-   RETURN dz_swagger3_requestbody_list
+   MEMBER PROCEDURE unique_requestbodies(
+      p_requestbodies IN OUT NOCOPY dz_swagger3_requestBody_list
+   )
    AS
-      ary_results   dz_swagger3_requestBody_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-      
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_requestbody_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      IF p_requestbodies IS NULL
+      THEN
+         p_requestbodies := dz_swagger3_requestBody_list();
+         
+      END IF;
 
       --------------------------------------------------------------------------
       -- Step 20
@@ -515,18 +438,13 @@ AS
       AND self.path_get_operation.operation_requestbody IS NOT NULL
       AND self.path_get_operation.operation_requestbody.isNULL() = 'FALSE'
       THEN
-         IF dz_swagger3_util.a_in_b(
+         IF dz_swagger3_util.a_in_requestbodies(
              self.path_get_operation.operation_requestbody.requestBody_id
-            ,ary_x
+            ,p_requestbodies
          ) = 'FALSE'
          THEN
-            ary_results.EXTEND();
-            ary_results(int_results) := self.path_get_operation.operation_requestbody;
-            int_results := int_results + 1;
-            
-            ary_x.EXTEND();
-            ary_x(int_x) := self.path_get_operation.operation_requestbody.requestBody_id;
-            int_x := int_x + 1;
+            p_requestbodies.EXTEND();
+            p_requestbodies(p_requestbodies.COUNT) := self.path_get_operation.operation_requestbody;
             
          END IF;
          
@@ -541,18 +459,13 @@ AS
       AND self.path_put_operation.operation_requestbody.isNULL() = 'FALSE'
       AND self.path_put_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
-         IF dz_swagger3_util.a_in_b(
+         IF dz_swagger3_util.a_in_requestbodies(
              self.path_put_operation.operation_requestbody.requestBody_id
-            ,ary_x
+            ,p_requestbodies
          ) = 'FALSE'
          THEN
-            ary_results.EXTEND();
-            ary_results(int_results) := self.path_put_operation.operation_requestbody;
-            int_results := int_results + 1;
-            
-            ary_x.EXTEND();
-            ary_x(int_x) := self.path_put_operation.operation_requestbody.requestBody_id;
-            int_x := int_x + 1;
+            p_requestbodies.EXTEND();
+            p_requestbodies(p_requestbodies.COUNT) := self.path_put_operation.operation_requestbody;
             
          END IF;
          
@@ -567,18 +480,13 @@ AS
       AND self.path_post_operation.operation_requestbody.isNULL() = 'FALSE'
       AND self.path_post_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
-         IF dz_swagger3_util.a_in_b(
+         IF dz_swagger3_util.a_in_requestbodies(
              self.path_post_operation.operation_requestbody.requestBody_id
-            ,ary_x
+            ,p_requestbodies
          ) = 'FALSE'
          THEN
-            ary_results.EXTEND();
-            ary_results(int_results) := self.path_post_operation.operation_requestbody;
-            int_results := int_results + 1;
-            
-            ary_x.EXTEND();
-            ary_x(int_x) := self.path_post_operation.operation_requestbody.requestBody_id;
-            int_x := int_x + 1;
+            p_requestbodies.EXTEND();
+            p_requestbodies(p_requestbodies.COUNT) := self.path_post_operation.operation_requestbody;
             
          END IF;
          
@@ -593,18 +501,13 @@ AS
       AND self.path_delete_operation.operation_requestbody.isNULL() = 'FALSE'
       AND self.path_delete_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
-         IF dz_swagger3_util.a_in_b(
+         IF dz_swagger3_util.a_in_requestbodies(
              self.path_delete_operation.operation_requestbody.requestBody_id
-            ,ary_x
+            ,p_requestbodies
          ) = 'FALSE'
          THEN
-            ary_results.EXTEND();
-            ary_results(int_results) := self.path_delete_operation.operation_requestbody;
-            int_results := int_results + 1;
-            
-            ary_x.EXTEND();
-            ary_x(int_x) := self.path_delete_operation.operation_requestbody.requestBody_id;
-            int_x := int_x + 1;
+            p_requestbodies.EXTEND();
+            p_requestbodies(p_requestbodies.COUNT) := self.path_delete_operation.operation_requestbody;
             
          END IF;
          
@@ -619,18 +522,13 @@ AS
       AND self.path_options_operation.operation_requestbody.isNULL() = 'FALSE'
       AND self.path_options_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
-         IF dz_swagger3_util.a_in_b(
+         IF dz_swagger3_util.a_in_requestbodies(
              self.path_options_operation.operation_requestbody.requestBody_id
-            ,ary_x
+            ,p_requestbodies
          ) = 'FALSE'
          THEN
-            ary_results.EXTEND();
-            ary_results(int_results) := self.path_options_operation.operation_requestbody;
-            int_results := int_results + 1;
-            
-            ary_x.EXTEND();
-            ary_x(int_x) := self.path_options_operation.operation_requestbody.requestBody_id;
-            int_x := int_x + 1;
+            p_requestbodies.EXTEND();
+            p_requestbodies(p_requestbodies.COUNT) := self.path_options_operation.operation_requestbody;
             
          END IF;
          
@@ -645,18 +543,13 @@ AS
       AND self.path_head_operation.operation_requestbody.isNULL() = 'FALSE'
       AND self.path_head_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
-         IF dz_swagger3_util.a_in_b(
+         IF dz_swagger3_util.a_in_requestbodies(
              self.path_head_operation.operation_requestbody.requestBody_id
-            ,ary_x
+            ,p_requestbodies
          ) = 'FALSE'
          THEN
-            ary_results.EXTEND();
-            ary_results(int_results) := self.path_head_operation.operation_requestbody;
-            int_results := int_results + 1;
-            
-            ary_x.EXTEND();
-            ary_x(int_x) := self.path_head_operation.operation_requestbody.requestBody_id;
-            int_x := int_x + 1;
+            p_requestbodies.EXTEND();
+            p_requestbodies(p_requestbodies.COUNT) := self.path_head_operation.operation_requestbody;
             
          END IF;
          
@@ -671,18 +564,13 @@ AS
       AND self.path_patch_operation.operation_requestbody.isNULL() = 'FALSE'
       AND self.path_patch_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
-         IF dz_swagger3_util.a_in_b(
+         IF dz_swagger3_util.a_in_requestbodies(
              self.path_patch_operation.operation_requestbody.requestBody_id
-            ,ary_x
+            ,p_requestbodies
          ) = 'FALSE'
          THEN
-            ary_results.EXTEND();
-            ary_results(int_results) := self.path_patch_operation.operation_requestbody;
-            int_results := int_results + 1;
-            
-            ary_x.EXTEND();
-            ary_x(int_x) := self.path_patch_operation.operation_requestbody.requestBody_id;
-            int_x := int_x + 1;
+            p_requestbodies.EXTEND();
+            p_requestbodies(p_requestbodies.COUNT) := self.path_patch_operation.operation_requestbody;
             
          END IF;
          
@@ -697,51 +585,37 @@ AS
       AND self.path_trace_operation.operation_requestbody.isNULL() = 'FALSE'
       AND self.path_trace_operation.operation_requestbody.doRef() = 'TRUE'
       THEN
-         IF dz_swagger3_util.a_in_b(
+         IF dz_swagger3_util.a_in_requestbodies(
              self.path_trace_operation.operation_requestbody.requestBody_id
-            ,ary_x
+            ,p_requestbodies
          ) = 'FALSE'
          THEN
-            ary_results.EXTEND();
-            ary_results(int_results) := self.path_trace_operation.operation_requestbody;
-            int_results := int_results + 1;
-            
-            ary_x.EXTEND();
-            ary_x(int_x) := self.path_trace_operation.operation_requestbody.requestBody_id;
-            int_x := int_x + 1;
+            p_requestbodies.EXTEND();
+            p_requestbodies(p_requestbodies.COUNT) := self.path_trace_operation.operation_requestbody;
             
          END IF;
          
       END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 110
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
    
    END unique_requestBodies;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_parameters
-   RETURN dz_swagger3_parameter_list
+   MEMBER PROCEDURE unique_parameters(
+      p_parameters IN OUT NOCOPY dz_swagger3_parameter_list
+   )
    AS
-      ary_results   dz_swagger3_parameter_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-      
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_parameter_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      IF p_parameters IS NULL
+      THEN
+         p_parameters := dz_swagger3_parameter_list();
+         
+      END IF;
 
       --------------------------------------------------------------------------
       -- Step 20
@@ -752,18 +626,13 @@ AS
       THEN
          FOR i IN 1 .. self.path_parameters.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
+            IF dz_swagger3_util.a_in_parameters(
                 self.path_parameters(i).parameter_id
-               ,ary_x
+               ,p_parameters
             ) = 'FALSE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_parameters(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_parameters(i).parameter_id;
-               int_x := int_x + 1;
+               p_parameters.EXTEND();
+               p_parameters(p_parameters.COUNT) := self.path_parameters(i);
                
             END IF;
             
@@ -781,22 +650,13 @@ AS
       THEN
          FOR i IN 1 .. self.path_get_operation.operation_parameters.COUNT
          LOOP
-            IF path_get_operation.operation_parameters(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_parameters(
+                self.path_get_operation.operation_parameters(i).parameter_id
+               ,p_parameters
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_get_operation.operation_parameters(i).parameter_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_get_operation.operation_parameters(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_get_operation.operation_parameters(i).parameter_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               p_parameters.EXTEND();
+               p_parameters(p_parameters.COUNT) := self.path_get_operation.operation_parameters(i);
                
             END IF;
             
@@ -814,23 +674,14 @@ AS
       THEN
          FOR i IN 1 .. self.path_put_operation.operation_parameters.COUNT
          LOOP
-            IF path_put_operation.operation_parameters(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_parameters(
+                self.path_put_operation.operation_parameters(i).parameter_id
+               ,p_parameters
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_put_operation.operation_parameters(i).parameter_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_put_operation.operation_parameters(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_put_operation.operation_parameters(i).parameter_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
-            
+               p_parameters.EXTEND();
+               p_parameters(p_parameters.COUNT) := self.path_put_operation.operation_parameters(i);
+               
             END IF;
             
          END LOOP;
@@ -847,23 +698,14 @@ AS
       THEN
          FOR i IN 1 .. self.path_post_operation.operation_parameters.COUNT
          LOOP
-            IF path_post_operation.operation_parameters(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_parameters(
+                self.path_post_operation.operation_parameters(i).parameter_id
+               ,p_parameters
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_post_operation.operation_parameters(i).parameter_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_post_operation.operation_parameters(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_post_operation.operation_parameters(i).parameter_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
-            
+               p_parameters.EXTEND();
+               p_parameters(p_parameters.COUNT) := self.path_post_operation.operation_parameters(i);
+               
             END IF;
             
          END LOOP;
@@ -880,22 +722,13 @@ AS
       THEN
          FOR i IN 1 .. self.path_delete_operation.operation_parameters.COUNT
          LOOP
-            IF path_delete_operation.operation_parameters(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_parameters(
+                self.path_delete_operation.operation_parameters(i).parameter_id
+               ,p_parameters
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_delete_operation.operation_parameters(i).parameter_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_delete_operation.operation_parameters(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_delete_operation.operation_parameters(i).parameter_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               p_parameters.EXTEND();
+               p_parameters(p_parameters.COUNT) := self.path_delete_operation.operation_parameters(i);
                
             END IF;
             
@@ -913,22 +746,13 @@ AS
       THEN
          FOR i IN 1 .. self.path_options_operation.operation_parameters.COUNT
          LOOP
-            IF path_options_operation.operation_parameters(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_parameters(
+                self.path_options_operation.operation_parameters(i).parameter_id
+               ,p_parameters
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_options_operation.operation_parameters(i).parameter_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_options_operation.operation_parameters(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_options_operation.operation_parameters(i).parameter_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               p_parameters.EXTEND();
+               p_parameters(p_parameters.COUNT) := self.path_options_operation.operation_parameters(i);
                
             END IF;
             
@@ -946,22 +770,13 @@ AS
       THEN
          FOR i IN 1 .. self.path_head_operation.operation_parameters.COUNT
          LOOP
-            IF path_head_operation.operation_parameters(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_parameters(
+                self.path_head_operation.operation_parameters(i).parameter_id
+               ,p_parameters
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_head_operation.operation_parameters(i).parameter_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_head_operation.operation_parameters(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_head_operation.operation_parameters(i).parameter_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               p_parameters.EXTEND();
+               p_parameters(p_parameters.COUNT) := self.path_head_operation.operation_parameters(i);
                
             END IF;
             
@@ -979,23 +794,14 @@ AS
       THEN
          FOR i IN 1 .. self.path_patch_operation.operation_parameters.COUNT
          LOOP
-            IF path_patch_operation.operation_parameters(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_parameters(
+                self.path_patch_operation.operation_parameters(i).parameter_id
+               ,p_parameters
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_patch_operation.operation_parameters(i).parameter_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_patch_operation.operation_parameters(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_patch_operation.operation_parameters(i).parameter_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
-            
+               p_parameters.EXTEND();
+               p_parameters(p_parameters.COUNT) := self.path_patch_operation.operation_parameters(i);
+               
             END IF;
             
          END LOOP;
@@ -1012,35 +818,20 @@ AS
       THEN
          FOR i IN 1 .. self.path_trace_operation.operation_parameters.COUNT
          LOOP
-            IF path_trace_operation.operation_parameters(i).doRef() = 'TRUE'
+            IF dz_swagger3_util.a_in_parameters(
+                self.path_trace_operation.operation_parameters(i).parameter_id
+               ,p_parameters
+            ) = 'FALSE'
             THEN
-               IF dz_swagger3_util.a_in_b(
-                   self.path_trace_operation.operation_parameters(i).parameter_id
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := self.path_trace_operation.operation_parameters(i);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := self.path_trace_operation.operation_parameters(i).parameter_id;
-                  int_x := int_x + 1;
-                  
-               END IF;
+               p_parameters.EXTEND();
+               p_parameters(p_parameters.COUNT) := self.path_trace_operation.operation_parameters(i);
                
             END IF;
             
          END LOOP;
          
       END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 110
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
-   
+
    END unique_parameters;
 
    ----------------------------------------------------------------------------
@@ -1168,24 +959,21 @@ AS
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_tags
-   RETURN dz_swagger3_tag_list
+   MEMBER PROCEDURE unique_tags(
+      p_tags IN OUT NOCOPY dz_swagger3_tag_list
+   )
    AS
-      ary_results   dz_swagger3_tag_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-   
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_tag_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      IF p_tags IS NULL
+      THEN
+         p_tags := dz_swagger3_tag_list();
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 20
@@ -1196,19 +984,14 @@ AS
       THEN
          FOR i IN 1 .. self.path_get_operation.operation_tags.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
+            IF dz_swagger3_util.a_in_tags(
                 self.path_get_operation.operation_tags(i).tag_name
-               ,ary_x
+               ,p_tags
             ) = 'FALSE'
             AND self.path_get_operation.operation_tags(i).tag_id IS NOT NULL
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_get_operation.operation_tags(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_get_operation.operation_tags(i).tag_name;
-               int_x := int_x + 1;
+               p_tags.EXTEND();
+               p_tags(p_tags.COUNT) := self.path_get_operation.operation_tags(i);
                
             END IF;
             
@@ -1225,19 +1008,14 @@ AS
       THEN
          FOR i IN 1 .. self.path_put_operation.operation_tags.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
+            IF dz_swagger3_util.a_in_tags(
                 self.path_put_operation.operation_tags(i).tag_name
-               ,ary_x
+               ,p_tags
             ) = 'FALSE'
             AND self.path_put_operation.operation_tags(i).tag_id IS NOT NULL
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_put_operation.operation_tags(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_put_operation.operation_tags(i).tag_name;
-               int_x := int_x + 1;
+               p_tags.EXTEND();
+               p_tags(p_tags.COUNT) := self.path_put_operation.operation_tags(i);
                
             END IF;
             
@@ -1254,19 +1032,14 @@ AS
       THEN
          FOR i IN 1 .. self.path_post_operation.operation_tags.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
+            IF dz_swagger3_util.a_in_tags(
                 self.path_post_operation.operation_tags(i).tag_name
-               ,ary_x
+               ,p_tags
             ) = 'FALSE'
             AND self.path_post_operation.operation_tags(i).tag_id IS NOT NULL
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_post_operation.operation_tags(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_post_operation.operation_tags(i).tag_name;
-               int_x := int_x + 1;
+               p_tags.EXTEND();
+               p_tags(p_tags.COUNT) := self.path_post_operation.operation_tags(i);
                
             END IF;
             
@@ -1283,19 +1056,14 @@ AS
       THEN
          FOR i IN 1 .. self.path_delete_operation.operation_tags.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
+            IF dz_swagger3_util.a_in_tags(
                 self.path_delete_operation.operation_tags(i).tag_name
-               ,ary_x
+               ,p_tags
             ) = 'FALSE'
             AND self.path_delete_operation.operation_tags(i).tag_id IS NOT NULL
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_delete_operation.operation_tags(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_delete_operation.operation_tags(i).tag_name;
-               int_x := int_x + 1;
+               p_tags.EXTEND();
+               p_tags(p_tags.COUNT) := self.path_delete_operation.operation_tags(i);
                
             END IF;
             
@@ -1312,19 +1080,14 @@ AS
       THEN
          FOR i IN 1 .. self.path_options_operation.operation_tags.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
+            IF dz_swagger3_util.a_in_tags(
                 self.path_options_operation.operation_tags(i).tag_name
-               ,ary_x
+               ,p_tags
             ) = 'FALSE'
             AND self.path_options_operation.operation_tags(i).tag_id IS NOT NULL
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_options_operation.operation_tags(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_options_operation.operation_tags(i).tag_name;
-               int_x := int_x + 1;
+               p_tags.EXTEND();
+               p_tags(p_tags.COUNT) := self.path_options_operation.operation_tags(i);
                
             END IF;
             
@@ -1341,19 +1104,14 @@ AS
       THEN
          FOR i IN 1 .. self.path_head_operation.operation_tags.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
+            IF dz_swagger3_util.a_in_tags(
                 self.path_head_operation.operation_tags(i).tag_name
-               ,ary_x
+               ,p_tags
             ) = 'FALSE'
             AND self.path_head_operation.operation_tags(i).tag_id IS NOT NULL
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_head_operation.operation_tags(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_head_operation.operation_tags(i).tag_name;
-               int_x := int_x + 1;
+               p_tags.EXTEND();
+               p_tags(p_tags.COUNT) := self.path_head_operation.operation_tags(i);
                
             END IF;
             
@@ -1370,19 +1128,14 @@ AS
       THEN
          FOR i IN 1 .. self.path_patch_operation.operation_tags.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
+            IF dz_swagger3_util.a_in_tags(
                 self.path_patch_operation.operation_tags(i).tag_name
-               ,ary_x
+               ,p_tags
             ) = 'FALSE'
             AND self.path_patch_operation.operation_tags(i).tag_id IS NOT NULL
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_patch_operation.operation_tags(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_patch_operation.operation_tags(i).tag_name;
-               int_x := int_x + 1;
+               p_tags.EXTEND();
+               p_tags(p_tags.COUNT) := self.path_patch_operation.operation_tags(i);
                
             END IF;
             
@@ -1399,31 +1152,20 @@ AS
       THEN
          FOR i IN 1 .. self.path_trace_operation.operation_tags.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
+            IF dz_swagger3_util.a_in_tags(
                 self.path_trace_operation.operation_tags(i).tag_name
-               ,ary_x
+               ,p_tags
             ) = 'FALSE'
             AND self.path_trace_operation.operation_tags(i).tag_id IS NOT NULL
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.path_trace_operation.operation_tags(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.path_trace_operation.operation_tags(i).tag_name;
-               int_x := int_x + 1;
+               p_tags.EXTEND();
+               p_tags(p_tags.COUNT) := self.path_trace_operation.operation_tags(i);
                
             END IF;
             
          END LOOP;
          
       END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 100
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
       
    END unique_tags;
    

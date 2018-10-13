@@ -23,7 +23,7 @@ AS
       str_items_schema_id  VARCHAR2(255 Char);
       
    BEGIN
-      
+
       --------------------------------------------------------------------------
       -- Step 10
       -- Load the easy items using constructor

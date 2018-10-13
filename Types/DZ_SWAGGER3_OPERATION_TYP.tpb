@@ -322,25 +322,22 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_responses
-   RETURN dz_swagger3_response_list
+   MEMBER PROCEDURE unique_responses(
+      p_responses IN OUT NOCOPY dz_swagger3_response_list
+   )
    AS
-      ary_results   dz_swagger3_response_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-   
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_response_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
-
+      IF p_responses IS NULL
+      THEN
+         p_responses := dz_swagger3_response_list();
+         
+      END IF;
+   
       --------------------------------------------------------------------------
       -- Step 20
       -- Pull the parmeters from the operation
@@ -350,39 +347,39 @@ AS
       THEN
          FOR i IN 1 .. self.operation_responses.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
+            IF dz_swagger3_util.a_in_responses(
                 self.operation_responses(i).response_id
-               ,ary_x
+               ,p_responses
             ) = 'FALSE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.operation_responses(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.operation_responses(i).response_id;
-               int_x := int_x + 1;
+               p_responses.EXTEND();
+               p_responses(p_responses.COUNT) := self.operation_responses(i);
                
             END IF;
             
          END LOOP;
          
       END IF;
-   
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
 
    END unique_responses;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_requestbodies
-   RETURN dz_swagger3_requestbody_list
+   MEMBER PROCEDURE unique_requestbodies(
+      p_requestbodies IN OUT NOCOPY dz_swagger3_requestBody_list
+   )
    AS
    BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Setup for the harvest
+      --------------------------------------------------------------------------
+      IF p_requestbodies IS NULL
+      THEN
+         p_requestbodies := dz_swagger3_requestBody_list();
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 10
@@ -391,12 +388,15 @@ AS
       IF  self.operation_requestBody IS NOT NULL
       AND self.operation_requestBody.isNULL() = 'FALSE'
       THEN
-         RETURN dz_swagger3_requestbody_list(
-            self.operation_requestBody
-         );
-      
-      ELSE
-         RETURN dz_swagger3_requestbody_list();
+         IF dz_swagger3_util.a_in_requestbodies(
+             self.operation_requestBody.requestBody_id
+            ,p_requestbodies
+         ) = 'FALSE'
+         THEN
+            p_requestbodies.EXTEND();
+            p_requestbodies(p_requestbodies.COUNT) := self.operation_requestBody;
+            
+         END IF;
          
       END IF;
    
@@ -404,25 +404,22 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_parameters
-   RETURN dz_swagger3_parameter_list
+   MEMBER PROCEDURE unique_parameters(
+      p_parameters IN OUT NOCOPY dz_swagger3_parameter_list
+   )
    AS
-      ary_results   dz_swagger3_parameter_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-   
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_parameter_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
-
+      IF p_parameters IS NULL
+      THEN
+         p_parameters := dz_swagger3_parameter_list();
+         
+      END IF;
+   
       --------------------------------------------------------------------------
       -- Step 20
       -- Pull the parmeters from the operation
@@ -432,30 +429,19 @@ AS
       THEN
          FOR i IN 1 .. self.operation_parameters.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
+            IF dz_swagger3_util.a_in_parameters(
                 self.operation_parameters(i).parameter_id
-               ,ary_x
+               ,p_parameters
             ) = 'FALSE'
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.operation_parameters(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.operation_parameters(i).parameter_id;
-               int_x := int_x + 1;
+               p_parameters.EXTEND();
+               p_parameters(p_parameters.COUNT) := self.operation_parameters(i);
                
             END IF;
             
          END LOOP;
          
       END IF;
-   
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
 
    END unique_parameters;
    
@@ -522,24 +508,21 @@ AS
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_tags
-   RETURN dz_swagger3_tag_list
+   MEMBER PROCEDURE unique_tags(
+      p_tags IN OUT NOCOPY dz_swagger3_tag_list
+   )
    AS
-      ary_results   dz_swagger3_tag_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-   
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_tag_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      IF p_tags IS NULL
+      THEN
+         p_tags := dz_swagger3_tag_list();
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 20
@@ -550,31 +533,20 @@ AS
       THEN
          FOR i IN 1 .. self.operation_tags.COUNT
          LOOP
-            IF dz_swagger3_util.a_in_b(
+            IF dz_swagger3_util.a_in_tags(
                 self.operation_tags(i).tag_name
-               ,ary_x
+               ,p_tags
             ) = 'FALSE'
             AND self.operation_tags(i).tag_id IS NOT NULL
             THEN
-               ary_results.EXTEND();
-               ary_results(int_results) := self.operation_tags(i);
-               int_results := int_results + 1;
-               
-               ary_x.EXTEND();
-               ary_x(int_x) := self.operation_tags(i).tag_name;
-               int_x := int_x + 1;
+               p_tags.EXTEND();
+               p_tags(p_tags.COUNT) := self.operation_tags(i);
                
             END IF;
             
          END LOOP;
          
       END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
       
    END unique_tags;
    

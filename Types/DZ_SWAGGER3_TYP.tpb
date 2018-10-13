@@ -23,7 +23,11 @@ AS
       str_group_id        VARCHAR2(255 Char) := p_group_id;
       str_versionid       VARCHAR2(40 Char)  := p_versionid;
       str_externaldocs_id VARCHAR2(255 Char);
+      ary_parameters      dz_swagger3_parameter_list;
+      ary_responses       dz_swagger3_response_list;
+      ary_requestbodies   dz_swagger3_requestBody_list;
       ary_schemas         dz_swagger3_schema_nf_list;
+      ary_tags            dz_swagger3_tag_list;
 
    BEGIN
 
@@ -77,7 +81,7 @@ AS
       WHERE
           a.versionid  = str_versionid
       AND a.doc_id     = str_doc_id;
-      
+
       --------------------------------------------------------------------------
       -- Step 40
       -- Load the servers
@@ -158,21 +162,30 @@ AS
       -- Load the components in sorted by id order
       --------------------------------------------------------------------------
       self.components := dz_swagger3_components();
+
+      self.unique_parameters(ary_parameters);
+      dz_swagger3_sort.parameters(
+         ary_parameters
+      );
+      self.components.components_parameters := ary_parameters;
+
+      self.unique_requestbodies(ary_requestbodies);
+      dz_swagger3_sort.requestBodies(
+         ary_requestbodies
+      );
+      self.components.components_requestBodies := ary_requestbodies;
       
-      self.components.components_parameters    := dz_swagger3_sort.parameters(
-         self.unique_parameters()
+      self.unique_responses(ary_responses);
+      dz_swagger3_sort.responses(
+         ary_responses
       );
-      self.components.components_requestBodies := dz_swagger3_sort.requestBodies(
-         self.unique_requestBodies()
-      );
-      self.components.components_responses     := dz_swagger3_sort.responses(
-         self.unique_responses()
-      );
+      self.components.components_responses := ary_responses;
 
       self.unique_schemas(ary_schemas);
-      self.components.components_schemas       := dz_swagger3_sort.schemas(
+      dz_swagger3_sort.schemas(
          ary_schemas
       );
+      self.components.components_schemas := ary_schemas;
 
       --------------------------------------------------------------------------
       -- Step 70
@@ -184,7 +197,8 @@ AS
       -- Step 80
       -- Load the tags
       --------------------------------------------------------------------------
-      self.tags := self.unique_tags();
+      self.unique_tags(ary_tags);
+      self.tags := ary_tags;
 
       --------------------------------------------------------------------------
       -- Step 90
@@ -232,25 +246,21 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_responses
-   RETURN dz_swagger3_response_list
+   MEMBER PROCEDURE unique_responses(
+      p_responses IN OUT NOCOPY dz_swagger3_response_list
+   )
    AS
-      ary_results   dz_swagger3_response_list;
-      ary_working   dz_swagger3_response_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-   
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_response_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      IF p_responses IS NULL
+      THEN
+         p_responses := dz_swagger3_response_list();
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 20
@@ -261,64 +271,31 @@ AS
       THEN
          FOR i IN 1 .. self.paths.COUNT
          LOOP
-            ary_working := self.paths(i).unique_responses();
-            
-            IF ary_working.COUNT > 0
-            THEN
-               FOR j IN 1 .. ary_working.COUNT
-               LOOP
-                  IF dz_swagger3_util.a_in_b(
-                      ary_working(j).response_id
-                     ,ary_x
-                  ) = 'FALSE'
-                  THEN
-                     ary_results.EXTEND();
-                     ary_results(int_results) := ary_working(j);
-                     int_results := int_results + 1;
-                     
-                     ary_x.EXTEND();
-                     ary_x(int_x) := ary_working(j).response_id;
-                     int_x := int_x + 1;
-                     
-                  END IF;
-                  
-               END LOOP;
-               
-            END IF;
+            self.paths(i).unique_responses(p_responses);
             
          END LOOP;
          
       END IF;
-   
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
    
    END unique_responses;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_requestBodies
-   RETURN dz_swagger3_requestBody_list
+   MEMBER PROCEDURE unique_requestbodies(
+      p_requestbodies IN OUT NOCOPY dz_swagger3_requestBody_list
+   )
    AS
-      ary_results   dz_swagger3_requestBody_list;
-      ary_working   dz_swagger3_requestBody_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-   
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_requestBody_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      IF p_requestbodies IS NULL
+      THEN
+         p_requestbodies := dz_swagger3_requestBody_list();
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 20
@@ -329,64 +306,31 @@ AS
       THEN
          FOR i IN 1 .. self.paths.COUNT
          LOOP
-            ary_working := self.paths(i).unique_requestBodies();
-            
-            IF ary_working.COUNT > 0
-            THEN
-               FOR j IN 1 .. ary_working.COUNT
-               LOOP
-                  IF dz_swagger3_util.a_in_b(
-                      ary_working(j).requestBody_id
-                     ,ary_x
-                  ) = 'FALSE'
-                  THEN
-                     ary_results.EXTEND();
-                     ary_results(int_results) := ary_working(j);
-                     int_results := int_results + 1;
-                     
-                     ary_x.EXTEND();
-                     ary_x(int_x) := ary_working(j).requestBody_id;
-                     int_x := int_x + 1;
-                     
-                  END IF;
-                  
-               END LOOP;
-               
-            END IF;
+            self.paths(i).unique_requestBodies(p_requestbodies);
             
          END LOOP;
          
       END IF;
-   
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
    
    END unique_requestBodies;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_parameters
-   RETURN dz_swagger3_parameter_list
+   MEMBER PROCEDURE unique_parameters(
+      p_parameters IN OUT NOCOPY dz_swagger3_parameter_list
+   )
    AS
-      ary_results   dz_swagger3_parameter_list;
-      ary_working   dz_swagger3_parameter_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-   
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_parameter_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      IF p_parameters IS NULL
+      THEN
+         p_parameters := dz_swagger3_parameter_list();
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 20
@@ -397,40 +341,11 @@ AS
       THEN
          FOR i IN 1 .. self.paths.COUNT
          LOOP
-            ary_working := self.paths(i).unique_parameters();
-            
-            IF ary_working.COUNT > 0
-            THEN
-               FOR j IN 1 .. ary_working.COUNT
-               LOOP
-                  IF dz_swagger3_util.a_in_b(
-                      ary_working(j).parameter_id
-                     ,ary_x
-                  ) = 'FALSE'
-                  THEN
-                     ary_results.EXTEND();
-                     ary_results(int_results) := ary_working(j);
-                     int_results := int_results + 1;
-                     
-                     ary_x.EXTEND();
-                     ary_x(int_x) := ary_working(j).parameter_id;
-                     int_x := int_x + 1;
-                     
-                  END IF;
-                  
-               END LOOP;
-               
-            END IF;
-            
+            self.paths(i).unique_parameters(p_parameters);
+ 
          END LOOP;
          
       END IF;
-   
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
    
    END unique_parameters;
    
@@ -462,7 +377,7 @@ AS
          FOR i IN 1 .. self.paths.COUNT
          LOOP
             self.paths(i).unique_schemas(p_schemas);
-            
+
          END LOOP;
          
       END IF;
@@ -471,25 +386,21 @@ AS
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   MEMBER FUNCTION unique_tags
-   RETURN dz_swagger3_tag_list
+   MEMBER PROCEDURE unique_tags(
+      p_tags IN OUT NOCOPY dz_swagger3_tag_list
+   )
    AS
-      ary_results   dz_swagger3_tag_list;
-      ary_working   dz_swagger3_tag_list;
-      int_results   PLS_INTEGER;
-      ary_x         MDSYS.SDO_STRING2_ARRAY;
-      int_x         PLS_INTEGER;
-   
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
       -- Setup for the harvest
       --------------------------------------------------------------------------
-      int_results := 1;
-      ary_results := dz_swagger3_tag_list();
-      int_x       := 1;
-      ary_x       := MDSYS.SDO_STRING2_ARRAY();
+      IF p_tags IS NULL
+      THEN
+         p_tags := dz_swagger3_tag_list();
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 20
@@ -500,36 +411,11 @@ AS
       THEN
          FOR i IN 1 .. self.paths.COUNT
          LOOP
-            ary_working := self.paths(i).unique_tags();
-            
-            FOR j IN 1 .. ary_working.COUNT
-            LOOP         
-               IF dz_swagger3_util.a_in_b(
-                   ary_working(j).tag_name
-                  ,ary_x
-               ) = 'FALSE'
-               THEN
-                  ary_results.EXTEND();
-                  ary_results(int_results) := ary_working(j);
-                  int_results := int_results + 1;
-                  
-                  ary_x.EXTEND();
-                  ary_x(int_x) := ary_working(j).tag_name;
-                  int_x := int_x + 1;
-                  
-               END IF;
-               
-            END LOOP;
+            self.paths(i).unique_tags(p_tags);
             
          END LOOP;
          
       END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Return what we got
-      --------------------------------------------------------------------------
-      RETURN ary_results;
       
    END unique_tags;
    

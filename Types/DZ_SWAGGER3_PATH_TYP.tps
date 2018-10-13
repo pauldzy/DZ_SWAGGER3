@@ -2,6 +2,7 @@ CREATE OR REPLACE TYPE dz_swagger3_path_typ FORCE
 AUTHID DEFINER
 AS OBJECT (
     hash_key                 VARCHAR2(255 Char)
+   ,path_id                  VARCHAR2(255 Char)
    ,path_summary             VARCHAR2(255 Char)
    ,path_description         VARCHAR2(4000 Char)
    ,path_get_operation       dz_swagger3_operation_typ
@@ -31,6 +32,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_path_typ(
        p_hash_key                IN  VARCHAR2
+      ,p_path_id                 IN  VARCHAR2
       ,p_path_summary            IN  VARCHAR2
       ,p_path_description        IN  VARCHAR2
       ,p_path_get_operation      IN  dz_swagger3_operation_typ
@@ -57,18 +59,21 @@ AS OBJECT (
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION unique_responses
-    RETURN dz_swagger3_response_list
+   ,MEMBER PROCEDURE unique_responses(
+      p_responses IN OUT NOCOPY dz_swagger3_response_list
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION unique_requestbodies
-    RETURN dz_swagger3_requestbody_list
+   ,MEMBER PROCEDURE unique_requestbodies(
+      p_requestbodies IN OUT NOCOPY dz_swagger3_requestBody_list
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION unique_parameters
-    RETURN dz_swagger3_parameter_list
+   ,MEMBER PROCEDURE unique_parameters(
+      p_parameters IN OUT NOCOPY dz_swagger3_parameter_list
+    )
     
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
@@ -78,8 +83,9 @@ AS OBJECT (
     
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   ,MEMBER FUNCTION unique_tags
-    RETURN dz_swagger3_tag_list
+   ,MEMBER PROCEDURE unique_tags(
+      p_tags IN OUT NOCOPY dz_swagger3_tag_list
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

@@ -66,18 +66,21 @@ AS OBJECT (
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION unique_responses
-    RETURN dz_swagger3_response_list
+   ,MEMBER PROCEDURE unique_responses(
+      p_responses IN OUT NOCOPY dz_swagger3_response_list
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION unique_requestbodies
-    RETURN dz_swagger3_requestBody_list
+   ,MEMBER PROCEDURE unique_requestbodies(
+      p_requestbodies IN OUT NOCOPY dz_swagger3_requestBody_list
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION unique_parameters
-    RETURN dz_swagger3_parameter_list
+   ,MEMBER PROCEDURE unique_parameters(
+      p_parameters IN OUT NOCOPY dz_swagger3_parameter_list
+    )
     
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
@@ -87,8 +90,9 @@ AS OBJECT (
     
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   ,MEMBER FUNCTION unique_tags
-    RETURN dz_swagger3_tag_list
+   ,MEMBER PROCEDURE unique_tags(
+      p_tags IN OUT NOCOPY dz_swagger3_tag_list
+    )
 
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------

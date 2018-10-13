@@ -337,7 +337,7 @@ AS
    -----------------------------------------------------------------------------
    FUNCTION a_in_schemas(
        p_input_a          IN VARCHAR2
-      ,p_input_b          IN dz_swagger3_schema_nf_list
+      ,p_input_b          IN OUT NOCOPY dz_swagger3_schema_nf_list
    ) RETURN VARCHAR2 DETERMINISTIC
    AS
       boo_check BOOLEAN := FALSE;
@@ -378,6 +378,190 @@ AS
       END IF;
    
    END a_in_schemas;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION a_in_responses(
+       p_input_a          IN VARCHAR2
+      ,p_input_b          IN OUT NOCOPY dz_swagger3_response_list
+   ) RETURN VARCHAR2 DETERMINISTIC
+   AS
+      boo_check BOOLEAN := FALSE;
+      
+   BEGIN
+   
+      IF p_input_a IS NULL
+      THEN
+         RAISE_APPLICATION_ERROR(-20001,'err');
+         
+      END IF;
+
+      IF p_input_b IS NULL
+      OR p_input_b.COUNT = 0
+      THEN
+         RETURN 'FALSE';
+         
+      END IF;
+
+      FOR i IN 1 .. p_input_b.COUNT
+      LOOP
+         IF p_input_a = p_input_b(i).response_id
+         THEN
+            boo_check := TRUE;
+            EXIT;
+            
+         END IF;
+         
+      END LOOP;
+
+      IF boo_check = TRUE
+      THEN
+         RETURN 'TRUE';
+         
+      ELSE
+         RETURN 'FALSE';
+         
+      END IF;
+   
+   END a_in_responses;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION a_in_requestbodies(
+       p_input_a          IN VARCHAR2
+      ,p_input_b          IN OUT NOCOPY dz_swagger3_requestBody_list
+   ) RETURN VARCHAR2 DETERMINISTIC
+   AS
+      boo_check BOOLEAN := FALSE;
+      
+   BEGIN
+   
+      IF p_input_a IS NULL
+      THEN
+         RAISE_APPLICATION_ERROR(-20001,'err');
+         
+      END IF;
+
+      IF p_input_b IS NULL
+      OR p_input_b.COUNT = 0
+      THEN
+         RETURN 'FALSE';
+         
+      END IF;
+
+      FOR i IN 1 .. p_input_b.COUNT
+      LOOP
+         IF p_input_a = p_input_b(i).requestbody_id
+         THEN
+            boo_check := TRUE;
+            EXIT;
+            
+         END IF;
+         
+      END LOOP;
+
+      IF boo_check = TRUE
+      THEN
+         RETURN 'TRUE';
+         
+      ELSE
+         RETURN 'FALSE';
+         
+      END IF;
+   
+   END a_in_requestbodies;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION a_in_parameters(
+       p_input_a          IN VARCHAR2
+      ,p_input_b          IN OUT NOCOPY dz_swagger3_parameter_list
+   ) RETURN VARCHAR2 DETERMINISTIC
+   AS
+      boo_check BOOLEAN := FALSE;
+      
+   BEGIN
+   
+      IF p_input_a IS NULL
+      THEN
+         RAISE_APPLICATION_ERROR(-20001,'err');
+         
+      END IF;
+
+      IF p_input_b IS NULL
+      OR p_input_b.COUNT = 0
+      THEN
+         RETURN 'FALSE';
+         
+      END IF;
+
+      FOR i IN 1 .. p_input_b.COUNT
+      LOOP
+         IF p_input_a = p_input_b(i).parameter_id
+         THEN
+            boo_check := TRUE;
+            EXIT;
+            
+         END IF;
+         
+      END LOOP;
+
+      IF boo_check = TRUE
+      THEN
+         RETURN 'TRUE';
+         
+      ELSE
+         RETURN 'FALSE';
+         
+      END IF;
+   
+   END a_in_parameters;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION a_in_tags(
+       p_input_a          IN VARCHAR2
+      ,p_input_b          IN OUT NOCOPY dz_swagger3_tag_list
+   ) RETURN VARCHAR2 DETERMINISTIC
+   AS
+      boo_check BOOLEAN := FALSE;
+      
+   BEGIN
+   
+      IF p_input_a IS NULL
+      THEN
+         RAISE_APPLICATION_ERROR(-20001,'err');
+         
+      END IF;
+
+      IF p_input_b IS NULL
+      OR p_input_b.COUNT = 0
+      THEN
+         RETURN 'FALSE';
+         
+      END IF;
+
+      FOR i IN 1 .. p_input_b.COUNT
+      LOOP
+         IF p_input_a = p_input_b(i).tag_id
+         THEN
+            boo_check := TRUE;
+            EXIT;
+            
+         END IF;
+         
+      END LOOP;
+
+      IF boo_check = TRUE
+      THEN
+         RETURN 'TRUE';
+         
+      ELSE
+         RETURN 'FALSE';
+         
+      END IF;
+   
+   END a_in_tags;
 
 END dz_swagger3_util;
 /
