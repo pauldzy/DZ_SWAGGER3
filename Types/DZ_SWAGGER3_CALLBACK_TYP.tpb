@@ -10,6 +10,43 @@ AS
       RETURN; 
       
    END dz_swagger3_callback_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_callback_typ(
+       p_hash_key                IN  VARCHAR2
+      ,p_callback_id             IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+   ) RETURN SELF AS RESULT
+   AS
+   BEGIN
+   
+      SELECT
+      dz_swagger3_callback_typ(
+          p_hash_key                => p_hash_key
+         ,p_callback_id             => p_callback_id
+         ,p_path_summary            => NULL
+         ,p_path_description        => NULL
+         ,p_path_get_operation      => NULL
+         ,p_path_put_operation      => NULL
+         ,p_path_post_operation     => NULL
+         ,p_path_delete_operation   => NULL
+         ,p_path_options_operation  => NULL
+         ,p_path_head_operation     => NULL
+         ,p_path_patch_operation    => NULL
+         ,p_path_trace_operation    => NULL
+         ,p_path_servers            => NULL
+         ,p_path_parameters         => NULL
+         ,p_load_components         => p_load_components
+      )
+      INTO SELF
+      FROM
+      dual;
+      
+      RETURN; 
+      
+   END dz_swagger3_callback_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -28,6 +65,7 @@ AS
       ,p_path_trace_operation    IN  dz_swagger3_cboperation_typ
       ,p_path_servers            IN  dz_swagger3_server_list
       ,p_path_parameters         IN  dz_swagger3_parameter_list
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -46,6 +84,18 @@ AS
       self.path_trace_operation    := p_path_trace_operation;
       self.path_servers            := p_path_servers;
       self.path_parameters         := p_path_parameters;
+      
+      --------------------------------------------------------------------------
+      IF self.doREF() = 'TRUE'
+      AND p_load_components = 'TRUE'
+      THEN
+         dz_swagger3_main.insert_component(
+             p_object_id     => p_callback_id
+            ,p_object_type   => 'callback'
+            ,p_response_code => p_hash_key
+         );
+         
+      END IF;
       
       RETURN; 
       
@@ -558,7 +608,10 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              '$ref'
-            ,'#/components/callbacks/' || self.callback_id
+            ,'#/components/callbacks/' || dz_swagger3_main.short(
+                p_object_id   => self.callback_id
+               ,p_object_type => 'callback'
+             )
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1
@@ -906,7 +959,10 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/callbacks/' || self.callback_id
+             '#/components/callbacks/' || dz_swagger3_main.short(
+                p_object_id   => self.callback_id
+               ,p_object_type => 'callback'
+             )
             ,p_pretty_print
          )
          ,p_pretty_print

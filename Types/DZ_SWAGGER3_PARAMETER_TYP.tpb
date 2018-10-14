@@ -16,8 +16,9 @@ AS
    CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
        p_parameter_id              IN  VARCHAR2
       ,p_versionid                 IN  VARCHAR2
+      ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
-   AS 
+   AS      
    BEGIN
    
       BEGIN
@@ -45,6 +46,7 @@ AS
             ,p_parameter_examples        => NULL
             ,p_parameter_force_inline    => a.parameter_force_inline
             ,p_parameter_list_hidden     => a.parameter_list_hidden
+            ,p_load_components           => p_load_components
          )
          INTO SELF
          FROM
@@ -56,14 +58,17 @@ AS
       EXCEPTION
          WHEN NO_DATA_FOUND
          THEN
-            RETURN;
+            RAISE_APPLICATION_ERROR(
+                -20001
+               ,'Missing parameter ' || p_parameter_id
+            );
             
          WHEN OTHERS
          THEN
             RAISE;
             
       END;
-      
+
       RETURN;
       
    END;
@@ -88,6 +93,7 @@ AS
       ,p_parameter_examples        IN  dz_swagger3_example_list
       ,p_parameter_force_inline    IN  VARCHAR2
       ,p_parameter_list_hidden     IN  VARCHAR2
+      ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -110,6 +116,17 @@ AS
       self.parameter_force_inline    := p_parameter_force_inline;
       self.parameter_list_hidden     := p_parameter_list_hidden;
       
+      --------------------------------------------------------------------------
+      IF self.doREF() = 'TRUE'
+      AND p_load_components = 'TRUE'
+      THEN
+         dz_swagger3_main.insert_component(
+             p_object_id   => p_parameter_id
+            ,p_object_type => 'parameter'
+         );
+         
+      END IF;
+ 
       RETURN; 
       
    END dz_swagger3_parameter_typ;
@@ -151,57 +168,6 @@ AS
       RETURN 'TRUE';
       
    END doRef;
-   
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   MEMBER PROCEDURE unique_schemas(
-      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
-   )
-   AS
-      obj_schema dz_swagger3_schema_typ;
-      
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Setup for the harvest
-      --------------------------------------------------------------------------
-      IF p_schemas IS NULL
-      THEN
-         p_schemas := dz_swagger3_schema_nf_list();
-         
-      END IF;
-
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Pull the schema from the items
-      --------------------------------------------------------------------------
-      IF self.parameter_schema IS NOT NULL
-      AND self.parameter_schema.isNULL() = 'FALSE'
-      THEN
-         obj_schema := TREAT(
-            self.parameter_schema AS dz_swagger3_schema_typ
-         );
-            
-         IF dz_swagger3_util.a_in_schemas(
-             self.parameter_schema.schema_id
-            ,p_schemas
-         ) = 'FALSE'
-         THEN
-            obj_schema.unique_schemas(p_schemas);
-            
-            IF obj_schema.doREF() = 'TRUE'
-            THEN
-               p_schemas.EXTEND();
-               p_schemas(p_schemas.COUNT) := self.parameter_schema;
-              
-            END IF;
-            
-         END IF;
-         
-      END IF;
-
-   END unique_schemas;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -666,7 +632,12 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              '$ref'
-            ,'#/components/parameters/' || dz_swagger3_util.utl_url_escape(self.parameter_id)
+            ,'#/components/parameters/' || dz_swagger3_util.utl_url_escape(
+                dz_swagger3_main.short(
+                   p_object_id   => self.parameter_id
+                  ,p_object_type => 'parameter'
+                )
+             )
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1
@@ -995,7 +966,10 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/parameters/' || self.parameter_id
+             '#/components/parameters/' || dz_swagger3_main.short(
+                p_object_id   => self.parameter_id
+               ,p_object_type => 'parameter'
+             )
             ,p_pretty_print
          )
          ,p_pretty_print

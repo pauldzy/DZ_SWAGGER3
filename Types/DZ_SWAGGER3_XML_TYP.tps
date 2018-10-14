@@ -1,4 +1,4 @@
-CREATE OR REPLACE TYPE dz_swagger3_xml FORCE
+CREATE OR REPLACE TYPE dz_swagger3_xml_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
     xml_name            VARCHAR2(255 Char)
@@ -9,12 +9,12 @@ AS OBJECT (
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_xml
+   ,CONSTRUCTOR FUNCTION dz_swagger3_xml_typ
     RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_xml(
+   ,CONSTRUCTOR FUNCTION dz_swagger3_xml_typ(
        p_xml_name            IN  VARCHAR2 DEFAULT NULL
       ,p_xml_namespace       IN  VARCHAR2 DEFAULT NULL
       ,p_xml_prefix          IN  VARCHAR2 DEFAULT NULL
@@ -41,5 +41,5 @@ AS OBJECT (
 );
 /
 
-GRANT EXECUTE ON dz_swagger3_xml TO public;
+GRANT EXECUTE ON dz_swagger3_xml_typ TO public;
 

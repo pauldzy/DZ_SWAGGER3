@@ -7,6 +7,7 @@ AS
    RETURN SELF AS RESULT
    AS
    BEGIN
+      dz_swagger3_main.purge_component();
       RETURN;
 
    END dz_swagger3_typ;
@@ -17,6 +18,7 @@ AS
        p_doc_id              IN  VARCHAR2
       ,p_group_id            IN  VARCHAR2 DEFAULT NULL
       ,p_versionid           IN  VARCHAR2 DEFAULT NULL
+      ,p_shorten_logic       IN  VARCHAR2 DEFAULT NULL
    ) RETURN SELF AS RESULT
    AS
       str_doc_id          VARCHAR2(255 Char) := p_doc_id;
@@ -35,6 +37,7 @@ AS
       -- Step 10
       -- Check over incoming parameters
       --------------------------------------------------------------------------
+      dz_swagger3_main.purge_component();
 
       --------------------------------------------------------------------------
       -- Step 20     
@@ -54,16 +57,16 @@ AS
       -- Load the info object and externalDocs object
       --------------------------------------------------------------------------
       SELECT
-       dz_swagger3_info(
+       dz_swagger3_info_typ(
           p_info_title          => a.info_title
          ,p_info_description    => a.info_description
          ,p_info_termsofservice => a.info_termsofservice
-         ,p_info_contact        => dz_swagger3_info_contact(
+         ,p_info_contact        => dz_swagger3_info_contact_typ(
              p_contact_name  => a.info_contact_name
             ,p_contact_url   => a.info_contact_url
             ,p_contact_email => a.info_contact_email
           )
-         ,p_info_license        => dz_swagger3_info_license(
+         ,p_info_license        => dz_swagger3_info_license_typ(
              p_license_name  => a.info_license_name
             ,p_license_url   => a.info_license_url
           )
@@ -161,31 +164,9 @@ AS
       -- Step 60
       -- Load the components in sorted by id order
       --------------------------------------------------------------------------
-      self.components := dz_swagger3_components();
-
-      self.unique_parameters(ary_parameters);
-      dz_swagger3_sort.parameters(
-         ary_parameters
+      self.components := dz_swagger3_components_typ(
+         p_versionid  => str_versionid
       );
-      self.components.components_parameters := ary_parameters;
-
-      self.unique_requestbodies(ary_requestbodies);
-      dz_swagger3_sort.requestBodies(
-         ary_requestbodies
-      );
-      self.components.components_requestBodies := ary_requestbodies;
-      
-      self.unique_responses(ary_responses);
-      dz_swagger3_sort.responses(
-         ary_responses
-      );
-      self.components.components_responses := ary_responses;
-
-      self.unique_schemas(ary_schemas);
-      dz_swagger3_sort.schemas(
-         ary_schemas
-      );
-      self.components.components_schemas := ary_schemas;
 
       --------------------------------------------------------------------------
       -- Step 70
@@ -197,11 +178,46 @@ AS
       -- Step 80
       -- Load the tags
       --------------------------------------------------------------------------
-      self.unique_tags(ary_tags);
-      self.tags := ary_tags;
-
+      SELECT 
+      dz_swagger3_tag_typ(
+          p_tag_id            => b.tag_id
+         ,p_tag_name          => b.tag_name
+         ,p_tag_description   => c.tag_description
+         ,p_tag_externalDocs  => dz_swagger3_extrdocs_typ(
+             p_externaldoc_id      => c.tag_externaldocs_id
+            ,p_versionid           => str_versionid
+          )
+         ,p_load_components   => 'FALSE'
+      )
+      BULK COLLECT INTO self.tags
+      FROM
+      dz_swagger3_components a
+      JOIN
+      dz_swagger3_operation_tag_map b
+      ON
+      a.object_id = b.tag_id
+      JOIN
+      dz_swagger3_tag c
+      ON
+          b.versionid = c.versionid
+      AND b.tag_id    = c.tag_id
+      WHERE
+          a.object_type = 'tag'
+      AND b.versionid = str_versionid
+      AND c.versionid = str_versionid
+      ORDER BY
+      a.object_id;
+      
       --------------------------------------------------------------------------
       -- Step 90
+      -- Update components with shortened names
+      --------------------------------------------------------------------------
+      dz_swagger3_main.add_short_names(
+         p_shorten_logic => p_shorten_logic
+      );
+
+      --------------------------------------------------------------------------
+      -- Step 100
       -- Return the completed object
       --------------------------------------------------------------------------
       RETURN;
@@ -211,10 +227,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_typ(
-       p_info                IN  dz_swagger3_info
+       p_info                IN  dz_swagger3_info_typ
       ,p_servers             IN  dz_swagger3_server_list
       ,p_paths               IN  dz_swagger3_path_list
-      ,p_components          IN  dz_swagger3_components
+      ,p_components          IN  dz_swagger3_components_typ
       ,p_security            IN  dz_swagger3_security_req_list
       ,p_tags                IN  dz_swagger3_tag_list
       ,p_externalDocs        IN  dz_swagger3_extrdocs_typ
@@ -227,7 +243,8 @@ AS
       -- Step 10
       -- Check over incoming parameters
       --------------------------------------------------------------------------
-
+      dz_swagger3_main.purge_component();
+      
       --------------------------------------------------------------------------
       -- Step 20
       -- Load the object
@@ -243,181 +260,6 @@ AS
       RETURN;      
 
    END dz_swagger3_typ;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER PROCEDURE unique_responses(
-      p_responses IN OUT NOCOPY dz_swagger3_response_list
-   )
-   AS
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Setup for the harvest
-      --------------------------------------------------------------------------
-      IF p_responses IS NULL
-      THEN
-         p_responses := dz_swagger3_response_list();
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Pull parameters from the paths
-      --------------------------------------------------------------------------
-      IF self.paths IS NOT NULL
-      AND self.paths.COUNT > 0
-      THEN
-         FOR i IN 1 .. self.paths.COUNT
-         LOOP
-            self.paths(i).unique_responses(p_responses);
-            
-         END LOOP;
-         
-      END IF;
-   
-   END unique_responses;
-
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER PROCEDURE unique_requestbodies(
-      p_requestbodies IN OUT NOCOPY dz_swagger3_requestBody_list
-   )
-   AS
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Setup for the harvest
-      --------------------------------------------------------------------------
-      IF p_requestbodies IS NULL
-      THEN
-         p_requestbodies := dz_swagger3_requestBody_list();
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Pull parameters from the paths
-      --------------------------------------------------------------------------
-      IF self.paths IS NOT NULL
-      AND self.paths.COUNT > 0
-      THEN
-         FOR i IN 1 .. self.paths.COUNT
-         LOOP
-            self.paths(i).unique_requestBodies(p_requestbodies);
-            
-         END LOOP;
-         
-      END IF;
-   
-   END unique_requestBodies;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER PROCEDURE unique_parameters(
-      p_parameters IN OUT NOCOPY dz_swagger3_parameter_list
-   )
-   AS
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Setup for the harvest
-      --------------------------------------------------------------------------
-      IF p_parameters IS NULL
-      THEN
-         p_parameters := dz_swagger3_parameter_list();
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Pull parameters from the paths
-      --------------------------------------------------------------------------
-      IF self.paths IS NOT NULL
-      AND self.paths.COUNT > 0
-      THEN
-         FOR i IN 1 .. self.paths.COUNT
-         LOOP
-            self.paths(i).unique_parameters(p_parameters);
- 
-         END LOOP;
-         
-      END IF;
-   
-   END unique_parameters;
-   
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   MEMBER PROCEDURE unique_schemas(
-      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
-   )
-   AS
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Setup for the harvest
-      --------------------------------------------------------------------------
-      IF p_schemas IS NULL
-      THEN
-         p_schemas := dz_swagger3_schema_nf_list();
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Pull parameters from the paths
-      --------------------------------------------------------------------------
-      IF self.paths IS NOT NULL
-      AND self.paths.COUNT > 0
-      THEN
-         FOR i IN 1 .. self.paths.COUNT
-         LOOP
-            self.paths(i).unique_schemas(p_schemas);
-
-         END LOOP;
-         
-      END IF;
-   
-   END unique_schemas;
-   
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   MEMBER PROCEDURE unique_tags(
-      p_tags IN OUT NOCOPY dz_swagger3_tag_list
-   )
-   AS
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Setup for the harvest
-      --------------------------------------------------------------------------
-      IF p_tags IS NULL
-      THEN
-         p_tags := dz_swagger3_tag_list();
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Pull the schema from the requestBody
-      --------------------------------------------------------------------------
-      IF self.paths IS NOT NULL
-      AND self.paths.COUNT > 0
-      THEN
-         FOR i IN 1 .. self.paths.COUNT
-         LOOP
-            self.paths(i).unique_tags(p_tags);
-            
-         END LOOP;
-         
-      END IF;
-      
-   END unique_tags;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -621,7 +463,7 @@ AS
          ,p_pretty_print + 1
       );
       str_pad1 := ',';
-      
+
       --------------------------------------------------------------------------
       -- Step 70
       -- Add get operation

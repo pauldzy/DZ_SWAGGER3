@@ -10,23 +10,69 @@ AS
       RETURN; 
       
    END dz_swagger3_header_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_header_typ(
+       p_hash_key                IN  VARCHAR2
+      ,p_header_id               IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+   ) RETURN SELF AS RESULT 
+   AS 
+   BEGIN
+      
+      SELECT
+      dz_swagger3_header_typ(
+          p_hash_key                => p_hash_key
+         ,p_header_id               => a.header_id
+         ,p_header_description      => a.header_description
+         ,p_header_required         => a.header_required
+         ,p_header_deprecated       => a.header_deprecated
+         ,p_header_allowEmptyValue  => a.header_allowEmptyValue
+         ,p_header_style            => a.header_style
+         ,p_header_explode          => a.header_explode
+         ,p_header_allowReserved    => a.header_allowReserved
+         ,p_header_schema           => dz_swagger3_schema_typ(
+             p_hash_key                => a.header_schema_id
+            ,p_schema_id               => a.header_schema_id
+            ,p_required                => 'TRUE'
+            ,p_versionid               => p_versionid
+            ,p_load_components         => p_load_components
+          )
+         ,p_header_example_string   => a.header_example_string
+         ,p_header_example_number   => a.header_example_number
+         ,p_header_examples         => NULL
+         ,p_load_components         => p_load_components
+      )
+      INTO SELF
+      FROM
+      dz_swagger3_header a
+      WHERE
+          a.versionid = p_versionid
+      AND a.header_id = p_header_id;
+   
+      RETURN; 
+      
+   END dz_swagger3_header_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_header_typ(
-       p_hash_key               IN  VARCHAR2
-      ,p_header_id              IN  VARCHAR2
-      ,p_header_description     IN  VARCHAR2
-      ,p_header_required        IN  VARCHAR2
-      ,p_header_deprecated      IN  VARCHAR2
-      ,p_header_allowEmptyValue IN  VARCHAR2
-      ,p_header_style           IN  VARCHAR2
-      ,p_header_explode         IN  VARCHAR2
-      ,p_header_allowReserved   IN  VARCHAR2
-      ,p_header_schema          IN  dz_swagger3_schema_typ
-      ,p_header_example_string  IN  VARCHAR2
-      ,p_header_example_number  IN  NUMBER
-      ,p_header_examples        IN  dz_swagger3_example_list
+       p_hash_key                IN  VARCHAR2
+      ,p_header_id               IN  VARCHAR2
+      ,p_header_description      IN  VARCHAR2
+      ,p_header_required         IN  VARCHAR2
+      ,p_header_deprecated       IN  VARCHAR2
+      ,p_header_allowEmptyValue  IN  VARCHAR2
+      ,p_header_style            IN  VARCHAR2
+      ,p_header_explode          IN  VARCHAR2
+      ,p_header_allowReserved    IN  VARCHAR2
+      ,p_header_schema           IN  dz_swagger3_schema_typ
+      ,p_header_example_string   IN  VARCHAR2
+      ,p_header_example_number   IN  NUMBER
+      ,p_header_examples         IN  dz_swagger3_example_list
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -44,6 +90,17 @@ AS
       self.header_example_string  := p_header_example_string;
       self.header_example_number  := p_header_example_number;
       self.header_examples        := p_header_examples;
+      
+      --------------------------------------------------------------------------
+      IF self.doREF() = 'TRUE'
+      AND p_load_components = 'TRUE'
+      THEN
+         dz_swagger3_main.insert_component(
+             p_object_id     => p_header_id
+            ,p_object_type   => 'header'
+         );
+         
+      END IF;
       
       RETURN; 
       
@@ -517,7 +574,10 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              '$ref'
-            ,'#/components/headers/' || self.header_id
+            ,'#/components/headers/' || dz_swagger3_main.short(
+                p_object_id   => self.header_id
+               ,p_object_type => 'header'
+             )
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1
@@ -816,7 +876,10 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/headers/' || self.header_id
+             '#/components/headers/' || dz_swagger3_main.short(
+                p_object_id   => self.header_id
+               ,p_object_type => 'header'
+             )
             ,p_pretty_print
          )
          ,p_pretty_print

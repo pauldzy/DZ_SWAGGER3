@@ -19,23 +19,33 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_header_typ
     RETURN SELF AS RESULT
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_header_typ(
+       p_hash_key                IN  VARCHAR2
+      ,p_header_id               IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+   ) RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_header_typ(
-       p_hash_key               IN  VARCHAR2
-      ,p_header_id              IN  VARCHAR2
-      ,p_header_description     IN  VARCHAR2
-      ,p_header_required        IN  VARCHAR2
-      ,p_header_deprecated      IN  VARCHAR2
-      ,p_header_allowEmptyValue IN  VARCHAR2
-      ,p_header_style           IN  VARCHAR2
-      ,p_header_explode         IN  VARCHAR2
-      ,p_header_allowReserved   IN  VARCHAR2
-      ,p_header_schema          IN  dz_swagger3_schema_typ
-      ,p_header_example_string  IN  VARCHAR2
-      ,p_header_example_number  IN  NUMBER
-      ,p_header_examples        IN  dz_swagger3_example_list
+       p_hash_key                IN  VARCHAR2
+      ,p_header_id               IN  VARCHAR2
+      ,p_header_description      IN  VARCHAR2
+      ,p_header_required         IN  VARCHAR2
+      ,p_header_deprecated       IN  VARCHAR2
+      ,p_header_allowEmptyValue  IN  VARCHAR2
+      ,p_header_style            IN  VARCHAR2
+      ,p_header_explode          IN  VARCHAR2
+      ,p_header_allowReserved    IN  VARCHAR2
+      ,p_header_schema           IN  dz_swagger3_schema_typ
+      ,p_header_example_string   IN  VARCHAR2
+      ,p_header_example_number   IN  NUMBER
+      ,p_header_examples         IN  dz_swagger3_example_list
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------

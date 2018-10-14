@@ -1,19 +1,34 @@
-CREATE OR REPLACE TYPE dz_swagger3_info_license FORCE
+CREATE OR REPLACE TYPE dz_swagger3_info_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    license_name        VARCHAR2(255 Char)
-   ,license_url         VARCHAR2(255 Char)
+    info_title           VARCHAR2(255 Char)
+   ,info_description     VARCHAR2(4000 Char)
+   ,info_termsofservice  VARCHAR2(255 Char)
+   ,info_contact         dz_swagger3_info_contact_typ
+   ,info_license         dz_swagger3_info_license_typ
+   ,info_version         VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_info_license
+   ,CONSTRUCTOR FUNCTION dz_swagger3_info_typ
     RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_info_license(
-       p_license_name     IN  VARCHAR2
-      ,p_license_url      IN  VARCHAR2
+   ,CONSTRUCTOR FUNCTION dz_swagger3_info_typ(
+       p_doc_id         IN  VARCHAR2
+      ,p_versionid      IN  VARCHAR2
+   ) RETURN SELF AS RESULT
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_info_typ(
+       p_info_title          IN  VARCHAR2
+      ,p_info_description    IN  VARCHAR2
+      ,p_info_termsofservice IN  VARCHAR2
+      ,p_info_contact        IN  dz_swagger3_info_contact_typ
+      ,p_info_license        IN  dz_swagger3_info_license_typ
+      ,p_info_version        IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -40,5 +55,5 @@ AS OBJECT (
 );
 /
 
-GRANT EXECUTE ON dz_swagger3_info_license TO public;
+GRANT EXECUTE ON dz_swagger3_info_typ TO public;
 

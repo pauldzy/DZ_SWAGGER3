@@ -48,41 +48,6 @@ AS
        p_input_a          IN VARCHAR2
       ,p_input_b          IN MDSYS.SDO_STRING2_ARRAY
    ) RETURN VARCHAR2 DETERMINISTIC;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   FUNCTION a_in_schemas(
-       p_input_a          IN VARCHAR2
-      ,p_input_b          IN OUT NOCOPY dz_swagger3_schema_nf_list
-   ) RETURN VARCHAR2 DETERMINISTIC;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   FUNCTION a_in_responses(
-       p_input_a          IN VARCHAR2
-      ,p_input_b          IN OUT NOCOPY dz_swagger3_response_list
-   ) RETURN VARCHAR2 DETERMINISTIC;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   FUNCTION a_in_requestbodies(
-       p_input_a          IN VARCHAR2
-      ,p_input_b          IN OUT NOCOPY dz_swagger3_requestBody_list
-   ) RETURN VARCHAR2 DETERMINISTIC;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   FUNCTION a_in_parameters(
-       p_input_a          IN VARCHAR2
-      ,p_input_b          IN OUT NOCOPY dz_swagger3_parameter_list
-   ) RETURN VARCHAR2 DETERMINISTIC;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   FUNCTION a_in_tags(
-       p_input_a          IN VARCHAR2
-      ,p_input_b          IN OUT NOCOPY dz_swagger3_tag_list
-   ) RETURN VARCHAR2 DETERMINISTIC;
  
  END dz_swagger3_util;
 /

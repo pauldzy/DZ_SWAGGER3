@@ -17,6 +17,7 @@ AS
        p_response_id             IN  VARCHAR2
       ,p_response_code           IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    AS 
    BEGIN 
@@ -34,6 +35,7 @@ AS
             ,p_response_headers      => NULL
             ,p_response_content      => NULL
             ,p_response_links        => NULL
+            ,p_load_components       => p_load_components 
          )
          INTO SELF
          FROM
@@ -95,6 +97,7 @@ AS
       ,p_response_headers        IN  dz_swagger3_header_list
       ,p_response_content        IN  dz_swagger3_media_list
       ,p_response_links          IN  dz_swagger3_link_list
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -105,6 +108,18 @@ AS
       self.response_headers        := p_response_headers;
       self.response_content        := p_response_content;
       self.response_links          := p_response_links;
+      
+      --------------------------------------------------------------------------
+      IF self.doREF() = 'TRUE'
+      AND p_load_components = 'TRUE'
+      THEN
+         dz_swagger3_main.insert_component(
+             p_object_id     => p_response_id
+            ,p_object_type   => 'response'
+            ,p_response_code => p_hash_key
+         );
+         
+      END IF;
       
       RETURN; 
       
@@ -153,41 +168,6 @@ AS
       RETURN 'TRUE';
       
    END doRef;
-   
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   MEMBER PROCEDURE unique_schemas(
-      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
-   )
-   AS   
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Setup for the harvest
-      --------------------------------------------------------------------------
-      IF p_schemas IS NULL
-      THEN
-         p_schemas := dz_swagger3_schema_nf_list();
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Pull the schema from the items
-      --------------------------------------------------------------------------
-      IF self.response_content IS NOT NULL
-      AND self.response_content.COUNT > 0
-      THEN
-         FOR i IN 1  .. self.response_content.COUNT
-         LOOP
-            self.response_content(i).unique_schemas(p_schemas);
-            
-         END LOOP;
-         
-      END IF;
-
-   END unique_schemas;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -581,7 +561,12 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              '$ref'
-            ,'#/components/responses/' || dz_swagger3_util.utl_url_escape(self.response_id)
+            ,'#/components/responses/' || dz_swagger3_util.utl_url_escape(
+               dz_swagger3_main.short(
+                   p_object_id   => self.response_id
+                  ,p_object_type => 'response'
+               )
+             )
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1
@@ -808,7 +793,10 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/responses/' || self.response_id
+             '#/components/responses/' || dz_swagger3_main.short(
+                p_object_id   => self.response_id
+               ,p_object_type => 'response'
+             )
             ,p_pretty_print
          )
          ,p_pretty_print

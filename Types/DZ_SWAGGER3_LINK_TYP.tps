@@ -14,18 +14,28 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_link_typ
     RETURN SELF AS RESULT
-    
+   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_link_typ(
-       p_hash_key           IN  VARCHAR2
-      ,p_link_id            IN  VARCHAR2
-      ,p_link_operationRef  IN  VARCHAR2
-      ,p_link_operationId   IN  VARCHAR2
-      ,p_link_parameters    IN  dz_swagger3_string_hash_list
-      ,p_link_requestBody   IN  VARCHAR2
-      ,p_link_description   IN  VARCHAR2
-      ,p_link_server        IN  dz_swagger3_server_typ
+       p_hash_key                IN  VARCHAR2
+      ,p_link_id                 IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+   ) RETURN SELF AS RESULT
+ 
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_link_typ(
+       p_hash_key                IN  VARCHAR2
+      ,p_link_id                 IN  VARCHAR2
+      ,p_link_operationRef       IN  VARCHAR2
+      ,p_link_operationId        IN  VARCHAR2
+      ,p_link_parameters         IN  dz_swagger3_string_hash_list
+      ,p_link_requestBody        IN  VARCHAR2
+      ,p_link_description        IN  VARCHAR2
+      ,p_link_server             IN  dz_swagger3_server_typ
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------

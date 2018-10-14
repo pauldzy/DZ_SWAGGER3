@@ -19,6 +19,7 @@ AS OBJECT (
    ,CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
        p_requestbody_id           IN  VARCHAR2
       ,p_versionid                IN  VARCHAR2
+      ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -28,6 +29,7 @@ AS OBJECT (
       ,p_media_type               IN  VARCHAR2
       ,p_parameters               IN  dz_swagger3_parameter_list
       ,p_inline_rb                IN  VARCHAR2
+      ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
@@ -39,6 +41,7 @@ AS OBJECT (
       ,p_requestBody_force_inline IN  VARCHAR2
       ,p_requestbody_content      IN  dz_swagger3_media_list
       ,p_requestbody_required     IN  VARCHAR2
+      ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -55,12 +58,6 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION doRef
     RETURN VARCHAR2
-    
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE unique_schemas(
-      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
-    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

@@ -59,6 +59,7 @@ UNDER dz_swagger3_schema_typ_nf(
       ,p_schema_id               IN  VARCHAR2
       ,p_required                IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -100,6 +101,8 @@ UNDER dz_swagger3_schema_typ_nf(
       ,p_xml_wrapped             IN  VARCHAR2
       ,p_schema_force_inline     IN  VARCHAR2
       ,p_property_list_hidden    IN  VARCHAR2
+      ,p_schema_required         IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -150,30 +153,31 @@ UNDER dz_swagger3_schema_typ_nf(
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
+       p_parameter               IN  dz_swagger3_parameter_typ
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+   ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    ,MEMBER PROCEDURE addItemsSchema(
-       SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_items_schema_id     IN  VARCHAR2
-      ,p_versionid           IN  VARCHAR2
+       SELF                      IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_items_schema_id         IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
    )
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER PROCEDURE addProperties(
-       SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_versionid           IN  VARCHAR2
+       SELF                      IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_versionid               IN  VARCHAR2
    )
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER PROCEDURE addCombined(
-       SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_versionid           IN  VARCHAR2
-   )
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE pruneRefChildren(
-       SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
+       SELF                      IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_versionid               IN  VARCHAR2
    )
    
    -----------------------------------------------------------------------------
@@ -193,98 +197,92 @@ UNDER dz_swagger3_schema_typ_nf(
     
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE unique_schemas(
-      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
-    )
-    
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
    ,MEMBER FUNCTION schema_properties_keys
     RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'       
+       p_pretty_print            IN  INTEGER   DEFAULT NULL
+      ,p_force_inline            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema              IN  VARCHAR2  DEFAULT 'FALSE'       
    ) RETURN CLOB
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toJSON_component(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'       
+       p_pretty_print            IN  INTEGER   DEFAULT NULL
+      ,p_force_inline            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema              IN  VARCHAR2  DEFAULT 'FALSE'       
    ) RETURN CLOB
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toJSON_schema(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'       
+       p_pretty_print            IN  INTEGER   DEFAULT NULL
+      ,p_force_inline            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema              IN  VARCHAR2  DEFAULT 'FALSE'       
    ) RETURN CLOB
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toJSON_ref(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'       
+       p_pretty_print            IN  INTEGER   DEFAULT NULL
+      ,p_force_inline            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema              IN  VARCHAR2  DEFAULT 'FALSE'       
    ) RETURN CLOB
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toJSON_combine(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'       
+       p_pretty_print            IN  INTEGER   DEFAULT NULL
+      ,p_force_inline            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema              IN  VARCHAR2  DEFAULT 'FALSE'       
    ) RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toYAML(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+       p_pretty_print            IN  INTEGER   DEFAULT 0
+      ,p_initial_indent          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toYAML_component(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+       p_pretty_print            IN  INTEGER   DEFAULT 0
+      ,p_initial_indent          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toYAML_schema(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+       p_pretty_print            IN  INTEGER   DEFAULT 0
+      ,p_initial_indent          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toYAML_ref(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+       p_pretty_print            IN  INTEGER   DEFAULT 0
+      ,p_initial_indent          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,OVERRIDING MEMBER FUNCTION toYAML_combine(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+       p_pretty_print            IN  INTEGER   DEFAULT 0
+      ,p_initial_indent          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    
 );

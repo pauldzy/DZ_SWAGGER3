@@ -22,6 +22,15 @@ AS OBJECT (
    ,CONSTRUCTOR FUNCTION dz_swagger3_securityScheme_typ(
        p_hash_key                IN  VARCHAR2
       ,p_scheme_id               IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+   ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_securityScheme_typ(
+       p_hash_key                IN  VARCHAR2
+      ,p_scheme_id               IN  VARCHAR2
       ,p_scheme_type             IN  VARCHAR2
       ,p_scheme_description      IN  VARCHAR2
       ,p_scheme_name             IN  VARCHAR2
@@ -30,6 +39,7 @@ AS OBJECT (
       ,p_scheme_bearerFormat     IN  VARCHAR2
       ,p_scheme_flows            IN  dz_swagger3_oauth_flows_typ
       ,p_scheme_openIdConnectUrl IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------

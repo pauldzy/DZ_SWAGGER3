@@ -1275,8 +1275,9 @@ AS
               || '   ,header_style           VARCHAR2(255 Char) '
               || '   ,header_explode         VARCHAR2(5 Char) '
               || '   ,header_allowReserved   VARCHAR2(5 Char) '
-              || '   ,header_schema          VARCHAR2(255 Char) '
-              || '   ,header_example         VARCHAR2(255 Char) '
+              || '   ,header_schema_id       VARCHAR2(255 Char) '
+              || '   ,header_example_string  VARCHAR2(255 Char) '
+              || '   ,header_example_number  NUMBER '
               || '   ,header_content         VARCHAR2(255 Char) '
               || '   ,header_desc_updated    DATE '
               || '   ,header_desc_author     VARCHAR2(30 Char) '
@@ -1503,6 +1504,28 @@ AS
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
       
       END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+
+      -------------------------------------------------------------------------
+      -- Step 300
+      -- Build COMPONENTS table
+      -------------------------------------------------------------------------
+      str_sql := 'CREATE GLOBAL TEMPORARY TABLE dz_swagger3_components('
+              || '    object_id            VARCHAR2(255 Char) '
+              || '   ,object_type          VARCHAR2(255 Char) '
+              || '   ,hash_key             VARCHAR2(255 Char) '
+              || '   ,schema_required      VARCHAR2(5 Char) '
+              || '   ,response_code        VARCHAR2(255 Char)'
+              || '   ,short_id             VARCHAR2(255 Char) '
+              || ') '
+              || 'ON COMMIT PRESERVE ROWS ';
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_components '
+              || 'ADD CONSTRAINT dz_swagger3_components_pk '
+              || 'PRIMARY KEY(object_type,object_id) ';
       
       EXECUTE IMMEDIATE str_sql;
       

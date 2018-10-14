@@ -1,22 +1,25 @@
-CREATE OR REPLACE TYPE dz_swagger3_info_contact FORCE
+CREATE OR REPLACE TYPE dz_swagger3_security_req_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    contact_name        VARCHAR2(255 Char)
-   ,contact_url         VARCHAR2(255 Char)
-   ,contact_email       VARCHAR2(255 Char)
+    hash_key            VARCHAR2(255 Char)
+   ,scope_names         MDSYS.SDO_STRING2_ARRAY
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_info_contact 
+   ,CONSTRUCTOR FUNCTION dz_swagger3_security_req_typ
     RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_info_contact(
-       p_contact_name     IN  VARCHAR2
-      ,p_contact_url      IN  VARCHAR2
-      ,p_contact_email    IN  VARCHAR2
+   ,CONSTRUCTOR FUNCTION dz_swagger3_security_req_typ(
+       p_hash_key           IN  VARCHAR2
+      ,p_scope_names        IN  MDSYS.SDO_STRING2_ARRAY
    ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION key
+    RETURN VARCHAR2
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -42,5 +45,5 @@ AS OBJECT (
 );
 /
 
-GRANT EXECUTE ON dz_swagger3_info_contact TO public;
+GRANT EXECUTE ON dz_swagger3_security_req_typ TO public;
 

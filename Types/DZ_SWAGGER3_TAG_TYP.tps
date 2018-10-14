@@ -18,6 +18,7 @@ AS OBJECT (
       ,p_tag_name           IN  VARCHAR2
       ,p_tag_description    IN  VARCHAR2
       ,p_tag_externalDocs   IN  dz_swagger3_extrdocs_typ
+      ,p_load_components    IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------

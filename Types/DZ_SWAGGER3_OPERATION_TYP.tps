@@ -64,36 +64,6 @@ AS OBJECT (
    ,MEMBER FUNCTION tags
     RETURN MDSYS.SDO_STRING2_ARRAY
     
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE unique_responses(
-      p_responses IN OUT NOCOPY dz_swagger3_response_list
-    )
-    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE unique_requestbodies(
-      p_requestbodies IN OUT NOCOPY dz_swagger3_requestBody_list
-    )
-    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE unique_parameters(
-      p_parameters IN OUT NOCOPY dz_swagger3_parameter_list
-    )
-    
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE unique_schemas(
-      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
-    )
-    
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE unique_tags(
-      p_tags IN OUT NOCOPY dz_swagger3_tag_list
-    )
-
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    ,MEMBER FUNCTION operation_responses_keys

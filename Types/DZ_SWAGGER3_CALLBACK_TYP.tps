@@ -20,7 +20,16 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_callback_typ
     RETURN SELF AS RESULT
-
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_callback_typ(
+       p_hash_key                IN  VARCHAR2
+      ,p_callback_id             IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+   ) RETURN SELF AS RESULT
+   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_callback_typ(
@@ -38,6 +47,7 @@ AS OBJECT (
       ,p_path_trace_operation    IN  dz_swagger3_cboperation_typ
       ,p_path_servers            IN  dz_swagger3_server_list
       ,p_path_parameters         IN  dz_swagger3_parameter_list
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
 
    -----------------------------------------------------------------------------

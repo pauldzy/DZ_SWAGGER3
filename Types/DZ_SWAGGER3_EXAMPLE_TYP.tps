@@ -17,13 +17,23 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_example_typ(
-       p_hash_key              IN  VARCHAR2
-      ,p_example_id            IN  VARCHAR2
-      ,p_example_summary       IN  VARCHAR2
-      ,p_example_description   IN  VARCHAR2
-      ,p_example_value_string  IN  VARCHAR2
-      ,p_example_value_number  IN  NUMBER
-      ,p_example_externalValue IN  VARCHAR2
+       p_hash_key                IN  VARCHAR2
+      ,p_example_id              IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+   ) RETURN SELF AS RESULT
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_example_typ(
+       p_hash_key                IN  VARCHAR2
+      ,p_example_id              IN  VARCHAR2
+      ,p_example_summary         IN  VARCHAR2
+      ,p_example_description     IN  VARCHAR2
+      ,p_example_value_string    IN  VARCHAR2
+      ,p_example_value_number    IN  NUMBER
+      ,p_example_externalValue   IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------

@@ -29,6 +29,7 @@ AS OBJECT (
    ,CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
        p_parameter_id              IN  VARCHAR2
       ,p_versionid                 IN  VARCHAR2
+      ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
@@ -51,6 +52,7 @@ AS OBJECT (
       ,p_parameter_examples        IN  dz_swagger3_example_list
       ,p_parameter_force_inline    IN  VARCHAR2
       ,p_parameter_list_hidden     IN  VARCHAR2
+      ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -67,12 +69,6 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION doRef
     RETURN VARCHAR2
-    
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE unique_schemas(
-      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
-    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

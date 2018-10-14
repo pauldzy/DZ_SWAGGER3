@@ -20,6 +20,7 @@ AS OBJECT (
        p_response_id             IN  VARCHAR2
       ,p_response_code           IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
 
    -----------------------------------------------------------------------------
@@ -31,6 +32,7 @@ AS OBJECT (
       ,p_response_headers        IN  dz_swagger3_header_list
       ,p_response_content        IN  dz_swagger3_media_list
       ,p_response_links          IN  dz_swagger3_link_list
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
 
    -----------------------------------------------------------------------------
@@ -49,12 +51,6 @@ AS OBJECT (
     RETURN VARCHAR2
     
    ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE unique_schemas(
-      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
-    )
-
-   -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION response_headers_keys
     RETURN MDSYS.SDO_STRING2_ARRAY

@@ -18,6 +18,7 @@ AS
       ,p_schema_id               IN  VARCHAR2
       ,p_required                IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    AS
       str_items_schema_id  VARCHAR2(255 Char);
@@ -70,6 +71,8 @@ AS
             ,p_xml_wrapped             => a.xml_wrapped
             ,p_schema_force_inline     => a.schema_force_inline
             ,p_property_list_hidden    => a.property_list_hidden
+            ,p_schema_required         => p_required
+            ,p_load_components         => p_load_components
           )
          ,a.schema_items_schema_id
          INTO
@@ -95,10 +98,9 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Add hash key and required flag
+      -- Add hash key 
       --------------------------------------------------------------------------
       self.hash_key        := p_hash_key;
-      self.schema_required := p_required;
       
       --------------------------------------------------------------------------
       -- Step 30
@@ -214,6 +216,8 @@ AS
       ,p_xml_wrapped             IN  VARCHAR2
       ,p_schema_force_inline     IN  VARCHAR2
       ,p_property_list_hidden    IN  VARCHAR2
+      ,p_schema_required         IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -255,6 +259,20 @@ AS
       -----
       self.schema_force_inline     := p_schema_force_inline;
       self.property_list_hidden    := p_property_list_hidden;
+      -----
+      self.schema_required         := p_schema_required;
+      
+      --------------------------------------------------------------------------
+      IF self.doREF() = 'TRUE'
+      AND p_load_components = 'TRUE'
+      THEN
+         dz_swagger3_main.insert_component(
+             p_object_id       => p_schema_id
+            ,p_object_type     => 'schema'
+            ,p_schema_required => p_schema_required
+         );
+         
+      END IF;
       
       RETURN; 
       
@@ -358,10 +376,50 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
+       p_parameter               IN  dz_swagger3_parameter_typ
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+   ) RETURN SELF AS RESULT
+   AS
+   BEGIN
+   
+      SELF := TREAT(p_parameter.parameter_schema AS dz_swagger3_schema_typ);
+      self.schema_id             := 'rb.' || p_parameter.parameter_id;
+      self.hash_key              := p_parameter.parameter_name;
+      self.schema_description    := p_parameter.parameter_description;
+      self.schema_required       := p_parameter.parameter_required;
+      self.schema_deprecated     := p_parameter.parameter_deprecated;
+      self.schema_example_string := p_parameter.parameter_example_string;
+      self.schema_example_number := p_parameter.parameter_example_number;
+      
+      IF self.schema_category IS NULL
+      THEN
+         RAISE_APPLICATION_ERROR(-20001,'err');
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      IF self.doREF() = 'TRUE'
+      AND p_load_components = 'TRUE'
+      THEN
+         dz_swagger3_main.insert_component(
+             p_object_id       => p_parameter.parameter_id
+            ,p_object_type     => 'rbparameter'
+            ,p_schema_required => self.schema_required
+         );
+         
+      END IF;
+   
+      RETURN; 
+      
+   END dz_swagger3_schema_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER PROCEDURE addItemsSchema(
-       SELF               IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_items_schema_id  IN  VARCHAR2
-      ,p_versionid        IN  VARCHAR2
+       SELF                      IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_items_schema_id         IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
    )
    AS
    BEGIN
@@ -378,8 +436,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER PROCEDURE addProperties(
-       SELF         IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_versionid  IN  VARCHAR2
+       SELF                IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_versionid         IN  VARCHAR2
    )
    AS
    BEGIN
@@ -441,95 +499,6 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER PROCEDURE pruneRefChildren(
-       SELF                  IN  OUT NOCOPY dz_swagger3_schema_typ
-   )
-   AS
-     obj_schema  dz_swagger3_schema_typ;
-     
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Check through the properties
-      --------------------------------------------------------------------------
-      IF self.schema_properties IS NOT NULL
-      AND self.schema_properties.COUNT > 0
-      THEN
-         FOR i IN 1 .. self.schema_properties.COUNT
-         LOOP
-            obj_schema := TREAT(
-               self.schema_properties(i) AS dz_swagger3_schema_typ
-            );
-            
-            IF obj_schema.doREF() = 'TRUE'
-            THEN
-               obj_schema.schema_properties   := NULL;
-               obj_schema.schema_items_schema := NULL;
-               obj_schema.combine_schemas     := NULL;
-               
-               self.schema_properties(i) := obj_schema;
-            
-            END IF;
-            
-         END LOOP;
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Check the array items
-      --------------------------------------------------------------------------
-      IF self.schema_items_schema IS NOT NULL
-      AND self.schema_items_schema.isNULL() = 'FALSE'
-      THEN
-         obj_schema := TREAT(
-            self.schema_items_schema AS dz_swagger3_schema_typ
-         );
-            
-         IF obj_schema.doREF() = 'TRUE'
-         THEN
-            obj_schema.schema_properties   := NULL;
-            obj_schema.schema_items_schema := NULL;
-            obj_schema.combine_schemas     := NULL;
-            
-            self.schema_items_schema := obj_schema;
-         
-         END IF;
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Check through the combines
-      --------------------------------------------------------------------------
-      IF self.combine_schemas IS NOT NULL
-      AND self.combine_schemas.COUNT > 0
-      THEN
-         FOR i IN 1 .. self.combine_schemas.COUNT
-         LOOP
-            obj_schema := TREAT(
-               self.combine_schemas(i) AS dz_swagger3_schema_typ
-            );
-            
-            IF obj_schema.doREF() = 'TRUE'
-            THEN
-               obj_schema.schema_properties   := NULL;
-               obj_schema.schema_items_schema := NULL;
-               obj_schema.combine_schemas     := NULL;
-               
-               self.combine_schemas(i) := obj_schema;
-            
-            END IF;
-            
-         END LOOP;
-         
-      END IF;
-
-   END pruneRefChildren;
-
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    OVERRIDING MEMBER FUNCTION isNULL
    RETURN VARCHAR2
    AS
@@ -587,122 +556,6 @@ AS
       END IF;
       
    END doRef;
-   
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   MEMBER PROCEDURE unique_schemas(
-      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
-   )
-   AS
-      obj_schema    dz_swagger3_schema_typ;
-   
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Setup for the harvest
-      --------------------------------------------------------------------------
-      IF p_schemas IS NULL
-      THEN
-         p_schemas := dz_swagger3_schema_nf_list();
-         
-      END IF;
-
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Pull the schemas from the properties
-      --------------------------------------------------------------------------
-      IF self.schema_properties IS NOT NULL
-      AND self.schema_properties.COUNT > 0
-      THEN
-         FOR i IN 1 .. self.schema_properties.COUNT
-         LOOP
-            obj_schema := TREAT(
-               self.schema_properties(i) AS dz_swagger3_schema_typ
-            );
-  
-            IF dz_swagger3_util.a_in_schemas(
-                obj_schema.schema_id
-               ,p_schemas
-            ) = 'FALSE'
-            THEN
-               obj_schema.unique_schemas(p_schemas);
-               
-               IF obj_schema.doREF() = 'TRUE'
-               THEN
-                  p_schemas.EXTEND();
-                  obj_schema.pruneRefChildren();
-                  p_schemas(p_schemas.COUNT) := obj_schema;
-               
-               END IF;
-               
-            END IF;
-            
-         END LOOP;
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Pull the schema from the items
-      --------------------------------------------------------------------------
-      IF self.schema_items_schema IS NOT NULL
-      AND self.schema_items_schema.isNULL() = 'FALSE'
-      THEN
-         obj_schema := TREAT(self.schema_items_schema AS dz_swagger3_schema_typ);
-         
-         IF dz_swagger3_util.a_in_schemas(
-             obj_schema.schema_id
-            ,p_schemas
-         ) = 'FALSE'
-         THEN
-            obj_schema.unique_schemas(p_schemas);
-               
-            IF obj_schema.doREF() = 'TRUE'
-            THEN
-               p_schemas.EXTEND();
-               obj_schema.pruneRefChildren();
-               p_schemas(p_schemas.COUNT) := obj_schema;
-               
-            END IF;
-            
-         END IF;
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Pull the schemas from the combines
-      --------------------------------------------------------------------------
-      IF self.combine_schemas IS NOT NULL
-      AND self.combine_schemas.COUNT > 0
-      THEN
-         FOR i IN 1 .. self.combine_schemas.COUNT
-         LOOP
-            obj_schema := TREAT(self.combine_schemas(i) AS dz_swagger3_schema_typ);
-            
-            IF dz_swagger3_util.a_in_schemas(
-                obj_schema.schema_id
-               ,p_schemas
-            ) = 'FALSE'
-            THEN
-               obj_schema.unique_schemas(p_schemas);
-                  
-               IF obj_schema.doREF() = 'TRUE'
-               THEN
-                  p_schemas.EXTEND();
-                  obj_schema.pruneRefChildren();
-                  p_schemas(p_schemas.COUNT) := obj_schema;
-               
-               END IF;
-               
-            END IF;
-            
-         END LOOP;
-         
-      END IF;
-      
-   END unique_schemas;
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
@@ -1241,7 +1094,7 @@ AS
             clb_output := clb_output || dz_json_util.pretty(
                 str_pad1 || dz_json_main.formatted2json(
                    'xml'
-                  ,dz_swagger3_xml(
+                  ,dz_swagger3_xml_typ(
                       p_xml_name       => self.xml_name
                      ,p_xml_namespace  => self.xml_namespace
                      ,p_xml_prefix     => self.xml_prefix
@@ -1419,7 +1272,12 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              '$ref'
-            ,'#/components/schemas/' || dz_swagger3_util.utl_url_escape(self.schema_id)
+            ,'#/components/schemas/' || dz_swagger3_util.utl_url_escape(
+               dz_swagger3_main.short(
+                   p_object_id   => self.schema_id
+                  ,p_object_type => 'schema'
+               )
+             )
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1
@@ -1952,7 +1810,7 @@ AS
              'xml: '
             ,p_pretty_print
             ,'  '
-         ) || dz_swagger3_xml(
+         ) || dz_swagger3_xml_typ(
              p_xml_name      => self.xml_name
             ,p_xml_namespace => self.xml_namespace
             ,p_xml_prefix    => self.xml_prefix
@@ -2083,7 +1941,10 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/schemas/' || self.schema_id
+             '#/components/schemas/' || dz_swagger3_main.short(
+                p_object_id   => self.schema_id
+               ,p_object_type => 'schema'
+            )
             ,p_pretty_print
          )
          ,p_pretty_print

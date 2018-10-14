@@ -1,4 +1,4 @@
-CREATE OR REPLACE TYPE dz_swagger3_components FORCE
+CREATE OR REPLACE TYPE dz_swagger3_components_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
     components_schemas          dz_swagger3_schema_nf_list
@@ -13,12 +13,18 @@ AS OBJECT (
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_components
+   ,CONSTRUCTOR FUNCTION dz_swagger3_components_typ
     RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_components(
+   ,CONSTRUCTOR FUNCTION dz_swagger3_components_typ(
+      p_versionid                     IN  VARCHAR2
+   ) RETURN SELF AS RESULT
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_components_typ(
        p_components_schemas           IN  dz_swagger3_schema_nf_list
       ,p_components_responses         IN  dz_swagger3_response_list
       ,p_components_parameters        IN  dz_swagger3_parameter_list
@@ -32,48 +38,66 @@ AS OBJECT (
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION get_components_schemas
-    RETURN dz_swagger3_schema_nf_list
+   ,MEMBER PROCEDURE load_components_schemas(
+       SELF        IN OUT NOCOPY dz_swagger3_components_typ
+      ,p_versionid IN VARCHAR2
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION get_components_responses
-    RETURN dz_swagger3_response_list
+   ,MEMBER PROCEDURE load_components_responses(
+       SELF        IN OUT NOCOPY dz_swagger3_components_typ
+      ,p_versionid IN VARCHAR2
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION get_components_parameters
-    RETURN dz_swagger3_parameter_list
+   ,MEMBER PROCEDURE load_components_parameters(
+       SELF        IN OUT NOCOPY dz_swagger3_components_typ
+      ,p_versionid IN VARCHAR2
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION get_components_examples
-    RETURN dz_swagger3_example_list
+   ,MEMBER PROCEDURE load_components_examples(
+       SELF        IN OUT NOCOPY dz_swagger3_components_typ
+      ,p_versionid IN VARCHAR2
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION get_components_requestBodies
-    RETURN dz_swagger3_requestBody_list
+   ,MEMBER PROCEDURE load_components_requestBodies(
+       SELF        IN OUT NOCOPY dz_swagger3_components_typ
+      ,p_versionid IN VARCHAR2
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION get_components_headers
-    RETURN dz_swagger3_header_list
+   ,MEMBER PROCEDURE load_components_headers(
+       SELF        IN OUT NOCOPY dz_swagger3_components_typ
+      ,p_versionid IN VARCHAR2
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION get_components_securitySchemes
-    RETURN dz_swagger3_securitySchem_list
+   ,MEMBER PROCEDURE load_components_securityScheme(
+       SELF        IN OUT NOCOPY dz_swagger3_components_typ
+      ,p_versionid IN VARCHAR2
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION get_components_links
-    RETURN dz_swagger3_link_list
+   ,MEMBER PROCEDURE load_components_links(
+       SELF        IN OUT NOCOPY dz_swagger3_components_typ
+      ,p_versionid IN VARCHAR2
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION get_components_callbacks
-    RETURN dz_swagger3_callback_list
+   ,MEMBER PROCEDURE load_components_callbacks(
+       SELF        IN OUT NOCOPY dz_swagger3_components_typ
+      ,p_versionid IN VARCHAR2
+    )
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -99,5 +123,5 @@ AS OBJECT (
 );
 /
 
-GRANT EXECUTE ON dz_swagger3_components TO public;
+GRANT EXECUTE ON dz_swagger3_components_typ TO public;
 

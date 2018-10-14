@@ -16,6 +16,7 @@ AS
    CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
        p_requestbody_id          IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    AS
    BEGIN
@@ -33,6 +34,7 @@ AS
             ,p_requestBody_force_inline => a.requestBody_force_inline
             ,p_requestbody_content      => NULL
             ,p_requestbody_required     => a.requestbody_required
+            ,p_load_components          => p_load_components
          )
          INTO SELF
          FROM
@@ -89,11 +91,11 @@ AS
       ,p_media_type               IN  VARCHAR2
       ,p_parameters               IN  dz_swagger3_parameter_list
       ,p_inline_rb                IN  VARCHAR2
+      ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    AS
       int_counter PLS_INTEGER;
       obj_parent  dz_swagger3_schema_typ;
-      obj_schema  dz_swagger3_schema_typ;
       str_check   VARCHAR2(255 Char);
       
    BEGIN
@@ -126,23 +128,10 @@ AS
       LOOP
          IF p_parameters(i).parameter_list_hidden <> 'TRUE'
          THEN
-            obj_schema := TREAT(p_parameters(i).parameter_schema AS dz_swagger3_schema_typ);
-            obj_schema.schema_id             := 'requestbody.' || p_parameters(i).parameter_id;
-            obj_schema.hash_key              := p_parameters(i).parameter_name;
-            obj_schema.schema_description    := p_parameters(i).parameter_description;
-            obj_schema.schema_required       := p_parameters(i).parameter_required;
-            obj_schema.schema_deprecated     := p_parameters(i).parameter_deprecated;
-            obj_schema.schema_example_string := p_parameters(i).parameter_example_string;
-            obj_schema.schema_example_number := p_parameters(i).parameter_example_number;
-            
-            IF obj_schema.schema_category IS NULL
-            THEN
-               RAISE_APPLICATION_ERROR(-20001,'err');
-               
-            END IF;
-
             obj_parent.schema_properties.EXTEND();
-            obj_parent.schema_properties(int_counter) := obj_schema;
+            obj_parent.schema_properties(int_counter) := dz_swagger3_schema_typ(
+               p_parameter   => p_parameters(i)
+            );
             int_counter := int_counter + 1;            
 
          END IF;
@@ -172,6 +161,7 @@ AS
       ,p_requestBody_force_inline IN  VARCHAR2
       ,p_requestbody_content      IN  dz_swagger3_media_list
       ,p_requestbody_required     IN  VARCHAR2
+      ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -182,6 +172,17 @@ AS
       self.requestBody_force_inline := p_requestBody_force_inline;
       self.requestbody_content      := p_requestbody_content;
       self.requestbody_required     := p_requestbody_required;
+      
+      --------------------------------------------------------------------------
+      IF  self.doREF() = 'TRUE'
+      AND p_load_components = 'TRUE'
+      THEN
+         dz_swagger3_main.insert_component(
+             p_object_id   => p_requestbody_id
+            ,p_object_type => 'requestBody'
+         );
+         
+      END IF;
       
       RETURN; 
       
@@ -234,41 +235,6 @@ AS
       RETURN 'TRUE';
       
    END doRef;
-   
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   MEMBER PROCEDURE unique_schemas(
-      p_schemas IN OUT NOCOPY dz_swagger3_schema_nf_list
-   )
-   AS
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Setup for the harvest
-      --------------------------------------------------------------------------
-      IF p_schemas IS NULL
-      THEN
-         p_schemas := dz_swagger3_schema_nf_list();
-         
-      END IF;
-
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Pull the schema from the items
-      --------------------------------------------------------------------------
-      IF self.requestbody_content IS NOT NULL
-      AND self.requestbody_content.COUNT > 0
-      THEN
-         FOR i IN 1 .. self.requestbody_content.COUNT
-         LOOP
-            self.requestbody_content(i).unique_schemas(p_schemas);
-            
-         END LOOP;
-         
-      END IF;
-
-   END unique_schemas;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -523,7 +489,12 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              '$ref'
-            ,'#/components/requestBodies/' || dz_swagger3_util.utl_url_escape(self.requestbody_id) 
+            ,'#/components/requestBodies/' || dz_swagger3_util.utl_url_escape(
+               dz_swagger3_main.short(
+                   p_object_id   => self.requestbody_id
+                  ,p_object_type => 'requestbody'
+                )
+             ) 
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1
@@ -705,7 +676,10 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/requestBodies/' || self.requestbody_id
+             '#/components/requestBodies/' || dz_swagger3_main.short(
+                p_object_id   => self.requestbody_id
+               ,p_object_type => 'requestbody'
+             )
             ,p_pretty_print
          )
          ,p_pretty_print

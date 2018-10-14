@@ -1,34 +1,21 @@
-CREATE OR REPLACE TYPE dz_swagger3_info FORCE
+CREATE OR REPLACE TYPE dz_swagger3_info_contact_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    info_title           VARCHAR2(255 Char)
-   ,info_description     VARCHAR2(4000 Char)
-   ,info_termsofservice  VARCHAR2(255 Char)
-   ,info_contact         dz_swagger3_info_contact
-   ,info_license         dz_swagger3_info_license
-   ,info_version         VARCHAR2(255 Char)
+    contact_name        VARCHAR2(255 Char)
+   ,contact_url         VARCHAR2(255 Char)
+   ,contact_email       VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_info 
+   ,CONSTRUCTOR FUNCTION dz_swagger3_info_contact_typ
     RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_info(
-       p_doc_id         IN  VARCHAR2
-      ,p_versionid      IN  VARCHAR2
-   ) RETURN SELF AS RESULT
-    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_info(
-       p_info_title          IN  VARCHAR2
-      ,p_info_description    IN  VARCHAR2
-      ,p_info_termsofservice IN  VARCHAR2
-      ,p_info_contact        IN  dz_swagger3_info_contact
-      ,p_info_license        IN  dz_swagger3_info_license
-      ,p_info_version        IN  VARCHAR2
+   ,CONSTRUCTOR FUNCTION dz_swagger3_info_contact_typ(
+       p_contact_name     IN  VARCHAR2
+      ,p_contact_url      IN  VARCHAR2
+      ,p_contact_email    IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -55,5 +42,5 @@ AS OBJECT (
 );
 /
 
-GRANT EXECUTE ON dz_swagger3_info TO public;
+GRANT EXECUTE ON dz_swagger3_info_contact_typ TO public;
 

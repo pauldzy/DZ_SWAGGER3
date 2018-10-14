@@ -1,33 +1,41 @@
-CREATE OR REPLACE TYPE BODY dz_swagger3_info_contact
+CREATE OR REPLACE TYPE BODY dz_swagger3_security_req_typ
 AS 
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_info_contact
+   CONSTRUCTOR FUNCTION dz_swagger3_security_req_typ
    RETURN SELF AS RESULT 
    AS 
    BEGIN 
       RETURN; 
       
-   END dz_swagger3_info_contact;
+   END dz_swagger3_security_req_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_info_contact(
-       p_contact_name     IN  VARCHAR2
-      ,p_contact_url      IN  VARCHAR2
-      ,p_contact_email    IN  VARCHAR2
+   CONSTRUCTOR FUNCTION dz_swagger3_security_req_typ(
+       p_hash_key           IN  VARCHAR2
+      ,p_scope_names        IN  MDSYS.SDO_STRING2_ARRAY
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.contact_name      := p_contact_name;
-      self.contact_url       := p_contact_url;
-      self.contact_email     := p_contact_email;
+      self.hash_key        := p_hash_key;
+      self.scope_names     := p_scope_names;
       
       RETURN; 
       
-   END dz_swagger3_info_contact;
+   END dz_swagger3_security_req_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION key
+   RETURN VARCHAR2
+   AS
+   BEGIN
+      RETURN self.hash_key;
+
+   END key;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -36,18 +44,10 @@ AS
    AS
    BEGIN
    
-      IF self.contact_name IS NOT NULL
+      IF self.hash_key IS NOT NULL
       THEN
          RETURN 'FALSE';
          
-      ELSIF self.contact_url IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-      
-      ELSIF self.contact_email IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-      
       ELSE
          RETURN 'TRUE';
          
@@ -78,11 +78,11 @@ AS
       --------------------------------------------------------------------------
       IF p_pretty_print IS NULL
       THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
+         clb_output  := dz_json_util.pretty('[',NULL);
          str_pad     := '';
          
       ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
+         clb_output  := dz_json_util.pretty('[',-1);
          str_pad     := ' ';
          
       END IF;
@@ -91,68 +91,32 @@ AS
       -- Step 30
       -- Add name element
       --------------------------------------------------------------------------
-      IF self.contact_name IS NOT NULL
+      IF  self.scope_names IS NOT NULL
+      AND self.scope_names.COUNT > 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.value2json(
-                'name'
-               ,self.contact_name
+         FOR i IN 1 .. self.scope_names.COUNT
+         LOOP
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad || dz_json_main.json_format(self.scope_names(i))
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad := ',';
+            );
+            str_pad := ',';
+
+         END LOOP;
          
       END IF;
          
       --------------------------------------------------------------------------
       -- Step 40
-      -- Add optional url 
-      --------------------------------------------------------------------------
-      IF self.contact_url IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.value2json(
-                'url'
-               ,self.contact_url
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad := ',';
-
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Add optional email 
-      --------------------------------------------------------------------------
-      IF self.contact_email IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.value2json(
-                'email'
-               ,self.contact_email
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         
-         str_pad := ',';
-
-      END IF;
- 
-      --------------------------------------------------------------------------
-      -- Step 100
       -- Add the left bracket
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
-          '}'
+          ']'
          ,p_pretty_print,NULL,NULL
       );
       
       --------------------------------------------------------------------------
-      -- Step 110
+      -- Step 50
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
@@ -181,51 +145,21 @@ AS
       -- Step 20
       -- Write the yaml contact name
       --------------------------------------------------------------------------
-      IF self.contact_name IS NOT NULL
+      IF  self.scope_names IS NOT NULL
+      AND self.scope_names.COUNT > 0
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'name: ' || dz_swagger3_util.yaml_text(
-                self.contact_name
+         clb_output := clb_output || ': ';
+
+         FOR i IN 1 .. self.scope_names.COUNT
+         LOOP
+            clb_output := clb_output || dz_json_util.pretty(
+                '- ' || dz_swagger3_util.yaml_text(self.scope_names(i),p_pretty_print)
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Write the optional contact url
-      --------------------------------------------------------------------------
-      IF self.contact_url IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'url: ' || dz_swagger3_util.yaml_text(
-                self.contact_url
-               ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Write the optional contact_email
-      --------------------------------------------------------------------------
-      IF self.contact_email IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'email: ' || dz_swagger3_util.yaml_text(
-                self.contact_email
-               ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
+               ,'  '
+            );
+
+         END LOOP;
+
       END IF;
       
       --------------------------------------------------------------------------

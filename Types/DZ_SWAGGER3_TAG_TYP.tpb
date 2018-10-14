@@ -18,6 +18,7 @@ AS
       ,p_tag_name           IN  VARCHAR2
       ,p_tag_description    IN  VARCHAR2
       ,p_tag_externalDocs   IN  dz_swagger3_extrdocs_typ
+      ,p_load_components    IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -26,6 +27,17 @@ AS
       self.tag_name          := p_tag_name;
       self.tag_description   := p_tag_description;
       self.tag_externalDocs  := p_tag_externalDocs;
+      
+      --------------------------------------------------------------------------
+      IF  self.tag_id IS NOT NULL
+      AND p_load_components = 'TRUE'
+      THEN
+         dz_swagger3_main.insert_component(
+             p_object_id   => p_tag_id
+            ,p_object_type => 'tag'
+         );
+         
+      END IF;
       
       RETURN; 
       

@@ -1,19 +1,19 @@
-CREATE OR REPLACE TYPE BODY dz_swagger3_info_license
+CREATE OR REPLACE TYPE BODY dz_swagger3_info_license_typ
 AS 
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_info_license
+   CONSTRUCTOR FUNCTION dz_swagger3_info_license_typ
    RETURN SELF AS RESULT 
    AS 
    BEGIN 
       RETURN; 
       
-   END dz_swagger3_info_license;
+   END dz_swagger3_info_license_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_info_license(
+   CONSTRUCTOR FUNCTION dz_swagger3_info_license_typ(
        p_license_name     IN  VARCHAR2
       ,p_license_url      IN  VARCHAR2
    ) RETURN SELF AS RESULT 
@@ -25,7 +25,7 @@ AS
       
       RETURN; 
       
-   END dz_swagger3_info_license;
+   END dz_swagger3_info_license_typ;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

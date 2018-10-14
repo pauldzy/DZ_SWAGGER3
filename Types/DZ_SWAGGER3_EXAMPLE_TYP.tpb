@@ -10,17 +10,51 @@ AS
       RETURN; 
       
    END dz_swagger3_example_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_example_typ(
+       p_hash_key                IN  VARCHAR2
+      ,p_example_id              IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+   ) RETURN SELF AS RESULT
+   AS 
+   BEGIN
+   
+      SELECT
+      dz_swagger3_example_typ(
+          p_hash_key               => p_hash_key
+         ,p_example_id             => a.example_id
+         ,p_example_summary        => a.example_summary
+         ,p_example_description    => a.example_description
+         ,p_example_value_string   => a.example_value_string
+         ,p_example_value_number   => a.example_value_number
+         ,p_example_externalValue  => a.example_externalValue
+         ,p_load_components        => p_load_components
+      )
+      INTO SELF
+      FROM
+      dz_swagger3_example a
+      WHERE
+          a.versionid = p_versionid
+      AND a.example_id = p_example_id;
+   
+   RETURN; 
+      
+   END dz_swagger3_example_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_example_typ(
-       p_hash_key              IN  VARCHAR2
-      ,p_example_id            IN  VARCHAR2
-      ,p_example_summary       IN  VARCHAR2
-      ,p_example_description   IN  VARCHAR2
-      ,p_example_value_string  IN  VARCHAR2
-      ,p_example_value_number  IN  NUMBER
-      ,p_example_externalValue IN  VARCHAR2
+       p_hash_key                IN  VARCHAR2
+      ,p_example_id              IN  VARCHAR2
+      ,p_example_summary         IN  VARCHAR2
+      ,p_example_description     IN  VARCHAR2
+      ,p_example_value_string    IN  VARCHAR2
+      ,p_example_value_number    IN  NUMBER
+      ,p_example_externalValue   IN  VARCHAR2
+      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -32,6 +66,18 @@ AS
       self.example_value_string  := p_example_value_string;
       self.example_value_number  := p_example_value_number;
       self.example_externalValue := p_example_externalValue;
+      
+      --------------------------------------------------------------------------
+      IF self.doREF() = 'TRUE'
+      AND p_load_components = 'TRUE'
+      THEN
+         dz_swagger3_main.insert_component(
+             p_object_id     => p_example_id
+            ,p_object_type   => 'example'
+            ,p_response_code => p_hash_key
+         );
+         
+      END IF;
       
       RETURN; 
       
@@ -282,7 +328,10 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              '$ref'
-            ,'#/components/examples/' || self.example_id
+            ,'#/components/examples/' || dz_swagger3_main.short(
+                p_object_id   => self.example_id
+               ,p_object_type => 'example'
+             )
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1
@@ -479,7 +528,10 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/examples/' || self.example_id
+             '#/components/examples/' || dz_swagger3_main.short(
+                p_object_id   => self.example_id
+               ,p_object_type => 'example'
+             )
             ,p_pretty_print
          )
          ,p_pretty_print

@@ -1,25 +1,20 @@
-CREATE OR REPLACE TYPE dz_swagger3_security_req FORCE
+CREATE OR REPLACE TYPE dz_swagger3_info_license_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    hash_key            VARCHAR2(255 Char)
-   ,scope_names         MDSYS.SDO_STRING2_ARRAY
+    license_name        VARCHAR2(255 Char)
+   ,license_url         VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_security_req
+   ,CONSTRUCTOR FUNCTION dz_swagger3_info_license_typ
     RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_security_req(
-       p_hash_key           IN  VARCHAR2
-      ,p_scope_names        IN  MDSYS.SDO_STRING2_ARRAY
+   ,CONSTRUCTOR FUNCTION dz_swagger3_info_license_typ(
+       p_license_name     IN  VARCHAR2
+      ,p_license_url      IN  VARCHAR2
    ) RETURN SELF AS RESULT
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION key
-    RETURN VARCHAR2
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -45,5 +40,5 @@ AS OBJECT (
 );
 /
 
-GRANT EXECUTE ON dz_swagger3_security_req TO public;
+GRANT EXECUTE ON dz_swagger3_info_license_typ TO public;
 
