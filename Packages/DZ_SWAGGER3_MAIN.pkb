@@ -66,7 +66,8 @@ AS
          FROM
          dz_swagger3_doc a
          WHERE
-         a.versionid = out_versionid
+             a.versionid = out_versionid
+         AND a.is_default = 'TRUE'
          AND rownum = 1;
          
       END IF;
