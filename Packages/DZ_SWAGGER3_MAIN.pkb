@@ -133,9 +133,13 @@ AS
    PRAGMA AUTONOMOUS_TRANSACTION;
    BEGIN
 
-      IF p_shorten_logic IS NULL
-      OR p_shorten_logic = 'NONE'
+      IF p_shorten_logic = 'CONDENSE'
       THEN
+         UPDATE dz_swagger3_components
+         SET
+         short_id = 'x' || TO_CHAR(rownum);
+
+      ELSE
          UPDATE dz_swagger3_components
          SET
          short_id = CASE
@@ -145,13 +149,7 @@ AS
          ELSE
             object_id
          END;
-         
-      ELSIF p_shorten_logic = 'CONDENSE'
-      THEN
-         UPDATE dz_swagger3_components
-         SET
-         short_id = 'x' || TO_CHAR(rownum);
-
+      
       END IF;
       
       COMMIT;
