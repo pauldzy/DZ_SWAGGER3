@@ -112,7 +112,7 @@ AS
          FROM
          dz_swagger3_parameter a
          JOIN
-         dz_swagger3_parm_parent_map b
+         dz_swagger3_parent_parm_map b
          ON
              a.versionid = b.versionid
          AND a.parameter_id = b.parameter_id
@@ -204,7 +204,7 @@ AS
       )
       BULK COLLECT INTO self.operation_servers
       FROM
-      dz_swagger3_server_parent_map a
+      dz_swagger3_parent_server_map a
       WHERE
           a.versionid = p_versionid
       AND a.parent_id = p_operation_id;

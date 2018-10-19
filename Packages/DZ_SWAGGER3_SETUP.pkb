@@ -173,7 +173,7 @@ AS
       -- Step 50
       -- Build HEAD_TO_SERVER table
       -------------------------------------------------------------------------
-      str_sql := 'CREATE TABLE dz_swagger3_server_parent_map('
+      str_sql := 'CREATE TABLE dz_swagger3_parent_server_map('
               || '    parent_id           VARCHAR2(255 Char) NOT NULL '
               || '   ,server_id           VARCHAR2(255 Char) NOT NULL '
               || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
@@ -187,8 +187,8 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_server_parent_map '
-              || 'ADD CONSTRAINT dz_swagger3_server_parent_mapk '
+      str_sql := 'ALTER TABLE dz_swagger3_parent_server_map '
+              || 'ADD CONSTRAINT dz_swagger3_parent_server_mapk '
               || 'PRIMARY KEY(versionid,parent_id,server_id) ';
               
       IF p_index_tablespace IS NOT NULL
@@ -199,15 +199,15 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_server_parent_map '
+      str_sql := 'ALTER TABLE dz_swagger3_parent_server_map '
               || 'ADD( '
-              || '    CONSTRAINT dz_swagger3_server_parent_mc01 '
+              || '    CONSTRAINT dz_swagger3_parent_server_mc01 '
               || '    CHECK (parent_id = TRIM(parent_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_server_parent_mc02 '
+              || '   ,CONSTRAINT dz_swagger3_parent_server_mc02 '
               || '    CHECK (server_id = TRIM(server_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_server_parent_mc03 '
+              || '   ,CONSTRAINT dz_swagger3_parent_server_mc03 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -368,7 +368,7 @@ AS
       -- Step 90
       -- Build PARENT_TO_PARM table
       -------------------------------------------------------------------------
-      str_sql := 'CREATE TABLE dz_swagger3_parm_parent_map('
+      str_sql := 'CREATE TABLE dz_swagger3_parent_parm_map('
               || '    parent_id              VARCHAR2(255 Char) NOT NULL '
               || '   ,parameter_id           VARCHAR2(255 Char) NOT NULL '
               || '   ,parameter_order        INTEGER NOT NULL '
@@ -383,8 +383,8 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_parm_parent_map '
-              || 'ADD CONSTRAINT dz_swagger3_parm_parent_map_pk '
+      str_sql := 'ALTER TABLE dz_swagger3_parent_parm_map '
+              || 'ADD CONSTRAINT dz_swagger3_parent_parm_map_pk '
               || 'PRIMARY KEY(versionid,parent_id,parameter_id) ';
               
       IF p_index_tablespace IS NOT NULL
@@ -395,15 +395,15 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_parm_parent_map '
+      str_sql := 'ALTER TABLE dz_swagger3_parent_parm_map '
               || 'ADD( '
-              || '    CONSTRAINT dz_swagger3_parm_parent_mapc01 '
+              || '    CONSTRAINT dz_swagger3_parent_parm_mapc01 '
               || '    CHECK (parent_id = TRIM(parent_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_parm_parent_mapc02 '
+              || '   ,CONSTRAINT dz_swagger3_parent_parm_mapc02 '
               || '    CHECK (parameter_id = TRIM(parameter_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_parm_parent_mapc03 '
+              || '   ,CONSTRAINT dz_swagger3_parent_parm_mapc03 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -760,7 +760,7 @@ AS
       -- Step 160
       -- Build MEDIA TO PARENT table
       -------------------------------------------------------------------------
-      str_sql := 'CREATE TABLE dz_swagger3_media_parent_map('
+      str_sql := 'CREATE TABLE dz_swagger3_parent_media_map('
               || '    parent_id           VARCHAR2(255 Char) NOT NULL '
               || '   ,media_type          VARCHAR2(255 Char) NOT NULL '
               || '   ,media_id            VARCHAR2(255 Char) NOT NULL '
@@ -776,8 +776,8 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_media_parent_map '
-              || 'ADD CONSTRAINT dz_swagger3_media_parent_mappk '
+      str_sql := 'ALTER TABLE dz_swagger3_parent_media_map '
+              || 'ADD CONSTRAINT dz_swagger3_parent_media_mappk '
               || 'PRIMARY KEY(versionid,parent_id,media_type,media_id) ';
               
       IF p_index_tablespace IS NOT NULL
@@ -788,18 +788,18 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_media_parent_map '
+      str_sql := 'ALTER TABLE dz_swagger3_parent_media_map '
               || 'ADD( '
-              || '    CONSTRAINT dz_swagger3_media_parent_mac01 '
+              || '    CONSTRAINT dz_swagger3_parent_media_mac01 '
               || '    CHECK (parent_id = TRIM(parent_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_media_parent_mac02 '
+              || '   ,CONSTRAINT dz_swagger3_parent_media_mac02 '
               || '    CHECK (media_type = TRIM(media_type)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_media_parent_mac03 '
+              || '   ,CONSTRAINT dz_swagger3_parent_media_mac03 '
               || '    CHECK (media_id = TRIM(media_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_media_parent_mac04 '
+              || '   ,CONSTRAINT dz_swagger3_parent_media_mac04 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -1168,6 +1168,56 @@ AS
       
       -------------------------------------------------------------------------
       -- Step 230
+      -- Build PARENT EXAMPLE MAP table
+      -------------------------------------------------------------------------
+      str_sql := 'CREATE TABLE dz_swagger3_parent_example_map('
+              || '    parent_id                VARCHAR2(255 Char) NOT NULL '
+              || '   ,example_name             VARCHAR2(255 Char) NOT NULL '
+              || '   ,example_id               VARCHAR2(255 Char) NOT NULL '
+              || '   ,example_order            INTEGER '
+              || '   ,versionid                VARCHAR2(255 Char) NOT NULL '
+              || ') ';
+              
+      IF p_table_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_parent_example_map '
+              || 'ADD CONSTRAINT dz_swagger3_parent_example_mpk '
+              || 'PRIMARY KEY(versionid,parent_id,example_name,example_id) ';
+              
+      IF p_index_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_parent_example_map '
+              || 'ADD( '
+              || '    CONSTRAINT dz_swagger3_parent_example_c01 '
+              || '    CHECK (parent_id = TRIM(parent_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_parent_example_c02 '
+              || '    CHECK (example_name = TRIM(example_name)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_parent_example_c03 '
+              || '    CHECK (example_id = TRIM(example_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_parent_example_c04 '
+              || '    CHECK (versionid = TRIM(versionid)) '
+              || '    ENABLE VALIDATE '
+              || ') ';
+              
+      EXECUTE IMMEDIATE str_sql;
+  
+      -------------------------------------------------------------------------
+      -- Step 240
       -- Build ENCODING table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_encoding('
@@ -1218,7 +1268,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       -------------------------------------------------------------------------
-      -- Step 240
+      -- Step 250
       -- Build LINK table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_link('
@@ -1263,7 +1313,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       -------------------------------------------------------------------------
-      -- Step 250
+      -- Step 260
       -- Build HEADER table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_header('
@@ -1333,7 +1383,107 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       -------------------------------------------------------------------------
-      -- Step 260
+      -- Step 270
+      -- Build RESPONSE HEADER MAP table
+      -------------------------------------------------------------------------
+      str_sql := 'CREATE TABLE dz_swagger3_response_headr_map('
+              || '    response_id              VARCHAR2(255 Char) NOT NULL '
+              || '   ,header_name              VARCHAR2(255 Char) NOT NULL '
+              || '   ,header_id                VARCHAR2(255 Char) NOT NULL '
+              || '   ,header_order             INTEGER '
+              || '   ,versionid                VARCHAR2(255 Char) NOT NULL '
+              || ') ';
+              
+      IF p_table_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_response_headr_map '
+              || 'ADD CONSTRAINT dz_swagger3_response_headr_mpk '
+              || 'PRIMARY KEY(versionid,response_id,header_name,header_id) ';
+              
+      IF p_index_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_response_headr_map '
+              || 'ADD( '
+              || '    CONSTRAINT dz_swagger3_response_headr_c01 '
+              || '    CHECK (response_id = TRIM(response_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_response_headr_c02 '
+              || '    CHECK (header_name = TRIM(header_name)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_response_headr_c03 '
+              || '    CHECK (header_id = TRIM(header_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_response_headr_c04 '
+              || '    CHECK (versionid = TRIM(versionid)) '
+              || '    ENABLE VALIDATE '
+              || ') ';
+              
+      EXECUTE IMMEDIATE str_sql;
+      
+      -------------------------------------------------------------------------
+      -- Step 280
+      -- Build RESPONSE LINK MAP table
+      -------------------------------------------------------------------------
+      str_sql := 'CREATE TABLE dz_swagger3_response_link_map('
+              || '    response_id              VARCHAR2(255 Char) NOT NULL '
+              || '   ,link_name                VARCHAR2(255 Char) NOT NULL '
+              || '   ,link_id                  VARCHAR2(255 Char) NOT NULL '
+              || '   ,link_order               INTEGER '
+              || '   ,versionid                VARCHAR2(255 Char) NOT NULL '
+              || ') ';
+              
+      IF p_table_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_response_link_map '
+              || 'ADD CONSTRAINT dz_swagger3_response_link_mapk '
+              || 'PRIMARY KEY(versionid,response_id,link_name,link_id) ';
+              
+      IF p_index_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_response_link_map '
+              || 'ADD( '
+              || '    CONSTRAINT dz_swagger3_response_link_mc01 '
+              || '    CHECK (response_id = TRIM(response_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_response_link_mc02 '
+              || '    CHECK (link_name = TRIM(link_name)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_response_link_mc03 '
+              || '    CHECK (link_id = TRIM(link_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_response_link_mc04 '
+              || '    CHECK (versionid = TRIM(versionid)) '
+              || '    ENABLE VALIDATE '
+              || ') ';
+              
+      EXECUTE IMMEDIATE str_sql;
+      
+      -------------------------------------------------------------------------
+      -- Step 290
       -- Build EXTERNALDOC table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_externaldoc('
@@ -1376,7 +1526,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       -------------------------------------------------------------------------
-      -- Step 270
+      -- Step 300
       -- Build SECURITY SCHEME table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_securityScheme('
@@ -1427,7 +1577,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       -------------------------------------------------------------------------
-      -- Step 280
+      -- Step 310
       -- Build TAG table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_tag('
@@ -1474,7 +1624,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       -------------------------------------------------------------------------
-      -- Step 290
+      -- Step 320
       -- Build CACHE table
       -------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_cache('
@@ -1508,7 +1658,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
 
       -------------------------------------------------------------------------
-      -- Step 300
+      -- Step 330
       -- Build COMPONENTS table
       -------------------------------------------------------------------------
       str_sql := 'CREATE GLOBAL TEMPORARY TABLE dz_swagger3_components('
@@ -1544,26 +1694,29 @@ AS
          ,'DZ_SWAGGER3_DOC'
          ,'DZ_SWAGGER3_GROUP'
          ,'DZ_SWAGGER3_SERVER'
-         ,'DZ_SWAGGER3_SERVER_PARENT_MAP'
+         ,'DZ_SWAGGER3_PARENT_SERVER_MAP'
          ,'DZ_SWAGGER3_SERVER_VARIABLE'
          ,'DZ_SWAGGER3_PATH'
-         ,'DZ_SWAGGER3_PARM_PARENT_MAP'
-         ,'DZ_SWAGGER3_PARM'
+         ,'DZ_SWAGGER3_PARENT_PARM_MAP'
+         ,'DZ_SWAGGER3_PARAMETER'
          ,'DZ_SWAGGER3_OPERATION'
          ,'DZ_SWAGGER3_OPERATION_RESP_MAP'
          ,'DZ_SWAGGER3_OPERATION_TAG_MAP'
          ,'DZ_SWAGGER3_REQUESTBODY'
          ,'DZ_SWAGGER3_RESPONSE'
          ,'DZ_SWAGGER3_MEDIA'
-         ,'DZ_SWAGGER3_MEDIA_PARENT_MAP'
+         ,'DZ_SWAGGER3_PARENT_MEDIA_MAP'
          ,'DZ_SWAGGER3_SCHEMA'
          ,'DZ_SWAGGER3_SCHEMA_PROP_MAP'
          ,'DZ_SWAGGER3_SCHEMA_ENUM_MAP'
          ,'DZ_SWAGGER3_SCHEMA_COMBINE_MAP'
          ,'DZ_SWAGGER3_EXAMPLE'
+         ,'DZ_SWAGGER3_PARENT_EXAMPLE_MAP'
          ,'DZ_SWAGGER3_ENCODING'
          ,'DZ_SWAGGER3_LINK'
          ,'DZ_SWAGGER3_HEADER'
+         ,'DZ_SWAGGER3_RESPONSE_HEADR_MAP'
+         ,'DZ_SWAGGER3_RESPONSE_LINK_MAP'
          ,'DZ_SWAGGER3_EXTERNALDOC'
          ,'DZ_SWAGGER3_SECURITYSCHEME'
          ,'DZ_SWAGGER3_TAG'

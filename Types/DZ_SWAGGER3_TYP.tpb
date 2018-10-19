@@ -96,7 +96,7 @@ AS
       )
       BULK COLLECT INTO self.servers
       FROM
-      dz_swagger3_server_parent_map a
+      dz_swagger3_parent_server_map a
       WHERE
           a.versionid = str_versionid
       AND a.parent_id = str_doc_id;

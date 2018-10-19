@@ -67,7 +67,7 @@ AS
       )
       BULK COLLECT INTO self.response_content
       FROM
-      dz_swagger3_media_parent_map a
+      dz_swagger3_parent_media_map a
       JOIN
       dz_swagger3_media b
       ON

@@ -162,7 +162,7 @@ AS
       INTO
       str_media_id
       FROM
-      dz_swagger3_media_parent_map a
+      dz_swagger3_parent_media_map a
       WHERE
          a.versionid = str_versionid
       AND a.parent_id = str_response_id
