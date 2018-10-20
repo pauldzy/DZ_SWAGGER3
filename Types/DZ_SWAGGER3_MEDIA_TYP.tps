@@ -19,6 +19,7 @@ AS OBJECT (
        p_media_id                IN  VARCHAR2
       ,p_media_type              IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
+      ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------

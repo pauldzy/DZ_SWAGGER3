@@ -60,6 +60,7 @@ UNDER dz_swagger3_schema_typ_nf(
       ,p_required                IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -164,6 +165,7 @@ UNDER dz_swagger3_schema_typ_nf(
        SELF                      IN  OUT NOCOPY dz_swagger3_schema_typ
       ,p_items_schema_id         IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
+      ,p_ref_brake               IN  VARCHAR2
    )
    
    -----------------------------------------------------------------------------
@@ -171,6 +173,7 @@ UNDER dz_swagger3_schema_typ_nf(
    ,MEMBER PROCEDURE addProperties(
        SELF                      IN  OUT NOCOPY dz_swagger3_schema_typ
       ,p_versionid               IN  VARCHAR2
+      ,p_ref_brake               IN  VARCHAR2
    )
    
    -----------------------------------------------------------------------------
@@ -178,6 +181,7 @@ UNDER dz_swagger3_schema_typ_nf(
    ,MEMBER PROCEDURE addCombined(
        SELF                      IN  OUT NOCOPY dz_swagger3_schema_typ
       ,p_versionid               IN  VARCHAR2
+      ,p_ref_brake               IN  VARCHAR2
    )
    
    -----------------------------------------------------------------------------

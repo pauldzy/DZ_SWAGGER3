@@ -29,16 +29,42 @@ AS
    ) RETURN SELF AS RESULT
    AS 
    BEGIN
-      self.load_components_schemas(p_versionid);
-      self.load_components_responses(p_versionid);
-      self.load_components_parameters(p_versionid);
-      self.load_components_examples(p_versionid);
-      self.load_components_requestBodies(p_versionid);
-      self.load_components_headers(p_versionid);
-      self.load_components_securityScheme(p_versionid);
-      self.load_components_links(p_versionid);
-      self.load_components_callbacks(p_versionid);
+      self.load_components_schemas(
+         p_versionid   => p_versionid
+      );
       
+      self.load_components_responses(
+         p_versionid   => p_versionid
+      );
+      
+      self.load_components_parameters(
+         p_versionid   => p_versionid
+      );
+      
+      self.load_components_examples(
+         p_versionid   => p_versionid
+      );
+      
+      self.load_components_requestBodies(
+         p_versionid   => p_versionid
+      );
+      
+      self.load_components_headers(
+         p_versionid   => p_versionid
+      );
+      
+      self.load_components_securityScheme(
+         p_versionid   => p_versionid
+      );
+      
+      self.load_components_links(
+         p_versionid   => p_versionid
+      );
+      
+      self.load_components_callbacks(
+         p_versionid   => p_versionid
+      );
+            
       RETURN;
       
    END dz_swagger3_components_typ;
@@ -93,6 +119,7 @@ AS
             ,p_required         => aa.schema_required
             ,p_versionid        => p_versionid
             ,p_load_components  => 'FALSE'
+            ,p_ref_brake        => 'FIRE'
           ) AS schemaobj
          ,aa.object_id
          FROM
@@ -106,6 +133,7 @@ AS
                 p_parameter_id     => bb.object_id
                ,p_versionid        => p_versionid
                ,p_load_components  => 'FALSE'
+               ,p_ref_brake        => 'FIRE'
              )
             ,p_load_components  => 'FALSE'
           ) AS schemaobj
@@ -135,6 +163,7 @@ AS
          ,p_response_code  => a.response_code
          ,p_versionid      => p_versionid
          ,p_load_components  => 'FALSE'
+         ,p_ref_brake        => 'FIRE'
       )
       BULK COLLECT INTO self.components_responses
       FROM
@@ -160,6 +189,7 @@ AS
           p_parameter_id     => a.object_id
          ,p_versionid        => p_versionid 
          ,p_load_components  => 'FALSE'
+         ,p_ref_brake        => 'FIRE'
       )
       BULK COLLECT INTO self.components_parameters
       FROM
@@ -186,6 +216,7 @@ AS
          ,p_example_id       => a.object_id
          ,p_versionid        => p_versionid 
          ,p_load_components  => 'FALSE'
+         ,p_ref_brake        => 'FIRE'
       )
       BULK COLLECT INTO self.components_examples
       FROM
@@ -211,6 +242,7 @@ AS
           p_requestbody_id   => a.object_id
          ,p_versionid        => p_versionid 
          ,p_load_components  => 'FALSE'
+         ,p_ref_brake        => 'FIRE'
       )
       BULK COLLECT INTO self.components_requestBodies
       FROM
@@ -237,6 +269,7 @@ AS
          ,p_header_id        => a.object_id
          ,p_versionid        => p_versionid
          ,p_load_components  => 'FALSE'
+         ,p_ref_brake        => 'FIRE'
       )
       BULK COLLECT INTO self.components_headers
       FROM
@@ -263,6 +296,7 @@ AS
          ,p_scheme_id        => a.object_id
          ,p_versionid        => p_versionid
          ,p_load_components  => 'FALSE'
+         ,p_ref_brake        => 'FIRE'
       )
       BULK COLLECT INTO self.components_securitySchemes
       FROM
@@ -289,6 +323,7 @@ AS
          ,p_link_id          => a.object_id
          ,p_versionid        => p_versionid
          ,p_load_components  => 'FALSE'
+         ,p_ref_brake        => 'FIRE'
       )
       BULK COLLECT INTO self.components_links
       FROM
@@ -315,6 +350,7 @@ AS
          ,p_callback_id      => a.object_id
          ,p_versionid        => p_versionid
          ,p_load_components  => 'FALSE'
+         ,p_ref_brake        => 'FIRE'
       )
       BULK COLLECT INTO self.components_callbacks
       FROM

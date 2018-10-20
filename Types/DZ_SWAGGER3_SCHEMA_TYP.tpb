@@ -19,6 +19,7 @@ AS
       ,p_required                IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
       str_items_schema_id  VARCHAR2(255 Char);
@@ -135,7 +136,8 @@ AS
       IF self.schema_category = 'object'
       THEN
          self.addProperties(
-            p_versionid  => p_versionid
+             p_versionid       => p_versionid
+            ,p_ref_brake       => p_ref_brake
          );
       
       ELSIF self.schema_category = 'array'
@@ -144,27 +146,32 @@ AS
          self.addItemsSchema(
              p_items_schema_id => str_items_schema_id
             ,p_versionid       => p_versionid
+            ,p_ref_brake       => p_ref_brake
          );
          
       ELSIF self.schema_category = 'combine'
       THEN
          self.addCombined(
-            p_versionid  => p_versionid
+            p_versionid        => p_versionid
+            ,p_ref_brake       => p_ref_brake
          );
       
       ELSIF self.schema_category IS NULL
       THEN
          self.addProperties(
-            p_versionid  => p_versionid
+             p_versionid       => p_versionid
+            ,p_ref_brake       => p_ref_brake
          );
          
          self.addItemsSchema(
              p_items_schema_id => str_items_schema_id
             ,p_versionid       => p_versionid
+            ,p_ref_brake       => p_ref_brake
          );
          
          self.addCombined(
-            p_versionid  => p_versionid
+             p_versionid       => p_versionid
+            ,p_ref_brake       => p_ref_brake
          );
       
       END IF;
@@ -420,16 +427,34 @@ AS
        SELF                      IN  OUT NOCOPY dz_swagger3_schema_typ
       ,p_items_schema_id         IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
+      ,p_ref_brake               IN  VARCHAR2
    )
    AS
+      str_ref_brake VARCHAR2(255 Char) := p_ref_brake;
+      
    BEGIN
       
-      self.schema_items_schema := dz_swagger3_schema_typ(
-          p_hash_key        => NULL
-         ,p_schema_id       => p_items_schema_id
-         ,p_required        => NULL
-         ,p_versionid       => p_versionid 
-      );
+      IF p_ref_brake = 'TRUE'
+      AND self.doREF() = 'TRUE'
+      THEN
+         NULL;
+        
+      ELSE
+         IF str_ref_brake = 'FIRE'
+         THEN
+            str_ref_brake := 'TRUE';
+            
+         END IF;
+         
+         self.schema_items_schema := dz_swagger3_schema_typ(
+             p_hash_key        => NULL
+            ,p_schema_id       => p_items_schema_id
+            ,p_required        => NULL
+            ,p_versionid       => p_versionid
+            ,p_ref_brake       => str_ref_brake
+         );
+      
+      END IF;
    
    END addItemsSchema;
    
@@ -438,38 +463,57 @@ AS
    MEMBER PROCEDURE addProperties(
        SELF                IN  OUT NOCOPY dz_swagger3_schema_typ
       ,p_versionid         IN  VARCHAR2
+      ,p_ref_brake         IN  VARCHAR2
    )
    AS
+      str_ref_brake VARCHAR2(255 Char) := p_ref_brake;
+      
    BEGIN
       
-      SELECT
-      dz_swagger3_schema_typ(
-          p_hash_key        => a.property_name
-         ,p_schema_id       => a.property_schema_id 
-         ,p_required        => a.property_required
-         ,p_versionid       => p_versionid 
-      )
-      BULK COLLECT INTO self.schema_properties
-      FROM
-      dz_swagger3_schema_prop_map a
-      JOIN
-      dz_swagger3_schema b
-      ON
-          a.versionid          = b.versionid
-      AND a.property_schema_id = b.schema_id
-      WHERE
-          a.versionid        = p_versionid
-      AND a.parent_schema_id = self.schema_id
-      ORDER BY
-      a.property_order;
+      IF p_ref_brake = 'TRUE'
+      AND self.doREF() = 'TRUE'
+      THEN
+         NULL;
+        
+      ELSE
+         IF str_ref_brake = 'FIRE'
+         THEN
+            str_ref_brake := 'TRUE';
+            
+         END IF;
+         
+         SELECT
+         dz_swagger3_schema_typ(
+             p_hash_key        => a.property_name
+            ,p_schema_id       => a.property_schema_id 
+            ,p_required        => a.property_required
+            ,p_versionid       => p_versionid 
+            ,p_ref_brake       => str_ref_brake
+         )
+         BULK COLLECT INTO self.schema_properties
+         FROM
+         dz_swagger3_schema_prop_map a
+         JOIN
+         dz_swagger3_schema b
+         ON
+             a.versionid          = b.versionid
+         AND a.property_schema_id = b.schema_id
+         WHERE
+             a.versionid        = p_versionid
+         AND a.parent_schema_id = self.schema_id
+         ORDER BY
+         a.property_order;
+      
+      END IF;
       
    END addProperties; 
       
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER PROCEDURE addCombined(
-       SELF         IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_versionid  IN  VARCHAR2
+       SELF                IN  OUT NOCOPY dz_swagger3_schema_typ
+      ,p_versionid         IN  VARCHAR2
+      ,p_ref_brake         IN  VARCHAR2
    )
    AS
    BEGIN
@@ -479,7 +523,8 @@ AS
           p_hash_key        => a.combine_keyword
          ,p_schema_id       => a.combine_schema_id 
          ,p_required        => NULL
-         ,p_versionid       => p_versionid 
+         ,p_versionid       => p_versionid
+         ,p_ref_brake       => p_ref_brake
       )
       BULK COLLECT INTO self.combine_schemas
       FROM

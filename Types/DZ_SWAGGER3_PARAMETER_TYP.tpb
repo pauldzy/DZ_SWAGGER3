@@ -17,6 +17,7 @@ AS
        p_parameter_id              IN  VARCHAR2
       ,p_versionid                 IN  VARCHAR2
       ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_ref_brake                 IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS      
    BEGIN
@@ -40,6 +41,7 @@ AS
                ,p_schema_id                 => a.parameter_schema_id
                ,p_required                  => NULL
                ,p_versionid                 => p_versionid
+               ,p_ref_brake                 => p_ref_brake
              )
             ,p_parameter_example_string  => a.parameter_example_string
             ,p_parameter_example_number  => a.parameter_example_number

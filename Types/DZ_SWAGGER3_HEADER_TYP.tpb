@@ -18,6 +18,7 @@ AS
       ,p_header_id               IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN
@@ -39,6 +40,7 @@ AS
             ,p_required                => 'TRUE'
             ,p_versionid               => p_versionid
             ,p_load_components         => p_load_components
+            ,p_ref_brake               => p_ref_brake
           )
          ,p_header_example_string   => a.header_example_string
          ,p_header_example_number   => a.header_example_number

@@ -18,8 +18,11 @@ AS
       ,p_response_code           IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
-   AS 
+   AS
+      str_ref_brake VARCHAR2(255 Char) := p_ref_brake;
+      
    BEGIN 
    
       --------------------------------------------------------------------------
@@ -58,28 +61,43 @@ AS
       --------------------------------------------------------------------------
       -- Step 20
       -- Collect the media content
-      -------------------------------------------------------------------------- 
-      SELECT
-      dz_swagger3_media_typ(
-          p_media_id              => b.media_id
-         ,p_media_type            => a.media_type
-         ,p_versionid             => p_versionid
-      )
-      BULK COLLECT INTO self.response_content
-      FROM
-      dz_swagger3_parent_media_map a
-      JOIN
-      dz_swagger3_media b
-      ON
-          a.versionid  = b.versionid
-      AND a.media_id   = b.media_id
-      WHERE
-          a.versionid = p_versionid
-      AND a.parent_id = p_response_id
-      ORDER BY
-       a.media_order
-      ,a.media_type;
+      --------------------------------------------------------------------------
+      IF  p_ref_brake = 'TRUE'
+      AND self.doREF() = 'TRUE'
+      THEN
+         NULL;
+         
+      ELSE
+         IF str_ref_brake = 'FIRE'
+         THEN
+            str_ref_brake := 'TRUE';
+            
+         END IF;
+         
+         SELECT
+         dz_swagger3_media_typ(
+             p_media_id              => b.media_id
+            ,p_media_type            => a.media_type
+            ,p_versionid             => p_versionid
+            ,p_ref_brake             => str_ref_brake
+         )
+         BULK COLLECT INTO self.response_content
+         FROM
+         dz_swagger3_parent_media_map a
+         JOIN
+         dz_swagger3_media b
+         ON
+             a.versionid  = b.versionid
+         AND a.media_id   = b.media_id
+         WHERE
+             a.versionid = p_versionid
+         AND a.parent_id = p_response_id
+         ORDER BY
+          a.media_order
+         ,a.media_type;
 
+      END IF;
+      
       --------------------------------------------------------------------------
       -- Step 
       -- Return the completed object

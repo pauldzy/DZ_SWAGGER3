@@ -30,6 +30,7 @@ AS OBJECT (
        p_parameter_id              IN  VARCHAR2
       ,p_versionid                 IN  VARCHAR2
       ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_ref_brake                 IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------

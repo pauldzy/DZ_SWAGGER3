@@ -17,6 +17,7 @@ AS
        p_media_id                IN  VARCHAR2
       ,p_media_type              IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
+      ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
       str_check VARCHAR2(255 Char);
@@ -32,6 +33,7 @@ AS
                ,p_schema_id             => a.media_schema_id
                ,p_required              => NULL
                ,p_versionid             => p_versionid
+               ,p_ref_brake             => p_ref_brake
              )
             ,p_media_example_string  => a.media_example_string
             ,p_media_example_number  => a.media_example_number
@@ -58,16 +60,6 @@ AS
             RAISE;
             
       END;
-      
-      str_check := TREAT(
-         self.media_schema AS dz_Swagger3_schema_typ
-      ).schema_category;
-      
-      IF str_check IS NULL
-      THEN
-         RAISE_APPLICATION_ERROR(-20001,'err');
-         
-      END IF;
        
       RETURN; 
       
