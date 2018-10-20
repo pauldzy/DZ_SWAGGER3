@@ -13,6 +13,11 @@ AS
    -----------------------------------------------------------------------------
    FUNCTION dz_swagger3_table_list
    RETURN MDSYS.SDO_STRING2_ARRAY;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION is_valid
+   RETURN MDSYS.SDO_STRING2_ARRAY PIPELINED;
  
  END dz_swagger3_setup;
 /
