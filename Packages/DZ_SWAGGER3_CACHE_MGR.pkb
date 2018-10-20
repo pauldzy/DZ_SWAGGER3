@@ -3,10 +3,60 @@ AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   PROCEDURE vintage(
+       p_doc_id              IN  VARCHAR2
+      ,p_group_id            IN  VARCHAR2  DEFAULT NULL
+      ,p_versionid           IN  VARCHAR2  DEFAULT NULL
+      ,p_timestamp           OUT TIMESTAMP
+      ,p_shorten_logic       OUT VARCHAR2
+   )
+   AS
+      str_doc_id          VARCHAR2(255 Char);
+      str_group_id        VARCHAR2(255 Char);
+      str_versionid       VARCHAR2(40 Char);
+
+   BEGIN
+   
+      dz_swagger3_main.startup_defaults(
+          p_doc_id        => p_doc_id
+         ,p_group_id      => p_group_id
+         ,p_versionid     => p_versionid
+         ,out_doc_id      => str_doc_id
+         ,out_group_id    => str_group_id
+         ,out_versionid   => str_versionid
+      );
+   
+      SELECT
+       a.extraction_timestamp
+      ,a.shorten_logic
+      INTO
+       p_timestamp
+      ,p_shorten_logic
+      FROM
+      dz_swagger3_cache a
+      WHERE
+          a.doc_id    = str_doc_id
+      AND a.group_id  = str_group_id
+      AND a.versionid = str_versionid;
+      
+   EXCEPTION
+      WHEN NO_DATA_FOUND
+      THEN
+         RETURN;
+          
+      WHEN OTHERS
+      THEN
+         RAISE;
+   
+   END vintage;
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    PROCEDURE update_cache(
        p_doc_id              IN  VARCHAR2
       ,p_group_id            IN  VARCHAR2  DEFAULT NULL
       ,p_versionid           IN  VARCHAR2  DEFAULT NULL
+      ,p_shorten_logic       IN  VARCHAR2  DEFAULT NULL
       ,out_json              OUT CLOB
       ,out_json_pretty       OUT CLOB
       ,out_yaml              OUT CLOB
@@ -18,9 +68,10 @@ AS
    BEGIN
    
       obj_core := dz_swagger3_typ(
-          p_doc_id     => p_doc_id
-         ,p_group_id   => p_group_id
-         ,p_versionid  => p_versionid
+          p_doc_id        => p_doc_id
+         ,p_group_id      => p_group_id
+         ,p_versionid     => p_versionid
+         ,p_shorten_logic => p_shorten_logic 
       );
    
       out_json        := obj_core.toJSON();
@@ -35,6 +86,7 @@ AS
             ,json_pretty_payload
             ,yaml_payload
             ,extraction_timestamp 
+            ,shorten_logic
             ,versionid 
          ) VALUES (
              p_doc_id
@@ -43,6 +95,7 @@ AS
             ,out_json_pretty
             ,out_yaml
             ,SYSTIMESTAMP
+            ,p_shorten_logic
             ,p_versionid
          );
          
@@ -55,6 +108,7 @@ AS
             ,json_pretty_payload  = out_json
             ,yaml_payload         = out_yaml
             ,extraction_timestamp = SYSTIMESTAMP
+            ,shorten_logic        = p_shorten_logic
             WHERE
                 doc_id    = p_doc_id
             AND group_id  = p_group_id
@@ -76,7 +130,8 @@ AS
        p_doc_id              IN  VARCHAR2
       ,p_group_id            IN  VARCHAR2  DEFAULT NULL
       ,p_versionid           IN  VARCHAR2  DEFAULT NULL
-      ,p_refresh_interval    IN  INTERVAL DAY TO SECOND DEFAULT NULL
+      ,p_refresh_interval    IN  INTERVAL  DAY TO SECOND DEFAULT NULL
+      ,p_shorten_logic       IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output          CLOB;
@@ -86,6 +141,7 @@ AS
       str_group_id        VARCHAR2(255 Char);
       str_versionid       VARCHAR2(40 Char);
       dat_timestamp       TIMESTAMP;
+      str_shorten_logic   VARCHAR2(255 Char);
 
    BEGIN
    
@@ -111,11 +167,20 @@ AS
       -- Step 30     
       -- Fetch cache if populated
       --------------------------------------------------------------------------
-      dat_timestamp := vintage(
-          p_doc_id     => str_doc_id
-         ,p_group_id   => str_group_id
-         ,p_versionid  => str_versionid
+      vintage(
+          p_doc_id        => str_doc_id
+         ,p_group_id      => str_group_id
+         ,p_versionid     => str_versionid
+         ,p_timestamp     => dat_timestamp
+         ,p_shorten_logic => str_shorten_logic
       );
+      
+      IF  p_shorten_logic IS NOT NULL
+      AND p_shorten_logic <> str_shorten_logic
+      THEN
+         str_shorten_logic := p_shorten_logic;
+      
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 40     
@@ -123,11 +188,13 @@ AS
       --------------------------------------------------------------------------
       IF dat_timestamp IS NULL
       OR SYSTIMESTAMP - dat_timestamp > p_refresh_interval
+      OR p_shorten_logic <> str_shorten_logic
       THEN
          update_cache(
              p_doc_id          => str_doc_id
             ,p_group_id        => str_group_id
             ,p_versionid       => str_versionid
+            ,p_shorten_logic   => str_shorten_logic
             ,out_json          => clb_output
             ,out_json_pretty   => clb_output2
             ,out_yaml          => clb_output3
@@ -156,7 +223,8 @@ AS
        p_doc_id              IN  VARCHAR2
       ,p_group_id            IN  VARCHAR2  DEFAULT NULL
       ,p_versionid           IN  VARCHAR2  DEFAULT NULL
-      ,p_refresh_interval    IN  INTERVAL DAY TO SECOND DEFAULT NULL
+      ,p_refresh_interval    IN  INTERVAL  DAY TO SECOND DEFAULT NULL
+      ,p_shorten_logic       IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output          CLOB;
@@ -166,6 +234,7 @@ AS
       str_group_id        VARCHAR2(255 Char);
       str_versionid       VARCHAR2(40 Char);
       dat_timestamp       TIMESTAMP;
+      str_shorten_logic   VARCHAR2(255 Char);
 
    BEGIN
    
@@ -191,11 +260,20 @@ AS
       -- Step 30     
       -- Fetch cache if populated
       --------------------------------------------------------------------------
-      dat_timestamp := vintage(
-          p_doc_id     => str_doc_id
-         ,p_group_id   => str_group_id
-         ,p_versionid  => str_versionid
+      vintage(
+          p_doc_id        => str_doc_id
+         ,p_group_id      => str_group_id
+         ,p_versionid     => str_versionid
+         ,p_timestamp     => dat_timestamp
+         ,p_shorten_logic => str_shorten_logic
       );
+      
+      IF  p_shorten_logic IS NOT NULL
+      AND p_shorten_logic <> str_shorten_logic
+      THEN
+         str_shorten_logic := p_shorten_logic;
+      
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 40     
@@ -208,6 +286,7 @@ AS
              p_doc_id          => str_doc_id
             ,p_group_id        => str_group_id
             ,p_versionid       => str_versionid
+            ,p_shorten_logic   => str_shorten_logic
             ,out_json          => clb_output
             ,out_json_pretty   => clb_output2
             ,out_yaml          => clb_output3
@@ -236,7 +315,8 @@ AS
        p_doc_id              IN  VARCHAR2
       ,p_group_id            IN  VARCHAR2  DEFAULT NULL
       ,p_versionid           IN  VARCHAR2  DEFAULT NULL
-      ,p_refresh_interval    IN  INTERVAL DAY TO SECOND DEFAULT NULL
+      ,p_refresh_interval    IN  INTERVAL  DAY TO SECOND DEFAULT NULL
+      ,p_shorten_logic       IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output          CLOB;
@@ -246,6 +326,7 @@ AS
       str_group_id        VARCHAR2(255 Char);
       str_versionid       VARCHAR2(40 Char);
       dat_timestamp       TIMESTAMP;
+      str_shorten_logic   VARCHAR2(255 Char);
 
    BEGIN
    
@@ -271,11 +352,20 @@ AS
       -- Step 30     
       -- Fetch cache if populated
       --------------------------------------------------------------------------
-      dat_timestamp := vintage(
-          p_doc_id     => str_doc_id
-         ,p_group_id   => str_group_id
-         ,p_versionid  => str_versionid
+      vintage(
+          p_doc_id        => str_doc_id
+         ,p_group_id      => str_group_id
+         ,p_versionid     => str_versionid
+         ,p_timestamp     => dat_timestamp
+         ,p_shorten_logic => str_shorten_logic
       );
+      
+      IF  p_shorten_logic IS NOT NULL
+      AND p_shorten_logic <> str_shorten_logic
+      THEN
+         str_shorten_logic := p_shorten_logic;
+      
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 40     
@@ -288,6 +378,7 @@ AS
              p_doc_id          => str_doc_id
             ,p_group_id        => str_group_id
             ,p_versionid       => str_versionid
+            ,p_shorten_logic   => str_shorten_logic
             ,out_json          => clb_output
             ,out_json_pretty   => clb_output2
             ,out_yaml          => clb_output3
@@ -319,42 +410,20 @@ AS
    ) RETURN TIMESTAMP
    AS
       dat_result          TIMESTAMP;
-      str_doc_id          VARCHAR2(255 Char);
-      str_group_id        VARCHAR2(255 Char);
-      str_versionid       VARCHAR2(40 Char);
+      str_shorten_logic   VARCHAR2(255 Char);
       
    BEGIN
    
-      dz_swagger3_main.startup_defaults(
+      vintage(
           p_doc_id        => p_doc_id
          ,p_group_id      => p_group_id
          ,p_versionid     => p_versionid
-         ,out_doc_id      => str_doc_id
-         ,out_group_id    => str_group_id
-         ,out_versionid   => str_versionid
+         ,p_timestamp     => dat_result
+         ,p_shorten_logic => str_shorten_logic
       );
    
-      SELECT
-      a.extraction_timestamp
-      INTO dat_result
-      FROM
-      dz_swagger3_cache a
-      WHERE
-          a.doc_id    = str_doc_id
-      AND a.group_id  = str_group_id
-      AND a.versionid = str_versionid;
-      
       RETURN dat_result;
       
-   EXCEPTION
-      WHEN NO_DATA_FOUND
-      THEN
-         RETURN NULL;
-          
-      WHEN OTHERS
-      THEN
-         RAISE;
-         
    END vintage;
    
    -----------------------------------------------------------------------------
@@ -363,6 +432,7 @@ AS
        p_doc_id              IN  VARCHAR2  DEFAULT NULL
       ,p_group_id            IN  VARCHAR2  DEFAULT NULL
       ,p_versionid           IN  VARCHAR2  DEFAULT NULL
+      ,p_shorten_logic       IN  VARCHAR2  DEFAULT NULL
    )
    AS
       clb_output          CLOB;
@@ -387,6 +457,7 @@ AS
           p_doc_id          => str_doc_id
          ,p_group_id        => str_group_id
          ,p_versionid       => str_versionid
+         ,p_shorten_logic   => p_shorten_logic
          ,out_json          => clb_output
          ,out_json_pretty   => clb_output2
          ,out_yaml          => clb_output3

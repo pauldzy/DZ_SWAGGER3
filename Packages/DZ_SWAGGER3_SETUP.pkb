@@ -1734,6 +1734,7 @@ AS
               || '   ,json_pretty_payload  CLOB '
               || '   ,yaml_payload         CLOB '
               || '   ,extraction_timestamp TIMESTAMP '
+              || '   ,shorten_logic        VARCHAR2(255 Char) '
               || '   ,versionid            VARCHAR2(40 Char) NOT NULL '
               || ') ';
               

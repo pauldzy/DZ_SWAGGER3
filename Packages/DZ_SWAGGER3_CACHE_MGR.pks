@@ -8,7 +8,8 @@ AS
        p_doc_id              IN  VARCHAR2
       ,p_group_id            IN  VARCHAR2  DEFAULT NULL
       ,p_versionid           IN  VARCHAR2  DEFAULT NULL
-      ,p_refresh_interval    IN  INTERVAL DAY TO SECOND DEFAULT NULL
+      ,p_refresh_interval    IN  INTERVAL  DAY TO SECOND DEFAULT NULL
+      ,p_shorten_logic       IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB;
    
    -----------------------------------------------------------------------------
@@ -17,7 +18,8 @@ AS
        p_doc_id              IN  VARCHAR2
       ,p_group_id            IN  VARCHAR2  DEFAULT NULL
       ,p_versionid           IN  VARCHAR2  DEFAULT NULL
-      ,p_refresh_interval    IN  INTERVAL DAY TO SECOND DEFAULT NULL
+      ,p_refresh_interval    IN  INTERVAL  DAY TO SECOND DEFAULT NULL
+      ,p_shorten_logic       IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB;
    
    -----------------------------------------------------------------------------
@@ -26,7 +28,8 @@ AS
        p_doc_id              IN  VARCHAR2
       ,p_group_id            IN  VARCHAR2  DEFAULT NULL
       ,p_versionid           IN  VARCHAR2  DEFAULT NULL
-      ,p_refresh_interval    IN  INTERVAL DAY TO SECOND DEFAULT NULL
+      ,p_refresh_interval    IN  INTERVAL  DAY TO SECOND DEFAULT NULL
+      ,p_shorten_logic       IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB;
    
    -----------------------------------------------------------------------------
@@ -43,6 +46,7 @@ AS
        p_doc_id              IN  VARCHAR2  DEFAULT NULL
       ,p_group_id            IN  VARCHAR2  DEFAULT NULL
       ,p_versionid           IN  VARCHAR2  DEFAULT NULL
+      ,p_shorten_logic       IN  VARCHAR2  DEFAULT NULL
    );
    
    -----------------------------------------------------------------------------
