@@ -40,7 +40,13 @@ FROM dual;
 ```
 
 ## Data Model
-![Entity Relationship](doc/ERD1.png)
+![Entity Relationship](Doc/ERD1.png)
+
+
+![Entity Relationship](Doc/ERD2.png)
+
+
+![Entity Relationship](Doc/ERD3.png)
 
 ## JSON Schema Extension
 As Swagger properties are a superset of JSON Schema, one would think flipping between and Swagger and JSON Schema **should** be pretty simple.  However there is really nothing out there for doing the swap nor guidance for the conversion.  As its mostly a matter of removing Swagger elements from the definition output, the project includes logic to output JSON Schema by endpoint and method:
