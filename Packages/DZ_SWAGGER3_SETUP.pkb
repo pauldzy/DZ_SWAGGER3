@@ -1015,6 +1015,22 @@ AS
               || '   ,CONSTRAINT dz_swagger3_schema_c15 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_schema_c16 '
+              || '    CHECK ((schema_type = ''integer'' AND (schema_format = ''int32'' OR schema_format = ''int64'')) '
+              || '       OR '
+              || '          ((schema_type = ''number''  AND (schema_format = ''float'' OR schema_format = ''double'')) '
+              || '       OR '
+              || '          ((schema_type = ''string''  AND (schema_format IS NULL OR schema_format IN (''byte'',''binary'',''date'',''date-time'',''password'')) '
+              || '       OR '
+              || '          ( schema_type = ''boolean'' AND schema_format IS NULL ) '
+              || '       OR '
+              || '          ( schema_type = ''object''  AND schema_format IS NULL ) '
+              || '       OR '
+              || '          ( schema_type = ''array''   AND schema_format IS NULL ) '
+              || '       OR '
+              || '          ( schema_type IS NULL       AND schema_format IS NULL ) '
+              || '    ) '
+              || '    ENABLE VALIDATE '
               || ') ';
               
       EXECUTE IMMEDIATE str_sql;

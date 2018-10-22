@@ -105,7 +105,7 @@ AS
             UPDATE dz_swagger3_cache
             SET
              json_payload         = out_json
-            ,json_pretty_payload  = out_json
+            ,json_pretty_payload  = out_json_pretty
             ,yaml_payload         = out_yaml
             ,extraction_timestamp = SYSTIMESTAMP
             ,shorten_logic        = p_shorten_logic
