@@ -1020,6 +1020,38 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 120
+      -- Add optional minProperties and MaxProperties attribute
+      --------------------------------------------------------------------------
+      IF self.schema_maxProperties IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'maxProperties'
+               ,self.schema_maxProperties
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+      
+      END IF;
+      
+      IF self.schema_minProperties IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'minProperties'
+               ,self.schema_minProperties
+               ,p_pretty_print + 1
+            )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 130
       -- Add optional externalDocs
       --------------------------------------------------------------------------
       IF  self.schema_externalDocs IS NOT NULL
@@ -1042,8 +1074,8 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 130
-      -- Add optional description object
+      -- Step 140
+      -- Add optional example object
       --------------------------------------------------------------------------
       IF self.schema_example_string IS NOT NULL
       AND str_jsonschema <> 'TRUE'
@@ -1074,8 +1106,8 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 140
-      -- Add optional description object
+      -- Step 150
+      -- Add optional depracated object
       --------------------------------------------------------------------------
       IF self.schema_deprecated IS NOT NULL
       AND str_jsonschema <> 'TRUE'
@@ -1102,7 +1134,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 150
+      -- Step 160
       -- Add schema items
       --------------------------------------------------------------------------
       IF  self.schema_items_schema IS NOT NULL
@@ -1125,7 +1157,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 160
+      -- Step 170
       -- Add optional xml object
       --------------------------------------------------------------------------
       IF str_jsonschema = 'FALSE'
@@ -1160,7 +1192,7 @@ AS
       END IF;
       
       -------------------------------------------------------------------------
-      -- Step 170
+      -- Step 180
       -- Add parameters
       -------------------------------------------------------------------------
       IF self.schema_properties IS NULL 
@@ -1230,7 +1262,7 @@ AS
          str_pad1 := ',';
          
       -------------------------------------------------------------------------
-      -- Step 180
+      -- Step 190
       -- Add required array
       -------------------------------------------------------------------------
          IF ary_required IS NOT NULL
@@ -1251,7 +1283,7 @@ AS
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 190
+      -- Step 200
       -- Add the left bracket
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
@@ -1260,7 +1292,7 @@ AS
       );
       
       --------------------------------------------------------------------------
-      -- Step 200
+      -- Step 210
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
@@ -1637,7 +1669,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 50
-      -- Add optional description object
+      -- Add optional format attribute
       --------------------------------------------------------------------------
       IF self.schema_format IS NOT NULL
       THEN
@@ -1651,7 +1683,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 60
-      -- Add optional description object
+      -- Add optional nullable attribute
       --------------------------------------------------------------------------
       IF self.schema_nullable IS NOT NULL
       THEN
@@ -1665,7 +1697,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 70
-      -- Add optional description object
+      -- Add optional enum array
       --------------------------------------------------------------------------
       IF  self.schema_enum_string IS NOT NULL
       AND self.schema_enum_string.COUNT > 0
@@ -1709,7 +1741,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 80
-      -- Add optional description object
+      -- Add optional discriminator attribute
       --------------------------------------------------------------------------
       IF self.schema_discriminator IS NOT NULL
       THEN
@@ -1723,7 +1755,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 90
-      -- Add optional readonly and writeonly object
+      -- Add optional readonly and writeonly booleans
       --------------------------------------------------------------------------
       IF self.schema_readOnly IS NOT NULL
       THEN
@@ -1771,6 +1803,30 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 110
+      -- Add optional maxProperties and minProperties
+      --------------------------------------------------------------------------
+      IF self.schema_minProperties IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'minProperties: ' || self.schema_minProperties
+            ,p_pretty_print
+            ,'  '
+         );
+      
+      END IF;
+      
+      IF self.schema_maxProperties IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'maxProperties: ' || self.schema_maxProperties
+            ,p_pretty_print
+            ,'  '
+         );
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 120
       -- Write the optional externalDocs object
       --------------------------------------------------------------------------
       IF  self.schema_externalDocs IS NOT NULL
@@ -1788,7 +1844,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 120
+      -- Step 130
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_example_string IS NOT NULL
@@ -1810,7 +1866,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 130
+      -- Step 140
       -- Add optional description object
       --------------------------------------------------------------------------
       IF self.schema_deprecated IS NOT NULL
@@ -1824,7 +1880,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 140
+      -- Step 150
       -- Write the optional externalDocs object
       --------------------------------------------------------------------------
       IF  self.schema_items_schema IS NOT NULL
@@ -1842,7 +1898,7 @@ AS
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 150
+      -- Step 160
       -- Add optional xml object
       --------------------------------------------------------------------------
       IF self.xml_name      IS NOT NULL
@@ -1869,7 +1925,7 @@ AS
       END IF;
       
       -------------------------------------------------------------------------
-      -- Step 160
+      -- Step 170
       -- Write the properties map
       -------------------------------------------------------------------------
       IF  self.schema_properties IS NOT NULL 
@@ -1917,7 +1973,7 @@ AS
          END LOOP;
          
       --------------------------------------------------------------------------
-      -- Step 170
+      -- Step 180
       -- Add requirements array
       --------------------------------------------------------------------------
          IF boo_check
@@ -1943,7 +1999,7 @@ AS
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 180
+      -- Step 190
       -- Cough it out with adjustments as needed
       --------------------------------------------------------------------------
       IF p_initial_indent = 'FALSE'
