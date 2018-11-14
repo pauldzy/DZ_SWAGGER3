@@ -19,7 +19,7 @@ AS
    -----------------------------------------------------------------------------
    /*
    Constant: dz_swagger3_constants.c_table_tablespace
-      Tablespace in which to store table resources created by dz_swagger. Leave
+      Tablespace in which to store table resources created by dz_swagger3. Leave
       NULL to use the schema default
    */
    c_table_tablespace  CONSTANT VARCHAR2(40 Char) := NULL;
@@ -28,7 +28,7 @@ AS
    -----------------------------------------------------------------------------
    /*
    Constant: dz_swagger3_constants.c_index_tablespace
-      Tablespace in which to store index resources created by dz_swagger. Leave
+      Tablespace in which to store index resources created by dz_swagger3. Leave
       NULL to use the schema default
    */
    c_index_tablespace  CONSTANT VARCHAR2(40 Char) := NULL;
