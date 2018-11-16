@@ -105,6 +105,7 @@ AS
       self.hash_key            := p_requestbody_id;
       self.requestbody_id      := p_requestbody_id;
       self.requestBody_inline  := p_inline_rb;
+      self.requestBody_force_inline := 'TRUE';
       
       self.requestbody_content := dz_swagger3_media_list();
       self.requestbody_content.EXTEND();
