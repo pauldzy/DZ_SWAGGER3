@@ -392,6 +392,7 @@ AS
    
       SELF := TREAT(p_parameter.parameter_schema AS dz_swagger3_schema_typ);
       self.schema_id             := 'rb.' || p_parameter.parameter_id;
+      self.schema_title          := p_parameter.parameter_id;
       self.hash_key              := p_parameter.parameter_name;
       self.schema_description    := p_parameter.parameter_description;
       self.schema_required       := p_parameter.parameter_required;

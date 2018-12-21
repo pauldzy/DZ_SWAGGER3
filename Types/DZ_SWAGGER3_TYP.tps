@@ -24,6 +24,15 @@ AS OBJECT (
       ,p_versionid           IN  VARCHAR2 DEFAULT NULL
       ,p_shorten_logic       IN  VARCHAR2 DEFAULT NULL
    ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_typ(
+       p_doc_id              IN  VARCHAR2
+      ,p_path_id             IN  VARCHAR2 DEFAULT NULL
+      ,p_versionid           IN  VARCHAR2 DEFAULT NULL
+      ,p_shorten_logic       IN  VARCHAR2 DEFAULT NULL
+   ) RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

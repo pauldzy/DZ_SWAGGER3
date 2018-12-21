@@ -120,7 +120,7 @@ AS
             
       END;
       
-      COMMIT;      
+      COMMIT;
    
    END update_cache;
    
