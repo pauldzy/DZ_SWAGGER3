@@ -14,8 +14,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_path_typ(
-       p_path_id                 IN  VARCHAR2
-      ,p_versionid               IN  VARCHAR2
+       p_path_id                   IN  VARCHAR2
+      ,p_versionid                 IN  VARCHAR2
+      ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_ref_brake                 IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS 
    BEGIN 
@@ -34,34 +36,50 @@ AS
             ,p_path_get_operation     => dz_swagger3_operation_typ(
                 p_operation_id           => a.path_get_operation_id
                ,p_versionid              => p_versionid
+               ,p_load_components        => p_load_components
+               ,p_ref_brake              => p_ref_brake
              )
             ,p_path_put_operation     => dz_swagger3_operation_typ(
                 p_operation_id           => a.path_put_operation_id
                ,p_versionid              => p_versionid
+               ,p_load_components        => p_load_components
+               ,p_ref_brake              => p_ref_brake
              )
             ,p_path_post_operation    => dz_swagger3_operation_typ(
                 p_operation_id           => a.path_post_operation_id
                ,p_versionid              => p_versionid
+               ,p_load_components        => p_load_components
+               ,p_ref_brake              => p_ref_brake
              )
             ,p_path_delete_operation  => dz_swagger3_operation_typ(
                 p_operation_id           => a.path_delete_operation_id
                ,p_versionid              => p_versionid
+               ,p_load_components        => p_load_components
+               ,p_ref_brake              => p_ref_brake
              )
             ,p_path_options_operation => dz_swagger3_operation_typ(
                 p_operation_id           => a.path_options_operation_id
                ,p_versionid              => p_versionid
+               ,p_load_components        => p_load_components
+               ,p_ref_brake              => p_ref_brake
              )
             ,p_path_head_operation    => dz_swagger3_operation_typ(
                 p_operation_id           => a.path_head_operation_id
                ,p_versionid              => p_versionid
+               ,p_load_components        => p_load_components
+               ,p_ref_brake              => p_ref_brake
              )
             ,p_path_patch_operation   => dz_swagger3_operation_typ(
                 p_operation_id           => a.path_patch_operation_id
                ,p_versionid              => p_versionid
+               ,p_load_components        => p_load_components
+               ,p_ref_brake              => p_ref_brake
              )
             ,p_path_trace_operation   => dz_swagger3_operation_typ(
                 p_operation_id           => a.path_trace_operation_id
                ,p_versionid              => p_versionid
+               ,p_load_components        => p_load_components
+               ,p_ref_brake              => p_ref_brake
              )
             ,p_path_servers           => NULL
             ,p_path_parameters        => NULL
@@ -106,8 +124,31 @@ AS
       --------------------------------------------------------------------------
       SELECT
       dz_swagger3_parameter_typ(
-          p_parameter_id     => a.parameter_id
-         ,p_versionid        => p_versionid
+          p_hash_key                   => a.parameter_name
+         ,p_parameter_id               => a.parameter_id
+         ,p_parameter_name             => a.parameter_name
+         ,p_parameter_in               => a.parameter_in
+         ,p_parameter_description      => a.parameter_description
+         ,p_parameter_required         => a.parameter_required
+         ,p_parameter_deprecated       => a.parameter_deprecated
+         ,p_parameter_allowEmptyValue  => a.parameter_allowEmptyValue
+         ,p_parameter_style            => a.parameter_style
+         ,p_parameter_explode          => a.parameter_explode
+         ,p_parameter_allowReserved    => a.parameter_allowReserved
+         ,p_parameter_schema           => dz_swagger3_schema_typ(
+             p_hash_key                   => NULL 
+            ,p_schema_id                  => a.parameter_schema_id
+            ,p_required                   => NULL
+            ,p_versionid                  => p_versionid
+            ,p_ref_brake                  => p_ref_brake
+          )
+         ,p_parameter_example_string   => a.parameter_example_string
+         ,p_parameter_example_number   => a.parameter_example_number
+         ,p_parameter_examples         => NULL
+         ,p_parameter_force_inline     => a.parameter_force_inline
+         ,p_parameter_list_hidden      => a.parameter_list_hidden
+         ,p_parameter_requestbody_flag => b.requestbody_flag
+         ,p_load_components            => p_load_components
       )
       BULK COLLECT INTO self.path_parameters
       FROM

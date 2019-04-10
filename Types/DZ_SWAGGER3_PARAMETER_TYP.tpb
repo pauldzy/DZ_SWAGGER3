@@ -25,30 +25,31 @@ AS
       BEGIN
          SELECT
          dz_swagger3_parameter_typ(
-             p_hash_key                  => a.parameter_name
-            ,p_parameter_id              => a.parameter_id
-            ,p_parameter_name            => a.parameter_name
-            ,p_parameter_in              => a.parameter_in
-            ,p_parameter_description     => a.parameter_description
-            ,p_parameter_required        => a.parameter_required
-            ,p_parameter_deprecated      => a.parameter_deprecated
-            ,p_parameter_allowEmptyValue => a.parameter_allowEmptyValue
-            ,p_parameter_style           => a.parameter_style
-            ,p_parameter_explode         => a.parameter_explode
-            ,p_parameter_allowReserved   => a.parameter_allowReserved
-            ,p_parameter_schema          => dz_swagger3_schema_typ(
-                p_hash_key                  => NULL
-               ,p_schema_id                 => a.parameter_schema_id
-               ,p_required                  => NULL
-               ,p_versionid                 => p_versionid
-               ,p_ref_brake                 => p_ref_brake
+             p_hash_key                   => a.parameter_name
+            ,p_parameter_id               => a.parameter_id
+            ,p_parameter_name             => a.parameter_name
+            ,p_parameter_in               => a.parameter_in
+            ,p_parameter_description      => a.parameter_description
+            ,p_parameter_required         => a.parameter_required
+            ,p_parameter_deprecated       => a.parameter_deprecated
+            ,p_parameter_allowEmptyValue  => a.parameter_allowEmptyValue
+            ,p_parameter_style            => a.parameter_style
+            ,p_parameter_explode          => a.parameter_explode
+            ,p_parameter_allowReserved    => a.parameter_allowReserved
+            ,p_parameter_schema           => dz_swagger3_schema_typ(
+                p_hash_key                   => NULL
+               ,p_schema_id                  => a.parameter_schema_id
+               ,p_required                   => NULL
+               ,p_versionid                  => p_versionid
+               ,p_ref_brake                  => p_ref_brake
              )
-            ,p_parameter_example_string  => a.parameter_example_string
-            ,p_parameter_example_number  => a.parameter_example_number
-            ,p_parameter_examples        => NULL
-            ,p_parameter_force_inline    => a.parameter_force_inline
-            ,p_parameter_list_hidden     => a.parameter_list_hidden
-            ,p_load_components           => p_load_components
+            ,p_parameter_example_string   => a.parameter_example_string
+            ,p_parameter_example_number   => a.parameter_example_number
+            ,p_parameter_examples         => NULL
+            ,p_parameter_force_inline     => a.parameter_force_inline
+            ,p_parameter_list_hidden      => a.parameter_list_hidden
+            ,p_parameter_requestbody_flag => NULL
+            ,p_load_components            => p_load_components
          )
          INTO SELF
          FROM
@@ -78,45 +79,47 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
-       p_hash_key                  IN  VARCHAR2
-      ,p_parameter_id              IN  VARCHAR2
-      ,p_parameter_name            IN  VARCHAR2
-      ,p_parameter_in              IN  VARCHAR2
-      ,p_parameter_description     IN  VARCHAR2
-      ,p_parameter_required        IN  VARCHAR2
-      ,p_parameter_deprecated      IN  VARCHAR2
-      ,p_parameter_allowEmptyValue IN  VARCHAR2
-      ,p_parameter_style           IN  VARCHAR2
-      ,p_parameter_explode         IN  VARCHAR2
-      ,p_parameter_allowReserved   IN  VARCHAR2
-      ,p_parameter_schema          IN  dz_swagger3_schema_typ_nf
-      ,p_parameter_example_string  IN  VARCHAR2
-      ,p_parameter_example_number  IN  NUMBER
-      ,p_parameter_examples        IN  dz_swagger3_example_list
-      ,p_parameter_force_inline    IN  VARCHAR2
-      ,p_parameter_list_hidden     IN  VARCHAR2
-      ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
+       p_hash_key                   IN  VARCHAR2
+      ,p_parameter_id               IN  VARCHAR2
+      ,p_parameter_name             IN  VARCHAR2
+      ,p_parameter_in               IN  VARCHAR2
+      ,p_parameter_description      IN  VARCHAR2
+      ,p_parameter_required         IN  VARCHAR2
+      ,p_parameter_deprecated       IN  VARCHAR2
+      ,p_parameter_allowEmptyValue  IN  VARCHAR2
+      ,p_parameter_style            IN  VARCHAR2
+      ,p_parameter_explode          IN  VARCHAR2
+      ,p_parameter_allowReserved    IN  VARCHAR2
+      ,p_parameter_schema           IN  dz_swagger3_schema_typ_nf
+      ,p_parameter_example_string   IN  VARCHAR2
+      ,p_parameter_example_number   IN  NUMBER
+      ,p_parameter_examples         IN  dz_swagger3_example_list
+      ,p_parameter_force_inline     IN  VARCHAR2
+      ,p_parameter_list_hidden      IN  VARCHAR2
+      ,p_parameter_requestbody_flag IN  VARCHAR2 DEFAULT 'FALSE'
+      ,p_load_components            IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
-   
-      self.hash_key                  := p_hash_key;
-      self.parameter_id              := p_parameter_id;
-      self.parameter_name            := p_parameter_name;
-      self.parameter_in              := p_parameter_in;
-      self.parameter_description     := p_parameter_description;
-      self.parameter_required        := p_parameter_required;
-      self.parameter_deprecated      := p_parameter_deprecated;
-      self.parameter_allowEmptyValue := p_parameter_allowEmptyValue;
-      self.parameter_style           := p_parameter_style;
-      self.parameter_explode         := p_parameter_explode;
-      self.parameter_allowReserved   := p_parameter_allowReserved;
-      self.parameter_schema          := p_parameter_schema;
-      self.parameter_example_string  := p_parameter_example_string;
-      self.parameter_example_number  := p_parameter_example_number;
-      self.parameter_examples        := p_parameter_examples;
-      self.parameter_force_inline    := p_parameter_force_inline;
-      self.parameter_list_hidden     := p_parameter_list_hidden;
+    
+      self.hash_key                   := p_hash_key;
+      self.parameter_id               := p_parameter_id;
+      self.parameter_name             := p_parameter_name;
+      self.parameter_in               := p_parameter_in;
+      self.parameter_description      := p_parameter_description;
+      self.parameter_required         := p_parameter_required;
+      self.parameter_deprecated       := p_parameter_deprecated;
+      self.parameter_allowEmptyValue  := p_parameter_allowEmptyValue;
+      self.parameter_style            := p_parameter_style;
+      self.parameter_explode          := p_parameter_explode;
+      self.parameter_allowReserved    := p_parameter_allowReserved;
+      self.parameter_schema           := p_parameter_schema;
+      self.parameter_example_string   := p_parameter_example_string;
+      self.parameter_example_number   := p_parameter_example_number;
+      self.parameter_examples         := p_parameter_examples;
+      self.parameter_force_inline     := p_parameter_force_inline;
+      self.parameter_list_hidden      := p_parameter_list_hidden;
+      self.parameter_requestbody_flag := p_parameter_requestbody_flag;
       
       --------------------------------------------------------------------------
       IF self.doREF() = 'TRUE'
@@ -269,7 +272,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 30
-      -- Add optional summary
+      -- Add mandatory parameter name attribute
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
@@ -283,7 +286,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 30
-      -- Add optional summary
+      -- Add optional in attribute
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
@@ -297,7 +300,7 @@ AS
          
       --------------------------------------------------------------------------
       -- Step 30
-      -- Add optional summary
+      -- Add optional description attribute
       --------------------------------------------------------------------------
       IF self.parameter_description IS NOT NULL
       THEN
@@ -315,7 +318,7 @@ AS
          
       --------------------------------------------------------------------------
       -- Step 40
-      -- Add optional description 
+      -- Add mandatory required flag
       --------------------------------------------------------------------------
       IF self.parameter_required IS NOT NULL
       THEN
@@ -342,23 +345,15 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 50
-      -- Add optional description 
+      -- Add optional deprecated flag
       --------------------------------------------------------------------------
-      IF self.parameter_deprecated IS NOT NULL
+      IF  self.parameter_deprecated IS NOT NULL
+      AND LOWER(self.parameter_deprecated) = 'true'
       THEN
-         IF LOWER(self.parameter_deprecated) = 'true'
-         THEN
-            boo_temp := TRUE;
-            
-         ELSE
-            boo_temp := FALSE;
-            
-         END IF;
-         
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
                 'deprecated'
-               ,boo_temp
+               ,TRUE
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -372,20 +367,12 @@ AS
       -- Add optional description 
       --------------------------------------------------------------------------
       IF self.parameter_allowEmptyValue IS NOT NULL
+      AND LOWER(self.parameter_allowEmptyValue) = 'true'
       THEN
-         IF LOWER(self.parameter_allowEmptyValue) = 'true'
-         THEN
-            boo_temp := TRUE;
-            
-         ELSE
-            boo_temp := FALSE;
-            
-         END IF;
-         
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
                 'allowEmptyValue'
-               ,boo_temp
+               ,TRUE
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -414,7 +401,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 80
-      -- Add optional description 
+      -- Add optional explode attribute 
       --------------------------------------------------------------------------
       IF self.parameter_explode IS NOT NULL
       THEN
@@ -441,7 +428,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 90
-      -- Add optional description 
+      -- Add optional allowReserved attribute 
       --------------------------------------------------------------------------
       IF self.parameter_allowReserved IS NOT NULL
       THEN
@@ -468,7 +455,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 100
-      -- Add optional externalValue
+      -- Add optional schema attribute
       --------------------------------------------------------------------------
       IF self.parameter_schema IS NOT NULL
       THEN
@@ -717,7 +704,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Write the yaml summary
+      -- Write the mandatory parameter name
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           'name: ' || dz_swagger3_util.yaml_text(
@@ -730,7 +717,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 30
-      -- Write the yaml summary
+      -- Write the mandatory parameter in attribute
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           'in: ' || dz_swagger3_util.yaml_text(
@@ -743,7 +730,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Write the yaml summary
+      -- Write the optional description attribute
       --------------------------------------------------------------------------
       IF self.parameter_description IS NOT NULL
       THEN
@@ -763,7 +750,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 30
-      -- Write the optional license url
+      -- Write the optional required attribute
       --------------------------------------------------------------------------
       IF self.parameter_required IS NOT NULL
       THEN
@@ -777,7 +764,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 40
-      -- Write the optional license url
+      -- Write the optional deprecated attribute
       --------------------------------------------------------------------------
       IF self.parameter_deprecated IS NOT NULL
       THEN
@@ -791,7 +778,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 50
-      -- Write the optional license url
+      -- Write the optional allowEmptyValue attribute
       --------------------------------------------------------------------------
       IF self.parameter_allowEmptyValue IS NOT NULL
       THEN
@@ -805,7 +792,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 60
-      -- Write the yaml summary
+      -- Write the optional style attribute
       --------------------------------------------------------------------------
       IF self.parameter_style IS NOT NULL
       THEN
@@ -822,7 +809,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 70
-      -- Write the optional license url
+      -- Write the optional explode attribute
       --------------------------------------------------------------------------
       IF self.parameter_explode IS NOT NULL
       THEN
@@ -836,7 +823,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 80
-      -- Write the optional license url
+      -- Write the optional allowReserved attribute
       --------------------------------------------------------------------------
       IF self.parameter_allowReserved IS NOT NULL
       THEN
@@ -850,7 +837,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 90
-      -- Write the optional info license object
+      -- Write the optional schema subobject
       --------------------------------------------------------------------------
       IF  self.parameter_schema IS NOT NULL
       AND self.parameter_schema.isNULL() = 'FALSE'
@@ -868,7 +855,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 100
-      -- Write the optional value
+      -- Write the optional examples values
       --------------------------------------------------------------------------
       IF self.parameter_example_string IS NOT NULL
       THEN
@@ -896,7 +883,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 110
-      -- Write the optional variables map
+      -- Write the optional examples map
       --------------------------------------------------------------------------
       IF  self.parameter_examples IS NOT NULL 
       AND self.parameter_examples.COUNT > 0

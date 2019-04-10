@@ -24,27 +24,29 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_path_typ(
-       p_path_id                 IN  VARCHAR2
-      ,p_versionid               IN  VARCHAR2
+       p_path_id                   IN  VARCHAR2
+      ,p_versionid                 IN  VARCHAR2
+      ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_ref_brake                 IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_path_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_path_id                 IN  VARCHAR2
-      ,p_path_summary            IN  VARCHAR2
-      ,p_path_description        IN  VARCHAR2
-      ,p_path_get_operation      IN  dz_swagger3_operation_typ
-      ,p_path_put_operation      IN  dz_swagger3_operation_typ
-      ,p_path_post_operation     IN  dz_swagger3_operation_typ
-      ,p_path_delete_operation   IN  dz_swagger3_operation_typ
-      ,p_path_options_operation  IN  dz_swagger3_operation_typ
-      ,p_path_head_operation     IN  dz_swagger3_operation_typ
-      ,p_path_patch_operation    IN  dz_swagger3_operation_typ
-      ,p_path_trace_operation    IN  dz_swagger3_operation_typ
-      ,p_path_servers            IN  dz_swagger3_server_list
-      ,p_path_parameters         IN  dz_swagger3_parameter_list
+       p_hash_key                  IN  VARCHAR2
+      ,p_path_id                   IN  VARCHAR2
+      ,p_path_summary              IN  VARCHAR2
+      ,p_path_description          IN  VARCHAR2
+      ,p_path_get_operation        IN  dz_swagger3_operation_typ
+      ,p_path_put_operation        IN  dz_swagger3_operation_typ
+      ,p_path_post_operation       IN  dz_swagger3_operation_typ
+      ,p_path_delete_operation     IN  dz_swagger3_operation_typ
+      ,p_path_options_operation    IN  dz_swagger3_operation_typ
+      ,p_path_head_operation       IN  dz_swagger3_operation_typ
+      ,p_path_patch_operation      IN  dz_swagger3_operation_typ
+      ,p_path_trace_operation      IN  dz_swagger3_operation_typ
+      ,p_path_servers              IN  dz_swagger3_server_list
+      ,p_path_parameters           IN  dz_swagger3_parameter_list
    ) RETURN SELF AS RESULT
 
    -----------------------------------------------------------------------------

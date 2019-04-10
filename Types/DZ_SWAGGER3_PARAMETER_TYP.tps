@@ -18,6 +18,7 @@ AS OBJECT (
    ,parameter_examples         dz_swagger3_example_list
    ,parameter_force_inline     VARCHAR2(5 Char)
    ,parameter_list_hidden      VARCHAR2(5 Char)
+   ,parameter_requestbody_flag VARCHAR2(5 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -36,24 +37,25 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
-       p_hash_key                  IN  VARCHAR2
-      ,p_parameter_id              IN  VARCHAR2
-      ,p_parameter_name            IN  VARCHAR2
-      ,p_parameter_in              IN  VARCHAR2
-      ,p_parameter_description     IN  VARCHAR2
-      ,p_parameter_required        IN  VARCHAR2
-      ,p_parameter_deprecated      IN  VARCHAR2
-      ,p_parameter_allowEmptyValue IN  VARCHAR2
-      ,p_parameter_style           IN  VARCHAR2
-      ,p_parameter_explode         IN  VARCHAR2
-      ,p_parameter_allowReserved   IN  VARCHAR2
-      ,p_parameter_schema          IN  dz_swagger3_schema_typ_nf
-      ,p_parameter_example_string  IN  VARCHAR2
-      ,p_parameter_example_number  IN  NUMBER
-      ,p_parameter_examples        IN  dz_swagger3_example_list
-      ,p_parameter_force_inline    IN  VARCHAR2
-      ,p_parameter_list_hidden     IN  VARCHAR2
-      ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
+       p_hash_key                   IN  VARCHAR2
+      ,p_parameter_id               IN  VARCHAR2
+      ,p_parameter_name             IN  VARCHAR2
+      ,p_parameter_in               IN  VARCHAR2
+      ,p_parameter_description      IN  VARCHAR2
+      ,p_parameter_required         IN  VARCHAR2
+      ,p_parameter_deprecated       IN  VARCHAR2
+      ,p_parameter_allowEmptyValue  IN  VARCHAR2
+      ,p_parameter_style            IN  VARCHAR2
+      ,p_parameter_explode          IN  VARCHAR2
+      ,p_parameter_allowReserved    IN  VARCHAR2
+      ,p_parameter_schema           IN  dz_swagger3_schema_typ_nf
+      ,p_parameter_example_string   IN  VARCHAR2
+      ,p_parameter_example_number   IN  NUMBER
+      ,p_parameter_examples         IN  dz_swagger3_example_list
+      ,p_parameter_force_inline     IN  VARCHAR2
+      ,p_parameter_list_hidden      IN  VARCHAR2
+      ,p_parameter_requestbody_flag IN  VARCHAR2 DEFAULT 'FALSE'
+      ,p_load_components            IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------

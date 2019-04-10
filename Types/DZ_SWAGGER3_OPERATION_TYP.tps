@@ -27,6 +27,8 @@ AS OBJECT (
    ,CONSTRUCTOR FUNCTION dz_swagger3_operation_typ(
        p_operation_id              IN  VARCHAR2
       ,p_versionid                 IN  VARCHAR2
+      ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_ref_brake                 IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
 
    ----------------------------------------------------------------------------

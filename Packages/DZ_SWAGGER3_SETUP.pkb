@@ -372,6 +372,7 @@ AS
               || '    parent_id              VARCHAR2(255 Char) NOT NULL '
               || '   ,parameter_id           VARCHAR2(255 Char) NOT NULL '
               || '   ,parameter_order        INTEGER NOT NULL '
+              || '   ,requestbody_flag       VARCHAR2(5 Char) '
               || '   ,versionid              VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
@@ -405,6 +406,9 @@ AS
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_parent_parm_mapc03 '
               || '    CHECK (versionid = TRIM(versionid)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_parent_parm_mapc04 '
+              || '    CHECK (requestbody_flag IN (''TRUE'',''FALSE'')) '
               || '    ENABLE VALIDATE '
               || ') ';
               

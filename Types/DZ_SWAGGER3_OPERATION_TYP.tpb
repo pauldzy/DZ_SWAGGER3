@@ -14,12 +14,17 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_operation_typ(
-       p_operation_id            IN  VARCHAR2
-      ,p_versionid               IN  VARCHAR2
+       p_operation_id              IN  VARCHAR2
+      ,p_versionid                 IN  VARCHAR2
+      ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_ref_brake                 IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
       str_operation_requestBody_id VARCHAR2(255 Char);
-      
+      ary_filtered_parms           dz_swagger3_parameter_list;
+      boo_check                    BOOLEAN;
+      int_counter                  PLS_INTEGER;
+
    BEGIN 
       
       --------------------------------------------------------------------------
@@ -101,61 +106,103 @@ AS
       -- Step 30
       -- Add any parameters
       --------------------------------------------------------------------------
-      IF self.hash_key IN ('get','post')
-      THEN
-         SELECT
-         dz_swagger3_parameter_typ(
-             p_parameter_id     => a.parameter_id
-            ,p_versionid        => p_versionid
-         )
-         BULK COLLECT INTO self.operation_parameters
-         FROM
-         dz_swagger3_parameter a
-         JOIN
-         dz_swagger3_parent_parm_map b
-         ON
-             a.versionid = b.versionid
-         AND a.parameter_id = b.parameter_id
-         WHERE
-             b.versionid = p_versionid
-         AND b.parent_id = p_operation_id
-         ORDER BY
-          b.parameter_order
-         ,a.parameter_name;
-         
-      END IF;
+      SELECT
+      dz_swagger3_parameter_typ(
+          p_hash_key                   => a.parameter_name
+         ,p_parameter_id               => a.parameter_id
+         ,p_parameter_name             => a.parameter_name
+         ,p_parameter_in               => a.parameter_in
+         ,p_parameter_description      => a.parameter_description
+         ,p_parameter_required         => a.parameter_required
+         ,p_parameter_deprecated       => a.parameter_deprecated
+         ,p_parameter_allowEmptyValue  => a.parameter_allowEmptyValue
+         ,p_parameter_style            => a.parameter_style
+         ,p_parameter_explode          => a.parameter_explode
+         ,p_parameter_allowReserved    => a.parameter_allowReserved
+         ,p_parameter_schema           => dz_swagger3_schema_typ(
+             p_hash_key                   => NULL 
+            ,p_schema_id                  => a.parameter_schema_id
+            ,p_required                   => NULL
+            ,p_versionid                  => p_versionid
+            ,p_ref_brake                  => p_ref_brake
+          )
+         ,p_parameter_example_string   => a.parameter_example_string
+         ,p_parameter_example_number   => a.parameter_example_number
+         ,p_parameter_examples         => NULL
+         ,p_parameter_force_inline     => a.parameter_force_inline
+         ,p_parameter_list_hidden      => a.parameter_list_hidden
+         ,p_parameter_requestbody_flag => b.requestbody_flag
+         ,p_load_components            => p_load_components
+      )
+      BULK COLLECT INTO ary_filtered_parms
+      FROM
+      dz_swagger3_parameter a
+      JOIN
+      dz_swagger3_parent_parm_map b
+      ON
+          a.versionid = b.versionid
+      AND a.parameter_id = b.parameter_id
+      WHERE
+          b.versionid = p_versionid
+      AND b.parent_id = p_operation_id
+      ORDER BY
+       b.parameter_order
+      ,a.parameter_name;
       
       --------------------------------------------------------------------------
       -- Step 40
-      -- Add the requestBody from parameters
+      -- Add a normal request body if requested
       --------------------------------------------------------------------------
-      IF self.hash_key = 'get'
+      IF str_operation_requestBody_id IS NOT NULL
       THEN
-         NULL; -- nothing further needed
-      
-      ELSIF self.hash_key = 'post'
-      AND self.operation_parameters IS NOT NULL
-      AND self.operation_parameters.COUNT > 0
-      THEN
-         self.operation_requestBody := dz_swagger3_requestBody_typ(
-             p_requestBody_id => self.operation_id || '.requestBody'
-            ,p_media_type     => 'application/x-www-form-urlencoded'
-            ,p_parameters     => self.operation_parameters
-            ,p_inline_rb      => self.operation_inline_rb
-         );
+         self.operation_parameters := ary_filtered_parms;
          
-         self.operation_parameters := NULL;
-         
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Add a normal request body
-      --------------------------------------------------------------------------
-      ELSIF str_operation_requestBody_id IS NOT NULL
-      THEN
          self.operation_requestBody := dz_swagger3_requestBody_typ(
              p_requestBody_id          => str_operation_requestBody_id
             ,p_versionid               => p_versionid
          );
+         
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Or add a custom requestBody generated from parameters
+      --------------------------------------------------------------------------
+      ELSIF self.hash_key <> 'get'
+      AND ary_filtered_parms IS NOT NULL
+      AND ary_filtered_parms.COUNT > 0
+      THEN
+         boo_check := FALSE;
+         
+         int_counter := 1;
+         self.operation_parameters := dz_swagger3_parameter_list();
+         FOR i IN 1 .. ary_filtered_parms.COUNT 
+         LOOP
+            IF ary_filtered_parms(i).parameter_requestbody_flag <> 'TRUE'
+            THEN
+               boo_check := TRUE;
+               self.operation_parameters.EXTEND();
+               self.operation_parameters(int_counter) := ary_filtered_parms(i);
+               int_counter := int_counter + 1;
+               
+            END IF;
+         
+         END LOOP;
+         
+         IF boo_check
+         THEN
+            self.operation_requestBody := dz_swagger3_requestBody_typ(
+                p_requestBody_id => self.operation_id || '.requestBody'
+               ,p_media_type     => 'application/x-www-form-urlencoded'
+               ,p_parameters     => ary_filtered_parms
+               ,p_inline_rb      => self.operation_inline_rb
+            );
+            
+         ELSE
+            self.operation_parameters := ary_filtered_parms;
+            
+         END IF;
+
+      ELSE
+         self.operation_parameters := ary_filtered_parms;
          
       END IF;
       
