@@ -241,6 +241,7 @@ AS
       self.schema_writeonly        := p_schema_writeonly;
       self.schema_externalDocs     := p_schema_externalDocs;
       self.schema_example_string   := p_schema_example_string;
+      self.schema_example_number   := p_schema_example_number;
       self.schema_deprecated       := p_schema_deprecated;
       -----
       self.schema_default_string   := p_schema_default_string;
