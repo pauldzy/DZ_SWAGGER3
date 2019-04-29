@@ -34,6 +34,12 @@ AS
       THEN
          RETURN 'multiline';
          
+      -- Smells like JSON?
+      ELSIF ( REGEXP_LIKE(p_input,'^\[') AND REGEXP_LIKE(p_input,'\"+') AND REGEXP_LIKE(p_input,'\]$') )
+      OR    ( REGEXP_LIKE(p_input,'^\{') AND REGEXP_LIKE(p_input,'\"+') AND REGEXP_LIKE(p_input,'\}$') )
+      THEN
+         RETURN 'single';
+      
       ELSIF REGEXP_LIKE(p_input,'\:|\?|\]|\[|\"|\''|\&|\%|\$')
       THEN
          RETURN 'double';
