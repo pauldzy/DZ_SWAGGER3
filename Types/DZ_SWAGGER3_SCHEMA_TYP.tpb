@@ -1704,7 +1704,7 @@ AS
          FOR i IN 1 .. self.schema_enum_string.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty_str(
-                '- ' || self.schema_enum_string(i)
+                '- ' || dz_swagger3_util.yamlq(self.schema_enum_string(i))
                ,p_pretty_print + 1
                ,'  '
             );

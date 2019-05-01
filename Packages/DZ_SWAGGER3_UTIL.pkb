@@ -28,7 +28,7 @@ AS
    ) RETURN VARCHAR2
    AS
    BEGIN
-   
+      
       IF INSTR(p_input,CHR(10)) > 0
       OR INSTR(p_input,CHR(13)) > 0
       THEN
