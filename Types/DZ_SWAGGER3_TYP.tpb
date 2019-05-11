@@ -73,14 +73,19 @@ AS
          ,p_info_version        => a.info_version
        )
       ,dz_swagger3_extrdocs_typ(
-          p_externaldoc_id      => a.doc_externaldocs_id
-         ,p_versionid           => str_versionid
+          p_externaldoc_description => b.externaldoc_description
+         ,p_externaldoc_url         => b.externaldoc_url
        )
       INTO 
        self.info
       ,self.externalDocs
       FROM
       dz_swagger3_doc a
+      LEFT JOIN
+      dz_swagger3_externaldoc b
+      ON
+          a.doc_externaldocs_id = b.externaldoc_id
+      AND a.versionid           = b.versionid
       WHERE
           a.versionid  = str_versionid
       AND a.doc_id     = str_doc_id;
@@ -172,7 +177,7 @@ AS
       -- Step 70
       -- Load the security
       --------------------------------------------------------------------------
-      self.security     := dz_swagger3_security_req_list();
+      self.security := dz_swagger3_security_req_list();
       
       --------------------------------------------------------------------------
       -- Step 80
