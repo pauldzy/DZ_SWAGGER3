@@ -241,6 +241,7 @@ AS
       self.schema_writeonly        := p_schema_writeonly;
       self.schema_externalDocs     := p_schema_externalDocs;
       self.schema_example_string   := p_schema_example_string;
+      self.schema_example_number   := p_schema_example_number;
       self.schema_deprecated       := p_schema_deprecated;
       -----
       self.schema_default_string   := p_schema_default_string;
@@ -591,8 +592,8 @@ AS
       THEN
          RETURN 'TRUE';
          
-      ELSIF self.schema_description IS NOT NULL
-      AND LENGTH(self.schema_description) > 8
+      ELSIF LENGTH(self.schema_description) > 8
+      OR self.schema_title IS NOT NULL
       THEN
          RETURN 'TRUE';
          
@@ -1108,24 +1109,15 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 150
-      -- Add optional depracated object
+      -- Add optional deprecated object
       --------------------------------------------------------------------------
-      IF self.schema_deprecated IS NOT NULL
+      IF  LOWER(self.schema_deprecated) = 'true'
       AND str_jsonschema <> 'TRUE'
       THEN
-         IF LOWER(self.schema_deprecated) = 'true'
-         THEN
-            boo_temp := TRUE;
-            
-         ELSE
-            boo_temp := FALSE;
-         
-         END IF;
-      
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
                 'deprecated'
-               ,boo_temp
+               ,TRUE
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -1712,7 +1704,7 @@ AS
          FOR i IN 1 .. self.schema_enum_string.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty_str(
-                '- ' || self.schema_enum_string(i)
+                '- ' || dz_swagger3_util.yamlq(self.schema_enum_string(i))
                ,p_pretty_print + 1
                ,'  '
             );
@@ -1868,7 +1860,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 140
-      -- Add optional description object
+      -- Add optional deprecated flag
       --------------------------------------------------------------------------
       IF self.schema_deprecated IS NOT NULL
       THEN

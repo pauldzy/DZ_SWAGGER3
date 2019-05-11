@@ -129,11 +129,13 @@ AS
       int_counter := 1;
       FOR i IN 1 .. p_parameters.COUNT
       LOOP
-         IF p_parameters(i).parameter_list_hidden <> 'TRUE'
+         IF  p_parameters(i).parameter_list_hidden <> 'TRUE'
+         AND p_parameters(i).parameter_requestbody_flag = 'TRUE'
          THEN
             obj_parent.schema_properties.EXTEND();
             obj_parent.schema_properties(int_counter) := dz_swagger3_schema_typ(
-               p_parameter   => p_parameters(i)
+                p_parameter       => p_parameters(i)
+               ,p_load_components => p_load_components
             );
             int_counter := int_counter + 1;            
 
