@@ -4,7 +4,7 @@ AS OBJECT (
     tag_id              VARCHAR2(255 Char)
    ,tag_name            VARCHAR2(255 Char)
    ,tag_description     VARCHAR2(4000 Char)
-   ,tag_externalDocs    dz_swagger3_extrdocs_typ
+   ,tag_externalDocs    VARCHAR2(40 Char) --dz_swagger3_extrdocs_typ
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -17,7 +17,7 @@ AS OBJECT (
        p_tag_id             IN  VARCHAR2
       ,p_tag_name           IN  VARCHAR2
       ,p_tag_description    IN  VARCHAR2
-      ,p_tag_externalDocs   IN  dz_swagger3_extrdocs_typ
+      ,p_tag_externalDocs   IN  VARCHAR2 --dz_swagger3_extrdocs_typ
       ,p_load_components    IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
@@ -41,6 +41,14 @@ AS OBJECT (
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
 
 );
 /

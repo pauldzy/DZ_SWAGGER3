@@ -23,7 +23,7 @@ AS
       str_check VARCHAR2(255 Char);
       
    BEGIN
-   
+   /*
       BEGIN
          SELECT
          dz_swagger3_media_typ(
@@ -60,7 +60,7 @@ AS
             RAISE;
             
       END;
-       
+       */
       RETURN; 
       
    END dz_swagger3_media_typ;
@@ -68,22 +68,22 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_media_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_media_schema            IN  dz_swagger3_schema_typ_nf
+       p_media_id                IN  VARCHAR2
+      ,p_media_schema            IN  VARCHAR2 --dz_swagger3_schema_typ_nf
       ,p_media_example_string    IN  VARCHAR2
       ,p_media_example_number    IN  NUMBER
-      ,p_media_examples          IN  dz_swagger3_example_list
-      ,p_media_encoding          IN  dz_swagger3_encoding_list
+      ,p_media_examples          IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_example_list
+      ,p_media_encoding          IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_encoding_list
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.hash_key                := p_hash_key;
-      self.media_schema            := p_media_schema;
-      self.media_example_string    := p_media_example_string;
-      self.media_example_number    := p_media_example_number;
-      self.media_examples          := p_media_examples;
-      self.media_encoding          := p_media_encoding;
+      self.media_id              := p_media_id;
+      self.media_schema          := p_media_schema;
+      self.media_example_string  := p_media_example_string;
+      self.media_example_number  := p_media_example_number;
+      self.media_examples        := p_media_examples;
+      self.media_encoding        := p_media_encoding;
       
       RETURN; 
       
@@ -96,7 +96,7 @@ AS
    AS
    BEGIN
    
-      IF self.hash_key     IS NOT NULL
+      IF self.media_id     IS NOT NULL
       OR self.media_schema IS NOT NULL
       THEN
          RETURN 'FALSE';
@@ -114,69 +114,9 @@ AS
    RETURN VARCHAR2
    AS
    BEGIN
-      RETURN self.hash_key;
+      RETURN self.media_id;
       
    END key;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION media_examples_keys
-   RETURN MDSYS.SDO_STRING2_ARRAY
-   AS
-      int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
-      
-   BEGIN
-      IF self.media_examples IS NULL
-      OR self.media_examples.COUNT = 0
-      THEN
-         RETURN NULL;
-         
-      END IF;
-      
-      int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
-      FOR i IN 1 .. self.media_examples.COUNT
-      LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.media_examples(i).hash_key;
-         int_index := int_index + 1;
-         
-      END LOOP;
-      
-      RETURN ary_output;
-   
-   END media_examples_keys;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION media_encoding_keys
-   RETURN MDSYS.SDO_STRING2_ARRAY
-   AS
-      int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
-      
-   BEGIN
-      IF self.media_encoding IS NULL
-      OR self.media_encoding.COUNT = 0
-      THEN
-         RETURN NULL;
-         
-      END IF;
-      
-      int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
-      FOR i IN 1 .. self.media_encoding.COUNT
-      LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.media_encoding(i).hash_key;
-         int_index := int_index + 1;
-         
-      END LOOP;
-      
-      RETURN ary_output;
-   
-   END media_encoding_keys;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -192,6 +132,10 @@ AS
       str_pad2         VARCHAR2(1 Char);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       clb_hash         CLOB;
+      clb_tmp          CLOB;
+      
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
       
    BEGIN
       
@@ -221,27 +165,26 @@ AS
       -- Step 30
       -- Add schema object
       --------------------------------------------------------------------------
-      IF self.media_schema IS NULL
-      OR self.media_schema.isNULL() = 'TRUE'
+      IF self.media_schema IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'schema'
-               ,CAST(NULL AS NUMBER)
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-
-      ELSE
+         EXECUTE IMMEDIATE
+            'SELECT a.schematyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 1 '
+         || '  ,p_force_inline   => :p02 '
+         || ') FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id = :p03 '
+         INTO clb_tmp
+         USING 
+          p_pretty_print
+         ,p_force_inline
+         ,self.media_schema; 
+         
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
                 'schema'
-               ,self.media_schema.toJSON(
-                   p_pretty_print  => p_pretty_print + 1
-                  ,p_force_inline  => p_force_inline
-                )
+               ,clb_tmp
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -284,12 +227,28 @@ AS
       -- Step 120
       -- Add optional examples map
       --------------------------------------------------------------------------
-      IF self.media_examples IS NULL 
-      OR self.media_examples.COUNT = 0
+      IF  self.media_examples IS NOT NULL 
+      AND self.media_examples.COUNT > 0
       THEN
-         NULL;
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.exampletyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 1 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.media_examples;
          
-      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -301,16 +260,10 @@ AS
             
          END IF;
       
-      
-         ary_keys := self.media_examples_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.media_examples(i).toJSON(
-                   p_pretty_print  => p_pretty_print + 2
-                  ,p_force_inline  => p_force_inline
-                )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 1
             );
             str_pad2 := ',';
@@ -338,12 +291,28 @@ AS
       -- Step 120
       -- Add optional encoding map
       --------------------------------------------------------------------------
-      IF self.media_encoding IS NULL 
-      OR self.media_encoding.COUNT = 0
+      IF  self.media_encoding IS NOT NULL 
+      AND self.media_encoding.COUNT > 0
       THEN
-         NULL;
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.encodingtyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 1 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.media_encoding;
          
-      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -355,15 +324,10 @@ AS
             
          END IF;
       
-         ary_keys := self.media_encoding_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.media_encoding(i).toJSON(
-                   p_pretty_print   => p_pretty_print + 1
-                  ,p_force_inline   => p_force_inline
-                )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 1
             );
             str_pad2 := ',';
@@ -415,6 +379,10 @@ AS
    AS
       clb_output       CLOB;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      clb_tmp          CLOB;
+      
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
       
    BEGIN
    
@@ -428,23 +396,26 @@ AS
       -- Write the yaml schema object
       --------------------------------------------------------------------------
       IF self.media_schema IS NULL
-      OR self.media_schema.isNULL() = 'TRUE'
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             'schema: ' 
-            ,p_pretty_print
-            ,'  '
-         );
+         EXECUTE IMMEDIATE
+            'SELECT a.schematyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 1 '
+         || '  ,p_force_inline   => :p02 '
+         || ') FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id = :p03 '
+         INTO clb_tmp
+         USING 
+          p_pretty_print
+         ,p_force_inline
+         ,self.media_schema; 
          
-      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'schema: ' 
             ,p_pretty_print
             ,'  '
-         ) || self.media_schema.toYAML(
-             p_pretty_print   => p_pretty_print + 1
-            ,p_force_inline   => p_force_inline
-         );
+         ) || clb_tmp;
          
       END IF;
       
@@ -483,24 +454,38 @@ AS
       IF  self.media_examples IS NOT NULL 
       AND self.media_examples.COUNT > 0
       THEN
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.exampletyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 3 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.media_examples;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'examples: '
             ,p_pretty_print + 1
             ,'  '
          );
          
-         ary_keys := self.media_examples_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 2
                ,'  '
-            ) || self.media_examples(i).toYAML(
-                p_pretty_print   => p_pretty_print + 3
-               ,p_force_inline   => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -513,24 +498,38 @@ AS
       IF  self.media_encoding IS NOT NULL 
       AND self.media_encoding.COUNT > 0
       THEN
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.encodingtyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 3 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.media_encoding;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'encoding: '
             ,p_pretty_print + 1
             ,'  '
          );
          
-         ary_keys := self.media_encoding_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 2
                ,'  '
-            ) || self.media_encoding(i).toYAML(
-                p_pretty_print   => p_pretty_print + 3
-               ,p_force_inline   => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -555,6 +554,51 @@ AS
       RETURN clb_output;
       
    END toYAML;
+   
+-----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+   BEGIN
+   
+      INSERT INTO dz_swagger3_xrelates(
+          parent_object_id
+         ,child_object_id
+         ,child_object_type_id
+      )
+      SELECT
+       p_parent_id
+      ,a.column_value
+      ,'extrdocs'
+      FROM
+      TABLE(p_children_ids) a;
+
+      EXECUTE IMMEDIATE 
+      'INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,extrdocstyp
+          ,ordering_key
+      )
+      SELECT
+       a.column_value
+      ,''extrdocstyp''
+      ,dz_swagger3_extrdocs_typ(
+          p_externaldoc_id => a.column_value
+         ,p_versionid      => :p01
+       )
+      ,10
+      FROM 
+      TABLE(:p02) a'
+      USING p_versionid,p_children_ids;
+      
+      COMMIT;
+
+   END;
    
 END;
 /

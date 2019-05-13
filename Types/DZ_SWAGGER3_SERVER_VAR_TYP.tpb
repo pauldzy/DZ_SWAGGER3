@@ -14,7 +14,7 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_server_var_typ(
-       p_hash_key           IN  VARCHAR2
+       p_server_var_id      IN  VARCHAR2
       ,p_enum               IN  MDSYS.SDO_STRING2_ARRAY
       ,p_default_value      IN  VARCHAR2
       ,p_description        IN  VARCHAR2
@@ -22,7 +22,7 @@ AS
    AS
    BEGIN
 
-      self.hash_key          := p_hash_key;
+      self.server_var_id     := p_server_var_id;
       self.enum              := p_enum;
       self.default_value     := p_default_value;
       self.description       := p_description;
@@ -37,7 +37,7 @@ AS
    RETURN VARCHAR2
    AS
    BEGIN
-      RETURN self.hash_key;
+      RETURN self.server_var_id;
 
    END key;
 
@@ -48,7 +48,7 @@ AS
    AS
    BEGIN
 
-      IF self.hash_key IS NOT NULL
+      IF self.server_var_id IS NOT NULL
       THEN
          RETURN 'FALSE';
 
@@ -83,7 +83,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
 
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -246,6 +245,58 @@ AS
       RETURN clb_output;
 
    END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+   BEGIN
+   
+      INSERT INTO dz_swagger3_xrelates(
+          parent_object_id
+         ,child_object_id
+         ,child_object_type_id
+      )
+      SELECT
+       p_parent_id
+      ,a.column_value
+      ,'servervartyp'
+      FROM
+      TABLE(p_children_ids) a;
+
+      EXECUTE IMMEDIATE 
+      'INSERT 
+      INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,object_key
+          ,servertyp
+          ,ordering_key
+      )
+      SELECT
+       a.column_value
+      ,''servervartyp''
+      ,a.column_value
+      ,dz_swagger3_server_var_typ(
+          p_server_var_id  => a.column_value
+         ,p_versionid      => :p01
+       )
+      ,rownum * 10
+      FROM 
+      TABLE(:p02) a 
+      WHERE
+      a.column_value NOT IN (
+         SELECT b.object_id FROM dz_swagger3_xobjects b
+         WHERE b.object_type_id = ''servervartyp''
+      )  
+      AND a.column_value IS NOT NULL '
+      USING p_versionid,p_children_ids;
+
+   END;
 
 END;
 /

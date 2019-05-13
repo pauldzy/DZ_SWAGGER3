@@ -22,7 +22,7 @@ AS
    ) RETURN SELF AS RESULT
    AS
    BEGIN
-   
+   /*
       SELECT
       dz_swagger3_link_typ(
           p_hash_key           => p_hash_key
@@ -41,7 +41,7 @@ AS
       WHERE
           a.versionid = p_versionid
       AND a.link_id   = p_link_id;
-
+*/
       RETURN; 
       
    END dz_swagger3_link_typ;
@@ -49,20 +49,18 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_link_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_link_id                 IN  VARCHAR2
+       p_link_id                 IN  VARCHAR2
       ,p_link_operationRef       IN  VARCHAR2
       ,p_link_operationId        IN  VARCHAR2
-      ,p_link_parameters         IN  dz_swagger3_string_hash_list
+      ,p_link_parameters         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_string_hash_list
       ,p_link_requestBody        IN  VARCHAR2
       ,p_link_description        IN  VARCHAR2
-      ,p_link_server             IN  dz_swagger3_server_typ
+      ,p_link_server             IN  VARCHAR2 --dz_swagger3_server_typ
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.hash_key          := p_hash_key;
       self.link_id           := p_link_id;
       self.link_operationRef := p_link_operationRef;
       self.link_operationId  := p_link_operationId;
@@ -70,7 +68,7 @@ AS
       self.link_requestBody  := p_link_requestBody;
       self.link_description  := p_link_description;
       self.link_server       := p_link_server;
-      
+      /*
       --------------------------------------------------------------------------
       IF self.doREF() = 'TRUE'
       AND p_load_components = 'TRUE'
@@ -82,7 +80,7 @@ AS
          );
          
       END IF;
-      
+      */
       RETURN; 
       
    END dz_swagger3_link_typ;
@@ -94,7 +92,7 @@ AS
    AS
    BEGIN
    
-      RETURN self.hash_key;
+      RETURN self.link_id;
    
    END key;
    
@@ -105,7 +103,7 @@ AS
    AS
    BEGIN
    
-      IF self.hash_key IS NOT NULL
+      IF self.link_id IS NOT NULL
       THEN
          RETURN 'FALSE';
          
@@ -126,36 +124,6 @@ AS
       RETURN 'TRUE';
    
    END doRef;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION link_parameters_keys
-   RETURN MDSYS.SDO_STRING2_ARRAY
-   AS
-      int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
-      
-   BEGIN
-      IF self.link_parameters IS NULL
-      OR self.link_parameters.COUNT = 0
-      THEN
-         RETURN NULL;
-         
-      END IF;
-      
-      int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
-      FOR i IN 1 .. self.link_parameters.COUNT
-      LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.link_parameters(i).hash_key;
-         int_index := int_index + 1;
-      
-      END LOOP;
-      
-      RETURN ary_output;
-   
-   END link_parameters_keys;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -197,6 +165,10 @@ AS
       str_pad1         VARCHAR2(1 Char);
       str_pad2         VARCHAR2(1 Char);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      clb_tmp          CLOB;
+      
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
       
    BEGIN
       
@@ -220,11 +192,12 @@ AS
          
       END IF;
       
+      str_pad1 := str_pad;
+      
       --------------------------------------------------------------------------
       -- Step 30
       -- Add optional operationRef
       --------------------------------------------------------------------------
-      str_pad1 := str_pad;
       IF self.link_operationRef IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty(
@@ -261,12 +234,29 @@ AS
       -- Step 50
       -- Add optional parameter map
       --------------------------------------------------------------------------
-      IF self.link_parameters IS NOT NULL
+      IF  self.link_parameters IS NOT NULL
       AND self.link_parameters.COUNT > 0
       THEN
-         clb_hash := 'null';
+         EXECUTE IMMEDIATE 
+            'SELECT '
+         || ' a.stringhashtyp.toJSON( '
+         || '   p_pretty_print  => :p01 + 2 '
+         || '  ,p_force_inline  => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT * FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO
+          ary_clb
+         ,ary_keys
+         USING 
+          p_pretty_print
+         ,p_force_inline
+         ,self.link_parameters;
       
-       ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -278,16 +268,10 @@ AS
             
          END IF;
       
-      
-         ary_keys := self.link_parameters_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.link_parameters(i).toJSON(
-                   p_pretty_print   => p_pretty_print + 2
-                  ,p_force_inline   => p_force_inline
-                )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 1
             );
             str_pad2 := ',';
@@ -299,17 +283,17 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'parameters'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
+      
       END IF;
-         
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'parameters'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
       
       --------------------------------------------------------------------------
       -- Step 60
@@ -351,16 +335,27 @@ AS
       -- Step 80
       -- Add server object
       --------------------------------------------------------------------------
-      IF  self.link_server IS NOT NULL
-      AND self.link_server.isNULL() = 'FALSE'
+      IF self.link_server IS NOT NULL
       THEN
+         EXECUTE IMMEDIATE 
+            'SELECT '
+         || 'a.servertyp.toJSON( '
+         || '   p_pretty_print => :p01 + 1 '
+         || '  ,p_force_inline => :p02 '
+         || ') '
+         || 'FROM dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id = :p01'
+         INTO clb_tmp
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.link_server;
+
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
                 'server'
-               ,self.link_server.toJSON(
-                   p_pretty_print    => p_pretty_print + 1
-                  ,p_force_inline    => p_force_inline 
-                )
+               ,clb_tmp
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -499,6 +494,10 @@ AS
    AS
       clb_output       CLOB;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      clb_tmp          CLOB;
+      
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
       
    BEGIN
    
@@ -548,7 +547,25 @@ AS
       IF  self.link_parameters IS NULL 
       AND self.link_parameters.COUNT = 0
       THEN
-         ary_keys := self.link_parameters_keys();
+         EXECUTE IMMEDIATE 
+            'SELECT '
+         || ' a.stringhashtyp.toYAML( '
+         || '   p_pretty_print  => :p01 + 2 '
+         || '  ,p_force_inline  => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT * FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO
+          ary_clb
+         ,ary_keys
+         USING 
+          p_pretty_print
+         ,p_force_inline
+         ,self.link_parameters;
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
@@ -556,9 +573,7 @@ AS
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.link_parameters(i).toYAML(
-               p_pretty_print + 2
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -602,17 +617,28 @@ AS
       -- Step 30
       -- Write the server object
       --------------------------------------------------------------------------
-      IF  self.link_server IS NOT NULL
-      AND self.link_server.isNULL() = 'FALSE'
+      IF self.link_server IS NOT NULL
       THEN
+         EXECUTE IMMEDIATE 
+            'SELECT '
+         || 'a.servertyp.toYAML( '
+         || '   p_pretty_print => :p01 + 1 '
+         || '  ,p_force_inline => :p02 '
+         || ') '
+         || 'FROM dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id = :p01'
+         INTO clb_tmp
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.link_server;
+      
          clb_output := clb_output || dz_json_util.pretty_str(
              'server: ' 
             ,p_pretty_print
             ,'  '
-         ) || self.link_server.toYAML(
-             p_pretty_print   => p_pretty_print + 1
-            ,p_force_inline   => p_force_inline
-         );
+         ) || clb_tmp;
          
       END IF;
       
@@ -690,6 +716,51 @@ AS
       RETURN clb_output;
       
    END toYAML_ref;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+   BEGIN
+   
+      INSERT INTO dz_swagger3_xrelates(
+          parent_object_id
+         ,child_object_id
+         ,child_object_type_id
+      )
+      SELECT
+       p_parent_id
+      ,a.column_value
+      ,'extrdocs'
+      FROM
+      TABLE(p_children_ids) a;
+
+      EXECUTE IMMEDIATE 
+      'INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,extrdocstyp
+          ,ordering_key
+      )
+      SELECT
+       a.column_value
+      ,''extrdocstyp''
+      ,dz_swagger3_extrdocs_typ(
+          p_externaldoc_id => a.column_value
+         ,p_versionid      => :p01
+       )
+      ,10
+      FROM 
+      TABLE(:p02) a'
+      USING p_versionid,p_children_ids;
+      
+      COMMIT;
+
+   END;
    
 END;
 /

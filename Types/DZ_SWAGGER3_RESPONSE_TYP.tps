@@ -1,12 +1,11 @@
 CREATE OR REPLACE TYPE dz_swagger3_response_typ FORCE
 AUTHID DEFINER
 AS OBJECT (
-    hash_key                 VARCHAR2(255 Char)
-   ,response_id              VARCHAR2(255 Char)
+    response_id              VARCHAR2(255 Char)
    ,response_description     VARCHAR2(4000 Char)
-   ,response_headers         dz_swagger3_header_list
-   ,response_content         dz_swagger3_media_list
-   ,response_links           dz_swagger3_link_list
+   ,response_headers         MDSYS.SDO_STRING2_ARRAY --dz_swagger3_header_list
+   ,response_content         MDSYS.SDO_STRING2_ARRAY --dz_swagger3_media_list
+   ,response_links           MDSYS.SDO_STRING2_ARRAY --dz_swagger3_link_list
    ,response_force_inline    VARCHAR2(5 Char)
 
    -----------------------------------------------------------------------------
@@ -27,12 +26,11 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_response_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_response_id             IN  VARCHAR2
+       p_response_id             IN  VARCHAR2
       ,p_response_description    IN  VARCHAR2
-      ,p_response_headers        IN  dz_swagger3_header_list
-      ,p_response_content        IN  dz_swagger3_media_list
-      ,p_response_links          IN  dz_swagger3_link_list
+      ,p_response_headers        IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_header_list
+      ,p_response_content        IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_media_list
+      ,p_response_links          IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_link_list
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
 
@@ -51,21 +49,6 @@ AS OBJECT (
    ,MEMBER FUNCTION doRef
     RETURN VARCHAR2
     
-   ----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION response_headers_keys
-    RETURN MDSYS.SDO_STRING2_ARRAY
-
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION response_content_keys
-    RETURN MDSYS.SDO_STRING2_ARRAY
-
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION response_links_keys
-    RETURN MDSYS.SDO_STRING2_ARRAY
-
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
@@ -113,6 +96,14 @@ AS OBJECT (
       ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
 
 );
 /

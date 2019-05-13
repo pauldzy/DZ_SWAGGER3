@@ -24,7 +24,7 @@ AS
       str_ref_brake VARCHAR2(255 Char) := p_ref_brake;
       
    BEGIN 
-   
+   /*
       --------------------------------------------------------------------------
       -- Step 10
       -- Pull the object information
@@ -97,7 +97,7 @@ AS
          ,a.media_type;
 
       END IF;
-      
+      */
       --------------------------------------------------------------------------
       -- Step 
       -- Return the completed object
@@ -109,24 +109,22 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_response_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_response_id             IN  VARCHAR2
+       p_response_id             IN  VARCHAR2
       ,p_response_description    IN  VARCHAR2
-      ,p_response_headers        IN  dz_swagger3_header_list
-      ,p_response_content        IN  dz_swagger3_media_list
-      ,p_response_links          IN  dz_swagger3_link_list
+      ,p_response_headers        IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_header_list
+      ,p_response_content        IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_media_list
+      ,p_response_links          IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_link_list
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.hash_key                := p_hash_key;
       self.response_id             := p_response_id;
       self.response_description    := p_response_description;
       self.response_headers        := p_response_headers;
       self.response_content        := p_response_content;
       self.response_links          := p_response_links;
-      
+      /*
       --------------------------------------------------------------------------
       IF self.doREF() = 'TRUE'
       AND p_load_components = 'TRUE'
@@ -138,7 +136,7 @@ AS
          );
          
       END IF;
-      
+      */
       RETURN; 
       
    END dz_swagger3_response_typ;
@@ -150,7 +148,7 @@ AS
    AS
    BEGIN
    
-      IF self.hash_key IS NOT NULL
+      IF self.response_id IS NOT NULL
       THEN
          RETURN 'FALSE';
          
@@ -167,7 +165,7 @@ AS
    RETURN VARCHAR2
    AS
    BEGIN
-      RETURN self.hash_key;
+      RETURN self.response_id;
       
    END key;
    
@@ -186,96 +184,6 @@ AS
       RETURN 'TRUE';
       
    END doRef;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION response_headers_keys
-   RETURN MDSYS.SDO_STRING2_ARRAY
-   AS
-      int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
-      
-   BEGIN
-      IF self.response_headers IS NULL
-      OR self.response_headers.COUNT = 0
-      THEN
-         RETURN NULL;
-         
-      END IF;
-      
-      int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
-      FOR i IN 1 .. self.response_headers.COUNT
-      LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.response_headers(i).hash_key;
-         int_index := int_index + 1;
-         
-      END LOOP;
-      
-      RETURN ary_output;
-   
-   END response_headers_keys;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION response_content_keys
-   RETURN MDSYS.SDO_STRING2_ARRAY
-   AS
-      int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
-      
-   BEGIN
-      IF self.response_content IS NULL
-      OR self.response_content.COUNT = 0
-      THEN
-         RETURN NULL;
-         
-      END IF;
-      
-      int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
-      FOR i IN 1 .. self.response_content.COUNT
-      LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.response_content(i).hash_key;
-         int_index := int_index + 1;
-         
-      END LOOP;
-      
-      RETURN ary_output;
-   
-   END response_content_keys;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION response_links_keys
-   RETURN MDSYS.SDO_STRING2_ARRAY
-   AS
-      int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
-      
-   BEGIN
-      IF self.response_links IS NULL
-      OR self.response_links.COUNT = 0
-      THEN
-         RETURN NULL;
-         
-      END IF;
-      
-      int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
-      FOR i IN 1 .. self.response_links.COUNT
-      LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.response_links(i).hash_key;
-         int_index := int_index + 1;
-         
-      END LOOP;
-      
-      RETURN ary_output;
-   
-   END response_links_keys;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -318,6 +226,9 @@ AS
       str_pad2         VARCHAR2(1 Char);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       clb_hash         CLOB;
+      
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
       
    BEGIN
       
@@ -365,12 +276,28 @@ AS
       -- Step 40
       -- Add optional headers
       --------------------------------------------------------------------------
-      IF self.response_headers IS NULL 
-      OR self.response_headers.COUNT = 0
+      IF  self.response_headers IS NOT NULL 
+      AND self.response_headers.COUNT > 0
       THEN
-         NULL;
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.headertyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.response_headers; 
          
-      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -382,15 +309,10 @@ AS
             
          END IF;
       
-         ary_keys := self.response_headers_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.response_headers(i).toJSON(
-                   p_pretty_print  => p_pretty_print + 2
-                  ,p_force_inline  => p_force_inline
-                )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 1
             );
             str_pad2 := ',';
@@ -418,12 +340,28 @@ AS
       -- Step 50
       -- Add optional content objects
       --------------------------------------------------------------------------
-      IF self.response_content IS NULL 
-      OR self.response_content.COUNT = 0
+      IF  self.response_content IS NOT NULL 
+      AND self.response_content.COUNT > 0
       THEN
-         NULL;
-         
-      ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.mediatyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.response_content; 
+
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -435,15 +373,10 @@ AS
             
          END IF;
       
-         ary_keys := self.response_content_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.response_content(i).toJSON(
-                   p_pretty_print => p_pretty_print + 2
-                  ,p_force_inline  => p_force_inline
-                )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 2
             );
             str_pad2 := ',';
@@ -471,12 +404,28 @@ AS
       -- Step 60
       -- Add optional links map
       --------------------------------------------------------------------------
-      IF self.response_links IS NULL 
-      OR self.response_links.COUNT = 0
+      IF self.response_links IS NOT NULL 
+      OR self.response_links.COUNT > 0
       THEN
-         NULL;
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.linktyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.response_links; 
          
-      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -488,15 +437,10 @@ AS
             
          END IF;
       
-         ary_keys := self.response_links_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.response_links(i).toJSON(
-                   p_pretty_print  => p_pretty_print + 2
-                  ,p_force_inline  => p_force_inline
-                )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 1
             );
             str_pad2 := ',';
@@ -653,6 +597,9 @@ AS
       clb_output       CLOB;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
+      
    BEGIN
    
       --------------------------------------------------------------------------
@@ -684,24 +631,38 @@ AS
       IF  self.response_headers IS NOT NULL 
       AND self.response_headers.COUNT > 0
       THEN
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.headertyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.response_headers; 
+
          clb_output := clb_output || dz_json_util.pretty_str(
              'headers: '
             ,p_pretty_print
             ,'  '
          );
          
-         ary_keys := self.response_headers_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 dz_swagger3_util.yamlq(ary_keys(i)) || ': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.response_headers(i).toYAML(
-                p_pretty_print  => p_pretty_print + 2
-               ,p_force_inline  => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -714,24 +675,38 @@ AS
       IF  self.response_content IS NOT NULL 
       AND self.response_content.COUNT > 0
       THEN
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.mediatyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.response_content; 
+
          clb_output := clb_output || dz_json_util.pretty_str(
              'content: '
             ,p_pretty_print
             ,'  '
          );
          
-         ary_keys := self.response_content_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 dz_swagger3_util.yamlq(ary_keys(i)) || ': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.response_content(i).toYAML(
-                p_pretty_print  => p_pretty_print + 2
-               ,p_force_inline  => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -744,24 +719,38 @@ AS
       IF  self.response_links IS NOT NULL 
       AND self.response_links.COUNT > 0
       THEN
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.linktyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.response_links; 
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'links: '
             ,p_pretty_print
             ,'  '
          );
          
-         ary_keys := self.response_links_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 dz_swagger3_util.yamlq(ary_keys(i)) || ': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.response_links(i).toYAML(
-                p_pretty_print  => p_pretty_print + 2
-               ,p_force_inline  => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -840,6 +829,51 @@ AS
       RETURN clb_output;
       
    END toYAML_ref;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+   BEGIN
+   
+      INSERT INTO dz_swagger3_xrelates(
+          parent_object_id
+         ,child_object_id
+         ,child_object_type_id
+      )
+      SELECT
+       p_parent_id
+      ,a.column_value
+      ,'extrdocs'
+      FROM
+      TABLE(p_children_ids) a;
+
+      EXECUTE IMMEDIATE 
+      'INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,extrdocstyp
+          ,ordering_key
+      )
+      SELECT
+       a.column_value
+      ,''extrdocstyp''
+      ,dz_swagger3_extrdocs_typ(
+          p_externaldoc_id => a.column_value
+         ,p_versionid      => :p01
+       )
+      ,10
+      FROM 
+      TABLE(:p02) a'
+      USING p_versionid,p_children_ids;
+      
+      COMMIT;
+
+   END;
    
 END;
 /

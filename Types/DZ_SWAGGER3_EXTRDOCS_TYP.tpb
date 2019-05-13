@@ -229,6 +229,51 @@ AS
       
    END toYAML;
    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+   BEGIN
+   
+      INSERT INTO dz_swagger3_xrelates(
+          parent_object_id
+         ,child_object_id
+         ,child_object_type_id
+      )
+      SELECT
+       p_parent_id
+      ,a.column_value
+      ,'extrdocs'
+      FROM
+      TABLE(p_children_ids) a;
+
+      EXECUTE IMMEDIATE 
+      'INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,extrdocstyp
+          ,ordering_key
+      )
+      SELECT
+       a.column_value
+      ,''extrdocstyp''
+      ,dz_swagger3_extrdocs_typ(
+          p_externaldoc_id => a.column_value
+         ,p_versionid      => :p01
+       )
+      ,10
+      FROM 
+      TABLE(:p02) a'
+      USING p_versionid,p_children_ids;
+      
+      COMMIT;
+
+   END;
+   
 END;
 /
 

@@ -1,3 +1,10 @@
+BEGIN
+   EXECUTE IMMEDIATE 'DROP TABLE dz_swagger3_xobjects';
+EXCEPTION
+   WHEN OTHERS THEN NULL;
+END;
+/ 
+
 CREATE OR REPLACE TYPE dz_swagger3_extrdocs_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
@@ -43,6 +50,14 @@ AS OBJECT (
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
 
 );
 /

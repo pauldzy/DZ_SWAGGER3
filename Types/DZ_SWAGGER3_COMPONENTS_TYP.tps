@@ -1,15 +1,15 @@
 CREATE OR REPLACE TYPE dz_swagger3_components_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    components_schemas          dz_swagger3_schema_nf_list
-   ,components_responses        dz_swagger3_response_list
-   ,components_parameters       dz_swagger3_parameter_list
-   ,components_examples         dz_swagger3_example_list
-   ,components_requestBodies    dz_swagger3_requestBody_list
-   ,components_headers          dz_swagger3_header_list
-   ,components_securitySchemes  dz_swagger3_securitySchem_list
-   ,components_links            dz_swagger3_link_list
-   ,components_callbacks        dz_swagger3_callback_list
+    components_schemas          MDSYS.SDO_STRING2_ARRAY --dz_swagger3_schema_nf_list
+   ,components_responses        MDSYS.SDO_STRING2_ARRAY --dz_swagger3_response_list
+   ,components_parameters       MDSYS.SDO_STRING2_ARRAY --dz_swagger3_parameter_list
+   ,components_examples         MDSYS.SDO_STRING2_ARRAY --dz_swagger3_example_list
+   ,components_requestBodies    MDSYS.SDO_STRING2_ARRAY --dz_swagger3_requestBody_list
+   ,components_headers          MDSYS.SDO_STRING2_ARRAY --dz_swagger3_header_list
+   ,components_securitySchemes  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_securitySchem_list
+   ,components_links            MDSYS.SDO_STRING2_ARRAY --dz_swagger3_link_list
+   ,components_callbacks        MDSYS.SDO_STRING2_ARRAY --dz_swagger3_callback_list
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -25,15 +25,15 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_components_typ(
-       p_components_schemas           IN  dz_swagger3_schema_nf_list
-      ,p_components_responses         IN  dz_swagger3_response_list
-      ,p_components_parameters        IN  dz_swagger3_parameter_list
-      ,p_components_examples          IN  dz_swagger3_example_list
-      ,p_components_requestBodies     IN  dz_swagger3_requestBody_list
-      ,p_components_headers           IN  dz_swagger3_header_list
-      ,p_components_securitySchemes   IN  dz_swagger3_securitySchem_list
-      ,p_components_links             IN  dz_swagger3_link_list
-      ,p_components_callbacks         IN  dz_swagger3_callback_list
+       p_components_schemas           IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_schema_nf_list
+      ,p_components_responses         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_response_list
+      ,p_components_parameters        IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_parameter_list
+      ,p_components_examples          IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_example_list
+      ,p_components_requestBodies     IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_requestBody_list
+      ,p_components_headers           IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_header_list
+      ,p_components_securitySchemes   IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_securitySchem_list
+      ,p_components_links             IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_link_list
+      ,p_components_callbacks         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_callback_list
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------

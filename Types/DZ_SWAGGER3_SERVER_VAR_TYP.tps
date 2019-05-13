@@ -1,7 +1,7 @@
 CREATE OR REPLACE TYPE dz_swagger3_server_var_typ FORCE
 AUTHID DEFINER
 AS OBJECT (
-    hash_key            VARCHAR2(255 Char)
+    server_var_id       VARCHAR2(255 Char)
    ,enum                MDSYS.SDO_STRING2_ARRAY
    ,default_value       VARCHAR2(255 Char)
    ,description         VARCHAR2(4000 Char)
@@ -14,7 +14,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_server_var_typ(
-       p_hash_key           IN  VARCHAR2
+       p_server_var_id      IN  VARCHAR2
       ,p_enum               IN  MDSYS.SDO_STRING2_ARRAY
       ,p_default_value      IN  VARCHAR2
       ,p_description        IN  VARCHAR2
@@ -45,6 +45,14 @@ AS OBJECT (
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
 
 );
 /

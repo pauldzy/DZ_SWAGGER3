@@ -4,7 +4,7 @@ AS OBJECT (
     oauth_authorizationUrl       VARCHAR2(255 Char)
    ,oauth_tokenUrl               VARCHAR2(255 Char)
    ,oauth_refreshUrl             VARCHAR2(255 Char)
-   ,oauth_scopes                 dz_swagger3_string_hash_list
+   ,oauth_scopes                 MDSYS.SDO_STRING2_ARRAY --dz_swagger3_string_hash_list
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -17,7 +17,7 @@ AS OBJECT (
        p_oauth_authorizationUrl  IN  VARCHAR2
       ,p_oauth_tokenUrl          IN  VARCHAR2
       ,p_oauth_refreshUrl        IN  VARCHAR2
-      ,p_oauth_scopes            IN  dz_swagger3_string_hash_list
+      ,p_oauth_scopes            IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_string_hash_list
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -40,6 +40,14 @@ AS OBJECT (
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
 
 );
 /

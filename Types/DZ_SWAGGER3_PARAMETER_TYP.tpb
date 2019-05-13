@@ -21,7 +21,7 @@ AS
    ) RETURN SELF AS RESULT
    AS      
    BEGIN
-   
+   /*
       BEGIN
          SELECT
          dz_swagger3_parameter_typ(
@@ -71,7 +71,7 @@ AS
             RAISE;
             
       END;
-
+*/
       RETURN;
       
    END;
@@ -90,10 +90,10 @@ AS
       ,p_parameter_style            IN  VARCHAR2
       ,p_parameter_explode          IN  VARCHAR2
       ,p_parameter_allowReserved    IN  VARCHAR2
-      ,p_parameter_schema           IN  dz_swagger3_schema_typ_nf
+      ,p_parameter_schema           IN  VARCHAR2 --dz_swagger3_schema_typ_nf
       ,p_parameter_example_string   IN  VARCHAR2
       ,p_parameter_example_number   IN  NUMBER
-      ,p_parameter_examples         IN  dz_swagger3_example_list
+      ,p_parameter_examples         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_example_list
       ,p_parameter_force_inline     IN  VARCHAR2
       ,p_parameter_list_hidden      IN  VARCHAR2
       ,p_parameter_requestbody_flag IN  VARCHAR2 DEFAULT 'FALSE'
@@ -102,7 +102,6 @@ AS
    AS 
    BEGIN 
     
-      self.hash_key                   := p_hash_key;
       self.parameter_id               := p_parameter_id;
       self.parameter_name             := p_parameter_name;
       self.parameter_in               := p_parameter_in;
@@ -120,7 +119,7 @@ AS
       self.parameter_force_inline     := p_parameter_force_inline;
       self.parameter_list_hidden      := p_parameter_list_hidden;
       self.parameter_requestbody_flag := p_parameter_requestbody_flag;
-      
+      /*
       --------------------------------------------------------------------------
       IF self.doREF() = 'TRUE'
       AND p_load_components = 'TRUE'
@@ -131,7 +130,7 @@ AS
          );
          
       END IF;
- 
+ */
       RETURN; 
       
    END dz_swagger3_parameter_typ;
@@ -143,7 +142,7 @@ AS
    AS
    BEGIN
    
-      IF self.hash_key IS NOT NULL
+      IF self.parameter_id IS NOT NULL
       THEN
          RETURN 'FALSE';
          
@@ -160,7 +159,7 @@ AS
    RETURN VARCHAR2
    AS
    BEGIN
-      RETURN self.hash_key;
+      RETURN self.parameter_id;
       
    END key;
    
@@ -173,36 +172,6 @@ AS
       RETURN 'TRUE';
       
    END doRef;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION parameter_examples_keys
-   RETURN MDSYS.SDO_STRING2_ARRAY
-   AS
-      int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
-      
-   BEGIN
-      IF self.parameter_examples IS NULL
-      OR self.parameter_examples.COUNT = 0
-      THEN
-         RETURN NULL;
-         
-      END IF;
-      
-      int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
-      FOR i IN 1 .. self.parameter_examples.COUNT
-      LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.parameter_examples(i).hash_key;
-         int_index := int_index + 1;
-      
-      END LOOP;
-      
-      RETURN ary_output;
-   
-   END parameter_examples_keys;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -245,6 +214,10 @@ AS
       str_pad2         VARCHAR2(1 Char);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       clb_hash         CLOB;
+      clb_tmp          CLOB;
+      
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
       
    BEGIN
       
@@ -459,13 +432,24 @@ AS
       --------------------------------------------------------------------------
       IF self.parameter_schema IS NOT NULL
       THEN
+         EXECUTE IMMEDIATE
+            'SELECT a.schematyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 1 '
+         || '  ,p_force_inline   => :p02 '
+         || ') FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id = :p03 '
+         INTO clb_tmp
+         USING 
+          p_pretty_print
+         ,p_force_inline
+         ,self.parameter_schema; 
+
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
                 'schema'
-               ,self.parameter_schema.toJSON(
-                   p_pretty_print   => p_pretty_print + 1
-                  ,p_force_inline   => p_force_inline
-                )
+               ,clb_tmp
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -508,12 +492,28 @@ AS
       -- Step 120
       -- Add optional variables map
       --------------------------------------------------------------------------
-      IF self.parameter_examples IS NULL 
-      OR self.parameter_examples.COUNT = 0
+      IF self.parameter_examples IS NOT NULL 
+      AND self.parameter_examples.COUNT > 0
       THEN
-         NULL;
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.exampletyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 1 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.parameter_examples;
          
-      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -524,17 +524,11 @@ AS
             clb_hash := dz_json_util.pretty('{',-1);
             
          END IF;
-      
-      
-         ary_keys := self.parameter_examples_keys();
-      
+
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.parameter_examples(i).toJSON(
-                   p_pretty_print   => p_pretty_print + 2
-                  ,p_force_inline   => p_force_inline
-                )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 1
             );
             str_pad2 := ',';
@@ -694,6 +688,10 @@ AS
    AS
       clb_output       CLOB;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      clb_tmp          CLOB;
+      
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
       
    BEGIN
    
@@ -840,16 +838,26 @@ AS
       -- Write the optional schema subobject
       --------------------------------------------------------------------------
       IF  self.parameter_schema IS NOT NULL
-      AND self.parameter_schema.isNULL() = 'FALSE'
       THEN
+         EXECUTE IMMEDIATE
+            'SELECT a.schematyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 1 '
+         || '  ,p_force_inline   => :p02 '
+         || ') FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id = :p03 '
+         INTO clb_tmp
+         USING 
+          p_pretty_print
+         ,p_force_inline
+         ,self.parameter_schema; 
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'schema: '
             ,p_pretty_print
             ,'  '
-         ) || self.parameter_schema.toYAML(
-             p_pretty_print   => p_pretty_print + 1
-            ,p_force_inline   => p_force_inline
-         );
+         ) || clb_tmp;
          
       END IF;
       
@@ -888,24 +896,38 @@ AS
       IF  self.parameter_examples IS NOT NULL 
       AND self.parameter_examples.COUNT > 0
       THEN
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.exampletyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 1 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.parameter_examples; 
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'examples: '
             ,p_pretty_print + 1
             ,'  '
          );
          
-         ary_keys := self.parameter_examples_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 2
                ,'  '
-            ) || self.parameter_examples(i).toYAML(
-                p_pretty_print   => p_pretty_print + 3
-               ,p_force_inline   => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -984,6 +1006,51 @@ AS
       RETURN clb_output;
       
    END toYAML_ref;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+   BEGIN
+   
+      INSERT INTO dz_swagger3_xrelates(
+          parent_object_id
+         ,child_object_id
+         ,child_object_type_id
+      )
+      SELECT
+       p_parent_id
+      ,a.column_value
+      ,'extrdocs'
+      FROM
+      TABLE(p_children_ids) a;
+
+      EXECUTE IMMEDIATE 
+      'INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,extrdocstyp
+          ,ordering_key
+      )
+      SELECT
+       a.column_value
+      ,''extrdocstyp''
+      ,dz_swagger3_extrdocs_typ(
+          p_externaldoc_id => a.column_value
+         ,p_versionid      => :p01
+       )
+      ,10
+      FROM 
+      TABLE(:p02) a'
+      USING p_versionid,p_children_ids;
+      
+      COMMIT;
+
+   END;
    
 END;
 /

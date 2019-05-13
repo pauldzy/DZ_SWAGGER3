@@ -1,14 +1,13 @@
 CREATE OR REPLACE TYPE dz_swagger3_link_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    hash_key            VARCHAR2(255 Char)
-   ,link_id             VARCHAR2(255 Char)
+    link_id             VARCHAR2(255 Char)
    ,link_operationRef   VARCHAR2(255 Char)
    ,link_operationId    VARCHAR2(255 Char)
-   ,link_parameters     dz_swagger3_string_hash_list
+   ,link_parameters     MDSYS.SDO_STRING2_ARRAY --dz_swagger3_string_hash_list
    ,link_requestBody    VARCHAR2(4000 Char)
    ,link_description    VARCHAR2(4000 Char)
-   ,link_server         dz_swagger3_server_typ
+   ,link_server         VARCHAR2(40 Char) --dz_swagger3_server_typ
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -28,14 +27,13 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_link_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_link_id                 IN  VARCHAR2
+       p_link_id                 IN  VARCHAR2
       ,p_link_operationRef       IN  VARCHAR2
       ,p_link_operationId        IN  VARCHAR2
-      ,p_link_parameters         IN  dz_swagger3_string_hash_list
+      ,p_link_parameters         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_string_hash_list
       ,p_link_requestBody        IN  VARCHAR2
       ,p_link_description        IN  VARCHAR2
-      ,p_link_server             IN  dz_swagger3_server_typ
+      ,p_link_server             IN  VARCHAR2 --dz_swagger3_server_typ
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
@@ -53,11 +51,6 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION doRef
     RETURN VARCHAR2
-    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION link_parameters_keys
-    RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -106,6 +99,14 @@ AS OBJECT (
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
 
 );
 /

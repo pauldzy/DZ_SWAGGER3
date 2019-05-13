@@ -3,7 +3,7 @@ AUTHID DEFINER
 AS OBJECT (
     server_url          VARCHAR2(255 Char)
    ,server_description  VARCHAR2(4000 Char)
-   ,server_variables    dz_swagger3_server_var_list
+   ,server_variables    MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_var_list
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -22,18 +22,13 @@ AS OBJECT (
    ,CONSTRUCTOR FUNCTION dz_swagger3_server_typ(
        p_server_url          IN  VARCHAR2
       ,p_server_description  IN  VARCHAR2
-      ,p_server_variables    IN  dz_swagger3_server_var_list
+      ,p_server_variables    IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_var_list
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION isNULL
     RETURN VARCHAR2
-    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION server_variables_keys
-    RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -50,6 +45,14 @@ AS OBJECT (
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
 
 );
 /

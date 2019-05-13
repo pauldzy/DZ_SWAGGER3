@@ -21,7 +21,7 @@ AS
    ) RETURN SELF AS RESULT
    AS
    BEGIN
-   
+   /*
       --------------------------------------------------------------------------
       -- Step 10
       -- Pull the object information
@@ -77,7 +77,7 @@ AS
       WHERE
           a.versionid = p_versionid
       AND a.parent_id = p_requestbody_id;
-      
+      */
       --------------------------------------------------------------------------
       -- Step 
       -- Return the completed object
@@ -91,7 +91,7 @@ AS
    CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
        p_requestbody_id           IN  VARCHAR2
       ,p_media_type               IN  VARCHAR2
-      ,p_parameters               IN  dz_swagger3_parameter_list
+      ,p_parameters               IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_parameter_list
       ,p_inline_rb                IN  VARCHAR2
       ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
@@ -101,7 +101,7 @@ AS
       str_check   VARCHAR2(255 Char);
       
    BEGIN
-   
+   /*
       self.hash_key            := p_requestbody_id;
       self.requestbody_id      := p_requestbody_id;
       self.requestBody_inline  := p_inline_rb;
@@ -152,7 +152,7 @@ AS
          RAISE_APPLICATION_ERROR(-20001,'err');
          
       END IF;
-      
+      */
       RETURN;
       
    END dz_swagger3_requestbody_typ;
@@ -164,7 +164,7 @@ AS
       ,p_requestbody_id           IN  VARCHAR2
       ,p_requestbody_description  IN  VARCHAR2
       ,p_requestBody_force_inline IN  VARCHAR2
-      ,p_requestbody_content      IN  dz_swagger3_media_list
+      ,p_requestbody_content      IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_media_list
       ,p_requestbody_required     IN  VARCHAR2
       ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT 
@@ -177,7 +177,7 @@ AS
       self.requestBody_force_inline := p_requestBody_force_inline;
       self.requestbody_content      := p_requestbody_content;
       self.requestbody_required     := p_requestbody_required;
-      
+      /*
       --------------------------------------------------------------------------
       IF  self.doREF() = 'TRUE'
       AND p_load_components = 'TRUE'
@@ -188,7 +188,7 @@ AS
          );
          
       END IF;
-      
+      */
       RETURN; 
       
    END dz_swagger3_requestbody_typ;
@@ -243,36 +243,6 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION requestbody_content_keys
-   RETURN MDSYS.SDO_STRING2_ARRAY
-   AS
-      int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
-      
-   BEGIN
-      IF self.requestbody_content IS NULL
-      OR self.requestbody_content.COUNT = 0
-      THEN
-         RETURN NULL;
-         
-      END IF;
-      
-      int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
-      FOR i IN 1 .. self.requestbody_content.COUNT
-      LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.requestbody_content(i).hash_key;
-         int_index := int_index + 1;
-      
-      END LOOP;
-      
-      RETURN ary_output;
-   
-   END requestbody_content_keys;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print         IN  INTEGER   DEFAULT NULL
       ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE' 
@@ -312,6 +282,9 @@ AS
       str_pad2         VARCHAR2(1 Char);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       clb_hash         CLOB;
+      
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
       
    BEGIN
       
@@ -359,12 +332,28 @@ AS
       -- Step 40
       -- Add optional description 
       --------------------------------------------------------------------------
-      IF  self.requestbody_content IS NULL 
-      AND self.requestbody_content.COUNT = 0
-      THEN
-         clb_hash := 'null';
+      IF  self.requestbody_content IS NOT NULL 
+      AND self.requestbody_content.COUNT > 0
+      THEN 
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.mediatyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 1 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.requestbody_content; 
          
-      ELSE
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -376,15 +365,10 @@ AS
             
          END IF;
       
-         ary_keys := self.requestbody_content_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.requestbody_content(i).toJSON(
-                   p_pretty_print  => p_pretty_print + 2
-                  ,p_force_inline  => p_force_inline
-                )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 2
             );
             str_pad2 := ',';
@@ -396,17 +380,17 @@ AS
             ,p_pretty_print + 1,NULL,NULL
          );
          
-      END IF;
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad1 || dz_json_main.formatted2json(
+                 'content'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
+            ,p_pretty_print + 1
+         );
+         str_pad1 := ',';
          
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'content'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 50
@@ -568,6 +552,9 @@ AS
       clb_output       CLOB;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
+      
    BEGIN
    
       --------------------------------------------------------------------------
@@ -599,24 +586,38 @@ AS
       IF  self.requestbody_content IS NOT NULL 
       AND self.requestbody_content.COUNT > 0
       THEN
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.mediatyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.requestbody_content; 
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'content: '
             ,p_pretty_print
             ,'  '
          );
          
-         ary_keys := self.requestbody_content_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 dz_swagger3_util.yamlq(ary_keys(i)) || ': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.requestbody_content(i).toYAML(
-                p_pretty_print   => p_pretty_print + 2
-               ,p_force_inline   => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -710,6 +711,51 @@ AS
       RETURN clb_output;
       
    END toYAML_ref;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+   BEGIN
+   
+      INSERT INTO dz_swagger3_xrelates(
+          parent_object_id
+         ,child_object_id
+         ,child_object_type_id
+      )
+      SELECT
+       p_parent_id
+      ,a.column_value
+      ,'extrdocs'
+      FROM
+      TABLE(p_children_ids) a;
+
+      EXECUTE IMMEDIATE 
+      'INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,extrdocstyp
+          ,ordering_key
+      )
+      SELECT
+       a.column_value
+      ,''extrdocstyp''
+      ,dz_swagger3_extrdocs_typ(
+          p_externaldoc_id => a.column_value
+         ,p_versionid      => :p01
+       )
+      ,10
+      FROM 
+      TABLE(:p02) a'
+      USING p_versionid,p_children_ids;
+      
+      COMMIT;
+
+   END;
    
 END;
 /

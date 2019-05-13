@@ -10,10 +10,10 @@ AS OBJECT (
    ,header_style            VARCHAR2(255 Char)
    ,header_explode          VARCHAR2(5 Char)
    ,header_allowReserved    VARCHAR2(5 Char)
-   ,header_schema           dz_swagger3_schema_typ
+   ,header_schema           VARCHAR2(40 Char) --dz_swagger3_schema_typ
    ,header_example_string   VARCHAR2(255 Char)
    ,header_example_number   NUMBER
-   ,header_examples         dz_swagger3_example_list
+   ,header_examples         MDSYS.SDO_STRING2_ARRAY --z_swagger3_example_list
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -42,10 +42,10 @@ AS OBJECT (
       ,p_header_style            IN  VARCHAR2
       ,p_header_explode          IN  VARCHAR2
       ,p_header_allowReserved    IN  VARCHAR2
-      ,p_header_schema           IN  dz_swagger3_schema_typ
+      ,p_header_schema           IN  VARCHAR2 --dz_swagger3_schema_typ
       ,p_header_example_string   IN  VARCHAR2
       ,p_header_example_number   IN  NUMBER
-      ,p_header_examples         IN  dz_swagger3_example_list
+      ,p_header_examples         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_example_list
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
@@ -63,11 +63,6 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION doRef
     RETURN VARCHAR2
-    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION header_examples_keys
-    RETURN MDSYS.SDO_STRING2_ARRAY
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -116,6 +111,14 @@ AS OBJECT (
       ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
 
 );
 /

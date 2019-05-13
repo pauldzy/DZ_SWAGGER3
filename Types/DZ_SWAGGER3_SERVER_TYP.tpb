@@ -19,7 +19,7 @@ AS
    ) RETURN SELF AS RESULT
    AS 
    BEGIN 
-   
+
       SELECT
        a.server_url
       ,a.server_description
@@ -31,18 +31,9 @@ AS
       WHERE
           a.versionid = p_versionid
       AND a.server_id = p_server_id;
-      
+
       SELECT
-      dz_swagger3_server_var_typ(
-          p_hash_key       => a.server_var_name
-         ,p_enum           => dz_json_util.gz_split(
-             p_str            => a.server_var_enum
-            ,p_regex          => ','
-            ,p_trim           => 'TRUE'
-          )
-         ,p_default_value  => a.server_var_default
-         ,p_description    => a.server_var_description
-      )
+      a.server_var_name
       BULK COLLECT INTO self.server_variables
       FROM
       dz_swagger3_server_variable a
@@ -53,6 +44,16 @@ AS
        a.server_var_order
       ,a.server_var_name;
       
+      IF self.server_variables.COUNT > 0
+      THEN
+         dz_swagger3_server_var_typ.loader(
+             p_parent_id    => 'server'
+            ,p_children_ids => self.server_variables
+            ,p_versionid    => p_versionid
+         );
+
+      END IF;
+  
       RETURN;
       
    END dz_swagger3_server_typ;
@@ -62,7 +63,7 @@ AS
    CONSTRUCTOR FUNCTION dz_swagger3_server_typ(
        p_server_url         IN  VARCHAR2
       ,p_server_description IN  VARCHAR2
-      ,p_server_variables   IN  dz_swagger3_server_var_list
+      ,p_server_variables   IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_var_list
    ) RETURN SELF AS RESULT 
    AS
    BEGIN 
@@ -95,36 +96,6 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION server_variables_keys
-   RETURN MDSYS.SDO_STRING2_ARRAY
-   AS
-      int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
-      
-   BEGIN
-      IF self.server_variables IS NULL
-      OR self.server_variables.COUNT = 0
-      THEN
-         RETURN NULL;
-         
-      END IF;
-      
-      int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
-      FOR i IN 1 .. self.server_variables.COUNT
-      LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.server_variables(i).hash_key;
-         int_index := int_index + 1;
-      
-      END LOOP;
-      
-      RETURN ary_output;
-   
-   END server_variables_keys;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
@@ -136,6 +107,9 @@ AS
       str_pad2         VARCHAR2(1 Char);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       clb_hash         CLOB;
+      
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
       
    BEGIN
       
@@ -151,7 +125,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -192,12 +165,30 @@ AS
       -- Step 50
       -- Add optional variables map
       --------------------------------------------------------------------------
-      IF self.server_variables IS NULL 
-      OR self.server_variables.COUNT = 0
+      IF  self.server_variables IS NOT NULL 
+      AND self.server_variables.COUNT > 0
       THEN
-         NULL;
-         
-      ELSE
+         EXECUTE IMMEDIATE 
+            'SELECT '
+         || ' a.servervartyp.toJSON( '
+         || '   p_pretty_print  => :p01 + 2 '
+         || '  ,p_force_inline  => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || '    a.object_type_id = ''servervartyp'' '
+         || 'AND a.object_id IN (SELECT * FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO
+          ary_clb
+         ,ary_keys
+         USING 
+          p_pretty_print
+         ,p_force_inline
+         ,self.server_variables;   
+      
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -209,15 +200,10 @@ AS
             
          END IF;
       
-         ary_keys := self.server_variables_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || self.server_variables(i).toJSON(
-                   p_pretty_print   => p_pretty_print + 2
-                  ,p_force_inline   => p_force_inline
-                )
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_keys(i)
                ,p_pretty_print + 2
             );
             str_pad2 := ',';
@@ -270,6 +256,9 @@ AS
       clb_output        CLOB;
       ary_keys          MDSYS.SDO_STRING2_ARRAY;
       
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
+      
    BEGIN
    
       --------------------------------------------------------------------------
@@ -294,11 +283,8 @@ AS
       -- Step 30
       -- Write the optional description item
       --------------------------------------------------------------------------
-      IF self.server_description IS NULL
+      IF self.server_description IS NOT NULL
       THEN
-         NULL;
-         
-      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'description: ' || dz_swagger3_util.yaml_text(
                 self.server_description
@@ -314,30 +300,41 @@ AS
       -- Step 40
       -- Write the optional variables map
       --------------------------------------------------------------------------
-      IF  self.server_variables IS NULL 
-      OR self.server_variables.COUNT = 0
+      IF  self.server_variables IS NOT NULL 
+      AND self.server_variables.COUNT > 0
       THEN
-         NULL;
+         EXECUTE IMMEDIATE 
+            'SELECT '
+         || ' a.servervartyp.toYAML( '
+         || '   p_pretty_print  => :p01 + 2 '
+         || '  ,p_force_inline  => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT * FROM TABLE(:p03))'
+         BULK COLLECT INTO
+          ary_clb
+         ,ary_keys
+         USING 
+          p_pretty_print
+         ,p_force_inline
+         ,self.server_variables; 
          
-      ELSE
          clb_output := clb_output || dz_json_util.pretty_str(
              'variables: '
             ,p_pretty_print
             ,'  '
          );
          
-         ary_keys := self.server_variables_keys();
-      
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 '''' || ary_keys(i) || ''': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.server_variables(i).toYAML(
-                p_pretty_print   => p_pretty_print + 2
-               ,p_force_inline   => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -362,6 +359,56 @@ AS
       RETURN clb_output;
       
    END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   STATIC PROCEDURE loader(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+   BEGIN
+   
+      INSERT INTO dz_swagger3_xrelates(
+          parent_object_id
+         ,child_object_id
+         ,child_object_type_id
+      )
+      SELECT
+       p_parent_id
+      ,a.column_value
+      ,'servertyp'
+      FROM
+      TABLE(p_children_ids) a;
+
+      EXECUTE IMMEDIATE 
+      'INSERT 
+      INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,servertyp
+          ,ordering_key
+      )
+      SELECT
+       a.column_value
+      ,''servertyp''
+      ,dz_swagger3_server_typ(
+          p_server_id   => a.column_value
+         ,p_versionid   => :p01
+       )
+      ,rownum * 10
+      FROM 
+      TABLE(:p02) a 
+      WHERE
+      a.column_value NOT IN (
+         SELECT b.object_id FROM dz_swagger3_xobjects b
+         WHERE b.object_type_id = ''servertyp''
+      )  
+      AND a.column_value IS NOT NULL '
+      USING p_versionid,p_children_ids;
+
+   END;
    
 END;
 /

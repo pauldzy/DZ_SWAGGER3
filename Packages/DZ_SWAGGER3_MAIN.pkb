@@ -76,6 +76,17 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   PROCEDURE purge_xtemp
+   AS
+   BEGIN
+   
+      EXECUTE IMMEDIATE 'TRUNCATE TABLE dz_swagger3_xrelates';
+      EXECUTE IMMEDIATE 'TRUNCATE TABLE dz_swagger3_xobjects';
+      
+   END purge_xtemp;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    PROCEDURE purge_component
    AS
    PRAGMA AUTONOMOUS_TRANSACTION;

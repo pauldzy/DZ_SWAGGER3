@@ -8,15 +8,15 @@ AS
    AS 
    BEGIN 
       
-      self.components_schemas         := dz_swagger3_schema_nf_list();
-      self.components_responses       := dz_swagger3_response_list();
-      self.components_parameters      := dz_swagger3_parameter_list();
-      self.components_examples        := dz_swagger3_example_list();
-      self.components_requestBodies   := dz_swagger3_requestBody_list();
-      self.components_headers         := dz_swagger3_header_list();
-      self.components_securitySchemes := dz_swagger3_securitySchem_list();
-      self.components_links           := dz_swagger3_link_list();
-      self.components_callbacks       := dz_swagger3_callback_list();
+      self.components_schemas         := MDSYS.SDO_STRING2_ARRAY();
+      self.components_responses       := MDSYS.SDO_STRING2_ARRAY();
+      self.components_parameters      := MDSYS.SDO_STRING2_ARRAY();
+      self.components_examples        := MDSYS.SDO_STRING2_ARRAY();
+      self.components_requestBodies   := MDSYS.SDO_STRING2_ARRAY();
+      self.components_headers         := MDSYS.SDO_STRING2_ARRAY();
+      self.components_securitySchemes := MDSYS.SDO_STRING2_ARRAY();
+      self.components_links           := MDSYS.SDO_STRING2_ARRAY();
+      self.components_callbacks       := MDSYS.SDO_STRING2_ARRAY();
       
       RETURN;
       
@@ -72,15 +72,15 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_components_typ(
-       p_components_schemas           IN  dz_swagger3_schema_nf_list
-      ,p_components_responses         IN  dz_swagger3_response_list
-      ,p_components_parameters        IN  dz_swagger3_parameter_list
-      ,p_components_examples          IN  dz_swagger3_example_list
-      ,p_components_requestBodies     IN  dz_swagger3_requestBody_list
-      ,p_components_headers           IN  dz_swagger3_header_list
-      ,p_components_securitySchemes   IN  dz_swagger3_securitySchem_list
-      ,p_components_links             IN  dz_swagger3_link_list
-      ,p_components_callbacks         IN  dz_swagger3_callback_list
+       p_components_schemas           IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_schema_nf_list
+      ,p_components_responses         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_response_list
+      ,p_components_parameters        IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_parameter_list
+      ,p_components_examples          IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_example_list
+      ,p_components_requestBodies     IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_requestBody_list
+      ,p_components_headers           IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_header_list
+      ,p_components_securitySchemes   IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_securitySchem_list
+      ,p_components_links             IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_link_list
+      ,p_components_callbacks         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_callback_list
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -107,7 +107,7 @@ AS
    )
    AS
    BEGIN
-
+/*
       SELECT
       a.schemaobj
       BULK COLLECT INTO self.components_schemas
@@ -145,7 +145,7 @@ AS
       ) a
       ORDER BY
       a.object_id;
-
+*/ NULL;
    END load_components_schemas;
    
    -----------------------------------------------------------------------------
@@ -156,7 +156,7 @@ AS
    )
    AS
    BEGIN
-      
+/*
       SELECT
       dz_swagger3_response_typ(
           p_response_id    => a.object_id
@@ -172,7 +172,7 @@ AS
       a.object_type = 'response'
       ORDER BY
       a.object_id;
-   
+*/ NULL;
    END load_components_responses;
    
    -----------------------------------------------------------------------------
@@ -183,7 +183,7 @@ AS
    )
    AS
    BEGIN
-      
+/*
       SELECT
       dz_swagger3_parameter_typ(
           p_parameter_id     => a.object_id
@@ -198,7 +198,7 @@ AS
       a.object_type = 'parameter'
       ORDER BY
       a.object_id;
-   
+*/ NULL;
    END load_components_parameters;
    
    -----------------------------------------------------------------------------
@@ -209,7 +209,7 @@ AS
    )
    AS
    BEGIN
-      
+/*
       SELECT
       dz_swagger3_example_typ(
           p_hash_key         => a.hash_key
@@ -225,7 +225,7 @@ AS
       a.object_type = 'example'
       ORDER BY
       a.object_id;
-   
+*/ NULL;
    END load_components_examples;
    
    -----------------------------------------------------------------------------
@@ -236,7 +236,7 @@ AS
    )
    AS
    BEGIN
-      
+/*
       SELECT
       dz_swagger3_requestbody_typ(
           p_requestbody_id   => a.object_id
@@ -251,7 +251,7 @@ AS
       a.object_type = 'requestBody'
       ORDER BY
       a.object_id;
-   
+*/ NULL;
    END load_components_requestBodies;
    
    -----------------------------------------------------------------------------
@@ -262,7 +262,7 @@ AS
    )
    AS
    BEGIN
-      
+/*
       SELECT
       dz_swagger3_header_typ(
           p_hash_key         => a.hash_key
@@ -278,7 +278,7 @@ AS
       a.object_type = 'header'
       ORDER BY
       a.object_id;
-   
+*/ NULL;
    END load_components_headers;
    
    -----------------------------------------------------------------------------
@@ -289,7 +289,7 @@ AS
    )
    AS
    BEGIN
-      
+/*
       SELECT
       dz_swagger3_securityScheme_typ(
           p_hash_key         => a.hash_key
@@ -305,7 +305,7 @@ AS
       a.object_type = 'securityScheme'
       ORDER BY
       a.object_id;
-   
+*/ NULL;
    END load_components_securityScheme;
    
    -----------------------------------------------------------------------------
@@ -316,7 +316,7 @@ AS
    )
    AS
    BEGIN
-   
+/*
       SELECT
       dz_swagger3_link_typ(
           p_hash_key         => a.hash_key
@@ -332,7 +332,7 @@ AS
       a.object_type = 'link'
       ORDER BY
       a.object_id;
-   
+*/ NULL;
    END load_components_links;
    
    -----------------------------------------------------------------------------
@@ -342,8 +342,8 @@ AS
       ,p_versionid IN VARCHAR2
    )
    AS
-    BEGIN
-    
+   BEGIN
+/*
       SELECT
       dz_swagger3_callback_typ(
           p_hash_key         => a.hash_key
@@ -359,7 +359,7 @@ AS
       a.object_type = 'callback'
       ORDER BY
       a.object_id;
-   
+*/ NULL;
    END load_components_callbacks;
    
    -----------------------------------------------------------------------------
@@ -395,11 +395,16 @@ AS
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
-      clb_output        CLOB;
-      clb_hash          CLOB;
-      str_pad           VARCHAR2(1 Char);
-      str_pad1          VARCHAR2(1 Char);
-      str_pad2          VARCHAR2(1 Char);
+      clb_output       CLOB;
+      clb_hash         CLOB;
+      str_pad          VARCHAR2(1 Char);
+      str_pad1         VARCHAR2(1 Char);
+      str_pad2         VARCHAR2(1 Char);
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      ary_hidden       MDSYS.SDO_STRING2_ARRAY;
+      
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
       
    BEGIN
       
@@ -436,6 +441,28 @@ AS
          NULL;
       
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.schematyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || ',a.object_hidden '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         ,ary_hidden
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_schemas; 
+         
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -447,21 +474,18 @@ AS
             
          END IF;
       
-         FOR i IN 1 .. self.components_schemas.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            IF self.components_schemas(i).property_list_hidden = 'TRUE'
+            IF ary_hidden(i) = 'TRUE'
             THEN
                NULL;
                
             ELSE
                clb_hash := clb_hash || dz_json_util.pretty(
                    str_pad2 || '"' || dz_swagger3_main.short(
-                      p_object_id   => self.components_schemas(i).schema_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'schema'
-                   ) || '":' || str_pad || self.components_schemas(i).toJSON_component(
-                      p_pretty_print   => p_pretty_print + 2
-                     ,p_force_inline   => p_force_inline
-                   )
+                   ) || '":' || str_pad || ary_clb(i)
                   ,p_pretty_print + 2
                );
                str_pad2 := ',';
@@ -498,6 +522,26 @@ AS
          NULL;
       
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.responsetyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_responses;
+         
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -509,16 +553,13 @@ AS
             
          END IF;
       
-         FOR i IN 1 .. self.components_responses.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || dz_swagger3_main.short(
-                      p_object_id   => self.components_responses(i).response_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'response'
-                ) || '":' || str_pad || self.components_responses(i).toJSON_schema(
-                   p_pretty_print   => p_pretty_print + 2
-                  ,p_force_inline   => p_force_inline
-                )
+                ) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 2
             );
             str_pad2 := ',';
@@ -553,6 +594,28 @@ AS
          NULL;
       
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.parametertyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || ',a.object_hidden '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         ,ary_hidden
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_parameters;
+         
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -564,21 +627,18 @@ AS
             
          END IF;
       
-         FOR i IN 1 .. self.components_parameters.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            IF self.components_parameters(i).parameter_list_hidden = 'TRUE'
+            IF ary_hidden(i) = 'TRUE'
             THEN
                NULL;
                
             ELSE
                clb_hash := clb_hash || dz_json_util.pretty(
                    str_pad2 || '"' || dz_swagger3_main.short(
-                      p_object_id   => self.components_parameters(i).parameter_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'parameter'
-                   ) || '":' || str_pad || self.components_parameters(i).toJSON_schema(
-                      p_pretty_print   => p_pretty_print + 2
-                     ,p_force_inline   => p_force_inline
-                   )
+                   ) || '":' || str_pad || ary_clb(i)
                   ,p_pretty_print + 2
                );
                str_pad2 := ',';
@@ -615,6 +675,26 @@ AS
          NULL;
       
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.exampletyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_examples;
+         
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -626,16 +706,13 @@ AS
             
          END IF;
 
-         FOR i IN 1 .. self.components_examples.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || dz_swagger3_main.short(
-                      p_object_id   => self.components_examples(i).example_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'example'
-                ) || '":' || str_pad || self.components_examples(i).toJSON_schema(
-                   p_pretty_print   => p_pretty_print + 2
-                  ,p_force_inline   => p_force_inline
-                )
+                ) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 2
             );
             str_pad2 := ',';
@@ -670,6 +747,26 @@ AS
          NULL;
       
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.requestbodytyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_requestBodies;
+
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -681,16 +778,13 @@ AS
             
          END IF;
 
-         FOR i IN 1 .. self.components_requestBodies.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || dz_swagger3_main.short(
-                      p_object_id   => self.components_requestBodies(i).requestBody_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'requestBody'
-                ) || '":' || str_pad || self.components_requestBodies(i).toJSON_schema(
-                   p_pretty_print   => p_pretty_print + 2
-                  ,p_force_inline   => p_force_inline
-                )
+                ) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 2
             );
             str_pad2 := ',';
@@ -725,6 +819,26 @@ AS
          NULL;
       
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.headertyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_headers;
+         
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -736,16 +850,13 @@ AS
             
          END IF;
 
-         FOR i IN 1 .. self.components_headers.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || dz_swagger3_main.short(
-                      p_object_id   => self.components_headers(i).header_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'header'
-                ) || '":' || str_pad || self.components_headers(i).toJSON_schema(
-                   p_pretty_print   => p_pretty_print + 2
-                  ,p_force_inline   => p_force_inline
-                )
+                ) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 2
             );
             str_pad2 := ',';
@@ -780,6 +891,26 @@ AS
          NULL;
       
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.securityschemetyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_securitySchemes;
+         
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -791,16 +922,13 @@ AS
             
          END IF;
 
-         FOR i IN 1 .. self.components_securitySchemes.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || dz_swagger3_main.short(
-                      p_object_id   => self.components_securitySchemes(i).scheme_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'securityScheme'
-                ) || '":' || str_pad || self.components_securitySchemes(i).toJSON_schema(
-                   p_pretty_print   => p_pretty_print + 2
-                  ,p_force_inline   => p_force_inline
-                )
+                ) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 2
             );
             str_pad2 := ',';
@@ -835,6 +963,26 @@ AS
          NULL;
       
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.linktyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_links;
+         
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -846,16 +994,13 @@ AS
             
          END IF;
 
-         FOR i IN 1 .. self.components_links.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || dz_swagger3_main.short(
-                      p_object_id   => self.components_links(i).link_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'link'
-                ) || '":' || str_pad || self.components_links(i).toJSON_schema(
-                   p_pretty_print   => p_pretty_print + 2
-                  ,p_force_inline   => p_force_inline
-                )
+                ) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 2
             );
             str_pad2 := ',';
@@ -890,6 +1035,26 @@ AS
          NULL;
       
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.pathtyp.toJSON( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_callbacks;
+         
          str_pad2 := str_pad;
          
          IF p_pretty_print IS NULL
@@ -901,16 +1066,13 @@ AS
             
          END IF;
 
-         FOR i IN 1 .. self.components_callbacks.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
                 str_pad2 || '"' || dz_swagger3_main.short(
-                      p_object_id   => self.components_callbacks(i).callback_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'callback'
-                ) || '":' || str_pad || self.components_callbacks(i).toJSON_schema(
-                   p_pretty_print   => p_pretty_print + 2
-                  ,p_force_inline   => p_force_inline
-                )
+                ) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 2
             );
             str_pad2 := ',';
@@ -961,6 +1123,11 @@ AS
    ) RETURN CLOB
    AS
       clb_output       CLOB;
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      ary_hidden       MDSYS.SDO_STRING2_ARRAY;
+      
+      TYPE clob_table IS TABLE OF CLOB;
+      ary_clb          clob_table;
       
    BEGIN
       
@@ -980,15 +1147,37 @@ AS
          NULL;
 
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.schematyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || ',a.object_hidden '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         ,ary_hidden
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_schemas; 
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'schemas: '
             ,p_pretty_print
             ,'  '
          );
          
-         FOR i IN 1 .. self.components_schemas.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            IF self.components_schemas(i).property_list_hidden = 'TRUE'
+            IF ary_hidden(i) = 'TRUE'
             THEN
                NULL;
                
@@ -996,16 +1185,13 @@ AS
                clb_output := clb_output || dz_json_util.pretty(
                    dz_swagger3_util.yamlq(
                       dz_swagger3_main.short(
-                         p_object_id   => self.components_schemas(i).schema_id
+                         p_object_id   => ary_keys(i)
                         ,p_object_type => 'schema'
                       )
                    ) || ': '
                   ,p_pretty_print + 1
                   ,'  '
-               ) || self.components_schemas(i).toYAML_component(
-                   p_pretty_print   => p_pretty_print + 2
-                  ,p_force_inline   => p_force_inline
-               );
+               ) || ary_clb(i);
                
             END IF;
          
@@ -1024,27 +1210,44 @@ AS
          NULL;
          
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.responsetyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_responses;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'responses: '
             ,p_pretty_print
             ,'  '
          );
          
-         FOR i IN 1 .. self.components_responses.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 dz_swagger3_util.yamlq(
                    dz_swagger3_main.short(
-                      p_object_id   => self.components_responses(i).response_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'response'
                    )
                 ) || ': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_responses(i).toYAML_schema(
-                p_pretty_print   => p_pretty_print + 2
-               ,p_force_inline   => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -1061,15 +1264,37 @@ AS
          NULL;
          
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.parametertyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || ',a.object_hidden '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         ,ary_hidden
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_parameters;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'parameters: '
             ,p_pretty_print
             ,'  '
          );
          
-         FOR i IN 1 .. self.components_parameters.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            IF self.components_parameters(i).parameter_list_hidden = 'TRUE'
+            IF ary_hidden(i) = 'TRUE'
             THEN
                NULL;
                
@@ -1077,16 +1302,13 @@ AS
                clb_output := clb_output || dz_json_util.pretty(
                    dz_swagger3_util.yamlq(
                       dz_swagger3_main.short(
-                         p_object_id   => self.components_parameters(i).parameter_id
+                         p_object_id   => ary_keys(i)
                         ,p_object_type => 'parameter'
                       )
                    ) || ': '
                   ,p_pretty_print + 1
                   ,'  '
-               ) || self.components_parameters(i).toYAML_schema(
-                   p_pretty_print   => p_pretty_print + 2
-                  ,p_force_inline   => p_force_inline
-               );
+               ) || ary_clb(i);
                
             END IF;
          
@@ -1105,6 +1327,26 @@ AS
          NULL;
          
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.exampletyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_examples;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'examples: '
             ,p_pretty_print
@@ -1116,16 +1358,13 @@ AS
             clb_output := clb_output || dz_json_util.pretty(
                 dz_swagger3_util.yamlq(
                    dz_swagger3_main.short(
-                      p_object_id   => self.components_examples(i).example_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'example'
                    )
                 ) || ': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_examples(i).toYAML_schema(
-                p_pretty_print   => p_pretty_print + 2
-               ,p_force_inline   => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -1142,27 +1381,44 @@ AS
          NULL;
          
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.requestbodytyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_requestBodies;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'requestBodies: '
             ,p_pretty_print
             ,'  '
          );
          
-         FOR i IN 1 .. self.components_requestBodies.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 dz_swagger3_util.yamlq(
                    dz_swagger3_main.short(
-                      p_object_id   => self.components_requestBodies(i).requestBody_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'requestBody'
                    )
                 ) || ': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_requestBodies(i).toYAML_schema(
-                p_pretty_print   => p_pretty_print + 2
-               ,p_force_inline   => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -1179,27 +1435,44 @@ AS
          NULL;
          
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.headertyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_headers;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'headers: '
             ,p_pretty_print
             ,'  '
          );
          
-         FOR i IN 1 .. self.components_headers.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 dz_swagger3_util.yamlq(
                    dz_swagger3_main.short(
-                      p_object_id   => self.components_headers(i).header_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'header'
                    )
                 ) || ': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_headers(i).toYAML_schema(
-                p_pretty_print   => p_pretty_print + 2
-               ,p_force_inline   => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -1216,27 +1489,44 @@ AS
          NULL;
          
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.securityschemetyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_securitySchemes;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'securitySchemes: '
             ,p_pretty_print
             ,'  '
          );
          
-         FOR i IN 1 .. self.components_securitySchemes.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 dz_swagger3_util.yamlq(
                    dz_swagger3_main.short(
-                      p_object_id   => self.components_securitySchemes(i).scheme_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'securityScheme'
                    )
                 ) || ': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_securitySchemes(i).toYAML_schema(
-                p_pretty_print   => p_pretty_print + 2
-               ,p_force_inline   => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -1253,27 +1543,44 @@ AS
          NULL;
          
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.linktyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_links;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'links: '
             ,p_pretty_print
             ,'  '
          );
          
-         FOR i IN 1 .. self.components_links.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 dz_swagger3_util.yamlq(
                    dz_swagger3_main.short(
-                      p_object_id   => self.components_links(i).link_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'link'
                    )
                 ) || ': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_links(i).toYAML_schema(
-                p_pretty_print   => p_pretty_print + 2
-               ,p_force_inline   => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
@@ -1290,27 +1597,44 @@ AS
          NULL;
          
       ELSE
+         EXECUTE IMMEDIATE
+            'SELECT '
+         || ' a.pathtyp.toYAML( '
+         || '   p_pretty_print   => :p01 + 2 '
+         || '  ,p_force_inline   => :p02 '
+         || ' ) '
+         || ',a.object_key '
+         || 'FROM '
+         || 'dz_swagger3_xobjects a '
+         || 'WHERE '
+         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || 'ORDER BY a.ordering_key '
+         BULK COLLECT INTO 
+          ary_clb
+         ,ary_keys
+         USING
+          p_pretty_print
+         ,p_force_inline
+         ,self.components_callbacks;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
              'callbacks: '
             ,p_pretty_print
             ,'  '
          );
          
-         FOR i IN 1 .. self.components_callbacks.COUNT
+         FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
                 dz_swagger3_util.yamlq(
                    dz_swagger3_main.short(
-                      p_object_id   => self.components_callbacks(i).callback_id
+                      p_object_id   => ary_keys(i)
                      ,p_object_type => 'callback'
                    )
                 ) || ': '
                ,p_pretty_print + 1
                ,'  '
-            ) || self.components_callbacks(i).toYAML_schema(
-                p_pretty_print   => p_pretty_print + 2
-               ,p_force_inline   => p_force_inline
-            );
+            ) || ary_clb(i);
          
          END LOOP;
          
