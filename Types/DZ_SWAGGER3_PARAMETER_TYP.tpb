@@ -21,37 +21,44 @@ AS
    ) RETURN SELF AS RESULT
    AS      
    BEGIN
-   /*
+      
+      --------------------------------------------------------------------------
+      -- Step 10 
+      -- Load the parameter self and schema id
+      --------------------------------------------------------------------------
       BEGIN
          SELECT
-         dz_swagger3_parameter_typ(
-             p_hash_key                   => a.parameter_name
-            ,p_parameter_id               => a.parameter_id
-            ,p_parameter_name             => a.parameter_name
-            ,p_parameter_in               => a.parameter_in
-            ,p_parameter_description      => a.parameter_description
-            ,p_parameter_required         => a.parameter_required
-            ,p_parameter_deprecated       => a.parameter_deprecated
-            ,p_parameter_allowEmptyValue  => a.parameter_allowEmptyValue
-            ,p_parameter_style            => a.parameter_style
-            ,p_parameter_explode          => a.parameter_explode
-            ,p_parameter_allowReserved    => a.parameter_allowReserved
-            ,p_parameter_schema           => dz_swagger3_schema_typ(
-                p_hash_key                   => NULL
-               ,p_schema_id                  => a.parameter_schema_id
-               ,p_required                   => NULL
-               ,p_versionid                  => p_versionid
-               ,p_ref_brake                  => p_ref_brake
-             )
-            ,p_parameter_example_string   => a.parameter_example_string
-            ,p_parameter_example_number   => a.parameter_example_number
-            ,p_parameter_examples         => NULL
-            ,p_parameter_force_inline     => a.parameter_force_inline
-            ,p_parameter_list_hidden      => a.parameter_list_hidden
-            ,p_parameter_requestbody_flag => NULL
-            ,p_load_components            => p_load_components
-         )
-         INTO SELF
+          a.parameter_id
+         ,a.parameter_name
+         ,a.parameter_in
+         ,a.parameter_description
+         ,a.parameter_required
+         ,a.parameter_deprecated
+         ,a.parameter_allowEmptyValue
+         ,a.parameter_style
+         ,a.parameter_explode
+         ,a.parameter_allowReserved
+         ,a.parameter_schema_id
+         ,a.parameter_example_string
+         ,a.parameter_example_number
+         ,a.parameter_force_inline
+         ,a.parameter_list_hidden
+         INTO
+          self.parameter_id
+         ,self.parameter_name
+         ,self.parameter_in
+         ,self.parameter_description
+         ,self.parameter_required
+         ,self.parameter_deprecated
+         ,self.parameter_allowEmptyValue
+         ,self.parameter_style
+         ,self.parameter_explode
+         ,self.parameter_allowReserved
+         ,self.parameter_schema 
+         ,self.parameter_example_string
+         ,self.parameter_example_number
+         ,self.parameter_force_inline
+         ,self.parameter_list_hidden
          FROM
          dz_swagger3_parameter a
          WHERE
@@ -71,16 +78,28 @@ AS
             RAISE;
             
       END;
-*/
-      RETURN;
       
+      --------------------------------------------------------------------------
+      -- Step 20 
+      -- Load any example ids
+      --------------------------------------------------------------------------
+      SELECT
+      a.example_id
+      BULK COLLECT INTO self.parameter_examples
+      FROM
+      dz_swagger3_parent_example_map a
+      WHERE
+          a.parent_id = p_parameter_id
+      AND a.versionid = p_versionid
+      ORDER BY
+      a.example_order;
+
    END;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
-       p_hash_key                   IN  VARCHAR2
-      ,p_parameter_id               IN  VARCHAR2
+       p_parameter_id               IN  VARCHAR2
       ,p_parameter_name             IN  VARCHAR2
       ,p_parameter_in               IN  VARCHAR2
       ,p_parameter_description      IN  VARCHAR2
@@ -98,6 +117,7 @@ AS
       ,p_parameter_list_hidden      IN  VARCHAR2
       ,p_parameter_requestbody_flag IN  VARCHAR2 DEFAULT 'FALSE'
       ,p_load_components            IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_versionid                  IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -119,21 +139,45 @@ AS
       self.parameter_force_inline     := p_parameter_force_inline;
       self.parameter_list_hidden      := p_parameter_list_hidden;
       self.parameter_requestbody_flag := p_parameter_requestbody_flag;
-      /*
-      --------------------------------------------------------------------------
-      IF self.doREF() = 'TRUE'
-      AND p_load_components = 'TRUE'
-      THEN
-         dz_swagger3_main.insert_component(
-             p_object_id   => p_parameter_id
-            ,p_object_type => 'parameter'
-         );
-         
-      END IF;
- */
+      self.versionid                  := p_versionid;
+
       RETURN; 
       
    END dz_swagger3_parameter_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER PROCEDURE traverse
+   AS
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Load the parameter schema
+      --------------------------------------------------------------------------
+      dz_swagger3_loader.schematyp_loader(
+          p_parent_id    => self.parameter_id
+         ,p_children_ids => MDSYS.SDO_STRING2_ARRAY(self.parameter_schema)
+         ,p_versionid    => self.versionid
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Load the examples
+      --------------------------------------------------------------------------
+      IF  self.parameter_examples IS NOT NULL
+      AND self.parameter_examples.COUNT > 0
+      THEN
+         dz_swagger3_loader.exampletyp_loader(
+             p_parent_id    => self.parameter_id
+            ,p_children_ids => self.parameter_examples
+            ,p_versionid    => self.versionid
+         );
+         
+      END IF;
+         
+
+   END traverse;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -1006,51 +1050,6 @@ AS
       RETURN clb_output;
       
    END toYAML_ref;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-   BEGIN
-   
-      INSERT INTO dz_swagger3_xrelates(
-          parent_object_id
-         ,child_object_id
-         ,child_object_type_id
-      )
-      SELECT
-       p_parent_id
-      ,a.column_value
-      ,'extrdocs'
-      FROM
-      TABLE(p_children_ids) a;
-
-      EXECUTE IMMEDIATE 
-      'INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,extrdocstyp
-          ,ordering_key
-      )
-      SELECT
-       a.column_value
-      ,''extrdocstyp''
-      ,dz_swagger3_extrdocs_typ(
-          p_externaldoc_id => a.column_value
-         ,p_versionid      => :p01
-       )
-      ,10
-      FROM 
-      TABLE(:p02) a'
-      USING p_versionid,p_children_ids;
-      
-      COMMIT;
-
-   END;
    
 END;
 /

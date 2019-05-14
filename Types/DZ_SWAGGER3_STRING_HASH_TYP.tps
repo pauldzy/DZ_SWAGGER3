@@ -3,6 +3,7 @@ AUTHID DEFINER
 AS OBJECT (
     hash_key            VARCHAR2(255 Char)
    ,string_value        VARCHAR2(4000 Char)
+   ,versionid           VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -14,7 +15,12 @@ AS OBJECT (
    ,CONSTRUCTOR FUNCTION dz_swagger3_string_hash_typ(
        p_hash_key           IN  VARCHAR2
       ,p_string_value       IN  VARCHAR2
+      ,p_versionid          IN  VARCHAR2
    ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER PROCEDURE traverse
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -41,14 +47,6 @@ AS OBJECT (
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
 
 );
 /

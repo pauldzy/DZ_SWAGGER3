@@ -14,8 +14,7 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_schema_id               IN  VARCHAR2
+       p_schema_id               IN  VARCHAR2
       ,p_required                IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
@@ -25,86 +24,95 @@ AS
       str_items_schema_id  VARCHAR2(255 Char);
       
    BEGIN
-/*
+   
       --------------------------------------------------------------------------
       -- Step 10
       -- Load the easy items using constructor
       --------------------------------------------------------------------------
-      BEGIN
-         SELECT
-          dz_swagger3_schema_typ(
-             p_schema_id               => a.schema_id
-            ,p_schema_category         => a.schema_category
-            ,p_schema_title            => a.schema_title
-            ,p_schema_type             => a.schema_type
-            ,p_schema_description      => a.schema_description
-            ,p_schema_format           => a.schema_format
-            ,p_schema_nullable         => a.schema_nullable
-            ,p_schema_discriminator    => a.schema_discriminator
-            ,p_schema_readonly         => a.schema_readonly
-            ,p_schema_writeonly        => a.schema_writeonly
-            ,p_schema_externalDocs     => dz_swagger3_extrdocs_typ(
-                p_externaldoc_id          => a.schema_externaldocs_id
-               ,p_versionid               => p_versionid
-             )
-            ,p_schema_example_string   => a.schema_example_string
-            ,p_schema_example_number   => a.schema_example_number
-            ,p_schema_deprecated       => a.schema_deprecated 
-            ,p_schema_default_string   => a.schema_default_string
-            ,p_schema_default_number   => a.schema_default_number
-            ,p_schema_multipleOf       => a.schema_multipleOf
-            ,p_schema_minimum          => a.schema_minimum
-            ,p_schema_exclusiveMinimum => a.schema_exclusiveMinimum
-            ,p_schema_maximum          => a.schema_maximum 
-            ,p_schema_exclusiveMaximum => a.schema_exclusiveMaximum
-            ,p_schema_minLength        => a.schema_minLength
-            ,p_schema_maxLength        => a.schema_maxLength
-            ,p_schema_pattern          => a.schema_pattern
-            ,p_schema_minItems         => a.schema_minItems
-            ,p_schema_maxItems         => a.schema_maxItems
-            ,p_schema_uniqueItems      => a.schema_uniqueItems 
-            ,p_schema_minProperties    => a.schema_minProperties
-            ,p_schema_maxProperties    => a.schema_maxProperties
-            ,p_xml_name                => a.xml_name
-            ,p_xml_namespace           => a.xml_namespace
-            ,p_xml_prefix              => a.xml_prefix
-            ,p_xml_attribute           => a.xml_attribute
-            ,p_xml_wrapped             => a.xml_wrapped
-            ,p_schema_force_inline     => a.schema_force_inline
-            ,p_property_list_hidden    => a.property_list_hidden
-            ,p_schema_required         => p_required
-            ,p_load_components         => p_load_components
-          )
-         ,a.schema_items_schema_id
-         INTO
-          SELF
-         ,str_items_schema_id
-         FROM
-         dz_swagger3_schema a
-         WHERE
-             a.versionid = p_versionid
-         AND a.schema_id = p_schema_id;
-      
-      EXCEPTION
-         WHEN NO_DATA_FOUND
-         THEN
-            RAISE_APPLICATION_ERROR(-20001,'missing ' || p_schema_id);
-            --RETURN;
-             
-         WHEN OTHERS
-         THEN
-            RAISE;
-            
-      END;
-      
+      SELECT
+       a.schema_id
+      ,a.schema_category
+      ,a.schema_title
+      ,a.schema_type
+      ,a.schema_description
+      ,a.schema_format
+      ,a.schema_nullable
+      ,a.schema_discriminator
+      ,a.schema_readonly
+      ,a.schema_writeonly
+      ,a.schema_externaldocs_id
+      ,a.schema_example_string
+      ,a.schema_example_number
+      ,a.schema_deprecated
+      ,a.schema_items_schema_id
+      ,a.schema_default_string
+      ,a.schema_default_number
+      ,a.schema_multipleOf
+      ,a.schema_minimum
+      ,a.schema_exclusiveMinimum
+      ,a.schema_maximum 
+      ,a.schema_exclusiveMaximum
+      ,a.schema_minLength
+      ,a.schema_maxLength
+      ,a.schema_pattern
+      ,a.schema_minItems
+      ,a.schema_maxItems
+      ,a.schema_uniqueItems 
+      ,a.schema_minProperties
+      ,a.schema_maxProperties
+      ,a.xml_name
+      ,a.xml_namespace
+      ,a.xml_prefix
+      ,a.xml_attribute
+      ,a.xml_wrapped
+      ,a.schema_force_inline
+      ,a.property_list_hidden
+      INTO
+       self.schema_id
+      ,self.schema_category
+      ,self.schema_title
+      ,self.schema_type
+      ,self.schema_description
+      ,self.schema_format
+      ,self.schema_nullable
+      ,self.schema_discriminator
+      ,self.schema_readonly
+      ,self.schema_writeonly
+      ,self.schema_externaldocs
+      ,self.schema_example_string
+      ,self.schema_example_number
+      ,self.schema_deprecated
+      ,self.schema_items_schema
+      ,self.schema_default_string
+      ,self.schema_default_number
+      ,self.schema_multipleOf
+      ,self.schema_minimum
+      ,self.schema_exclusiveMinimum
+      ,self.schema_maximum 
+      ,self.schema_exclusiveMaximum
+      ,self.schema_minLength
+      ,self.schema_maxLength
+      ,self.schema_pattern
+      ,self.schema_minItems
+      ,self.schema_maxItems
+      ,self.schema_uniqueItems 
+      ,self.schema_minProperties
+      ,self.schema_maxProperties
+      ,self.xml_name
+      ,self.xml_namespace
+      ,self.xml_prefix
+      ,self.xml_attribute
+      ,self.xml_wrapped
+      ,self.schema_force_inline
+      ,self.property_list_hidden
+      FROM
+      dz_swagger3_schema a
+      WHERE
+          a.versionid = p_versionid
+      AND a.schema_id = p_schema_id;
+
       --------------------------------------------------------------------------
       -- Step 20
-      -- Add hash key 
-      --------------------------------------------------------------------------
-      self.hash_key        := p_hash_key;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
       -- Collect the enumerations
       --------------------------------------------------------------------------
       SELECT
@@ -128,56 +136,45 @@ AS
           a.versionid = p_versionid
       AND a.schema_id = p_schema_id
       AND a.enum_number IS NOT NULL;
-      
+
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 30
       -- Use schema category to more efficiently search for children schemas
       --------------------------------------------------------------------------
-      IF self.schema_category = 'object'
-      THEN
-         self.addProperties(
-             p_versionid       => p_versionid
-            ,p_ref_brake       => p_ref_brake
-         );
+      SELECT
+      a.property_schema_id 
+      BULK COLLECT INTO self.schema_properties
+      FROM
+      dz_swagger3_schema_prop_map a
+      JOIN
+      dz_swagger3_schema b
+      ON
+          a.versionid          = b.versionid
+      AND a.property_schema_id = b.schema_id
+      WHERE
+          a.versionid        = p_versionid
+      AND a.parent_schema_id = self.schema_id
+      ORDER BY
+      a.property_order;
       
-      ELSIF self.schema_category = 'array'
-      AND str_items_schema_id IS NOT NULL
-      THEN
-         self.addItemsSchema(
-             p_items_schema_id => str_items_schema_id
-            ,p_versionid       => p_versionid
-            ,p_ref_brake       => p_ref_brake
-         );
-         
-      ELSIF self.schema_category = 'combine'
-      THEN
-         self.addCombined(
-            p_versionid        => p_versionid
-            ,p_ref_brake       => p_ref_brake
-         );
-      
-      ELSIF self.schema_category IS NULL
-      THEN
-         self.addProperties(
-             p_versionid       => p_versionid
-            ,p_ref_brake       => p_ref_brake
-         );
-         
-         self.addItemsSchema(
-             p_items_schema_id => str_items_schema_id
-            ,p_versionid       => p_versionid
-            ,p_ref_brake       => p_ref_brake
-         );
-         
-         self.addCombined(
-             p_versionid       => p_versionid
-            ,p_ref_brake       => p_ref_brake
-         );
-      
-      END IF;
-*/
+      SELECT
+      a.combine_schema_id 
+      BULK COLLECT INTO self.combine_schemas
+      FROM
+      dz_swagger3_schema_combine_map a
+      JOIN
+      dz_swagger3_schema b
+      ON
+          a.versionid         = b.versionid
+      AND a.combine_schema_id = b.schema_id
+      WHERE
+          a.versionid         = p_versionid
+      AND a.schema_id         = self.schema_id
+      ORDER BY
+      a.combine_order;  
+
       --------------------------------------------------------------------------
-      -- Step 50
+      -- Step 40
       -- Return completed object
       --------------------------------------------------------------------------
       RETURN;
@@ -225,6 +222,7 @@ AS
       ,p_property_list_hidden    IN  VARCHAR2
       ,p_schema_required         IN  VARCHAR2
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -269,19 +267,8 @@ AS
       self.property_list_hidden    := p_property_list_hidden;
       -----
       self.schema_required         := p_schema_required;
-/*
-      --------------------------------------------------------------------------
-      IF self.doREF() = 'TRUE'
-      AND p_load_components = 'TRUE'
-      THEN
-         dz_swagger3_main.insert_component(
-             p_object_id       => p_schema_id
-            ,p_object_type     => 'schema'
-            ,p_schema_required => p_schema_required
-         );
-         
-      END IF;
-*/
+      self.versionid               := p_versionid;
+
       RETURN; 
       
    END dz_swagger3_schema_typ;
@@ -330,6 +317,7 @@ AS
       ,p_schema_force_inline     IN  VARCHAR2
       ,p_property_list_hidden    IN  VARCHAR2
       ,p_combine_schemas         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_schema_nf_list
+      ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -377,6 +365,7 @@ AS
       self.property_list_hidden    := p_property_list_hidden;
       -----
       self.combine_schemas         := p_combine_schemas;
+      self.versionid               := p_versionid;
       
       RETURN; 
       
@@ -385,12 +374,12 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
-       p_parameter               IN  VARCHAR2 --dz_swagger3_parameter_typ
+       p_parameter               IN  dz_swagger3_parameter_typ
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    AS
    BEGIN
-   /*
+/*
       SELF := TREAT(p_parameter.parameter_schema AS dz_swagger3_schema_typ);
       self.schema_id             := 'rb.' || p_parameter.parameter_id;
       self.schema_title          := p_parameter.parameter_id;
@@ -406,143 +395,76 @@ AS
          RAISE_APPLICATION_ERROR(-20001,'err');
          
       END IF;
-      
-      --------------------------------------------------------------------------
-      IF self.doREF() = 'TRUE'
-      AND p_load_components = 'TRUE'
-      THEN
-         dz_swagger3_main.insert_component(
-             p_object_id       => p_parameter.parameter_id
-            ,p_object_type     => 'rbparameter'
-            ,p_schema_required => self.schema_required
-         );
-         
-      END IF;
-   */
+*/
       RETURN; 
       
    END dz_swagger3_schema_typ;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER PROCEDURE addItemsSchema(
-       SELF                      IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_items_schema_id         IN  VARCHAR2
-      ,p_versionid               IN  VARCHAR2
-      ,p_ref_brake               IN  VARCHAR2
-   )
+   MEMBER PROCEDURE traverse
    AS
-      str_ref_brake VARCHAR2(255 Char) := p_ref_brake;
-      
    BEGIN
       
-      IF p_ref_brake = 'TRUE'
-      AND self.doREF() = 'TRUE'
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Load the external docs
+      --------------------------------------------------------------------------
+      IF self.schema_externalDocs IS NOT NULL
       THEN
-         NULL;
-        
-      ELSE
-         IF str_ref_brake = 'FIRE'
-         THEN
-            str_ref_brake := 'TRUE';
-            
-         END IF;
-         /*
-         self.schema_items_schema := dz_swagger3_schema_typ(
-             p_hash_key        => NULL
-            ,p_schema_id       => p_items_schema_id
-            ,p_required        => NULL
-            ,p_versionid       => p_versionid
-            ,p_ref_brake       => str_ref_brake
+         dz_swagger3_loader.extrdocstyp_loader(
+             p_parent_id    => self.schema_id
+            ,p_children_ids => MDSYS.SDO_STRING2_ARRAY(self.schema_externalDocs)
+            ,p_versionid    => self.versionid
          );
-      */
+      
       END IF;
-   
-   END addItemsSchema;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER PROCEDURE addProperties(
-       SELF                IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_versionid         IN  VARCHAR2
-      ,p_ref_brake         IN  VARCHAR2
-   )
-   AS
-      str_ref_brake VARCHAR2(255 Char) := p_ref_brake;
       
-   BEGIN
-      
-      IF p_ref_brake = 'TRUE'
-      AND self.doREF() = 'TRUE'
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Load the items schema
+      --------------------------------------------------------------------------
+      IF self.schema_items_schema IS NOT NULL
       THEN
-         NULL;
-        
-      ELSE
-         IF str_ref_brake = 'FIRE'
-         THEN
-            str_ref_brake := 'TRUE';
-            
-         END IF;
-         /*
-         SELECT
-         dz_swagger3_schema_typ(
-             p_hash_key        => a.property_name
-            ,p_schema_id       => a.property_schema_id 
-            ,p_required        => a.property_required
-            ,p_versionid       => p_versionid 
-            ,p_ref_brake       => str_ref_brake
-         )
-         BULK COLLECT INTO self.schema_properties
-         FROM
-         dz_swagger3_schema_prop_map a
-         JOIN
-         dz_swagger3_schema b
-         ON
-             a.versionid          = b.versionid
-         AND a.property_schema_id = b.schema_id
-         WHERE
-             a.versionid        = p_versionid
-         AND a.parent_schema_id = self.schema_id
-         ORDER BY
-         a.property_order;
-      */
+         dz_swagger3_loader.schematyp_loader(
+             p_parent_id    => self.schema_id
+            ,p_children_ids => MDSYS.SDO_STRING2_ARRAY(self.schema_items_schema)
+            ,p_versionid    => self.versionid
+         );
+      
       END IF;
       
-   END addProperties; 
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Load the properties schemas
+      --------------------------------------------------------------------------
+      IF  self.schema_properties IS NOT NULL
+      AND self.schema_properties.COUNT > 0
+      THEN
+         dz_swagger3_loader.schematyp_loader(
+             p_parent_id    => self.schema_id
+            ,p_children_ids => self.schema_properties
+            ,p_versionid    => self.versionid
+         );
       
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER PROCEDURE addCombined(
-       SELF                IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_versionid         IN  VARCHAR2
-      ,p_ref_brake         IN  VARCHAR2
-   )
-   AS
-   BEGIN
-      /*
-      SELECT
-      dz_swagger3_schema_typ(
-          p_hash_key        => a.combine_keyword
-         ,p_schema_id       => a.combine_schema_id 
-         ,p_required        => NULL
-         ,p_versionid       => p_versionid
-         ,p_ref_brake       => p_ref_brake
-      )
-      BULK COLLECT INTO self.combine_schemas
-      FROM
-      dz_swagger3_schema_combine_map a
-      JOIN
-      dz_swagger3_schema b
-      ON
-          a.versionid         = b.versionid
-      AND a.combine_schema_id = b.schema_id
-      WHERE
-          a.versionid         = p_versionid
-      AND a.schema_id         = self.schema_id
-      ORDER BY
-      a.combine_order;          
-   */ NULL;
-   END addCombined;
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Load the combine schemas
+      --------------------------------------------------------------------------
+      IF  self.combine_schemas IS NOT NULL
+      AND self.combine_schemas.COUNT > 0
+      THEN
+         dz_swagger3_loader.schematyp_loader(
+             p_parent_id    => self.schema_id
+            ,p_children_ids => self.combine_schemas
+            ,p_versionid    => self.versionid
+         );
+         
+      END IF;
+
+   END traverse;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -2294,51 +2216,6 @@ AS
       RETURN clb_output;
       
    END toYAML_combine;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-   BEGIN
-   
-      INSERT INTO dz_swagger3_xrelates(
-          parent_object_id
-         ,child_object_id
-         ,child_object_type_id
-      )
-      SELECT
-       p_parent_id
-      ,a.column_value
-      ,'extrdocs'
-      FROM
-      TABLE(p_children_ids) a;
-
-      EXECUTE IMMEDIATE 
-      'INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,extrdocstyp
-          ,ordering_key
-      )
-      SELECT
-       a.column_value
-      ,''extrdocstyp''
-      ,dz_swagger3_extrdocs_typ(
-          p_externaldoc_id => a.column_value
-         ,p_versionid      => :p01
-       )
-      ,10
-      FROM 
-      TABLE(:p02) a'
-      USING p_versionid,p_children_ids;
-      
-      COMMIT;
-
-   END;
    
 END;
 /

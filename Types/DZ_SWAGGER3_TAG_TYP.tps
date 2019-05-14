@@ -5,6 +5,7 @@ AS OBJECT (
    ,tag_name            VARCHAR2(255 Char)
    ,tag_description     VARCHAR2(4000 Char)
    ,tag_externalDocs    VARCHAR2(40 Char) --dz_swagger3_extrdocs_typ
+   ,versionid           VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -19,7 +20,12 @@ AS OBJECT (
       ,p_tag_description    IN  VARCHAR2
       ,p_tag_externalDocs   IN  VARCHAR2 --dz_swagger3_extrdocs_typ
       ,p_load_components    IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_versionid          IN  VARCHAR2
    ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER PROCEDURE traverse
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -41,14 +47,6 @@ AS OBJECT (
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
 
 );
 /

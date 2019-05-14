@@ -51,6 +51,7 @@ AS OBJECT (
    ,combine_schemas          MDSYS.SDO_STRING2_ARRAY --dz_swagger3_schema_nf_list
    -----
    ,inject_jsonschema        VARCHAR2(5 Char)
+   ,versionid                VARCHAR2(255 Char)
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -60,8 +61,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_schema_id               IN  VARCHAR2
+       p_schema_id               IN  VARCHAR2
       ,p_required                IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
@@ -109,6 +109,7 @@ AS OBJECT (
       ,p_property_list_hidden    IN  VARCHAR2
       ,p_schema_required         IN  VARCHAR2
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
@@ -155,39 +156,19 @@ AS OBJECT (
       ,p_schema_force_inline     IN  VARCHAR2
       ,p_property_list_hidden    IN  VARCHAR2
       ,p_combine_schemas         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_schema_nf_list
+      ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
-       p_parameter               IN  VARCHAR2 --dz_swagger3_parameter_typ
+       p_parameter               IN  dz_swagger3_parameter_typ
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE addItemsSchema(
-       SELF                      IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_items_schema_id         IN  VARCHAR2
-      ,p_versionid               IN  VARCHAR2
-      ,p_ref_brake               IN  VARCHAR2
-   )
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE addProperties(
-       SELF                      IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_versionid               IN  VARCHAR2
-      ,p_ref_brake               IN  VARCHAR2
-   )
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER PROCEDURE addCombined(
-       SELF                      IN  OUT NOCOPY dz_swagger3_schema_typ
-      ,p_versionid               IN  VARCHAR2
-      ,p_ref_brake               IN  VARCHAR2
-   )
+   ,MEMBER PROCEDURE traverse
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -293,14 +274,6 @@ AS OBJECT (
       ,p_final_linefeed          IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
    
 );
 /

@@ -26,9 +26,15 @@ AS
       int_counter                  PLS_INTEGER;
 
    BEGIN 
-      
+   
       --------------------------------------------------------------------------
       -- Step 10
+      -- Set up the object
+      --------------------------------------------------------------------------
+      self.versionid := p_versionid;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
       -- Load the operation type
       --------------------------------------------------------------------------
       SELECT
@@ -53,76 +59,36 @@ AS
           a.versionid    = p_versionid
       AND a.operation_id = p_operation_id;
       
-      self.operation_tags  := NULL;
       self.operation_parameters  := NULL;
       self.operation_requestBody  := NULL;
       self.operation_responses  := NULL;
       self.operation_callbacks  := NULL;
       self.operation_security  := NULL;
       self.operation_servers := NULL;
-/*
       
       --------------------------------------------------------------------------
-      -- Step 20
+      -- Step 30
       -- Add any required tags
       --------------------------------------------------------------------------
       SELECT
-      dz_swagger3_tag_typ(
-          p_tag_id           => a.tag_id
-         ,p_tag_name         => a.tag_name
-         ,p_tag_description  => b.tag_description
-         ,p_tag_externalDocs => dz_swagger3_extrdocs_typ(
-             p_externaldoc_id   => b.tag_externaldocs_id
-            ,p_versionid        => p_versionid
-         )
-      )
+      a.tag_id
       BULK COLLECT INTO self.operation_tags
       FROM
       dz_swagger3_operation_tag_map a
-      LEFT JOIN
-      dz_swagger3_tag b
-      ON
-          a.versionid = b.versionid
-      AND a.tag_id = b.tag_id
       WHERE
           a.versionid    = p_versionid
       AND a.operation_id = p_operation_id
       ORDER by
-      a.tag_name;
-      
+      a.tag_order;
+
+/*
       --------------------------------------------------------------------------
       -- Step 30
       -- Add any parameters
       --------------------------------------------------------------------------
       SELECT
-      dz_swagger3_parameter_typ(
-          p_hash_key                   => a.parameter_name
-         ,p_parameter_id               => a.parameter_id
-         ,p_parameter_name             => a.parameter_name
-         ,p_parameter_in               => a.parameter_in
-         ,p_parameter_description      => a.parameter_description
-         ,p_parameter_required         => a.parameter_required
-         ,p_parameter_deprecated       => a.parameter_deprecated
-         ,p_parameter_allowEmptyValue  => a.parameter_allowEmptyValue
-         ,p_parameter_style            => a.parameter_style
-         ,p_parameter_explode          => a.parameter_explode
-         ,p_parameter_allowReserved    => a.parameter_allowReserved
-         ,p_parameter_schema           => dz_swagger3_schema_typ(
-             p_hash_key                   => NULL 
-            ,p_schema_id                  => a.parameter_schema_id
-            ,p_required                   => NULL
-            ,p_versionid                  => p_versionid
-            ,p_ref_brake                  => p_ref_brake
-          )
-         ,p_parameter_example_string   => a.parameter_example_string
-         ,p_parameter_example_number   => a.parameter_example_number
-         ,p_parameter_examples         => NULL
-         ,p_parameter_force_inline     => a.parameter_force_inline
-         ,p_parameter_list_hidden      => a.parameter_list_hidden
-         ,p_parameter_requestbody_flag => b.requestbody_flag
-         ,p_load_components            => p_load_components
-      )
-      BULK COLLECT INTO ary_filtered_parms
+      a.parameter_id
+      BULK COLLECT INTO self.operation_parameters
       FROM
       dz_swagger3_parameter a
       JOIN
@@ -136,7 +102,7 @@ AS
       ORDER BY
        b.parameter_order
       ,a.parameter_name;
-      
+
       --------------------------------------------------------------------------
       -- Step 40
       -- Add a normal request body if requested
@@ -269,6 +235,7 @@ AS
       ,p_operation_deprecated      IN  VARCHAR2
       ,p_operation_security        IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_security_req_list
       ,p_operation_servers         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_list
+      ,p_versionid                 IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -287,10 +254,34 @@ AS
       self.operation_deprecated      := p_operation_deprecated;
       self.operation_security        := p_operation_security;
       self.operation_servers         := p_operation_servers;
+      self.versionid                 := p_versionid;
  
       RETURN; 
       
    END dz_swagger3_operation_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER PROCEDURE traverse
+   AS
+   BEGIN
+
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Load the tags
+      --------------------------------------------------------------------------
+      IF  self.operation_tags IS NOT NULL
+      AND self.operation_tags.COUNT > 0
+      THEN
+         dz_swagger3_loader.tagtyp_loader(
+             p_parent_id    => self.operation_id
+            ,p_children_ids => self.operation_tags
+            ,p_versionid    => self.versionid
+         );
+      
+      END IF;
+
+   END traverse;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -404,12 +395,50 @@ AS
       IF  self.operation_tags IS NOT NULL
       AND self.operation_tags.COUNT > 0
       THEN
+         EXECUTE IMMEDIATE 
+            'SELECT '
+         || 'a.tagtyp.tag_name '
+         || 'FROM dz_swagger3_xobjects a '
+         || 'WHERE '
+         || '    a.object_type_id = ''tagtyp'' '
+         || 'AND a.object_id IN (SELECT * FROM TABLE(:p01))'
+         BULK COLLECT INTO
+         ary_keys
+         USING 
+         self.operation_tags;
+
+         str_pad2 := str_pad;
+         
+         IF p_pretty_print IS NULL
+         THEN
+            clb_hash := dz_json_util.pretty('[',NULL);
+            
+         ELSE
+            clb_hash := dz_json_util.pretty('[',-1);
+            
+         END IF;
+      
+         FOR i IN 1 .. ary_keys.COUNT
+         LOOP
+            clb_hash := clb_hash || dz_json_util.pretty(
+               str_pad2 || '"' || ary_keys(i) || '"'
+               ,p_pretty_print + 2
+            );
+            str_pad2 := ',';
+         
+         END LOOP;
+         
+         clb_hash := clb_hash || dz_json_util.pretty(
+             ']'
+            ,p_pretty_print + 1,NULL,NULL
+         );
+         
          clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'tags'
-               ,self.tags()
-               ,p_pretty_print + 1
-            )
+             str_pad1 || dz_json_main.formatted2json(
+                 'tags'
+                ,clb_hash
+                ,p_pretty_print + 1
+             )
             ,p_pretty_print + 1
          );
          str_pad1 := ',';
@@ -941,18 +970,28 @@ AS
       IF  self.operation_tags IS NOT NULL
       AND self.operation_tags.COUNT > 0
       THEN
+         EXECUTE IMMEDIATE 
+            'SELECT '
+         || 'a.tagtyp.tag_name '
+         || 'FROM dz_swagger3_xobjects a '
+         || 'WHERE '
+         || '    a.object_type_id = ''tagtyp'' '
+         || 'AND a.object_id IN (SELECT * FROM TABLE(:p01))'
+         BULK COLLECT INTO
+         ary_keys
+         USING 
+         self.operation_tags;
+      
          clb_output := clb_output || dz_json_util.pretty_str(
              'tags: '
             ,p_pretty_print + 1
             ,'  '
          );
          
-         ary_keys := self.tags();
-         
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty_str(
-                '- ' || ary_keys(i)
+                '- ' || dz_swagger3_util.yamlq(ary_keys(i))
                ,p_pretty_print + 2
                ,'  '
             );
@@ -1337,57 +1376,6 @@ AS
       RETURN clb_output;
       
    END toYAML;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children            IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-   BEGIN
-   
-      INSERT INTO dz_swagger3_xrelates(
-          parent_object_id
-         ,child_object_id
-         ,child_object_type_id
-      )
-      SELECT
-       p_parent_id
-      ,column_value
-      ,'operation'
-      FROM
-      TABLE(p_children) a
-      WHERE a.column_value IS NOT NULL;
-
-      EXECUTE IMMEDIATE '      
-      INSERT 
-      INTO dz_swagger3_xobjects(
-          object_id
-         ,object_type_id
-         ,operationtyp
-         ,ordering_key 
-      )
-      SELECT
-       a.column_value
-      ,''operationtyp''
-      ,dz_swagger3_operation_typ(
-          p_operation_id => a.column_value
-         ,p_versionid    => :p01
-       )
-      ,rownum * 10
-      FROM
-      TABLE(:p02) a
-      WHERE
-      a.column_value NOT IN (
-         SELECT b.object_id FROM dz_swagger3_xobjects b
-         WHERE b.object_type_id = ''operationtyp''
-      )  
-      AND a.column_value IS NOT NULL '
-      USING p_versionid,p_children;
-
-   END;
    
 END;
 /

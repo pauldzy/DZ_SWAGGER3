@@ -20,6 +20,8 @@ AS
    AS 
    BEGIN 
 
+      self.versionid := p_versionid;
+      
       SELECT
        a.server_url
       ,a.server_description
@@ -43,16 +45,6 @@ AS
       ORDER BY
        a.server_var_order
       ,a.server_var_name;
-      
-      IF self.server_variables.COUNT > 0
-      THEN
-         dz_swagger3_server_var_typ.loader(
-             p_parent_id    => 'server'
-            ,p_children_ids => self.server_variables
-            ,p_versionid    => p_versionid
-         );
-
-      END IF;
   
       RETURN;
       
@@ -64,6 +56,7 @@ AS
        p_server_url         IN  VARCHAR2
       ,p_server_description IN  VARCHAR2
       ,p_server_variables   IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_var_list
+      ,p_versionid          IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS
    BEGIN 
@@ -71,10 +64,34 @@ AS
       self.server_url         := p_server_url;
       self.server_description := p_server_description;
       self.server_variables   := p_server_variables;
+      self.versionid          := p_versionid;
       
       RETURN; 
       
    END dz_swagger3_server_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER PROCEDURE traverse
+   AS
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Load the server vars
+      --------------------------------------------------------------------------
+      IF  self.server_variables IS NOT NULL
+      AND self.server_variables.COUNT > 0
+      THEN
+         dz_swagger3_loader.servervartyp_loader(
+             p_parent_id    => self.server_url
+            ,p_children_ids => self.server_variables
+            ,p_versionid    => self.versionid
+         );
+         
+      END IF;
+
+   END traverse;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -359,56 +376,6 @@ AS
       RETURN clb_output;
       
    END toYAML;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-   BEGIN
-   
-      INSERT INTO dz_swagger3_xrelates(
-          parent_object_id
-         ,child_object_id
-         ,child_object_type_id
-      )
-      SELECT
-       p_parent_id
-      ,a.column_value
-      ,'servertyp'
-      FROM
-      TABLE(p_children_ids) a;
-
-      EXECUTE IMMEDIATE 
-      'INSERT 
-      INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,servertyp
-          ,ordering_key
-      )
-      SELECT
-       a.column_value
-      ,''servertyp''
-      ,dz_swagger3_server_typ(
-          p_server_id   => a.column_value
-         ,p_versionid   => :p01
-       )
-      ,rownum * 10
-      FROM 
-      TABLE(:p02) a 
-      WHERE
-      a.column_value NOT IN (
-         SELECT b.object_id FROM dz_swagger3_xobjects b
-         WHERE b.object_type_id = ''servertyp''
-      )  
-      AND a.column_value IS NOT NULL '
-      USING p_versionid,p_children_ids;
-
-   END;
    
 END;
 /

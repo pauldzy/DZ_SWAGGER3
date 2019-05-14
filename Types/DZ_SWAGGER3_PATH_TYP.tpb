@@ -63,16 +63,13 @@ AS
       WHERE
           a.versionid = p_versionid
       AND a.path_id   = p_path_id;
-      /*
+      
       --------------------------------------------------------------------------
       -- Step 20
       -- Load the server objects on this path
       --------------------------------------------------------------------------
       SELECT
-      dz_swagger3_server_typ(
-          p_server_id    => a.server_id
-         ,p_versionid    => p_versionid
-      )
+      a.server_id
       BULK COLLECT INTO self.path_servers
       FROM
       dz_swagger3_parent_server_map a
@@ -85,33 +82,7 @@ AS
       -- Load the parameter objects on this path
       --------------------------------------------------------------------------
       SELECT
-      dz_swagger3_parameter_typ(
-          p_hash_key                   => a.parameter_name
-         ,p_parameter_id               => a.parameter_id
-         ,p_parameter_name             => a.parameter_name
-         ,p_parameter_in               => a.parameter_in
-         ,p_parameter_description      => a.parameter_description
-         ,p_parameter_required         => a.parameter_required
-         ,p_parameter_deprecated       => a.parameter_deprecated
-         ,p_parameter_allowEmptyValue  => a.parameter_allowEmptyValue
-         ,p_parameter_style            => a.parameter_style
-         ,p_parameter_explode          => a.parameter_explode
-         ,p_parameter_allowReserved    => a.parameter_allowReserved
-         ,p_parameter_schema           => dz_swagger3_schema_typ(
-             p_hash_key                   => NULL 
-            ,p_schema_id                  => a.parameter_schema_id
-            ,p_required                   => NULL
-            ,p_versionid                  => p_versionid
-            ,p_ref_brake                  => p_ref_brake
-          )
-         ,p_parameter_example_string   => a.parameter_example_string
-         ,p_parameter_example_number   => a.parameter_example_number
-         ,p_parameter_examples         => NULL
-         ,p_parameter_force_inline     => a.parameter_force_inline
-         ,p_parameter_list_hidden      => a.parameter_list_hidden
-         ,p_parameter_requestbody_flag => b.requestbody_flag
-         ,p_load_components            => p_load_components
-      )
+      a.parameter_id
       BULK COLLECT INTO self.path_parameters
       FROM
       dz_swagger3_parameter a
@@ -126,7 +97,7 @@ AS
       ORDER BY
        b.parameter_order
       ,a.parameter_name;
-*/
+
       --------------------------------------------------------------------------
       -- Step 40
       -- Return the object
@@ -185,9 +156,9 @@ AS
       -- Step 10
       -- Load the operations
       --------------------------------------------------------------------------
-      dz_swagger3_operation_typ.loader(
-          p_parent_id => self.path_id
-         ,p_children  => MDSYS.SDO_STRING2_ARRAY(
+      dz_swagger3_loader.operationtyp_loader(
+          p_parent_id    => self.path_id
+         ,p_children_ids => MDSYS.SDO_STRING2_ARRAY(
              self.path_get_operation
             ,self.path_put_operation
             ,self.path_post_operation
@@ -197,8 +168,38 @@ AS
             ,self.path_patch_operation
             ,self.path_trace_operation
           )
-         ,p_versionid => self.versionid
+         ,p_versionid    => self.versionid
       );
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Load the servers
+      --------------------------------------------------------------------------
+      IF  self.path_servers IS NOT NULL
+      AND self.path_servers.COUNT > 0
+      THEN
+         dz_swagger3_loader.servertyp_loader(
+             p_parent_id    => self.path_id
+            ,p_children_ids => self.path_servers
+            ,p_versionid    => self.versionid
+         );
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Load the path parameters
+      --------------------------------------------------------------------------
+      IF  self.path_parameters IS NOT NULL
+      AND self.path_parameters.COUNT > 0
+      THEN
+         dz_swagger3_loader.parametertyp_loader(
+             p_parent_id    => self.path_id
+            ,p_children_ids => self.path_parameters
+            ,p_versionid    => self.versionid
+         );
+         
+      END IF;
       
    END traverse;
    
@@ -1149,81 +1150,6 @@ AS
       RETURN clb_output;
       
    END toYAML;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-   BEGIN
-   
-      INSERT INTO dz_swagger3_xrelates(
-          parent_object_id
-         ,child_object_id
-         ,child_object_type_id
-      )
-      SELECT
-       p_parent_id
-      ,a.column_value
-      ,'pathtyp'
-      FROM
-      TABLE(p_children_ids) a
-      WHERE a.column_value IS NOT NULL;
-
-      EXECUTE IMMEDIATE 
-      'INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,pathtyp
-          ,ordering_key
-      )
-      SELECT
-       a.column_value
-      ,''pathtyp''
-      ,dz_swagger3_path_typ(
-          p_path_id    => a.column_value
-         ,p_versionid  => :p01
-       )
-      ,10
-      FROM 
-      TABLE(:p02) a 
-      WHERE 
-      a.column_value NOT IN (
-         SELECT b.object_id FROM dz_swagger3_xobjects b
-         WHERE b.object_type_id = ''pathtyp''
-      )  
-      AND a.column_value IS NOT NULL '
-      USING p_versionid,p_children_ids;
-      
-      EXECUTE IMMEDIATE
-      'BEGIN
-         FOR r IN (
-            SELECT 
-            a.pathtyp 
-            FROM 
-            dz_swagger3_xobjects a
-            WHERE
-            (a.object_id,a.object_type_id) IN (
-               SELECT
-                b.column_value
-               ,''pathtyp''
-               FROM
-               TABLE(:p01) b
-            )
-         )
-         LOOP
-            r.pathtyp.traverse();
-         END LOOP;
-
-      END;'
-      USING p_children_ids;
-      
-      COMMIT;
-      
-   END;
    
 END;
 /

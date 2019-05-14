@@ -18,6 +18,7 @@ AS OBJECT (
    ,parameter_force_inline     VARCHAR2(5 Char)
    ,parameter_list_hidden      VARCHAR2(5 Char)
    ,parameter_requestbody_flag VARCHAR2(5 Char)
+   ,versionid                  VARCHAR2(40 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -36,8 +37,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
-       p_hash_key                   IN  VARCHAR2
-      ,p_parameter_id               IN  VARCHAR2
+       p_parameter_id               IN  VARCHAR2
       ,p_parameter_name             IN  VARCHAR2
       ,p_parameter_in               IN  VARCHAR2
       ,p_parameter_description      IN  VARCHAR2
@@ -55,7 +55,12 @@ AS OBJECT (
       ,p_parameter_list_hidden      IN  VARCHAR2
       ,p_parameter_requestbody_flag IN  VARCHAR2 DEFAULT 'FALSE'
       ,p_load_components            IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_versionid                  IN  VARCHAR2
    ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER PROCEDURE traverse
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -119,14 +124,6 @@ AS OBJECT (
       ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline         IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
 
 );
 /

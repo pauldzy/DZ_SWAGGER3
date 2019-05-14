@@ -94,6 +94,7 @@ AS
       ,p_parameters               IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_parameter_list
       ,p_inline_rb                IN  VARCHAR2
       ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_versionid                IN  VARCHAR2
    ) RETURN SELF AS RESULT
    AS
       int_counter PLS_INTEGER;
@@ -160,35 +161,24 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
-       p_hash_key                 IN  VARCHAR2
-      ,p_requestbody_id           IN  VARCHAR2
+       p_requestbody_id           IN  VARCHAR2
       ,p_requestbody_description  IN  VARCHAR2
       ,p_requestBody_force_inline IN  VARCHAR2
       ,p_requestbody_content      IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_media_list
       ,p_requestbody_required     IN  VARCHAR2
       ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_versionid                IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.hash_key                 := p_hash_key;
       self.requestbody_id           := p_requestbody_id;
       self.requestbody_description  := p_requestbody_description;
       self.requestBody_force_inline := p_requestBody_force_inline;
       self.requestbody_content      := p_requestbody_content;
       self.requestbody_required     := p_requestbody_required;
-      /*
-      --------------------------------------------------------------------------
-      IF  self.doREF() = 'TRUE'
-      AND p_load_components = 'TRUE'
-      THEN
-         dz_swagger3_main.insert_component(
-             p_object_id   => p_requestbody_id
-            ,p_object_type => 'requestBody'
-         );
-         
-      END IF;
-      */
+      self.versionid                := p_versionid;
+
       RETURN; 
       
    END dz_swagger3_requestbody_typ;
@@ -219,7 +209,7 @@ AS
    RETURN VARCHAR2
    AS
    BEGIN
-      RETURN self.hash_key;
+      RETURN self.requestBody_id;
       
    END key;
    
@@ -711,51 +701,6 @@ AS
       RETURN clb_output;
       
    END toYAML_ref;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-   BEGIN
-   
-      INSERT INTO dz_swagger3_xrelates(
-          parent_object_id
-         ,child_object_id
-         ,child_object_type_id
-      )
-      SELECT
-       p_parent_id
-      ,a.column_value
-      ,'extrdocs'
-      FROM
-      TABLE(p_children_ids) a;
-
-      EXECUTE IMMEDIATE 
-      'INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,extrdocstyp
-          ,ordering_key
-      )
-      SELECT
-       a.column_value
-      ,''extrdocstyp''
-      ,dz_swagger3_extrdocs_typ(
-          p_externaldoc_id => a.column_value
-         ,p_versionid      => :p01
-       )
-      ,10
-      FROM 
-      TABLE(:p02) a'
-      USING p_versionid,p_children_ids;
-      
-      COMMIT;
-
-   END;
    
 END;
 /

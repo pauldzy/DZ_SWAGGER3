@@ -84,7 +84,7 @@ AS
       
       IF self.externalDocs IS NOT NULL
       THEN
-         dz_swagger3_extrdocs_typ.loader(
+         dz_swagger3_loader.extrdocstyp_loader(
              p_parent_id    => 'root'
             ,p_children_ids => MDSYS.SDO_STRING2_ARRAY(self.externalDocs)
             ,p_versionid    => str_versionid
@@ -107,7 +107,7 @@ AS
       
       IF self.servers.COUNT > 0
       THEN
-         dz_swagger3_server_typ.loader(
+         dz_swagger3_loader.servertyp_loader(
              p_parent_id    => 'root'
             ,p_children_ids => self.servers
             ,p_versionid    => str_versionid
@@ -171,7 +171,7 @@ AS
       
       IF self.paths.COUNT > 0
       THEN
-         dz_swagger3_path_typ.loader(
+         dz_swagger3_loader.pathtyp_loader(
              p_parent_id    => 'root'
             ,p_children_ids => self.paths
             ,p_versionid    => str_versionid

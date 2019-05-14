@@ -1,13 +1,13 @@
 CREATE OR REPLACE TYPE dz_swagger3_example_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    hash_key              VARCHAR2(255 Char)
-   ,example_id            VARCHAR2(255 Char)
-   ,example_summary       VARCHAR2(255 Char)
-   ,example_description   VARCHAR2(4000 Char)
-   ,example_value_string  VARCHAR2(255 Char)
-   ,example_value_number  NUMBER
-   ,example_externalValue VARCHAR2(255 Char)
+    example_id             VARCHAR2(255 Char)
+   ,example_summary        VARCHAR2(255 Char)
+   ,example_description    VARCHAR2(4000 Char)
+   ,example_value_string   VARCHAR2(255 Char)
+   ,example_value_number   NUMBER
+   ,example_externalValue  VARCHAR2(255 Char)
+   ,versionid              VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -17,8 +17,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_example_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_example_id              IN  VARCHAR2
+       p_example_id              IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
       ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
@@ -27,15 +26,19 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_example_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_example_id              IN  VARCHAR2
+       p_example_id              IN  VARCHAR2
       ,p_example_summary         IN  VARCHAR2
       ,p_example_description     IN  VARCHAR2
       ,p_example_value_string    IN  VARCHAR2
       ,p_example_value_number    IN  NUMBER
       ,p_example_externalValue   IN  VARCHAR2
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER PROCEDURE traverse
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -99,14 +102,6 @@ AS OBJECT (
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
 
 );
 /

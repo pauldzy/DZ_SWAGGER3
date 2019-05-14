@@ -18,6 +18,7 @@ AS
       ,p_enum               IN  MDSYS.SDO_STRING2_ARRAY
       ,p_default_value      IN  VARCHAR2
       ,p_description        IN  VARCHAR2
+      ,p_versionid          IN  VARCHAR2
    ) RETURN SELF AS RESULT
    AS
    BEGIN
@@ -26,10 +27,19 @@ AS
       self.enum              := p_enum;
       self.default_value     := p_default_value;
       self.description       := p_description;
+      self.versionid         := p_versionid;
 
       RETURN;
 
    END dz_swagger3_server_var_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER PROCEDURE traverse
+   AS
+   BEGIN
+      NULL;
+   END traverse;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -245,58 +255,6 @@ AS
       RETURN clb_output;
 
    END toYAML;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-   BEGIN
-   
-      INSERT INTO dz_swagger3_xrelates(
-          parent_object_id
-         ,child_object_id
-         ,child_object_type_id
-      )
-      SELECT
-       p_parent_id
-      ,a.column_value
-      ,'servervartyp'
-      FROM
-      TABLE(p_children_ids) a;
-
-      EXECUTE IMMEDIATE 
-      'INSERT 
-      INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,object_key
-          ,servertyp
-          ,ordering_key
-      )
-      SELECT
-       a.column_value
-      ,''servervartyp''
-      ,a.column_value
-      ,dz_swagger3_server_var_typ(
-          p_server_var_id  => a.column_value
-         ,p_versionid      => :p01
-       )
-      ,rownum * 10
-      FROM 
-      TABLE(:p02) a 
-      WHERE
-      a.column_value NOT IN (
-         SELECT b.object_id FROM dz_swagger3_xobjects b
-         WHERE b.object_type_id = ''servervartyp''
-      )  
-      AND a.column_value IS NOT NULL '
-      USING p_versionid,p_children_ids;
-
-   END;
 
 END;
 /

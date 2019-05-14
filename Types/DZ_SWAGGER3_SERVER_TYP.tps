@@ -4,6 +4,7 @@ AS OBJECT (
     server_url          VARCHAR2(255 Char)
    ,server_description  VARCHAR2(4000 Char)
    ,server_variables    MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_var_list
+   ,versionid           VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -23,7 +24,12 @@ AS OBJECT (
        p_server_url          IN  VARCHAR2
       ,p_server_description  IN  VARCHAR2
       ,p_server_variables    IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_var_list
+      ,p_versionid           IN  VARCHAR2
    ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER PROCEDURE traverse
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -45,14 +51,6 @@ AS OBJECT (
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
 
 );
 /

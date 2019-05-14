@@ -19,6 +19,7 @@ AS
       ,p_tag_description    IN  VARCHAR2
       ,p_tag_externalDocs   IN  VARCHAR2 --dz_swagger3_extrdocs_typ
       ,p_load_components    IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_versionid          IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -27,21 +28,33 @@ AS
       self.tag_name          := p_tag_name;
       self.tag_description   := p_tag_description;
       self.tag_externalDocs  := p_tag_externalDocs;
-/*
-      --------------------------------------------------------------------------
-      IF  self.tag_id IS NOT NULL
-      AND p_load_components = 'TRUE'
-      THEN
-         dz_swagger3_main.insert_component(
-             p_object_id   => p_tag_id
-            ,p_object_type => 'tag'
-         );
-         
-      END IF;
-*/ 
+      self.versionid         := p_versionid;
+
       RETURN; 
       
    END dz_swagger3_tag_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER PROCEDURE traverse
+   AS
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Load the external docs
+      --------------------------------------------------------------------------
+      IF self.tag_externalDocs IS NOT NULL
+      THEN
+         dz_swagger3_loader.extrdocstyp_loader(
+             p_parent_id    => self.tag_id
+            ,p_children_ids => MDSYS.SDO_STRING2_ARRAY(self.tag_externalDocs)
+            ,p_versionid    => self.versionid
+         );
+      
+      END IF;
+
+   END traverse;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -86,7 +99,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -271,51 +283,6 @@ AS
       RETURN clb_output;
       
    END toYAML;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-   BEGIN
-   
-      INSERT INTO dz_swagger3_xrelates(
-          parent_object_id
-         ,child_object_id
-         ,child_object_type_id
-      )
-      SELECT
-       p_parent_id
-      ,a.column_value
-      ,'extrdocs'
-      FROM
-      TABLE(p_children_ids) a;
-
-      EXECUTE IMMEDIATE 
-      'INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,extrdocstyp
-          ,ordering_key
-      )
-      SELECT
-       a.column_value
-      ,''extrdocstyp''
-      ,dz_swagger3_extrdocs_typ(
-          p_externaldoc_id => a.column_value
-         ,p_versionid      => :p01
-       )
-      ,10
-      FROM 
-      TABLE(:p02) a'
-      USING p_versionid,p_children_ids;
-      
-      COMMIT;
-
-   END;
    
 END;
 /
