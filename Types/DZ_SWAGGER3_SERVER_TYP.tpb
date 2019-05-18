@@ -35,16 +35,23 @@ AS
       AND a.server_id = p_server_id;
 
       SELECT
-      a.server_var_name
+      dz_swagger3_object_typ(
+          p_object_id      => b.server_var_id
+         ,p_object_type_id => 'servervartyp'
+         ,p_object_key     => b.server_var_name
+         ,p_object_order   => a.server_var_order
+      )
       BULK COLLECT INTO self.server_variables
       FROM
-      dz_swagger3_server_variable a
+      dz_swagger3_server_var_map a
+      JOIN
+      dz_swagger3_server_variable b
+      ON
+          a.server_var_id = b.server_var_id
+      AND a.versionid     = b.versionid
       WHERE
           a.versionid = p_versionid
-      AND a.server_id = p_server_id
-      ORDER BY
-       a.server_var_order
-      ,a.server_var_name;
+      AND a.server_id = p_server_id;
   
       RETURN;
       
@@ -55,7 +62,7 @@ AS
    CONSTRUCTOR FUNCTION dz_swagger3_server_typ(
        p_server_url         IN  VARCHAR2
       ,p_server_description IN  VARCHAR2
-      ,p_server_variables   IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_var_list
+      ,p_server_variables   IN  dz_swagger3_object_vry --dz_swagger3_server_var_list
       ,p_versionid          IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS
@@ -83,7 +90,7 @@ AS
       IF  self.server_variables IS NOT NULL
       AND self.server_variables.COUNT > 0
       THEN
-         dz_swagger3_loader.servervartyp_loader(
+         dz_swagger3_loader.servervartyp(
              p_parent_id    => self.server_url
             ,p_children_ids => self.server_variables
             ,p_versionid    => self.versionid
@@ -195,8 +202,11 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''servervartyp'' '
-         || 'AND a.object_id IN (SELECT * FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
          || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
           ary_clb
@@ -330,7 +340,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT * FROM TABLE(:p03))'
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
           ary_clb
          ,ary_keys

@@ -5,16 +5,16 @@ AS OBJECT (
    ,path_endpoint            VARCHAR2(255 Char)
    ,path_summary             VARCHAR2(255 Char)
    ,path_description         VARCHAR2(4000 Char)
-   ,path_get_operation       VARCHAR2(40 Char)       --dz_swagger3_operation_typ
-   ,path_put_operation       VARCHAR2(40 Char)       --dz_swagger3_operation_typ
-   ,path_post_operation      VARCHAR2(40 Char)       --dz_swagger3_operation_typ
-   ,path_delete_operation    VARCHAR2(40 Char)       --dz_swagger3_operation_typ
-   ,path_options_operation   VARCHAR2(40 Char)       --dz_swagger3_operation_typ
-   ,path_head_operation      VARCHAR2(40 Char)       --dz_swagger3_operation_typ
-   ,path_patch_operation     VARCHAR2(40 Char)       --dz_swagger3_operation_typ
-   ,path_trace_operation     VARCHAR2(40 Char)       --dz_swagger3_operation_typ
-   ,path_servers             MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_list
-   ,path_parameters          MDSYS.SDO_STRING2_ARRAY --dz_swagger3_parameter_list
+   ,path_get_operation       dz_swagger3_object_typ --dz_swagger3_operation_typ
+   ,path_put_operation       dz_swagger3_object_typ --dz_swagger3_operation_typ
+   ,path_post_operation      dz_swagger3_object_typ --dz_swagger3_operation_typ
+   ,path_delete_operation    dz_swagger3_object_typ --dz_swagger3_operation_typ
+   ,path_options_operation   dz_swagger3_object_typ --dz_swagger3_operation_typ
+   ,path_head_operation      dz_swagger3_object_typ --dz_swagger3_operation_typ
+   ,path_patch_operation     dz_swagger3_object_typ --dz_swagger3_operation_typ
+   ,path_trace_operation     dz_swagger3_object_typ --dz_swagger3_operation_typ
+   ,path_servers             dz_swagger3_object_vry --dz_swagger3_server_list
+   ,path_parameters          dz_swagger3_object_vry --dz_swagger3_parameter_list
    ,versionid                VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
@@ -37,16 +37,16 @@ AS OBJECT (
        p_path_id                   IN  VARCHAR2
       ,p_path_summary              IN  VARCHAR2
       ,p_path_description          IN  VARCHAR2
-      ,p_path_get_operation        IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_put_operation        IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_post_operation       IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_delete_operation     IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_options_operation    IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_head_operation       IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_patch_operation      IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_trace_operation      IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_servers              IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_list
-      ,p_path_parameters           IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_parameter_list
+      ,p_path_get_operation        IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_put_operation        IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_post_operation       IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_delete_operation     IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_options_operation    IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_head_operation       IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_patch_operation      IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_trace_operation      IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_servers              IN  dz_swagger3_object_vry --dz_swagger3_server_list
+      ,p_path_parameters           IN  dz_swagger3_object_vry --dz_swagger3_parameter_list
       ,p_versionid                 IN  VARCHAR2
    ) RETURN SELF AS RESULT
    

@@ -21,12 +21,16 @@ AS
       ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
-      str_items_schema_id  VARCHAR2(255 Char);
-      
    BEGIN
    
       --------------------------------------------------------------------------
       -- Step 10
+      -- Initialize the object
+      --------------------------------------------------------------------------
+      self.versionid := p_versionid;
+
+      --------------------------------------------------------------------------
+      -- Step 20
       -- Load the easy items using constructor
       --------------------------------------------------------------------------
       SELECT
@@ -40,11 +44,29 @@ AS
       ,a.schema_discriminator
       ,a.schema_readonly
       ,a.schema_writeonly
-      ,a.schema_externaldocs_id
+      ,CASE
+       WHEN a.schema_externaldocs_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id => a.schema_externaldocs_id
+            ,p_object_type_id => 'extrdocstyp'
+         )
+       ELSE
+         NULL
+       END
       ,a.schema_example_string
       ,a.schema_example_number
       ,a.schema_deprecated
-      ,a.schema_items_schema_id
+      ,CASE
+       WHEN a.schema_items_schema_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id      => a.schema_items_schema_id
+            ,p_object_type_id => 'schematyp'
+         )
+       ELSE
+         NULL
+       END
       ,a.schema_default_string
       ,a.schema_default_number
       ,a.schema_multipleOf
@@ -112,7 +134,7 @@ AS
       AND a.schema_id = p_schema_id;
 
       --------------------------------------------------------------------------
-      -- Step 20
+      -- Step 30
       -- Collect the enumerations
       --------------------------------------------------------------------------
       SELECT
@@ -138,11 +160,15 @@ AS
       AND a.enum_number IS NOT NULL;
 
       --------------------------------------------------------------------------
-      -- Step 30
+      -- Step 40
       -- Use schema category to more efficiently search for children schemas
       --------------------------------------------------------------------------
       SELECT
-      a.property_schema_id 
+      dz_swagger3_object_typ(
+          p_object_id      => a.property_schema_id 
+         ,p_object_type_id => 'schematyp'
+         ,p_object_order   => a.property_order
+      )
       BULK COLLECT INTO self.schema_properties
       FROM
       dz_swagger3_schema_prop_map a
@@ -153,12 +179,13 @@ AS
       AND a.property_schema_id = b.schema_id
       WHERE
           a.versionid        = p_versionid
-      AND a.parent_schema_id = self.schema_id
-      ORDER BY
-      a.property_order;
+      AND a.parent_schema_id = self.schema_id;
       
       SELECT
-      a.combine_schema_id 
+      dz_swagger3_object_typ(
+          p_object_id      => a.combine_schema_id
+         ,p_object_type_id => 'schematyp'
+      )
       BULK COLLECT INTO self.combine_schemas
       FROM
       dz_swagger3_schema_combine_map a
@@ -174,7 +201,7 @@ AS
       a.combine_order;  
 
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 50
       -- Return completed object
       --------------------------------------------------------------------------
       RETURN;
@@ -184,219 +211,94 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
-       p_schema_id               IN  VARCHAR2
-      ,p_schema_category         IN  VARCHAR2
-      ,p_schema_title            IN  VARCHAR2
-      ,p_schema_type             IN  VARCHAR2
-      ,p_schema_description      IN  VARCHAR2
-      ,p_schema_format           IN  VARCHAR2
-      ,p_schema_nullable         IN  VARCHAR2
-      ,p_schema_discriminator    IN  VARCHAR2
-      ,p_schema_readonly         IN  VARCHAR2
-      ,p_schema_writeonly        IN  VARCHAR2
-      ,p_schema_externalDocs     IN  VARCHAR2 --dz_swagger3_extrdocs_typ
-      ,p_schema_example_string   IN  VARCHAR2
-      ,p_schema_example_number   IN  NUMBER
-      ,p_schema_deprecated       IN  VARCHAR2
-      ,p_schema_default_string   IN  VARCHAR2
-      ,p_schema_default_number   IN  NUMBER 
-      ,p_schema_multipleOf       IN  NUMBER 
-      ,p_schema_minimum          IN  NUMBER 
-      ,p_schema_exclusiveMinimum IN  VARCHAR2
-      ,p_schema_maximum          IN  NUMBER 
-      ,p_schema_exclusiveMaximum IN  VARCHAR2
-      ,p_schema_minLength        IN  INTEGER 
-      ,p_schema_maxLength        IN  INTEGER 
-      ,p_schema_pattern          IN  VARCHAR2
-      ,p_schema_minItems         IN  INTEGER 
-      ,p_schema_maxItems         IN  INTEGER 
-      ,p_schema_uniqueItems      IN  VARCHAR2 
-      ,p_schema_minProperties    IN  INTEGER 
-      ,p_schema_maxProperties    IN  INTEGER
-      ,p_xml_name                IN  VARCHAR2
-      ,p_xml_namespace           IN  VARCHAR2
-      ,p_xml_prefix              IN  VARCHAR2
-      ,p_xml_attribute           IN  VARCHAR2
-      ,p_xml_wrapped             IN  VARCHAR2
-      ,p_schema_force_inline     IN  VARCHAR2
-      ,p_property_list_hidden    IN  VARCHAR2
-      ,p_schema_required         IN  VARCHAR2
-      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_versionid               IN  VARCHAR2
-   ) RETURN SELF AS RESULT 
-   AS 
-   BEGIN 
-   
-      self.schema_id               := p_schema_id;
-      self.schema_category         := p_schema_category;
-      self.schema_title            := p_schema_title;
-      self.schema_type             := p_schema_type;
-      self.schema_description      := p_schema_description;
-      self.schema_format           := p_schema_format;
-      self.schema_nullable         := p_schema_nullable;
-      self.schema_discriminator    := p_schema_discriminator;
-      self.schema_readonly         := p_schema_readonly;
-      self.schema_writeonly        := p_schema_writeonly;
-      self.schema_externalDocs     := p_schema_externalDocs;
-      self.schema_example_string   := p_schema_example_string;
-      self.schema_example_number   := p_schema_example_number;
-      self.schema_deprecated       := p_schema_deprecated;
-      -----
-      self.schema_default_string   := p_schema_default_string;
-      self.schema_default_number   := p_schema_default_number;
-      self.schema_multipleOf       := p_schema_multipleOf;
-      self.schema_minimum          := p_schema_minimum;
-      self.schema_exclusiveMinimum := p_schema_exclusiveMinimum;
-      self.schema_maximum          := p_schema_maximum;
-      self.schema_exclusiveMaximum := p_schema_exclusiveMaximum;
-      self.schema_minLength        := p_schema_minLength;
-      self.schema_maxLength        := p_schema_maxLength;
-      self.schema_pattern          := p_schema_pattern;
-      self.schema_minItems         := p_schema_minItems;
-      self.schema_maxItems         := p_schema_maxItems;
-      self.schema_uniqueItems      := p_schema_uniqueItems;
-      self.schema_minProperties    := p_schema_minProperties;
-      self.schema_maxProperties    := p_schema_maxProperties;
-      self.xml_name                := p_xml_name;
-      self.xml_namespace           := p_xml_namespace;
-      self.xml_prefix              := p_xml_prefix;
-      self.xml_attribute           := p_xml_attribute;
-      self.xml_wrapped             := p_xml_wrapped;
-      -----
-      self.schema_force_inline     := p_schema_force_inline;
-      self.property_list_hidden    := p_property_list_hidden;
-      -----
-      self.schema_required         := p_schema_required;
-      self.versionid               := p_versionid;
-
-      RETURN; 
-      
-   END dz_swagger3_schema_typ;
-
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
-       p_schema_id               IN  VARCHAR2
-      ,p_schema_category         IN  VARCHAR2
-      ,p_schema_title            IN  VARCHAR2
-      ,p_schema_type             IN  VARCHAR2
-      ,p_schema_description      IN  VARCHAR2
-      ,p_schema_format           IN  VARCHAR2
-      ,p_schema_nullable         IN  VARCHAR2
-      ,p_schema_discriminator    IN  VARCHAR2
-      ,p_schema_readonly         IN  VARCHAR2
-      ,p_schema_writeonly        IN  VARCHAR2
-      ,p_schema_externalDocs     IN  VARCHAR2 --dz_swagger3_extrdocs_typ
-      ,p_schema_example_string   IN  VARCHAR2
-      ,p_schema_example_number   IN  NUMBER
-      ,p_schema_deprecated       IN  VARCHAR2
-      ,p_schema_default_string   IN  VARCHAR2
-      ,p_schema_default_number   IN  NUMBER 
-      ,p_schema_multipleOf       IN  NUMBER 
-      ,p_schema_minimum          IN  NUMBER 
-      ,p_schema_exclusiveMinimum IN  VARCHAR2
-      ,p_schema_maximum          IN  NUMBER 
-      ,p_schema_exclusiveMaximum IN  VARCHAR2
-      ,p_schema_minLength        IN  INTEGER 
-      ,p_schema_maxLength        IN  INTEGER 
-      ,p_schema_pattern          IN  VARCHAR2
-      ,p_schema_minItems         IN  INTEGER 
-      ,p_schema_maxItems         IN  INTEGER 
-      ,p_schema_uniqueItems      IN  VARCHAR2 
-      ,p_schema_minProperties    IN  INTEGER 
-      ,p_schema_maxProperties    IN  INTEGER
-      ,p_xml_name                IN  VARCHAR2
-      ,p_xml_namespace           IN  VARCHAR2
-      ,p_xml_prefix              IN  VARCHAR2
-      ,p_xml_attribute           IN  VARCHAR2
-      ,p_xml_wrapped             IN  VARCHAR2
-      ,p_schema_items_schema     IN  VARCHAR2 --dz_swagger3_schema_typ_nf
-      ,p_schema_properties       IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_schema_nf_list
-      ,p_schema_enum_string      IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_schema_enum_number      IN  MDSYS.SDO_NUMBER_ARRAY
-      ,p_schema_force_inline     IN  VARCHAR2
-      ,p_property_list_hidden    IN  VARCHAR2
-      ,p_combine_schemas         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_schema_nf_list
-      ,p_versionid               IN  VARCHAR2
-   ) RETURN SELF AS RESULT 
-   AS 
-   BEGIN 
-   
-      self.schema_id               := p_schema_id;
-      self.schema_category         := p_schema_category;
-      self.schema_title            := p_schema_title;
-      self.schema_type             := p_schema_type;
-      self.schema_description      := p_schema_description;
-      self.schema_format           := p_schema_format;
-      self.schema_nullable         := p_schema_nullable;
-      self.schema_discriminator    := p_schema_discriminator;
-      self.schema_readonly         := p_schema_readonly;
-      self.schema_writeonly        := p_schema_writeonly;
-      self.schema_externalDocs     := p_schema_externalDocs;
-      self.schema_example_string   := p_schema_example_string;
-      self.schema_deprecated       := p_schema_deprecated;
-      self.schema_default_string   := p_schema_default_string;
-      self.schema_default_number   := p_schema_default_number;
-      self.schema_multipleOf       := p_schema_multipleOf;
-      self.schema_minimum          := p_schema_minimum;
-      self.schema_exclusiveMinimum := p_schema_exclusiveMinimum;
-      self.schema_maximum          := p_schema_maximum;
-      self.schema_exclusiveMaximum := p_schema_exclusiveMaximum;
-      self.schema_minLength        := p_schema_minLength;
-      self.schema_maxLength        := p_schema_maxLength;
-      self.schema_pattern          := p_schema_pattern;
-      self.schema_minItems         := p_schema_minItems;
-      self.schema_maxItems         := p_schema_maxItems;
-      self.schema_uniqueItems      := p_schema_uniqueItems;
-      self.schema_minProperties    := p_schema_minProperties;
-      self.schema_maxProperties    := p_schema_maxProperties;
-      self.xml_name                := p_xml_name;
-      self.xml_namespace           := p_xml_namespace;
-      self.xml_prefix              := p_xml_prefix;
-      self.xml_attribute           := p_xml_attribute;
-      self.xml_wrapped             := p_xml_wrapped;
-      -----
-      self.schema_items_schema     := p_schema_items_schema;
-      self.schema_properties       := p_schema_properties;
-      self.schema_enum_string      := p_schema_enum_string;
-      self.schema_enum_number      := p_schema_enum_number;
-      -----
-      self.schema_force_inline     := p_schema_force_inline;
-      self.property_list_hidden    := p_property_list_hidden;
-      -----
-      self.combine_schemas         := p_combine_schemas;
-      self.versionid               := p_versionid;
-      
-      RETURN; 
-      
-   END dz_swagger3_schema_typ;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
-       p_parameter               IN  dz_swagger3_parameter_typ
-      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+       p_schema_id                IN  VARCHAR2
+      ,p_required                 IN  VARCHAR2
+      ,p_parameters               IN  dz_swagger3_object_vry
+      ,p_versionid                IN  VARCHAR2
+      ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_ref_brake                IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
    BEGIN
-/*
-      SELF := TREAT(p_parameter.parameter_schema AS dz_swagger3_schema_typ);
-      self.schema_id             := 'rb.' || p_parameter.parameter_id;
-      self.schema_title          := p_parameter.parameter_id;
-      self.hash_key              := p_parameter.parameter_name;
-      self.schema_description    := p_parameter.parameter_description;
-      self.schema_required       := p_parameter.parameter_required;
-      self.schema_deprecated     := p_parameter.parameter_deprecated;
-      self.schema_example_string := p_parameter.parameter_example_string;
-      self.schema_example_number := p_parameter.parameter_example_number;
       
-      IF self.schema_category IS NULL
-      THEN
-         RAISE_APPLICATION_ERROR(-20001,'err');
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Initialize the object
+      --------------------------------------------------------------------------
+      self.versionid := p_versionid;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Load the bare array to hold the parameter derived schema object
+      --------------------------------------------------------------------------
+      self.schema_id           := p_schema_id;
+      self.schema_category     := 'object';
+      self.schema_format       := 'object';
+
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Load the items on the schema object as properties
+      --------------------------------------------------------------------------
+      self.schema_properties := dz_swagger3_object_vry();
+      self.schema_properties.EXTEND(p_parameters.COUNT);
+
+      FOR i IN 1 .. p_parameters.COUNT
+      LOOP
+         self.schema_properties(i) := dz_swagger3_object_typ(
+             p_object_id        => 'rb.' || p_parameters(i).object_id
+            ,p_object_type_id   => 'schematyp'
+            ,p_object_key       => 'rb.' || p_parameters(i).object_id
+            ,p_object_subtype   => 'emulated_item'
+            ,p_object_attribute => p_parameters(i).object_id
+         );
          
-      END IF;
-*/
-      RETURN; 
+      END LOOP;
+
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Return completed object
+      --------------------------------------------------------------------------
+      RETURN;
+      
+   END dz_swagger3_schema_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
+       p_schema_id                IN  VARCHAR2
+      ,p_required                 IN  VARCHAR2
+      ,p_emulated_parameter_id    IN  VARCHAR2
+      ,p_versionid                IN  VARCHAR2
+      ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_ref_brake                IN  VARCHAR2 DEFAULT 'FALSE'
+   ) RETURN SELF AS RESULT
+   AS
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Initialize the object
+      --------------------------------------------------------------------------
+      self.versionid := p_versionid;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Load the bare array to hold the parameter derived schema object
+      --------------------------------------------------------------------------
+      self.schema_id           := p_schema_id;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Load the parameter details to emulate
+      --------------------------------------------------------------------------
+      --self.schema_category     := 'object';
+      --self.schema_format       := 'object';
+   
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Return completed object
+      --------------------------------------------------------------------------
+      RETURN;
       
    END dz_swagger3_schema_typ;
    
@@ -412,9 +314,9 @@ AS
       --------------------------------------------------------------------------
       IF self.schema_externalDocs IS NOT NULL
       THEN
-         dz_swagger3_loader.extrdocstyp_loader(
+         dz_swagger3_loader.extrdocstyp(
              p_parent_id    => self.schema_id
-            ,p_children_ids => MDSYS.SDO_STRING2_ARRAY(self.schema_externalDocs)
+            ,p_children_ids => dz_swagger3_object_vry(self.schema_externalDocs)
             ,p_versionid    => self.versionid
          );
       
@@ -426,9 +328,9 @@ AS
       --------------------------------------------------------------------------
       IF self.schema_items_schema IS NOT NULL
       THEN
-         dz_swagger3_loader.schematyp_loader(
+         dz_swagger3_loader.schematyp(
              p_parent_id    => self.schema_id
-            ,p_children_ids => MDSYS.SDO_STRING2_ARRAY(self.schema_items_schema)
+            ,p_children_ids => dz_swagger3_object_vry(self.schema_items_schema)
             ,p_versionid    => self.versionid
          );
       
@@ -441,7 +343,7 @@ AS
       IF  self.schema_properties IS NOT NULL
       AND self.schema_properties.COUNT > 0
       THEN
-         dz_swagger3_loader.schematyp_loader(
+         dz_swagger3_loader.schematyp(
              p_parent_id    => self.schema_id
             ,p_children_ids => self.schema_properties
             ,p_versionid    => self.versionid
@@ -456,7 +358,7 @@ AS
       IF  self.combine_schemas IS NOT NULL
       AND self.combine_schemas.COUNT > 0
       THEN
-         dz_swagger3_loader.schematyp_loader(
+         dz_swagger3_loader.schematyp(
              p_parent_id    => self.schema_id
             ,p_children_ids => self.combine_schemas
             ,p_versionid    => self.versionid
@@ -525,36 +427,6 @@ AS
       END IF;
       
    END doRef;
-   
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   MEMBER FUNCTION schema_properties_keys
-   RETURN MDSYS.SDO_STRING2_ARRAY
-   AS
-      int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
-      
-   BEGIN
-      IF self.schema_properties IS NULL
-      OR self.schema_properties.COUNT = 0
-      THEN
-         RETURN NULL;
-         
-      END IF;
-      
-      int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
-      FOR i IN 1 .. self.schema_properties.COUNT
-      LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.schema_properties(i);
-         int_index := int_index + 1;
-      
-      END LOOP;
-      
-      RETURN ary_output;
-   
-   END schema_properties_keys;
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
@@ -988,19 +860,34 @@ AS
       IF  self.schema_externalDocs IS NOT NULL
       AND str_jsonschema <> 'TRUE'
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT a.extrdocstyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || 'a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.schema_externalDocs;      
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.extrdocstyp.toJSON( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.schema_externalDocs.object_type_id 
+            ,self.schema_externalDocs.object_id;
+         
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END; 
       
          clb_output := clb_output || dz_json_util.pretty(
              str_pad || dz_json_main.formatted2json(
@@ -1069,24 +956,38 @@ AS
       -- Step 160
       -- Add schema items
       --------------------------------------------------------------------------
-      IF  self.schema_items_schema IS NOT NULL
+      IF self.schema_items_schema IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.schematyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ' ) '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || 'a.object_id = :p03 '
-         INTO 
-         clb_tmp
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,self.schema_externalDocs;  
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || ' a.schematyp.toJSON( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ' ) '
+            || 'FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO 
+            clb_tmp
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,self.schema_items_schema.object_type_id
+            ,self.schema_items_schema.object_id;
+         
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
 
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -1154,7 +1055,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
@@ -1814,19 +1720,33 @@ AS
       --------------------------------------------------------------------------
       IF  self.schema_externalDocs IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT a.extrdocstyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || 'a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.schema_externalDocs; 
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT a.extrdocstyp.toYAML( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.schema_externalDocs.object_type_id
+            ,self.schema_externalDocs.object_id; 
+         
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
       
          clb_output := clb_output || dz_json_util.pretty_str(
              'externalDocs: ' 
@@ -1878,22 +1798,36 @@ AS
       --------------------------------------------------------------------------
       IF  self.schema_items_schema IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.schematyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ' ) '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || 'a.object_id = :p03 '
-         INTO 
-         clb_tmp
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,self.schema_externalDocs;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || ' a.schematyp.toYAML( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ' ) '
+            || 'FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO 
+            clb_tmp
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,self.schema_items_schema.object_type_id
+            ,self.schema_items_schema.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
       
          clb_output := clb_output || dz_json_util.pretty_str(
              'items: ' 
@@ -1949,7 +1883,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys

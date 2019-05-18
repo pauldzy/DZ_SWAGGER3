@@ -37,14 +37,94 @@ AS
       ,a.path_id
       ,a.path_summary
       ,a.path_description
-      ,a.path_get_operation_id
-      ,a.path_put_operation_id
-      ,a.path_post_operation_id
-      ,a.path_delete_operation_id
-      ,a.path_options_operation_id
-      ,a.path_head_operation_id
-      ,a.path_patch_operation_id
-      ,a.path_trace_operation_id
+      ,CASE
+       WHEN a.path_get_operation_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id      => a.path_get_operation_id
+            ,p_object_type_id => 'operationtyp'
+            ,p_object_subtype => 'get'
+         )
+       ELSE
+         NULL
+       END
+      ,CASE
+       WHEN a.path_put_operation_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id      => a.path_put_operation_id
+            ,p_object_type_id => 'operationtyp'
+            ,p_object_subtype => 'put'
+         )
+       ELSE
+         NULL
+       END
+      ,CASE
+       WHEN a.path_post_operation_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id      => a.path_post_operation_id
+            ,p_object_type_id => 'operationtyp'
+            ,p_object_subtype => 'post'
+         )
+       ELSE
+         NULL
+       END
+      ,CASE
+       WHEN a.path_delete_operation_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id      => a.path_delete_operation_id
+            ,p_object_type_id => 'operationtyp'
+            ,p_object_subtype => 'delete'
+         )
+       ELSE
+         NULL
+       END
+      ,CASE
+       WHEN a.path_options_operation_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id      => a.path_options_operation_id
+            ,p_object_type_id => 'operationtyp'
+            ,p_object_subtype => 'options'
+         )
+       ELSE
+         NULL
+       END
+      ,CASE
+       WHEN a.path_head_operation_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id      => a.path_head_operation_id
+            ,p_object_type_id => 'operationtyp'
+            ,p_object_subtype => 'head'
+         )
+       ELSE
+         NULL
+       END
+      ,CASE
+       WHEN a.path_patch_operation_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id      => a.path_patch_operation_id
+            ,p_object_type_id => 'operationtyp'
+            ,p_object_subtype => 'patch'
+         )
+       ELSE
+         NULL
+       END
+      ,CASE
+       WHEN a.path_trace_operation_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id      => a.path_trace_operation_id
+            ,p_object_type_id => 'operationtyp'
+            ,p_object_subtype => 'trace'
+         )
+       ELSE
+         NULL
+       END
       INTO 
        self.path_endpoint
       ,self.path_id
@@ -69,7 +149,11 @@ AS
       -- Load the server objects on this path
       --------------------------------------------------------------------------
       SELECT
-      a.server_id
+      dz_swagger3_object_typ(
+          p_object_id      => a.server_id
+         ,p_object_type_id => 'servertyp'
+         ,p_object_order   => a.server_order
+      )
       BULK COLLECT INTO self.path_servers
       FROM
       dz_swagger3_parent_server_map a
@@ -82,7 +166,11 @@ AS
       -- Load the parameter objects on this path
       --------------------------------------------------------------------------
       SELECT
-      a.parameter_id
+      dz_swagger3_object_typ(
+          p_object_id      => a.parameter_id
+         ,p_object_type_id => 'parametertyp'
+         ,p_object_order   => b.parameter_order
+      )
       BULK COLLECT INTO self.path_parameters
       FROM
       dz_swagger3_parameter a
@@ -93,10 +181,7 @@ AS
       AND a.parameter_id = b.parameter_id
       WHERE
           b.versionid = p_versionid
-      AND b.parent_id = p_path_id
-      ORDER BY
-       b.parameter_order
-      ,a.parameter_name;
+      AND b.parent_id = p_path_id;
 
       --------------------------------------------------------------------------
       -- Step 40
@@ -112,16 +197,16 @@ AS
        p_path_id                   IN  VARCHAR2
       ,p_path_summary              IN  VARCHAR2
       ,p_path_description          IN  VARCHAR2
-      ,p_path_get_operation        IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_put_operation        IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_post_operation       IN  VARCHAR2 -- dz_swagger3_operation_typ
-      ,p_path_delete_operation     IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_options_operation    IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_head_operation       IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_patch_operation      IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_trace_operation      IN  VARCHAR2 --dz_swagger3_operation_typ
-      ,p_path_servers              IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_list
-      ,p_path_parameters           IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_parameter_list
+      ,p_path_get_operation        IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_put_operation        IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_post_operation       IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_delete_operation     IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_options_operation    IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_head_operation       IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_patch_operation      IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_trace_operation      IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
+      ,p_path_servers              IN  dz_swagger3_object_vry --dz_swagger3_server_list
+      ,p_path_parameters           IN  dz_swagger3_object_vry --dz_swagger3_parameter_list
       ,p_versionid                 IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
@@ -156,9 +241,9 @@ AS
       -- Step 10
       -- Load the operations
       --------------------------------------------------------------------------
-      dz_swagger3_loader.operationtyp_loader(
+      dz_swagger3_loader.operationtyp(
           p_parent_id    => self.path_id
-         ,p_children_ids => MDSYS.SDO_STRING2_ARRAY(
+         ,p_children_ids => dz_swagger3_object_vry(
              self.path_get_operation
             ,self.path_put_operation
             ,self.path_post_operation
@@ -178,7 +263,7 @@ AS
       IF  self.path_servers IS NOT NULL
       AND self.path_servers.COUNT > 0
       THEN
-         dz_swagger3_loader.servertyp_loader(
+         dz_swagger3_loader.servertyp(
              p_parent_id    => self.path_id
             ,p_children_ids => self.path_servers
             ,p_versionid    => self.versionid
@@ -193,7 +278,7 @@ AS
       IF  self.path_parameters IS NOT NULL
       AND self.path_parameters.COUNT > 0
       THEN
-         dz_swagger3_loader.parametertyp_loader(
+         dz_swagger3_loader.parametertyp(
              p_parent_id    => self.path_id
             ,p_children_ids => self.path_parameters
             ,p_versionid    => self.versionid
@@ -264,7 +349,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -316,21 +400,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_get_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_get_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toJSON( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_get_operation.object_type_id
+            ,self.path_get_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
       
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -350,21 +447,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_put_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_put_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toJSON( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_put_operation.object_type_id
+            ,self.path_put_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
 
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -384,21 +494,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_post_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_post_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toJSON( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_post_operation.object_type_id
+            ,self.path_post_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
 
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -411,28 +534,41 @@ AS
          str_pad1 := ',';
 
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 80
       -- Add delete operation
       --------------------------------------------------------------------------
       IF self.path_delete_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_delete_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toJSON( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_delete_operation.object_type_id
+            ,self.path_delete_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
 
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -452,21 +588,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_options_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_options_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toJSON( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_options_operation.object_type_id
+            ,self.path_options_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -486,21 +635,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_head_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_head_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toJSON( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_head_operation.object_type_id
+            ,self.path_head_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -520,21 +682,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_patch_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_patch_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toJSON( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_patch_operation.object_type_id
+            ,self.path_patch_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -554,21 +729,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_trace_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_trace_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toJSON( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_trace_operation.object_type_id
+            ,self.path_trace_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -598,8 +786,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''servertyp'' '
-         || 'AND a.object_id IN (SELECT column_value FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          USING
@@ -663,8 +855,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''parametertyp'' '
-         || 'AND a.object_id IN (SELECT column_value FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
@@ -800,21 +996,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_get_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_get_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toYAML( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_get_operation.object_type_id
+            ,self.path_get_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
 
          clb_output := clb_output || dz_json_util.pretty_str(
              'get: ' 
@@ -830,21 +1039,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_put_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_put_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toYAML( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_put_operation.object_type_id
+            ,self.path_put_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'put: ' 
@@ -860,21 +1082,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_post_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_post_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toYAML( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_post_operation.object_type_id
+            ,self.path_post_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'post: ' 
@@ -890,21 +1125,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_delete_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_delete_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toYAML( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_delete_operation.object_type_id
+            ,self.path_delete_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'delete: ' 
@@ -920,21 +1168,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_options_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_options_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toYAML( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_options_operation.object_type_id
+            ,self.path_options_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'options: ' 
@@ -950,21 +1211,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_head_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_head_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toYAML( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_head_operation.object_type_id
+            ,self.path_head_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'head: ' 
@@ -980,21 +1254,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_patch_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_patch_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toYAML( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_patch_operation.object_type_id
+            ,self.path_patch_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'patch: ' 
@@ -1010,21 +1297,34 @@ AS
       --------------------------------------------------------------------------
       IF self.path_trace_operation IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.operationtyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''operationtyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.path_trace_operation;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.operationtyp.toYAML( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.path_trace_operation.object_type_id
+            ,self.path_trace_operation.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'trace: ' 
@@ -1050,8 +1350,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''servertyp'' '
-         || 'AND a.object_id IN (SELECT column_value FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
          ary_clb
          USING
@@ -1095,8 +1399,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''parametertyp'' '
-         || 'AND a.object_id IN (SELECT column_value FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys

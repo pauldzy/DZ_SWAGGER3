@@ -170,8 +170,7 @@ AS
             
       SELECT
       dz_swagger3_schema_typ(
-          p_hash_key     => 'jsonschema'
-         ,p_schema_id    => a.media_schema_id
+          p_schema_id    => a.media_schema_id
          ,p_required     => NULL
          ,p_versionid    => str_versionid
       )

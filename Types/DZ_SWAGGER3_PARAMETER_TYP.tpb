@@ -24,6 +24,12 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 10 
+      -- Initialie the object
+      --------------------------------------------------------------------------
+      self.versionid := p_versionid;
+      
+      --------------------------------------------------------------------------
+      -- Step 10 
       -- Load the parameter self and schema id
       --------------------------------------------------------------------------
       BEGIN
@@ -38,7 +44,16 @@ AS
          ,a.parameter_style
          ,a.parameter_explode
          ,a.parameter_allowReserved
-         ,a.parameter_schema_id
+         ,CASE
+          WHEN a.parameter_schema_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id      => a.parameter_schema_id
+               ,p_object_type_id => 'schematyp'
+            )
+          ELSE
+            NULL
+          END
          ,a.parameter_example_string
          ,a.parameter_example_number
          ,a.parameter_force_inline
@@ -54,7 +69,7 @@ AS
          ,self.parameter_style
          ,self.parameter_explode
          ,self.parameter_allowReserved
-         ,self.parameter_schema 
+         ,self.parameter_schema
          ,self.parameter_example_string
          ,self.parameter_example_number
          ,self.parameter_force_inline
@@ -84,15 +99,19 @@ AS
       -- Load any example ids
       --------------------------------------------------------------------------
       SELECT
-      a.example_id
+      dz_swagger3_object_typ(
+          p_object_id      => a.example_id
+         ,p_object_type_id => 'exampletyp'
+         ,p_object_order   => a.example_order
+      )
       BULK COLLECT INTO self.parameter_examples
       FROM
       dz_swagger3_parent_example_map a
       WHERE
           a.parent_id = p_parameter_id
-      AND a.versionid = p_versionid
-      ORDER BY
-      a.example_order;
+      AND a.versionid = p_versionid;
+      
+      RETURN;
 
    END;
 
@@ -109,10 +128,10 @@ AS
       ,p_parameter_style            IN  VARCHAR2
       ,p_parameter_explode          IN  VARCHAR2
       ,p_parameter_allowReserved    IN  VARCHAR2
-      ,p_parameter_schema           IN  VARCHAR2 --dz_swagger3_schema_typ_nf
+      ,p_parameter_schema           IN  dz_swagger3_object_typ --dz_swagger3_schema_typ_nf
       ,p_parameter_example_string   IN  VARCHAR2
       ,p_parameter_example_number   IN  NUMBER
-      ,p_parameter_examples         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_example_list
+      ,p_parameter_examples         IN  dz_swagger3_object_vry --dz_swagger3_example_list
       ,p_parameter_force_inline     IN  VARCHAR2
       ,p_parameter_list_hidden      IN  VARCHAR2
       ,p_parameter_requestbody_flag IN  VARCHAR2 DEFAULT 'FALSE'
@@ -155,9 +174,9 @@ AS
       -- Step 10
       -- Load the parameter schema
       --------------------------------------------------------------------------
-      dz_swagger3_loader.schematyp_loader(
+      dz_swagger3_loader.schematyp(
           p_parent_id    => self.parameter_id
-         ,p_children_ids => MDSYS.SDO_STRING2_ARRAY(self.parameter_schema)
+         ,p_children_ids => dz_swagger3_object_vry(self.parameter_schema)
          ,p_versionid    => self.versionid
       );
       
@@ -168,14 +187,13 @@ AS
       IF  self.parameter_examples IS NOT NULL
       AND self.parameter_examples.COUNT > 0
       THEN
-         dz_swagger3_loader.exampletyp_loader(
+         dz_swagger3_loader.exampletyp(
              p_parent_id    => self.parameter_id
             ,p_children_ids => self.parameter_examples
             ,p_versionid    => self.versionid
          );
          
-      END IF;
-         
+      END IF;  
 
    END traverse;
    
@@ -269,7 +287,7 @@ AS
       -- Step 10
       -- Check incoming parameters
       --------------------------------------------------------------------------
-      
+
       --------------------------------------------------------------------------
       -- Step 20
       -- Build the wrapper
@@ -277,7 +295,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -314,7 +331,7 @@ AS
          ,p_pretty_print + 1
       );
       str_pad1 := ',';
-         
+
       --------------------------------------------------------------------------
       -- Step 30
       -- Add optional description attribute
@@ -330,9 +347,9 @@ AS
             ,p_pretty_print + 1
          );
          str_pad1 := ',';
-         
+
       END IF;
-         
+
       --------------------------------------------------------------------------
       -- Step 40
       -- Add mandatory required flag
@@ -378,7 +395,7 @@ AS
          str_pad1 := ',';
 
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 60
       -- Add optional description 
@@ -469,26 +486,41 @@ AS
          str_pad1 := ',';
 
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 100
       -- Add optional schema attribute
       --------------------------------------------------------------------------
       IF self.parameter_schema IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT a.schematyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || 'a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.parameter_schema; 
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.schematyp.toJSON( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.parameter_schema.object_type_id
+            ,self.parameter_schema.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
 
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -501,7 +533,7 @@ AS
          str_pad1 := ',';
 
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 110
       -- Add optional example
@@ -536,7 +568,7 @@ AS
       -- Step 120
       -- Add optional variables map
       --------------------------------------------------------------------------
-      IF self.parameter_examples IS NOT NULL 
+      IF  self.parameter_examples IS NOT NULL 
       AND self.parameter_examples.COUNT > 0
       THEN
          EXECUTE IMMEDIATE
@@ -549,7 +581,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
@@ -883,19 +920,34 @@ AS
       --------------------------------------------------------------------------
       IF  self.parameter_schema IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT a.schematyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || 'a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.parameter_schema; 
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.schematyp.toYAML( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.parameter_schema.object_type_id
+            ,self.parameter_schema.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+
+         END;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'schema: '
@@ -950,7 +1002,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys

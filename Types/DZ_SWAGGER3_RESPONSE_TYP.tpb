@@ -111,10 +111,11 @@ AS
    CONSTRUCTOR FUNCTION dz_swagger3_response_typ(
        p_response_id             IN  VARCHAR2
       ,p_response_description    IN  VARCHAR2
-      ,p_response_headers        IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_header_list
-      ,p_response_content        IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_media_list
-      ,p_response_links          IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_link_list
+      ,p_response_headers        IN  dz_swagger3_object_vry --dz_swagger3_header_list
+      ,p_response_content        IN  dz_swagger3_object_vry --dz_swagger3_media_list
+      ,p_response_links          IN  dz_swagger3_object_vry --dz_swagger3_link_list
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -124,19 +125,8 @@ AS
       self.response_headers        := p_response_headers;
       self.response_content        := p_response_content;
       self.response_links          := p_response_links;
-      /*
-      --------------------------------------------------------------------------
-      IF self.doREF() = 'TRUE'
-      AND p_load_components = 'TRUE'
-      THEN
-         dz_swagger3_main.insert_component(
-             p_object_id     => p_response_id
-            ,p_object_type   => 'response'
-            ,p_response_code => p_hash_key
-         );
-         
-      END IF;
-      */
+      self.versionid               := p_versionid;
+ 
       RETURN; 
       
    END dz_swagger3_response_typ;
@@ -289,7 +279,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
@@ -353,7 +348,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
@@ -417,7 +417,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
@@ -641,7 +646,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
@@ -685,7 +695,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
@@ -729,7 +744,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
@@ -829,52 +849,7 @@ AS
       RETURN clb_output;
       
    END toYAML_ref;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-   BEGIN
-   
-      INSERT INTO dz_swagger3_xrelates(
-          parent_object_id
-         ,child_object_id
-         ,child_object_type_id
-      )
-      SELECT
-       p_parent_id
-      ,a.column_value
-      ,'extrdocs'
-      FROM
-      TABLE(p_children_ids) a;
 
-      EXECUTE IMMEDIATE 
-      'INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,extrdocstyp
-          ,ordering_key
-      )
-      SELECT
-       a.column_value
-      ,''extrdocstyp''
-      ,dz_swagger3_extrdocs_typ(
-          p_externaldoc_id => a.column_value
-         ,p_versionid      => :p01
-       )
-      ,10
-      FROM 
-      TABLE(:p02) a'
-      USING p_versionid,p_children_ids;
-      
-      COMMIT;
-
-   END;
-   
 END;
 /
 

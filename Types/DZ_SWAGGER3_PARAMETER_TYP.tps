@@ -11,10 +11,10 @@ AS OBJECT (
    ,parameter_style            VARCHAR2(255 Char)
    ,parameter_explode          VARCHAR2(5 Char)
    ,parameter_allowReserved    VARCHAR2(5 Char)
-   ,parameter_schema           VARCHAR2(40 Char) --dz_swagger3_schema_typ_nf
+   ,parameter_schema           dz_swagger3_object_typ --dz_swagger3_schema_typ_nf
    ,parameter_example_string   VARCHAR2(255 Char)
    ,parameter_example_number   NUMBER
-   ,parameter_examples         MDSYS.SDO_STRING2_ARRAY --dz_swagger3_example_list
+   ,parameter_examples         dz_swagger3_object_vry --dz_swagger3_example_list
    ,parameter_force_inline     VARCHAR2(5 Char)
    ,parameter_list_hidden      VARCHAR2(5 Char)
    ,parameter_requestbody_flag VARCHAR2(5 Char)
@@ -47,10 +47,10 @@ AS OBJECT (
       ,p_parameter_style            IN  VARCHAR2
       ,p_parameter_explode          IN  VARCHAR2
       ,p_parameter_allowReserved    IN  VARCHAR2
-      ,p_parameter_schema           IN  VARCHAR2 --dz_swagger3_schema_typ_nf
+      ,p_parameter_schema           IN  dz_swagger3_object_typ --dz_swagger3_schema_typ_nf
       ,p_parameter_example_string   IN  VARCHAR2
       ,p_parameter_example_number   IN  NUMBER
-      ,p_parameter_examples         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_example_list
+      ,p_parameter_examples         IN  dz_swagger3_object_vry --dz_swagger3_example_list
       ,p_parameter_force_inline     IN  VARCHAR2
       ,p_parameter_list_hidden      IN  VARCHAR2
       ,p_parameter_requestbody_flag IN  VARCHAR2 DEFAULT 'FALSE'

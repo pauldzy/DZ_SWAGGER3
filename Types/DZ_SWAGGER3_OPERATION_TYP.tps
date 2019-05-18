@@ -8,21 +8,25 @@ END;
 CREATE OR REPLACE TYPE dz_swagger3_operation_typ FORCE
 AUTHID DEFINER
 AS OBJECT (
-    operation_id               VARCHAR2(255 Char)
-   ,operation_tags             MDSYS.SDO_STRING2_ARRAY --dz_swagger3_tag_list
-   ,operation_summary          VARCHAR2(255 Char)
-   ,operation_description      VARCHAR2(4000 Char)
-   ,operation_externalDocs     VARCHAR2(40 Char)       --dz_swagger3_extrdocs_typ
-   ,operation_operationId      VARCHAR2(255 Char)
-   ,operation_parameters       MDSYS.SDO_STRING2_ARRAY --dz_swagger3_parameter_list
-   ,operation_requestBody      VARCHAR2(40 Char)       --dz_swagger3_requestbody_typ
-   ,operation_responses        MDSYS.SDO_STRING2_ARRAY --dz_swagger3_response_list
-   ,operation_callbacks        MDSYS.SDO_STRING2_ARRAY --dz_swagger3_path_list
-   ,operation_inline_rb        VARCHAR2(5 Char)
-   ,operation_deprecated       VARCHAR2(5 Char)
-   ,operation_security         MDSYS.SDO_STRING2_ARRAY --dz_swagger3_security_req_list
-   ,operation_servers          MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_list
-   ,versionid                  VARCHAR2(255 Char)
+    operation_id                  VARCHAR2(255 Char)
+   ,operation_type                VARCHAR2(255 Char)
+   ,operation_tags                dz_swagger3_object_vry --dz_swagger3_tag_list
+   ,operation_summary             VARCHAR2(255 Char)
+   ,operation_description         VARCHAR2(4000 Char)
+   ,operation_externalDocs        dz_swagger3_object_typ --dz_swagger3_extrdocs_typ
+   ,operation_operationId         VARCHAR2(255 Char)
+   ,operation_parameters          dz_swagger3_object_vry --dz_swagger3_parameter_list
+   ,operation_emulated_rbparms    dz_swagger3_object_vry --dz_swagger3_parameter_list
+   ,operation_emulated_media_type VARCHAR2(255 Char)
+   ,operation_emulated_inline_rb  VARCHAR2(5 Char)
+   ,operation_requestBody         dz_swagger3_object_typ --dz_swagger3_requestbody_typ
+   ,operation_responses           dz_swagger3_object_vry --dz_swagger3_response_list
+   ,operation_callbacks           dz_swagger3_object_vry --dz_swagger3_path_list
+   ,operation_inline_rb           VARCHAR2(5 Char)
+   ,operation_deprecated          VARCHAR2(5 Char)
+   ,operation_security            dz_swagger3_object_vry --dz_swagger3_security_req_list
+   ,operation_servers             dz_swagger3_object_vry --dz_swagger3_server_list
+   ,versionid                     VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -42,19 +46,20 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_operation_typ(
        p_operation_id              IN  VARCHAR2
-      ,p_operation_tags            IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_tag_list
+      ,p_operation_type            IN  VARCHAR2
+      ,p_operation_tags            IN  dz_swagger3_object_vry --dz_swagger3_tag_list
       ,p_operation_summary         IN  VARCHAR2
       ,p_operation_description     IN  VARCHAR2
-      ,p_operation_externalDocs    IN  VARCHAR2                --dz_swagger3_extrdocs_typ
+      ,p_operation_externalDocs    IN  dz_swagger3_object_typ  --dz_swagger3_extrdocs_typ
       ,p_operation_operationId     IN  VARCHAR2
-      ,p_operation_parameters      IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_parameter_list
-      ,p_operation_requestBody     IN  VARCHAR2                --dz_swagger3_requestbody_typ
-      ,p_operation_responses       IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_response_list
-      ,p_operation_callbacks       IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_callback_list
+      ,p_operation_parameters      IN  dz_swagger3_object_vry --dz_swagger3_parameter_list
+      ,p_operation_requestBody     IN  dz_swagger3_object_typ --dz_swagger3_requestbody_typ
+      ,p_operation_responses       IN  dz_swagger3_object_vry --dz_swagger3_response_list
+      ,p_operation_callbacks       IN  dz_swagger3_object_vry --dz_swagger3_callback_list
       ,p_operation_inline_rb       IN  VARCHAR2
       ,p_operation_deprecated      IN  VARCHAR2
-      ,p_operation_security        IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_security_req_list
-      ,p_operation_servers         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_list
+      ,p_operation_security        IN  dz_swagger3_object_vry --dz_swagger3_security_req_list
+      ,p_operation_servers         IN  dz_swagger3_object_vry --dz_swagger3_server_list
       ,p_versionid                 IN  VARCHAR2
    ) RETURN SELF AS RESULT
    

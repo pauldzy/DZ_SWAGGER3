@@ -14,8 +14,7 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_link_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_link_id                 IN  VARCHAR2
+       p_link_id                 IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
       ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
@@ -52,11 +51,12 @@ AS
        p_link_id                 IN  VARCHAR2
       ,p_link_operationRef       IN  VARCHAR2
       ,p_link_operationId        IN  VARCHAR2
-      ,p_link_parameters         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_string_hash_list
+      ,p_link_parameters         IN  dz_swagger3_object_vry --dz_swagger3_string_hash_list
       ,p_link_requestBody        IN  VARCHAR2
       ,p_link_description        IN  VARCHAR2
-      ,p_link_server             IN  VARCHAR2 --dz_swagger3_server_typ
+      ,p_link_server             IN  dz_swagger3_object_typ --dz_swagger3_server_typ
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
@@ -68,19 +68,8 @@ AS
       self.link_requestBody  := p_link_requestBody;
       self.link_description  := p_link_description;
       self.link_server       := p_link_server;
-      /*
-      --------------------------------------------------------------------------
-      IF self.doREF() = 'TRUE'
-      AND p_load_components = 'TRUE'
-      THEN
-         dz_swagger3_main.insert_component(
-             p_object_id     => p_link_id
-            ,p_object_type   => 'link'
-            ,p_response_code => p_hash_key
-         );
-         
-      END IF;
-      */
+      self.versionid         := p_versionid;
+      
       RETURN; 
       
    END dz_swagger3_link_typ;
@@ -184,7 +173,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -247,7 +235,11 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT * FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
          || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
           ary_clb
@@ -337,20 +329,34 @@ AS
       --------------------------------------------------------------------------
       IF self.link_server IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || 'a.servertyp.toJSON( '
-         || '   p_pretty_print => :p01 + 1 '
-         || '  ,p_force_inline => :p02 '
-         || ') '
-         || 'FROM dz_swagger3_xobjects a '
-         || 'WHERE '
-         || 'a.object_id = :p01'
-         INTO clb_tmp
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,self.link_server;
+         BEGIN
+            EXECUTE IMMEDIATE 
+               'SELECT '
+            || 'a.servertyp.toJSON( '
+            || '   p_pretty_print => :p01 + 1 '
+            || '  ,p_force_inline => :p02 '
+            || ') '
+            || 'FROM dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,self.link_server.object_type_id
+            ,self.link_server.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
 
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -557,7 +563,11 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT * FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
          || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
           ary_clb
@@ -619,20 +629,34 @@ AS
       --------------------------------------------------------------------------
       IF self.link_server IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || 'a.servertyp.toYAML( '
-         || '   p_pretty_print => :p01 + 1 '
-         || '  ,p_force_inline => :p02 '
-         || ') '
-         || 'FROM dz_swagger3_xobjects a '
-         || 'WHERE '
-         || 'a.object_id = :p01'
-         INTO clb_tmp
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,self.link_server;
+         BEGIN
+            EXECUTE IMMEDIATE 
+               'SELECT '
+            || 'a.servertyp.toYAML( '
+            || '   p_pretty_print => :p01 + 1 '
+            || '  ,p_force_inline => :p02 '
+            || ') '
+            || 'FROM dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,self.link_server.object_type_id
+            ,self.link_server.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
       
          clb_output := clb_output || dz_json_util.pretty_str(
              'server: ' 

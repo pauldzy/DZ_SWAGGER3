@@ -3,7 +3,7 @@ AUTHID DEFINER
 AS OBJECT (
     encoding_id            VARCHAR2(255 Char)
    ,encoding_contentType   VARCHAR2(255 Char)
-   ,encoding_headers       MDSYS.SDO_STRING2_ARRAY --dz_swagger3_header_list
+   ,encoding_headers       dz_swagger3_object_vry --dz_swagger3_header_list
    ,encoding_style         VARCHAR2(255 Char)
    ,encoding_explode       VARCHAR2(5 Char)
    ,encoding_allowReserved VARCHAR2(5 Char)
@@ -18,7 +18,7 @@ AS OBJECT (
    ,CONSTRUCTOR FUNCTION dz_swagger3_encoding_typ(
        p_encoding_id            IN  VARCHAR2
       ,p_encoding_contentType   IN  VARCHAR2
-      ,p_encoding_headers       IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_header_list
+      ,p_encoding_headers       IN  dz_swagger3_object_vry --dz_swagger3_header_list
       ,p_encoding_style         IN  VARCHAR2
       ,p_encoding_explode       IN  VARCHAR2
       ,p_encoding_allowReserved IN  VARCHAR2

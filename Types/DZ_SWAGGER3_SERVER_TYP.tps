@@ -3,7 +3,7 @@ AUTHID DEFINER
 AS OBJECT (
     server_url          VARCHAR2(255 Char)
    ,server_description  VARCHAR2(4000 Char)
-   ,server_variables    MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_var_list
+   ,server_variables    dz_swagger3_object_vry --dz_swagger3_server_var_list
    ,versionid           VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
@@ -23,7 +23,7 @@ AS OBJECT (
    ,CONSTRUCTOR FUNCTION dz_swagger3_server_typ(
        p_server_url          IN  VARCHAR2
       ,p_server_description  IN  VARCHAR2
-      ,p_server_variables    IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_var_list
+      ,p_server_variables    IN  dz_swagger3_object_vry --dz_swagger3_server_var_list
       ,p_versionid           IN  VARCHAR2
    ) RETURN SELF AS RESULT
    

@@ -16,7 +16,7 @@ AS
    CONSTRUCTOR FUNCTION dz_swagger3_encoding_typ(
        p_encoding_id            IN  VARCHAR2
       ,p_encoding_contentType   IN  VARCHAR2
-      ,p_encoding_headers       IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_header_list
+      ,p_encoding_headers       IN  dz_swagger3_object_vry --dz_swagger3_header_list
       ,p_encoding_style         IN  VARCHAR2
       ,p_encoding_explode       IN  VARCHAR2
       ,p_encoding_allowReserved IN  VARCHAR2
@@ -139,7 +139,11 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
@@ -331,7 +335,11 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys

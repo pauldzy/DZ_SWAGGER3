@@ -3,16 +3,13 @@ AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   FUNCTION filter_ids(
-       p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_object_type_id      IN  VARCHAR2
+   PROCEDURE xrelates(
+       p_children_ids        IN  dz_swagger3_object_vry
       ,p_parent_id           IN  VARCHAR2
-   ) RETURN MDSYS.SDO_STRING2_ARRAY
+   )
    AS
-      ary_output MDSYS.SDO_STRING2_ARRAY;
-      
    BEGIN
-   
+
       INSERT INTO dz_swagger3_xrelates(
           parent_object_id
          ,child_object_id
@@ -20,702 +17,894 @@ AS
       )
       SELECT
        p_parent_id
-      ,a.column_value
-      ,p_object_type_id
+      ,a.object_id
+      ,a.object_type_id
       FROM
       TABLE(p_children_ids) a
       WHERE
-      a.column_value IS NOT NULL;
+      a.object_id IS NOT NULL;
+
+   END;
    
-      EXECUTE IMMEDIATE
-      'SELECT
-      a.column_value
-      FROM
-      TABLE(:p01) a
-      WHERE 
-      a.column_value NOT IN (
-         SELECT b.object_id FROM dz_swagger3_xobjects b
-         WHERE b.object_type_id = :p02
-      )  
-      AND a.column_value IS NOT NULL '
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION filter_ids(
+       p_children_ids        IN  dz_swagger3_object_vry
+      ,p_parent_id           IN  VARCHAR2
+   ) RETURN dz_swagger3_object_vry
+   AS
+      ary_output dz_swagger3_object_vry;
+      
+   BEGIN
+   
+      xrelates(p_children_ids,p_parent_id);
+   
+      SELECT
+      dz_swagger3_object_typ(
+          p_object_id        => a.object_id
+         ,p_object_type_id   => a.object_type_id
+         ,p_object_subtype   => a.object_subtype
+         ,p_object_attribute => a.object_attribute
+         ,p_object_key       => a.object_key
+         ,p_object_hidden    => a.object_hidden
+         ,p_object_required  => a.object_required
+         ,p_object_order     => a.object_order
+      )
       BULK COLLECT INTO ary_output
-      USING 
-       p_children_ids
-      ,p_object_type_id;
+      FROM
+      TABLE(p_children_ids) a
+      LEFT JOIN
+      dz_swagger3_xobjects b
+      ON
+          a.object_id      = b.object_id
+      AND a.object_type_id = b.object_type_id
+      WHERE 
+          b.object_id IS NULL 
+      AND a.object_id IS NOT NULL;
       
       RETURN ary_output;
       
    END filter_ids;
-
+   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE exampletyp_loader(
+   PROCEDURE encodingtyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    )
    AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
-      str_otype VARCHAR2(255 Char) := 'exampletyp';
-
    BEGIN
-   
-      ary_ids := filter_ids(p_children_ids,str_otype,p_parent_id);
-      
-      EXECUTE IMMEDIATE 
-      'INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,' || str_otype || '
-          ,ordering_key
-      )
-      SELECT
-       a.column_value
-      ,:p01
-      ,dz_swagger3_example_typ(
-          p_example_id => a.column_value
-         ,p_versionid      => :p02
-       )
-      ,10
-      FROM 
-      TABLE(:p03) a'
-      USING
-       str_otype
-      ,p_versionid
-      ,ary_ids;
-      
-      COMMIT;
-
-   END exampletyp_loader;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   PROCEDURE extrdocstyp_loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
-      str_otype VARCHAR2(255 Char) := 'extrdocstyp';
-
-   BEGIN
-   
-      ary_ids := filter_ids(p_children_ids,str_otype,p_parent_id);
-
-      EXECUTE IMMEDIATE 
-      'INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,' || str_otype || '
-          ,ordering_key
-      )
-      SELECT
-       a.column_value
-      ,:p01
-      ,dz_swagger3_extrdocs_typ(
-          p_externaldoc_id => a.column_value
-         ,p_versionid      => :p02
-       )
-      ,10
-      FROM 
-      TABLE(:p03) a'
-      USING
-       str_otype
-      ,p_versionid
-      ,ary_ids;
-      
-      COMMIT;
-
-   END extrdocstyp_loader;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   PROCEDURE headertyp_loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
-      str_otype VARCHAR2(255 Char) := 'headertyp';
-
-   BEGIN
-   
       NULL;
+   END encodingtyp;
 
-   END headertyp_loader;
-   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE linktyp_loader(
+   PROCEDURE exampletyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    )
    AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
+      ary_ids   dz_swagger3_object_vry;
+
+   BEGIN
+   
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
+      
+      INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,exampletyp
+          ,ordering_key
+      )
+      SELECT
+       a.object_id
+      ,a.object_type_id
+      ,dz_swagger3_example_typ(
+          p_example_id => a.object_id
+         ,p_versionid  => p_versionid
+       )
+      ,a.object_order
+      FROM 
+      TABLE(ary_ids) a;
+
+   END exampletyp;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE extrdocstyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+      ary_ids   dz_swagger3_object_vry;
+
+   BEGIN
+   
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
+
+      INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,extrdocstyp
+          ,ordering_key
+      )
+      SELECT
+       a.object_id
+      ,a.object_type_id
+      ,dz_swagger3_extrdocs_typ(
+          p_externaldoc_id => a.object_id
+         ,p_versionid      => p_versionid
+       )
+      ,a.object_order
+      FROM 
+      TABLE(ary_ids) a;
+
+   END extrdocstyp;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE headertyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+      ary_ids   dz_swagger3_object_vry;
+
+   BEGIN
+   
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
+
+      INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,headertyp
+          ,ordering_key
+      )
+      SELECT
+       a.object_id
+      ,a.object_type_id
+      ,dz_swagger3_header_typ(
+          p_header_id => a.object_id
+         ,p_versionid      => p_versionid
+       )
+      ,a.object_order
+      FROM 
+      TABLE(ary_ids) a;
+
+   END headertyp;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE linktyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+      ary_ids   dz_swagger3_object_vry;
       str_otype VARCHAR2(255 Char) := 'linktyp';
 
    BEGIN
    
       NULL;
 
-   END linktyp_loader;
+   END linktyp;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE mediatyp_loader(
+   PROCEDURE mediatyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    )
    AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
-      str_otype VARCHAR2(255 Char) := 'mediatyp';
+      ary_ids   dz_swagger3_object_vry;
 
    BEGIN
    
-      NULL;
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-   END mediatyp_loader;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   PROCEDURE operationtyp_loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
-      str_otype VARCHAR2(255 Char) := 'operationtyp';
-
-   BEGIN
-   
-      ary_ids := filter_ids(p_children_ids,str_otype,p_parent_id);
-
-      EXECUTE IMMEDIATE '      
       INSERT 
       INTO dz_swagger3_xobjects(
           object_id
          ,object_type_id
-         ,' || str_otype || '
+         ,object_key
+         ,mediatyp
          ,ordering_key 
       )
       SELECT
-       a.column_value
-      ,:p01
-      ,dz_swagger3_operation_typ(
-          p_operation_id => a.column_value
-         ,p_versionid    => :p02
+       a.object_id
+      ,a.object_type_id
+      ,a.object_key
+      ,dz_swagger3_media_typ(
+          p_media_id    => a.object_id
+         ,p_media_type  => a.object_key
+         ,p_versionid   => p_versionid
        )
-      ,rownum * 10
+      ,a.object_order
       FROM
-      TABLE(:p03) a '
-      USING
-       str_otype
-      ,p_versionid
-      ,ary_ids;
+      TABLE(ary_ids) a;
       
-      EXECUTE IMMEDIATE
-      'BEGIN
-         FOR r IN (
-            SELECT 
-            a.' || str_otype || ' 
-            FROM 
-            dz_swagger3_xobjects a
-            WHERE
-            (a.object_id,a.object_type_id) IN (
-               SELECT
-                b.column_value
-               ,:p01
-               FROM
-               TABLE(:p02) b
-            )
+      FOR r IN (
+         SELECT 
+         a.mediatyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
          )
-         LOOP
-            r.' || str_otype || '.traverse();
-         END LOOP;
+      )
+      LOOP
+         r.mediatyp.traverse();
+      END LOOP;
 
-      END;'
-      USING
-       str_otype
-      ,ary_ids;
-      
-   END operationtyp_loader;
-   
+   END mediatyp;
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE parametertyp_loader(
+   PROCEDURE mediatyp_emulated(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_parameter_ids       IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    )
    AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
-      str_otype VARCHAR2(255 Char) := 'parametertyp';
+      ary_ids   dz_swagger3_object_vry;
+
+   BEGIN
+   
+      ary_ids := filter_ids(
+          p_children_ids
+         ,p_parent_id
+      );
+
+      INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,object_key
+          ,mediatyp
+          ,ordering_key
+      )
+      SELECT
+       a.object_id
+      ,a.object_type_id
+      ,a.object_key
+      ,dz_swagger3_media_typ(
+          p_media_id       => a.object_id
+         ,p_media_type     => a.object_key
+         ,p_parameters     => p_parameter_ids
+         ,p_versionid      => p_versionid
+       )
+      ,a.object_order
+      FROM 
+      TABLE(ary_ids) a;
+
+      FOR r IN (
+         SELECT 
+         a.mediatyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
+         )
+      )
+      LOOP
+         r.mediatyp.traverse();
+      END LOOP;   
+
+   END mediatyp_emulated;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE operationtyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+      ary_ids   dz_swagger3_object_vry;
+
+   BEGIN
+   
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
+
+      INSERT 
+      INTO dz_swagger3_xobjects(
+          object_id
+         ,object_type_id
+         ,operationtyp
+         ,ordering_key 
+      )
+      SELECT
+       a.object_id
+      ,a.object_type_id
+      ,dz_swagger3_operation_typ(
+          p_operation_id => a.object_id
+         ,p_versionid    => p_versionid
+       )
+      ,a.object_order
+      FROM
+      TABLE(ary_ids) a;
+      
+      FOR r IN (
+         SELECT 
+         a.operationtyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
+         )
+      )
+      LOOP
+         r.operationtyp.traverse();
+      END LOOP;
+      
+   END operationtyp;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE parametertyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+      ary_ids   dz_swagger3_object_vry;
 
    BEGIN
       
-      ary_ids := filter_ids(p_children_ids,str_otype,p_parent_id);
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      EXECUTE IMMEDIATE 
-      'INSERT INTO dz_swagger3_xobjects(
+      INSERT INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
           ,object_key
           ,object_hidden
-          ,' || str_otype || '
+          ,parametertyp
           ,ordering_key
       )
       SELECT
-       a.column_value
-      ,:p01
-      ,a.parameter_name
-      ,a.parameter_list_hidden
+       a.object_id
+      ,a.object_type_id
+      ,a.object_key
+      ,a.object_hidden
       ,dz_swagger3_parameter_typ(
-          p_parameter_id => a.column_value
-         ,p_versionid    => :p02
+          p_parameter_id => a.object_id
+         ,p_versionid    => p_versionid
        )
-      ,10
+      ,a.object_order
       FROM 
-      dz_swagger3_parameter a
-      JOIN
-      dz_swagger3_parent_parm_map b
-      ON
-          a.parameter_id = b.parameter_id 
-      AND a.versionid    = b.versionid
-      JOIN
-      TABLE(:p03) c
-      ON
-      a.parameter_id = c.column_value
-      ORDER BY
-      b.parameter_order '
-      USING
-       str_otype
-      ,p_versionid
-      ,ary_ids;
-      
-      EXECUTE IMMEDIATE
-      'BEGIN
-         FOR r IN (
-            SELECT 
-            a.' || str_otype || ' 
-            FROM 
-            dz_swagger3_xobjects a
-            WHERE
-            (a.object_id,a.object_type_id) IN (
-               SELECT
-                b.column_value
-               ,:p01
-               FROM
-               TABLE(:p02) b
-            )
-         )
-         LOOP
-            r.' || str_otype || '.traverse();
-         END LOOP;
+      TABLE(ary_ids) a;
 
-      END;'
-      USING
-       str_otype
-      ,ary_ids;
-      
-      COMMIT;
+      FOR r IN (
+         SELECT 
+         a.parametertyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
+         )
+      )
+      LOOP
+         r.parametertyp.traverse();
+      END LOOP;
    
-   END parametertyp_loader;
+   END parametertyp;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE pathtyp_loader(
+   PROCEDURE pathtyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    )
    AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
-      str_otype VARCHAR2(255 Char) := 'pathtyp';
+      ary_ids   dz_swagger3_object_vry;
 
    BEGIN
    
-      ary_ids := filter_ids(p_children_ids,str_otype,p_parent_id);
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      EXECUTE IMMEDIATE 
-      'INSERT INTO dz_swagger3_xobjects(
+      INSERT INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
           ,object_key
-          ,' || str_otype || '
+          ,pathtyp
           ,ordering_key
       )
       SELECT
-       a.path_id
-      ,:p01
-      ,a.path_endpoint
+       a.object_id
+      ,a.object_type_id
+      ,a.object_key
       ,dz_swagger3_path_typ(
-          p_path_id    => a.path_id
-         ,p_versionid  => :p02
+          p_path_id    => a.object_id
+         ,p_versionid  => p_versionid
        )
-      ,10
+      ,a.object_order
       FROM 
-      dz_swagger3_path a
-      JOIN
-      TABLE(:p03) b
-      ON
-      a.path_id = b.column_value 
-      WHERE
-      a.versionid = :p04 '
-      USING
-       str_otype
-      ,p_versionid
-      ,ary_ids
-      ,p_versionid;
+      TABLE(ary_ids) a;
       
-      EXECUTE IMMEDIATE
-      'BEGIN
-         FOR r IN (
-            SELECT 
-            a.' || str_otype || ' 
-            FROM 
-            dz_swagger3_xobjects a
-            WHERE
-            (a.object_id,a.object_type_id) IN (
-               SELECT
-                b.column_value
-               ,:p01
-               FROM
-               TABLE(:p02) b
-            )
+      FOR r IN (
+         SELECT 
+         a.pathtyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
          )
-         LOOP
-            r.' || str_otype || '.traverse();
-         END LOOP;
+      )
+      LOOP
+         r.pathtyp.traverse();
+      END LOOP;
 
-      END;'
-      USING
-       str_otype
-      ,ary_ids;
-      
-      COMMIT;
-
-   END pathtyp_loader;
+   END pathtyp;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE requestbodytyp_loader(
+   PROCEDURE requestbodytyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_child_id            IN  dz_swagger3_object_typ
       ,p_versionid           IN  VARCHAR2
    )
    AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
-      str_otype VARCHAR2(255 Char) := 'requestbodytyp';
+      ary_ids   dz_swagger3_object_vry;
+
+   BEGIN
+   
+      ary_ids := filter_ids(
+          dz_swagger3_object_vry(p_child_id)
+         ,p_parent_id
+      );
+
+      INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,object_key
+          ,requestbodytyp
+          ,ordering_key
+      )
+      SELECT
+       a.object_id
+      ,a.object_type_id
+      ,a.object_key
+      ,dz_swagger3_requestbody_typ(
+          p_requestbody_id => a.object_id
+         ,p_versionid      => p_versionid
+       )
+      ,a.object_order
+      FROM 
+      TABLE(ary_ids) a;
+      
+      FOR r IN (
+         SELECT 
+         a.requestbodytyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
+         )
+      )
+      LOOP
+         r.requestbodytyp.traverse();
+      END LOOP;
+
+   END requestbodytyp;
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE requestbodytyp_emulated(
+       p_parent_id           IN  VARCHAR2
+      ,p_child_id            IN  dz_swagger3_object_typ
+      ,p_media_type          IN  VARCHAR2
+      ,p_parameter_ids       IN  dz_swagger3_object_vry
+      ,p_inline_rb           IN  VARCHAR2
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+      ary_ids   dz_swagger3_object_vry;
+
+   BEGIN
+   
+      ary_ids := filter_ids(
+          dz_swagger3_object_vry(p_child_id)
+         ,p_parent_id
+      );
+
+      INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,object_key
+          ,requestbodytyp
+          ,ordering_key
+      )
+      SELECT
+       a.object_id
+      ,a.object_type_id
+      ,a.object_key
+      ,dz_swagger3_requestbody_typ(
+          p_requestbody_id => a.object_id
+         ,p_media_type     => p_media_type
+         ,p_parameters     => p_parameter_ids
+         ,p_inline_rb      => p_inline_rb
+         ,p_versionid      => p_versionid
+       )
+      ,a.object_order
+      FROM 
+      TABLE(ary_ids) a;
+
+      FOR r IN (
+         SELECT 
+         a.requestbodytyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
+         )
+      )
+      LOOP
+         r.requestbodytyp.traverse();
+      END LOOP;
+
+   END requestbodytyp_emulated;
+   
+    -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE responsetyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+      ary_ids   dz_swagger3_object_vry;
+      str_otype VARCHAR2(255 Char) := 'responsetyp';
 
    BEGIN
    
       NULL;
 
-   END requestbodytyp_loader;
+   END responsetyp;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE schematyp_loader(
+   PROCEDURE schematyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    )
    AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
-      str_otype VARCHAR2(255 Char) := 'schematyp';
+      ary_ids   dz_swagger3_object_vry;
 
    BEGIN
    
-      ary_ids := filter_ids(p_children_ids,str_otype,p_parent_id);
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      EXECUTE IMMEDIATE 
-      'INSERT INTO dz_swagger3_xobjects(
+      INSERT INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
-          ,' || str_otype || '
+          ,object_required
+          ,schematyp
           ,ordering_key
       )
       SELECT
-       a.column_value
-      ,:p01
-      ,dz_swagger3_schema_typ(
-          p_schema_id   => a.column_value
-         ,p_versionid   => :p02
-       )
-      ,10
-      FROM 
-      TABLE(:p03) a'
-      USING
-       str_otype
-      ,p_versionid
-      ,ary_ids;
-      
-      EXECUTE IMMEDIATE
-      'BEGIN
-         FOR r IN (
-            SELECT 
-            a.' || str_otype || ' 
-            FROM 
-            dz_swagger3_xobjects a
-            WHERE
-            (a.object_id,a.object_type_id) IN (
-               SELECT
-                b.column_value
-               ,:p01
-               FROM
-               TABLE(:p02) b
-            )
+       a.object_id
+      ,a.object_type_id
+      ,a.object_required
+      ,CASE 
+       WHEN a.object_subtype = 'emulated_item'
+       THEN
+         dz_swagger3_schema_typ(
+             p_schema_id             => a.object_id
+            ,p_required              => a.object_required
+            ,p_emulated_parameter_id => a.object_attribute
+            ,p_versionid             => p_versionid
          )
-         LOOP
-            r.' || str_otype || '.traverse();
-         END LOOP;
-
-      END;'
-      USING
-       str_otype
-      ,ary_ids;
+       ELSE
+         dz_swagger3_schema_typ(
+             p_schema_id             => a.object_id
+            ,p_required              => a.object_required
+            ,p_versionid             => p_versionid
+         )
+       END
+      ,a.object_order
+      FROM 
+      TABLE(ary_ids) a;
       
-      COMMIT;
+      FOR r IN (
+         SELECT 
+         a.schematyp 
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
+         )
+      )
+      LOOP
+         r.schematyp.traverse();
+      END LOOP;
 
-   END schematyp_loader;
-   
+   END schematyp;
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE servertyp_loader(
+   PROCEDURE schematyp_emulated(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_child_id            IN  dz_swagger3_object_typ
+      ,p_parameter_ids       IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    )
    AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
-      str_otype VARCHAR2(255 Char) := 'servertyp';
+      ary_ids   dz_swagger3_object_vry;
 
    BEGIN
    
-      ary_ids := filter_ids(p_children_ids,str_otype,p_parent_id);
+      ary_ids := filter_ids(
+          dz_swagger3_object_vry(p_child_id)
+         ,p_parent_id
+      );
 
-      EXECUTE IMMEDIATE 
-      'INSERT 
+      INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,object_key
+          ,schematyp
+          ,ordering_key
+      )
+      SELECT
+       a.object_id
+      ,a.object_type_id
+      ,a.object_key
+      ,dz_swagger3_schema_typ(
+          p_schema_id     => a.object_id
+         ,p_required      => a.object_required
+         ,p_parameters    => p_parameter_ids
+         ,p_versionid     => p_versionid
+       )
+      ,a.object_order
+      FROM 
+      TABLE(ary_ids) a;
+
+      FOR r IN (
+         SELECT 
+         a.schematyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
+         )
+      )
+      LOOP
+         r.schematyp.traverse();
+      END LOOP;
+
+   END schematyp_emulated;
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE servertyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+      ary_ids   dz_swagger3_object_vry;
+
+   BEGIN
+   
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
+
+      INSERT 
       INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
-          ,' || str_otype || '
+          ,servertyp
           ,ordering_key
       )
       SELECT
-       a.column_value
-      ,:p01
+       a.object_id
+      ,a.object_type_id
       ,dz_swagger3_server_typ(
-          p_server_id   => a.column_value
-         ,p_versionid   => :p02
+          p_server_id   => a.object_id
+         ,p_versionid   => p_versionid
        )
-      ,rownum * 10
+      ,a.object_order
       FROM 
-      TABLE(:p03) a '
-      USING 
-       str_otype
-      ,p_versionid
-      ,ary_ids;
+      TABLE(ary_ids) a;
       
-      EXECUTE IMMEDIATE
-      'BEGIN
-         FOR r IN (
-            SELECT 
-            a.' || str_otype || ' 
-            FROM 
-            dz_swagger3_xobjects a
-            WHERE
-            (a.object_id,a.object_type_id) IN (
-               SELECT
-                b.column_value
-               ,:p01
-               FROM
-               TABLE(:p02) b
-            )
+      FOR r IN (
+         SELECT 
+         a.servertyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
          )
-         LOOP
-            r.' || str_otype || '.traverse();
-         END LOOP;
-
-      END;'
-      USING 
-       str_otype
-      ,ary_ids;
+      )
+      LOOP
+         r.servertyp.traverse();
+      END LOOP;
       
-   END servertyp_loader;
+   END servertyp;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE servervartyp_loader(
+   PROCEDURE servervartyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    )
    AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
-      str_otype VARCHAR2(255 Char) := 'servervartyp';
+      ary_ids   dz_swagger3_object_vry;
 
    BEGIN
    
-      ary_ids := filter_ids(p_children_ids,str_otype,p_parent_id);
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      EXECUTE IMMEDIATE 
-      'INSERT 
+      INSERT 
       INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
           ,object_key
-          ,' || str_otype || '
+          ,servervartyp
           ,ordering_key
       )
       SELECT
-       a.column_value
-      ,:p01
-      ,a.column_value
+       a.object_id
+      ,a.object_type_id
+      ,a.object_key
       ,dz_swagger3_server_var_typ(
-          p_server_var_id  => a.column_value
-         ,p_versionid      => :p02
+          p_server_var_id  => a.object_id
+         ,p_versionid      => p_versionid
        )
-      ,rownum * 10
+      ,a.object_order
       FROM 
-      TABLE(:p03) a '
-      USING 
-       str_otype
-      ,p_versionid
-      ,ary_ids;
+      TABLE(ary_ids) a;
       
-   END servervartyp_loader;
+   END servervartyp;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE stringhashtyp_loader(
+   PROCEDURE stringhashtyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    )
    AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
+      ary_ids   dz_swagger3_object_vry;
       str_otype VARCHAR2(255 Char) := 'stringhashtyp';
 
    BEGIN
    
-      ary_ids := filter_ids(p_children_ids,str_otype,p_parent_id);
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      EXECUTE IMMEDIATE 
-      'INSERT 
+      INSERT 
       INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
-          ,object_key
-          ,' || str_otype || '
+          ,stringhashtyp
           ,ordering_key
       )
       SELECT
-       a.column_value
-      ,:p01
-      ,a.column_value
-      ,dz_swagger3_server_var_typ(
-          p_server_var_id  => a.column_value
-         ,p_versionid      => :p02
+       a.object_id
+      ,a.object_type_id
+      ,dz_swagger3_string_hash_typ(
+          p_hash_key       => a.object_id
+         ,p_string_value   => a.object_key
+         ,p_versionid      => p_versionid
        )
-      ,rownum * 10
+      ,a.object_order
       FROM 
-      TABLE(:p03) a '
-      USING 
-       str_otype
-      ,p_versionid
-      ,ary_ids;
+      TABLE(ary_ids) a;
       
-   END stringhashtyp_loader;
+   END stringhashtyp;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE tagtyp_loader(
+   PROCEDURE tagtyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    )
    AS
-      ary_ids   MDSYS.SDO_STRING2_ARRAY;
+      ary_ids   dz_swagger3_object_vry;
       str_otype VARCHAR2(255 Char) := 'tagtyp';
 
    BEGIN
    
-      ary_ids := filter_ids(p_children_ids,str_otype,p_parent_id);
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      EXECUTE IMMEDIATE 
-      'INSERT 
+      INSERT 
       INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
           ,object_key
-          ,' || str_otype || '
+          ,tagtyp
           ,ordering_key
       )
       SELECT
-       a.tag_id
-      ,:p01
-      ,a.tag_name
+       a.object_id
+      ,a.object_type_id
+      ,a.object_key
       ,dz_swagger3_tag_typ(
-          p_tag_id           => a.tag_id
-         ,p_tag_name         => a.tag_name
-         ,p_tag_description  => a.tag_description
-         ,p_tag_externalDocs => a.tag_externaldocs_id
-         ,p_versionid        => :p02
+          p_tag_id        => a.object_id
+         ,p_versionid     => p_versionid
        )
-      ,rownum * 10
+      ,a.object_order
       FROM
-      dz_swagger3_tag a
-      JOIN (
-         SELECT
-          rownum AS array_order
-         ,cc.column_value
-         FROM
-         TABLE(:p03) cc
-      ) c
-      ON
-      a.tag_id = c.column_value
-      WHERE
-      a.versionid = :p04 
-      ORDER BY 
-      c.array_order '
-      USING 
-       str_otype
-      ,p_versionid
-      ,ary_ids
-      ,p_versionid;
+      TABLE(ary_ids) a;
       
-      EXECUTE IMMEDIATE
-      'BEGIN
-         FOR r IN (
-            SELECT 
-            a.' || str_otype || ' 
-            FROM 
-            dz_swagger3_xobjects a
-            WHERE
-            (a.object_id,a.object_type_id) IN (
-               SELECT
-                b.column_value
-               ,:p01
-               FROM
-               TABLE(:p02) b
-            )
+      FOR r IN (
+         SELECT 
+         a.tagtyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
          )
-         LOOP
-            r.' || str_otype || '.traverse();
-         END LOOP;
-
-      END;'
-      USING 
-       str_otype
-      ,ary_ids;
+      )
+      LOOP
+         r.tagtyp.traverse();
+      END LOOP;
       
-   END tagtyp_loader;
+   END tagtyp;
 
 END dz_swagger3_loader;
 /

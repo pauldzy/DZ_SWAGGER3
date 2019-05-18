@@ -1,8 +1,7 @@
 CREATE OR REPLACE TYPE dz_swagger3_header_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    hash_key                VARCHAR2(255 Char)
-   ,header_id               VARCHAR2(255 Char)
+    header_id               VARCHAR2(255 Char)
    ,header_description      VARCHAR2(4000 Char)
    ,header_required         VARCHAR2(5 Char)
    ,header_deprecated       VARCHAR2(5 Char)
@@ -10,10 +9,11 @@ AS OBJECT (
    ,header_style            VARCHAR2(255 Char)
    ,header_explode          VARCHAR2(5 Char)
    ,header_allowReserved    VARCHAR2(5 Char)
-   ,header_schema           VARCHAR2(40 Char) --dz_swagger3_schema_typ
+   ,header_schema           dz_swagger3_object_typ --dz_swagger3_schema_typ
    ,header_example_string   VARCHAR2(255 Char)
    ,header_example_number   NUMBER
-   ,header_examples         MDSYS.SDO_STRING2_ARRAY --z_swagger3_example_list
+   ,header_examples         dz_swagger3_object_vry --z_swagger3_example_list
+   ,versionid               VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -23,8 +23,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_header_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_header_id               IN  VARCHAR2
+       p_header_id               IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
       ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
@@ -33,8 +32,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_header_typ(
-       p_hash_key                IN  VARCHAR2
-      ,p_header_id               IN  VARCHAR2
+       p_header_id               IN  VARCHAR2
       ,p_header_description      IN  VARCHAR2
       ,p_header_required         IN  VARCHAR2
       ,p_header_deprecated       IN  VARCHAR2
@@ -42,11 +40,12 @@ AS OBJECT (
       ,p_header_style            IN  VARCHAR2
       ,p_header_explode          IN  VARCHAR2
       ,p_header_allowReserved    IN  VARCHAR2
-      ,p_header_schema           IN  VARCHAR2 --dz_swagger3_schema_typ
+      ,p_header_schema           IN  dz_swagger3_object_typ --dz_swagger3_schema_typ
       ,p_header_example_string   IN  VARCHAR2
       ,p_header_example_number   IN  NUMBER
-      ,p_header_examples         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_example_list
+      ,p_header_examples         IN  dz_swagger3_object_vry --dz_swagger3_example_list
       ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
+      ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT
    
    -----------------------------------------------------------------------------

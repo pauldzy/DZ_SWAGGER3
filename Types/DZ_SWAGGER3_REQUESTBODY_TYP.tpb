@@ -21,50 +21,43 @@ AS
    ) RETURN SELF AS RESULT
    AS
    BEGIN
-   /*
+
       --------------------------------------------------------------------------
       -- Step 10
-      -- Pull the object information
-      -------------------------------------------------------------------------- 
-      BEGIN
-         SELECT
-         dz_swagger3_requestbody_typ(
-             p_hash_key                 => p_requestbody_id
-            ,p_requestbody_id           => p_requestbody_id
-            ,p_requestbody_description  => a.requestbody_description
-            ,p_requestBody_force_inline => a.requestBody_force_inline
-            ,p_requestbody_content      => NULL
-            ,p_requestbody_required     => a.requestbody_required
-            ,p_load_components          => p_load_components
-         )
-         INTO SELF
-         FROM
-         dz_swagger3_requestbody a
-         WHERE
-             a.versionid      = p_versionid
-         AND a.requestbody_id = p_requestbody_id;
-         
-      EXCEPTION
-         WHEN NO_DATA_FOUND
-         THEN
-            RETURN;
-            
-         WHEN OTHERS
-         THEN
-            RAISE;
-            
-      END;
-      
+      -- Initialize the object
+      --------------------------------------------------------------------------
+      self.versionid                  := p_versionid;
+
       --------------------------------------------------------------------------
       -- Step 20
+      -- Pull the object information
+      --------------------------------------------------------------------------
+      SELECT
+       a.requestBody_id
+      ,a.requestBody_description
+      ,a.requestBody_force_inline
+      ,a.requestBody_required
+      INTO
+       self.requestBody_id
+      ,self.requestBody_description
+      ,self.requestBody_force_inline
+      ,self.requestBody_required
+      FROM
+      dz_swagger3_requestbody a
+      WHERE
+          a.versionid      = p_versionid
+      AND a.requestBody_id = p_requestBody_id;
+
+      --------------------------------------------------------------------------
+      -- Step 30
       -- Collect the media content
       -------------------------------------------------------------------------- 
       SELECT
-      dz_swagger3_media_typ(
-          p_media_id              => b.media_id
-         ,p_media_type            => a.media_type
-         ,p_versionid             => p_versionid
-         ,p_ref_brake             => p_ref_brake
+      dz_swagger3_object_typ(
+          p_object_id       => b.media_id
+         ,p_object_type_id  => 'mediatyp'
+         ,p_object_key      => a.media_type
+         ,p_object_order    => a.media_order
       )
       BULK COLLECT INTO self.requestbody_content
       FROM
@@ -77,9 +70,9 @@ AS
       WHERE
           a.versionid = p_versionid
       AND a.parent_id = p_requestbody_id;
-      */
+
       --------------------------------------------------------------------------
-      -- Step 
+      -- Step 40
       -- Return the completed object
       --------------------------------------------------------------------------   
       RETURN; 
@@ -91,69 +84,39 @@ AS
    CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
        p_requestbody_id           IN  VARCHAR2
       ,p_media_type               IN  VARCHAR2
-      ,p_parameters               IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_parameter_list
+      ,p_parameters               IN  dz_swagger3_object_vry --dz_swagger3_parameter_list
       ,p_inline_rb                IN  VARCHAR2
       ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
       ,p_versionid                IN  VARCHAR2
    ) RETURN SELF AS RESULT
    AS
-      int_counter PLS_INTEGER;
-      obj_parent  dz_swagger3_schema_typ;
-      str_check   VARCHAR2(255 Char);
-      
    BEGIN
-   /*
-      self.hash_key            := p_requestbody_id;
-      self.requestbody_id      := p_requestbody_id;
-      self.requestBody_inline  := p_inline_rb;
-      self.requestBody_force_inline := 'TRUE';
-      
-      self.requestbody_content := dz_swagger3_media_list();
-      self.requestbody_content.EXTEND();
-      
-      self.requestbody_content(1) := dz_swagger3_media_typ();
-      self.requestbody_content(1).hash_key := p_media_type;
-      
-      obj_parent                     := dz_swagger3_schema_typ();
-      obj_parent.schema_id           := p_requestbody_id || '.Schema';
-      obj_parent.schema_category     := 'object';
-      obj_parent.schema_type         := 'object';
-      obj_parent.schema_force_inline := 'TRUE';
-      obj_parent.schema_properties   := dz_swagger3_schema_nf_list();
-       
-      IF obj_parent.schema_category IS NULL
-      THEN
-         RAISE_APPLICATION_ERROR(-20001,'err');
-         
-      END IF;
-      
-      int_counter := 1;
-      FOR i IN 1 .. p_parameters.COUNT
-      LOOP
-         IF  p_parameters(i).parameter_list_hidden <> 'TRUE'
-         AND p_parameters(i).parameter_requestbody_flag = 'TRUE'
-         THEN
-            obj_parent.schema_properties.EXTEND();
-            obj_parent.schema_properties(int_counter) := dz_swagger3_schema_typ(
-                p_parameter       => p_parameters(i)
-               ,p_load_components => p_load_components
-            );
-            int_counter := int_counter + 1;            
 
-         END IF;
-         
-      END LOOP;
-
-      self.requestbody_content(1).media_schema := obj_parent;
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Initialize the object
+      --------------------------------------------------------------------------
+      self.versionid                  := p_versionid;
       
-      IF TREAT(
-         self.requestbody_content(1).media_schema AS dz_swagger3_schema_typ
-      ).schema_category IS NULL
-      THEN
-         RAISE_APPLICATION_ERROR(-20001,'err');
-         
-      END IF;
-      */
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Emulate the post object
+      --------------------------------------------------------------------------
+      self.requestBody_id             := p_requestbody_id;
+      self.requestBody_inline         := p_inline_rb;
+      self.requestBody_force_inline   := 'TRUE';
+      self.requestBody_emulated_parms := p_parameters;
+      
+      self.requestbody_content := dz_swagger3_object_vry(
+         dz_swagger3_object_typ(
+             p_object_id        => 'md.' || p_requestbody_id
+            ,p_object_type_id   => 'mediatyp'
+            ,p_object_subtype   => 'emulated'
+            ,p_object_key       => p_media_type
+            ,p_object_attribute => p_inline_rb   
+         )
+      );
+ 
       RETURN;
       
    END dz_swagger3_requestbody_typ;
@@ -164,7 +127,7 @@ AS
        p_requestbody_id           IN  VARCHAR2
       ,p_requestbody_description  IN  VARCHAR2
       ,p_requestBody_force_inline IN  VARCHAR2
-      ,p_requestbody_content      IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_media_list
+      ,p_requestbody_content      IN  dz_swagger3_object_vry --dz_swagger3_media_list
       ,p_requestbody_required     IN  VARCHAR2
       ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
       ,p_versionid                IN  VARCHAR2
@@ -182,6 +145,36 @@ AS
       RETURN; 
       
    END dz_swagger3_requestbody_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER PROCEDURE traverse
+   AS
+   BEGIN
+
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Load the media types
+      --------------------------------------------------------------------------
+      IF self.requestBody_content(1).object_subtype = 'emulated'
+      THEN
+         dz_swagger3_loader.mediatyp_emulated(
+             p_parent_id      => self.requestBody_id
+            ,p_children_ids   => self.requestBody_content
+            ,p_parameter_ids  => self.requestBody_emulated_parms
+            ,p_versionid      => self.versionid
+         );
+         
+      ELSE
+         dz_swagger3_loader.mediatyp(
+             p_parent_id      => self.requestBody_id
+            ,p_children_ids   => self.requestBody_content
+            ,p_versionid      => self.versionid
+         );
+         
+      END IF;
+  
+   END traverse;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -290,7 +283,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -328,14 +320,19 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.mediatyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
+         || '   p_pretty_print   => :p01 + 2 '
          || '  ,p_force_inline   => :p02 '
          || ' ) '
          || ',a.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
@@ -451,7 +448,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -586,7 +582,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys

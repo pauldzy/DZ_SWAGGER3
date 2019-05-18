@@ -10,6 +10,47 @@ AS
       RETURN; 
       
    END dz_swagger3_tag_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_tag_typ(
+       p_tag_id             IN  VARCHAR2
+      ,p_versionid          IN  VARCHAR2
+   ) RETURN SELF AS RESULT
+   AS
+   
+   BEGIN
+   
+      self.versionid := p_versionid;
+   
+      SELECT
+       a.tag_id
+      ,a.tag_name
+      ,a.tag_description
+      ,CASE
+       WHEN a.tag_externaldocs_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id => a.tag_externaldocs_id
+            ,p_object_type_id => 'extrdocstyp'
+         )
+       ELSE
+         NULL
+       END
+      INTO 
+       self.tag_id
+      ,self.tag_name
+      ,self.tag_description
+      ,self.tag_externalDocs
+      FROM
+      dz_swagger3_tag a
+      WHERE
+      a.versionid = p_versionid
+      AND a.tag_id = p_tag_id;
+      
+      RETURN;
+   
+   END dz_swagger3_tag_typ;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -17,7 +58,7 @@ AS
        p_tag_id             IN  VARCHAR2
       ,p_tag_name           IN  VARCHAR2
       ,p_tag_description    IN  VARCHAR2
-      ,p_tag_externalDocs   IN  VARCHAR2 --dz_swagger3_extrdocs_typ
+      ,p_tag_externalDocs   IN  dz_swagger3_object_typ --dz_swagger3_extrdocs_typ
       ,p_load_components    IN  VARCHAR2 DEFAULT 'TRUE'
       ,p_versionid          IN  VARCHAR2
    ) RETURN SELF AS RESULT 
@@ -46,9 +87,9 @@ AS
       --------------------------------------------------------------------------
       IF self.tag_externalDocs IS NOT NULL
       THEN
-         dz_swagger3_loader.extrdocstyp_loader(
+         dz_swagger3_loader.extrdocstyp(
              p_parent_id    => self.tag_id
-            ,p_children_ids => MDSYS.SDO_STRING2_ARRAY(self.tag_externalDocs)
+            ,p_children_ids => dz_swagger3_object_vry(self.tag_externalDocs)
             ,p_versionid    => self.versionid
          );
       
@@ -144,19 +185,34 @@ AS
       --------------------------------------------------------------------------
       IF self.tag_externalDocs IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT a.extrdocs.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || 'a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.tag_externalDocs;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.extrdocs.toJSON( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.tag_externalDocs.object_type_id
+            ,self.tag_externalDocs.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty(
              str_pad || dz_json_main.formatted2json(
@@ -242,19 +298,34 @@ AS
       --------------------------------------------------------------------------
       IF self.tag_externalDocs IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT a.extrdocs.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || 'a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.tag_externalDocs;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.extrdocs.toYAML( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.tag_externalDocs.object_type_id
+            ,self.tag_externalDocs.object_id;
+           
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'externalDocs: ' 

@@ -4,113 +4,158 @@ AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE exampletyp_loader(
+   PROCEDURE encodingtyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   );
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   PROCEDURE extrdocstyp_loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   );
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   PROCEDURE headertyp_loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   );
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   PROCEDURE linktyp_loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   );
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   PROCEDURE mediatyp_loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   );
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   PROCEDURE operationtyp_loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   );
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   PROCEDURE parametertyp_loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   );
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   PROCEDURE pathtyp_loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   );
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   PROCEDURE requestbodytyp_loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    );
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE schematyp_loader(
+   PROCEDURE exampletyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    );
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE servertyp_loader(
+   PROCEDURE extrdocstyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    );
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE servervartyp_loader(
+   PROCEDURE headertyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    );
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE stringhashtyp_loader(
+   PROCEDURE linktyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    );
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE tagtyp_loader(
+   PROCEDURE mediatyp(
        p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   );
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE mediatyp_emulated(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_parameter_ids       IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   );
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE operationtyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   );
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE parametertyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   );
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE pathtyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   );
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE requestbodytyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_child_id            IN  dz_swagger3_object_typ
+      ,p_versionid           IN  VARCHAR2
+   );
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE requestbodytyp_emulated(
+       p_parent_id           IN  VARCHAR2
+      ,p_child_id            IN  dz_swagger3_object_typ
+      ,p_media_type          IN  VARCHAR2
+      ,p_parameter_ids       IN  dz_swagger3_object_vry
+      ,p_inline_rb           IN  VARCHAR2
+      ,p_versionid           IN  VARCHAR2
+   );
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE responsetyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   );
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE schematyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   );
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE schematyp_emulated(
+       p_parent_id           IN  VARCHAR2
+      ,p_child_id            IN  dz_swagger3_object_typ
+      ,p_parameter_ids       IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   );
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE servertyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   );
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE servervartyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   );
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE stringhashtyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   );
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE tagtyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
       ,p_versionid           IN  VARCHAR2
    );
  

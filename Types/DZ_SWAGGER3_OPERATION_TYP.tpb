@@ -20,10 +20,7 @@ AS
       ,p_ref_brake                 IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
-      str_operation_requestBody_id VARCHAR2(255 Char);
-      ary_filtered_parms           dz_swagger3_parameter_list;
-      boo_check                    BOOLEAN;
-      int_counter                  PLS_INTEGER;
+      int_check                  PLS_INTEGER;
 
    BEGIN 
    
@@ -39,18 +36,40 @@ AS
       --------------------------------------------------------------------------
       SELECT
        a.operation_id
+      ,a.operation_type
       ,a.operation_summary
       ,a.operation_description
-      ,a.operation_externaldocs_id
+      ,CASE
+       WHEN a.operation_externaldocs_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id      => a.operation_externaldocs_id
+            ,p_object_type_id => 'extrdocstyp'
+         )
+       ELSE
+         NULL
+       END
       ,a.operation_operationID
+      ,CASE
+       WHEN a.operation_requestbody_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id      => a.operation_requestbody_id
+            ,p_object_type_id => 'operationtyp'
+         )
+       ELSE
+         NULL
+       END
       ,a.operation_inline_rb
       ,a.operation_deprecated
       INTO
-       self.operation_id 
+       self.operation_id
+      ,self.operation_type
       ,self.operation_summary
       ,self.operation_description
       ,self.operation_externalDocs  
       ,self.operation_operationId 
+      ,self.operation_requestBody
       ,self.operation_inline_rb 
       ,self.operation_deprecated 
       FROM
@@ -59,8 +78,6 @@ AS
           a.versionid    = p_versionid
       AND a.operation_id = p_operation_id;
       
-      self.operation_parameters  := NULL;
-      self.operation_requestBody  := NULL;
       self.operation_responses  := NULL;
       self.operation_callbacks  := NULL;
       self.operation_security  := NULL;
@@ -71,23 +88,29 @@ AS
       -- Add any required tags
       --------------------------------------------------------------------------
       SELECT
-      a.tag_id
+      dz_swagger3_object_typ(
+          p_object_id      => a.tag_id
+         ,p_object_type_id => 'tagtyp'
+         ,p_object_order   => a.tag_order
+      )
       BULK COLLECT INTO self.operation_tags
       FROM
       dz_swagger3_operation_tag_map a
       WHERE
           a.versionid    = p_versionid
-      AND a.operation_id = p_operation_id
-      ORDER by
-      a.tag_order;
+      AND a.operation_id = p_operation_id;
 
-/*
       --------------------------------------------------------------------------
       -- Step 30
       -- Add any parameters
       --------------------------------------------------------------------------
       SELECT
-      a.parameter_id
+      dz_swagger3_object_typ(
+          p_object_id      => a.parameter_id
+         ,p_object_type_id => 'parametertyp'
+         ,p_object_key     => a.parameter_name
+         ,p_object_order   => b.parameter_order
+      )
       BULK COLLECT INTO self.operation_parameters
       FROM
       dz_swagger3_parameter a
@@ -99,67 +122,54 @@ AS
       WHERE
           b.versionid = p_versionid
       AND b.parent_id = p_operation_id
-      ORDER BY
-       b.parameter_order
-      ,a.parameter_name;
+      AND ( b.requestbody_flag IS NULL 
+         OR b.requestbody_flag = 'FALSE'
+      );
 
       --------------------------------------------------------------------------
       -- Step 40
-      -- Add a normal request body if requested
+      -- Check for the condition of being post without a request body
       --------------------------------------------------------------------------
-      IF str_operation_requestBody_id IS NOT NULL
+      IF  self.operation_requestBody IS NULL
+      AND self.operation_type = 'post'
       THEN
-         self.operation_parameters := ary_filtered_parms;
+         SELECT
+         dz_swagger3_object_typ(
+             p_object_id      => a.parameter_id
+            ,p_object_type_id => 'parametertyp'
+            ,p_object_key     => a.parameter_name
+            ,p_object_order   => b.parameter_order
+         )
+         BULK COLLECT INTO self.operation_emulated_rbparms
+         FROM
+         dz_swagger3_parameter a
+         JOIN
+         dz_swagger3_parent_parm_map b
+         ON
+             a.versionid    = b.versionid
+         AND a.parameter_id = b.parameter_id
+         WHERE
+             b.versionid = p_versionid
+         AND b.parent_id = p_operation_id
+         AND b.requestbody_flag = 'TRUE';
          
-         self.operation_requestBody := dz_swagger3_requestBody_typ(
-             p_requestBody_id          => str_operation_requestBody_id
-            ,p_versionid               => p_versionid
-         );
-         
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Or add a custom requestBody generated from parameters
-      --------------------------------------------------------------------------
-      ELSIF self.hash_key <> 'get'
-      AND ary_filtered_parms IS NOT NULL
-      AND ary_filtered_parms.COUNT > 0
-      THEN
-         boo_check := FALSE;
-         
-         int_counter := 1;
-         self.operation_parameters := dz_swagger3_parameter_list();
-         FOR i IN 1 .. ary_filtered_parms.COUNT 
-         LOOP
-            IF ary_filtered_parms(i).parameter_requestbody_flag <> 'TRUE'
-            THEN
-               boo_check := TRUE;
-               self.operation_parameters.EXTEND();
-               self.operation_parameters(int_counter) := ary_filtered_parms(i);
-               int_counter := int_counter + 1;
-               
-            END IF;
-         
-         END LOOP;
-         
-         IF boo_check
-         THEN
-            self.operation_requestBody := dz_swagger3_requestBody_typ(
-                p_requestBody_id => self.operation_id || '.requestBody'
-               ,p_media_type     => 'application/x-www-form-urlencoded'
-               ,p_parameters     => ary_filtered_parms
-               ,p_inline_rb      => self.operation_inline_rb
+         IF  self.operation_emulated_rbparms IS NOT NULL
+         AND self.operation_emulated_rbparms.COUNT > 0
+         THEN    
+            self.operation_requestBody := dz_swagger3_object_typ(
+                p_object_id        => 'rb.' || self.operation_id
+               ,p_object_type_id   => 'requestbodytyp'
+               ,p_object_subtype   => 'emulated'
+               ,p_object_attribute => self.operation_id
             );
-            
-         ELSE
-            self.operation_parameters := ary_filtered_parms;
-            
+            self.operation_emulated_media_type := 'application/x-www-form-urlencoded';
+            self.operation_emulated_inline_rb  := 'TRUE';
+         
          END IF;
-
-      ELSE
-         self.operation_parameters := ary_filtered_parms;
          
       END IF;
-      
+         
+/*
       --------------------------------------------------------------------------
       -- Step 60
       -- Add the responses
@@ -222,25 +232,27 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_operation_typ(
        p_operation_id              IN  VARCHAR2
-      ,p_operation_tags            IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_tag_list
+      ,p_operation_type            IN  VARCHAR2
+      ,p_operation_tags            IN  dz_swagger3_object_vry --dz_swagger3_tag_list
       ,p_operation_summary         IN  VARCHAR2
       ,p_operation_description     IN  VARCHAR2
-      ,p_operation_externalDocs    IN  VARCHAR2                --dz_swagger3_extrdocs_typ
+      ,p_operation_externalDocs    IN  dz_swagger3_object_typ --dz_swagger3_extrdocs_typ
       ,p_operation_operationId     IN  VARCHAR2
-      ,p_operation_parameters      IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_parameter_list
-      ,p_operation_requestBody     IN  VARCHAR2                --dz_swagger3_requestbody_typ
-      ,p_operation_responses       IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_response_list
-      ,p_operation_callbacks       IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_callback_list
+      ,p_operation_parameters      IN  dz_swagger3_object_vry --dz_swagger3_parameter_list
+      ,p_operation_requestBody     IN  dz_swagger3_object_typ --dz_swagger3_requestbody_typ
+      ,p_operation_responses       IN  dz_swagger3_object_vry --dz_swagger3_response_list
+      ,p_operation_callbacks       IN  dz_swagger3_object_vry --dz_swagger3_callback_list
       ,p_operation_inline_rb       IN  VARCHAR2
       ,p_operation_deprecated      IN  VARCHAR2
-      ,p_operation_security        IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_security_req_list
-      ,p_operation_servers         IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_list
+      ,p_operation_security        IN  dz_swagger3_object_vry --dz_swagger3_security_req_list
+      ,p_operation_servers         IN  dz_swagger3_object_vry --dz_swagger3_server_list
       ,p_versionid                 IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
       self.operation_id              := p_operation_id;
+      self.operation_type            := p_operation_type;
       self.operation_tags            := p_operation_tags;
       self.operation_summary         := p_operation_summary;
       self.operation_description     := p_operation_description;
@@ -273,11 +285,55 @@ AS
       IF  self.operation_tags IS NOT NULL
       AND self.operation_tags.COUNT > 0
       THEN
-         dz_swagger3_loader.tagtyp_loader(
+         dz_swagger3_loader.tagtyp(
              p_parent_id    => self.operation_id
             ,p_children_ids => self.operation_tags
             ,p_versionid    => self.versionid
          );
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Load the parameters
+      --------------------------------------------------------------------------
+      IF  self.operation_parameters IS NOT NULL
+      AND self.operation_parameters.COUNT > 0
+      THEN
+         dz_swagger3_loader.parametertyp(
+             p_parent_id    => self.operation_id
+            ,p_children_ids => self.operation_parameters
+            ,p_versionid    => self.versionid
+         );
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Load the parameters
+      --------------------------------------------------------------------------
+      IF  self.operation_requestBody IS NOT NULL
+      AND self.operation_requestBody.object_id IS NOT NULL
+      THEN
+         IF self.operation_requestBody.object_subtype = 'emulated'
+         THEN
+            dz_swagger3_loader.requestbodytyp_emulated(
+                p_parent_id      => self.operation_id
+               ,p_child_id       => self.operation_requestBody
+               ,p_media_type     => self.operation_emulated_media_type
+               ,p_parameter_ids  => self.operation_emulated_rbparms
+               ,p_inline_rb      => self.operation_emulated_inline_rb
+               ,p_versionid      => self.versionid
+            );
+
+         ELSE
+            dz_swagger3_loader.requestbodytyp(
+                p_parent_id    => self.operation_id
+               ,p_child_id     => self.operation_requestBody
+               ,p_versionid    => self.versionid
+            );
+
+         END IF;
       
       END IF;
 
@@ -378,7 +434,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -400,8 +455,12 @@ AS
          || 'a.tagtyp.tag_name '
          || 'FROM dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''tagtyp'' '
-         || 'AND a.object_id IN (SELECT * FROM TABLE(:p01))'
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
          ary_keys
          USING 
@@ -485,23 +544,37 @@ AS
       -- Step 60
       -- Add optional externalDocs
       --------------------------------------------------------------------------
-      IF self.operation_externalDocs IS NOT NULL
+      IF  self.operation_externalDocs IS NOT NULL
+      AND self.operation_externalDocs.object_id IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || 'a.extrdocstyp.toJSON( '
-         || '   p_pretty_print =>  :p01 + 1 '
-         || '  ,p_force_inline =>  :p02 '
-         || ') '
-         || 'FROM dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''extrdocstyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,self.operation_externalDocs;
+         BEGIN
+            EXECUTE IMMEDIATE 
+               'SELECT '
+            || 'a.extrdocstyp.toJSON( '
+            || '   p_pretty_print =>  :p01 + 1 '
+            || '  ,p_force_inline =>  :p02 '
+            || ') '
+            || 'FROM dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,self.operation_externalDocs.object_type_id
+            ,self.operation_externalDocs.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
       
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -550,8 +623,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''parametertyp'' '
-         || 'AND a.object_id IN (SELECT * FROM TABLE(:p03))'
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
           ary_clb
          ,ary_hidden
@@ -561,7 +638,7 @@ AS
          ,self.operation_parameters;
 
          str_pad2 := str_pad;
-         
+
          IF p_pretty_print IS NULL
          THEN
             clb_hash := dz_json_util.pretty('[',NULL);
@@ -609,23 +686,37 @@ AS
       -- Step 90
       -- Add requestBody object
       --------------------------------------------------------------------------
-      IF self.operation_requestBody IS NOT NULL
+      IF  self.operation_requestBody IS NOT NULL
+      AND self.operation_requestBody.object_id IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || 'a.requestbodytyp.toJSON( '
-         || '   p_pretty_print =>  :p01 + 1 '
-         || '  ,p_force_inline =>  :p02 '
-         || ') '
-         || 'FROM dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''requestbodytyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,self.operation_requestBody;
+         BEGIN
+            EXECUTE IMMEDIATE 
+               'SELECT '
+            || 'a.requestbodytyp.toJSON( '
+            || '   p_pretty_print =>  :p01 + 1 '
+            || '  ,p_force_inline =>  :p02 '
+            || ') '
+            || 'FROM dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,self.operation_requestBody.object_type_id
+            ,self.operation_requestBody.object_id;
+            
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
 
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -656,8 +747,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''responsetyp'' '
-         || 'AND a.object_id IN (SELECT * FROM TABLE(:p03))'
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
@@ -721,8 +816,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''pathtyp'' '
-         || 'AND a.object_id IN (SELECT * FROM TABLE(:p03))'
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
@@ -812,8 +911,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''securityreqtyp'' '
-         || 'AND a.object_id IN (SELECT * FROM TABLE(:p03))'
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
          ary_clb
          USING 
@@ -875,8 +978,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''securitytyp'' '
-         || 'AND a.object_id IN (SELECT * FROM TABLE(:p03))'
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
          ary_clb
          USING 
@@ -975,8 +1082,12 @@ AS
          || 'a.tagtyp.tag_name '
          || 'FROM dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''tagtyp'' '
-         || 'AND a.object_id IN (SELECT * FROM TABLE(:p01))'
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
          ary_keys
          USING 
@@ -1039,22 +1150,36 @@ AS
       -- Write the externalDoc object
       --------------------------------------------------------------------------
       IF  self.operation_externalDocs IS NOT NULL
+      AND self.operation_externalDocs.object_id IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || 'a.extrdocstyp.toYAML( '
-         || '   p_pretty_print =>  :p01 + 1 '
-         || '  ,p_force_inline =>  :p02 '
-         || ') '
-         || 'FROM dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''extrdocstyp'' '
-         || 'AND a.object_id = :p01 '
-         INTO clb_tmp
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,self.operation_externalDocs;
+         BEGIN
+            EXECUTE IMMEDIATE 
+               'SELECT '
+            || 'a.extrdocstyp.toYAML( '
+            || '   p_pretty_print =>  :p01 + 1 '
+            || '  ,p_force_inline =>  :p02 '
+            || ') '
+            || 'FROM dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,self.operation_externalDocs.object_type_id
+            ,self.operation_externalDocs.object_id;
+
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
 
          clb_output := clb_output || dz_json_util.pretty_str(
              'externalDocs: ' 
@@ -1100,8 +1225,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''parametertyp'' '
-         || 'AND a.object_id IN (SELECT * FROM TABLE(:p03))'
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
           ary_clb
          ,ary_hidden
@@ -1140,28 +1269,42 @@ AS
       -- Write the requestBody
       --------------------------------------------------------------------------
       IF  self.operation_requestBody IS NOT NULL
+      AND self.operation_requestBody.object_id IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || 'a.requestbodytyp.toYAML( '
-         || '   p_pretty_print =>  :p01 + 2 '
-         || '  ,p_force_inline =>  :p02 '
-         || ') '
-         || 'FROM dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''requestbodytyp'' '
-         || 'AND a.object_id = :p01'
-         INTO clb_tmp
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,self.operation_requestBody;
+         BEGIN
+            EXECUTE IMMEDIATE 
+               'SELECT '
+            || 'a.requestbodytyp.toYAML( '
+            || '   p_pretty_print =>  :p01 + 1 '
+            || '  ,p_force_inline =>  :p02 '
+            || ') '
+            || 'FROM dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,self.operation_requestBody.object_type_id
+            ,self.operation_requestBody.object_id;
 
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'requestBody: ' 
-            ,p_pretty_print + 1
-            ,'  '
-         ) || clb_tmp;
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'requestBody: ' 
+               ,p_pretty_print + 1
+               ,'  '
+            ) || clb_tmp;
+
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
       END IF;
       
@@ -1182,8 +1325,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''responsetyp'' '
-         || 'AND a.object_id IN (SELECT * FROM TABLE(:p03))'
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
@@ -1227,8 +1374,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''pathtyp'' '
-         || 'AND a.object_id IN (SELECT * FROM TABLE(:p03))'
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
@@ -1285,8 +1436,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''securityreqtyp'' '
-         || 'AND a.object_id IN (SELECT * FROM TABLE(:p03))'
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
          ary_clb
          USING 
@@ -1330,8 +1485,12 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''securitytyp'' '
-         || 'AND a.object_id IN (SELECT * FROM TABLE(:p03))'
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
+         || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO
          ary_clb
          USING 

@@ -72,7 +72,16 @@ AS
           )
          ,p_info_version        => a.info_version
        )
-      ,a.doc_externaldocs_id
+      ,CASE
+       WHEN a.doc_externaldocs_id IS NOT NULL
+       THEN
+         dz_swagger3_object_typ(
+             p_object_id      => a.doc_externaldocs_id
+            ,p_object_type_id => 'extrdocstyp'
+         )
+       ELSE
+         NULL
+       END 
       INTO 
        self.info
       ,self.externalDocs
@@ -84,9 +93,9 @@ AS
       
       IF self.externalDocs IS NOT NULL
       THEN
-         dz_swagger3_loader.extrdocstyp_loader(
+         dz_swagger3_loader.extrdocstyp(
              p_parent_id    => 'root'
-            ,p_children_ids => MDSYS.SDO_STRING2_ARRAY(self.externalDocs)
+            ,p_children_ids => dz_swagger3_object_vry(self.externalDocs)
             ,p_versionid    => str_versionid
          );
          
@@ -97,7 +106,11 @@ AS
       -- Load the servers
       --------------------------------------------------------------------------
       SELECT
-      a.server_id
+      dz_swagger3_object_typ(
+          p_object_id      => a.server_id
+         ,p_object_type_id => 'servertyp'
+         ,p_object_order   => a.server_order
+      )
       BULK COLLECT INTO self.servers
       FROM
       dz_swagger3_parent_server_map a
@@ -107,14 +120,13 @@ AS
       
       IF self.servers.COUNT > 0
       THEN
-         dz_swagger3_loader.servertyp_loader(
+         dz_swagger3_loader.servertyp(
              p_parent_id    => 'root'
             ,p_children_ids => self.servers
             ,p_versionid    => str_versionid
          );
          
       END IF;
-
 
       --------------------------------------------------------------------------
       -- Step 50
@@ -123,7 +135,12 @@ AS
       IF str_group_id = 'MOA'
       THEN
          SELECT
-         b.path_id
+         dz_swagger3_object_typ(
+             p_object_id      => b.path_id
+            ,p_object_type_id => 'pathtyp'
+            ,p_object_key     => b.path_endpoint
+            ,p_object_order   => a.path_order
+         )
          BULK COLLECT INTO self.paths
          FROM (
             SELECT
@@ -144,14 +161,16 @@ AS
              a.versionid = b.versionid
          AND a.path_id   = b.path_id
          WHERE
-         a.versionid = str_versionid
-         ORDER BY
-          a.path_order
-         ,b.path_endpoint;
+         a.versionid = str_versionid;
          
       ELSE
          SELECT
-         b.path_id
+         dz_swagger3_object_typ(
+             p_object_id      => b.path_id
+            ,p_object_type_id => 'pathtyp'
+            ,p_object_key     => b.path_endpoint
+            ,p_object_order   => a.path_order
+         )
          BULK COLLECT INTO self.paths
          FROM
          dz_swagger3_group a
@@ -162,16 +181,13 @@ AS
          AND a.path_id   = b.path_id
          WHERE
              a.versionid = str_versionid
-         AND a.group_id  = str_group_id
-         ORDER BY
-          a.path_order
-         ,b.path_endpoint;
+         AND a.group_id  = str_group_id;
          
       END IF;
       
       IF self.paths.COUNT > 0
       THEN
-         dz_swagger3_loader.pathtyp_loader(
+         dz_swagger3_loader.pathtyp(
              p_parent_id    => 'root'
             ,p_children_ids => self.paths
             ,p_versionid    => str_versionid
@@ -248,12 +264,12 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_typ(
        p_info                IN  dz_swagger3_info_typ
-      ,p_servers             IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_server_list
-      ,p_paths               IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_path_list
+      ,p_servers             IN  dz_swagger3_object_vry --dz_swagger3_server_list
+      ,p_paths               IN  dz_swagger3_object_vry --dz_swagger3_path_list
       ,p_components          IN  dz_swagger3_components_typ
-      ,p_security            IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_security_req_list
-      ,p_tags                IN  MDSYS.SDO_STRING2_ARRAY --dz_swagger3_tag_list
-      ,p_externalDocs        IN  VARCHAR2 --dz_swagger3_extrdocs_typ
+      ,p_security            IN  dz_swagger3_object_vry --dz_swagger3_security_req_list
+      ,p_tags                IN  dz_swagger3_object_vry --dz_swagger3_tag_list
+      ,p_externalDocs        IN  dz_swagger3_object_typ--dz_swagger3_extrdocs_typ
    ) RETURN SELF AS RESULT
    AS
 
@@ -363,8 +379,11 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''servertyp'' '
-         || 'AND a.object_id IN (SELECT column_value FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
          || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
          ary_clb
@@ -428,8 +447,11 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''pathtyp'' '
-         || 'AND a.object_id IN (SELECT column_value FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
          || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
@@ -514,8 +536,11 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''securitytyp'' '
-         || 'AND a.object_id IN (SELECT column_value FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
          || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
          ary_clb
@@ -578,8 +603,11 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''tagtyp'' '
-         || 'AND a.object_id IN (SELECT column_value FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
          || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
          ary_clb
@@ -632,20 +660,34 @@ AS
       --------------------------------------------------------------------------
       IF self.externalDocs IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT a.extrdocstyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''extrdocstyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.externalDocs; 
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.extrdocstyp.toJSON( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.externalDocs.object_type_id
+            ,self.externalDocs.object_id; 
+         
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
 
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.formatted2json(
@@ -751,8 +793,11 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''servertyp'' '
-         || 'AND a.object_id IN (SELECT column_value FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
          || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
          ary_clb
@@ -802,8 +847,11 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''pathtyp'' '
-         || 'AND a.object_id IN (SELECT column_value FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
          || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
           ary_clb
@@ -866,8 +914,11 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''securitytyp'' '
-         || 'AND a.object_id IN (SELECT column_value FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
          || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
          ary_clb
@@ -910,8 +961,11 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''tagtyp'' '
-         || 'AND a.object_id IN (SELECT column_value FROM TABLE(:p03)) '
+         || '(a.object_type_id,a.object_id) IN ( '
+         || '   SELECT '
+         || '   b.object_type_id,b.object_id '
+         || '   FROM TABLE(:p03) b '
+         || ') '
          || 'ORDER BY a.ordering_key '
          BULK COLLECT INTO 
          ary_clb
@@ -944,21 +998,34 @@ AS
       --------------------------------------------------------------------------
       IF self.externalDocs IS NOT NULL
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.extrdocstyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
-         || ') FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '    a.object_type_id = ''extrdocstyp'' '
-         || 'AND a.object_id = :p03 '
-         INTO clb_tmp
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,self.externalDocs;
+         BEGIN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.extrdocstyp.toYAML( '
+            || '   p_pretty_print   => :p01 + 1 '
+            || '  ,p_force_inline   => :p02 '
+            || ') FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'WHERE '
+            || '    a.object_type_id = :p03 '
+            || 'AND a.object_id      = :p04 '
+            INTO clb_tmp
+            USING 
+             p_pretty_print
+            ,p_force_inline
+            ,self.externalDocs.object_type_id
+            ,self.externalDocs.object_id;
+           
+         EXCEPTION
+            WHEN NO_DATA_FOUND
+            THEN
+               clb_tmp := NULL;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+               
+         END;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'externalDocs: ' 
