@@ -7,6 +7,7 @@ AS OBJECT (
    ,encoding_style         VARCHAR2(255 Char)
    ,encoding_explode       VARCHAR2(5 Char)
    ,encoding_allowReserved VARCHAR2(5 Char)
+   ,versionid              VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -17,12 +18,13 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_encoding_typ(
        p_encoding_id            IN  VARCHAR2
-      ,p_encoding_contentType   IN  VARCHAR2
-      ,p_encoding_headers       IN  dz_swagger3_object_vry --dz_swagger3_header_list
-      ,p_encoding_style         IN  VARCHAR2
-      ,p_encoding_explode       IN  VARCHAR2
-      ,p_encoding_allowReserved IN  VARCHAR2
+      ,p_encoding_name          IN  VARCHAR2
+      ,p_versionid              IN  VARCHAR2
    ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER PROCEDURE traverse
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

@@ -398,7 +398,8 @@ AS
       -- Step 50
       -- Add get operation
       --------------------------------------------------------------------------
-      IF self.path_get_operation IS NOT NULL
+      IF  self.path_get_operation IS NOT NULL
+      AND self.path_get_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -425,7 +426,10 @@ AS
                
             WHEN OTHERS
             THEN
-               RAISE;
+               RAISE_APPLICATION_ERROR(
+                   -20001
+                  ,SQLERRM || self.path_get_operation.object_id
+               );
                
          END;
       
@@ -440,12 +444,13 @@ AS
          str_pad1 := ',';
 
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 60
       -- Add put operation
       --------------------------------------------------------------------------
-      IF self.path_put_operation IS NOT NULL
+      IF  self.path_put_operation IS NOT NULL
+      AND self.path_put_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -492,7 +497,8 @@ AS
       -- Step 70
       -- Add post operation
       --------------------------------------------------------------------------
-      IF self.path_post_operation IS NOT NULL
+      IF  self.path_post_operation IS NOT NULL
+      AND self.path_post_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -539,7 +545,8 @@ AS
       -- Step 80
       -- Add delete operation
       --------------------------------------------------------------------------
-      IF self.path_delete_operation IS NOT NULL
+      IF  self.path_delete_operation IS NOT NULL
+      AND self.path_delete_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -586,7 +593,8 @@ AS
       -- Step 90
       -- Add options operation
       --------------------------------------------------------------------------
-      IF self.path_options_operation IS NOT NULL
+      IF  self.path_options_operation IS NOT NULL
+      AND self.path_options_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -633,7 +641,8 @@ AS
       -- Step 100
       -- Add head operation
       --------------------------------------------------------------------------
-      IF self.path_head_operation IS NOT NULL
+      IF  self.path_head_operation IS NOT NULL
+      AND self.path_head_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -680,7 +689,8 @@ AS
       -- Step 110
       -- Add patch operation
       --------------------------------------------------------------------------
-      IF self.path_patch_operation IS NOT NULL
+      IF  self.path_patch_operation IS NOT NULL
+      AND self.path_patch_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -727,7 +737,8 @@ AS
       -- Step 120
       -- Add trace operation
       --------------------------------------------------------------------------
-      IF self.path_trace_operation IS NOT NULL
+      IF  self.path_trace_operation IS NOT NULL
+      AND self.path_trace_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -769,7 +780,7 @@ AS
          str_pad1 := ',';
 
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 130
       -- Add servers
@@ -994,7 +1005,8 @@ AS
       -- Step 40
       -- Write the get operation
       --------------------------------------------------------------------------
-      IF self.path_get_operation IS NOT NULL
+      IF  self.path_get_operation IS NOT NULL
+      AND self.path_get_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -1037,7 +1049,8 @@ AS
       -- Step 50
       -- Write the get operation
       --------------------------------------------------------------------------
-      IF self.path_put_operation IS NOT NULL
+      IF  self.path_put_operation IS NOT NULL
+      AND self.path_put_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -1080,7 +1093,8 @@ AS
       -- Step 60
       -- Write the post operation
       --------------------------------------------------------------------------
-      IF self.path_post_operation IS NOT NULL
+      IF  self.path_post_operation IS NOT NULL
+      AND self.path_post_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -1123,7 +1137,8 @@ AS
       -- Step 70
       -- Write the delete operation
       --------------------------------------------------------------------------
-      IF self.path_delete_operation IS NOT NULL
+      IF  self.path_delete_operation IS NOT NULL
+      AND self.path_delete_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -1166,7 +1181,8 @@ AS
       -- Step 80
       -- Write the options operation
       --------------------------------------------------------------------------
-      IF self.path_options_operation IS NOT NULL
+      IF  self.path_options_operation IS NOT NULL
+      AND self.path_options_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -1209,7 +1225,8 @@ AS
       -- Step 90
       -- Write the head operation
       --------------------------------------------------------------------------
-      IF self.path_head_operation IS NOT NULL
+      IF  self.path_head_operation IS NOT NULL
+      AND self.path_head_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -1252,7 +1269,8 @@ AS
       -- Step 100
       -- Write the patch operation
       --------------------------------------------------------------------------
-      IF self.path_patch_operation IS NOT NULL
+      IF  self.path_patch_operation IS NOT NULL
+      AND self.path_patch_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE
@@ -1295,7 +1313,8 @@ AS
       -- Step 110
       -- Write the trace operation
       --------------------------------------------------------------------------
-      IF self.path_trace_operation IS NOT NULL
+      IF  self.path_trace_operation IS NOT NULL
+      AND self.path_trace_operation.object_id IS NOT NULL
       THEN
          BEGIN
             EXECUTE IMMEDIATE

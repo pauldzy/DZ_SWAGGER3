@@ -74,7 +74,6 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
        p_schema_id                IN  VARCHAR2
-      ,p_required                 IN  VARCHAR2
       ,p_parameters               IN  dz_swagger3_object_vry
       ,p_versionid                IN  VARCHAR2
       ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
@@ -85,7 +84,6 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
        p_schema_id                IN  VARCHAR2
-      ,p_required                 IN  VARCHAR2
       ,p_emulated_parameter_id    IN  VARCHAR2
       ,p_versionid                IN  VARCHAR2
       ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'

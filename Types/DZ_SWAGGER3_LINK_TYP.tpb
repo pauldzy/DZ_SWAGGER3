@@ -76,6 +76,44 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER PROCEDURE traverse
+   AS
+   BEGIN
+
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Load the tags
+      --------------------------------------------------------------------------
+      IF  self.link_parameters IS NOT NULL
+      AND self.link_parameters.COUNT > 0
+      THEN
+         dz_swagger3_loader.parametertyp(
+             p_parent_id    => self.link_id
+            ,p_children_ids => self.link_parameters
+            ,p_versionid    => self.versionid
+         );
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Load the server
+      --------------------------------------------------------------------------
+      IF  self.link_server IS NOT NULL
+      AND self.link_server.object_id IS NOT NULL
+      THEN
+         dz_swagger3_loader.servertyp(
+             p_parent_id    => self.link_id
+            ,p_children_ids => dz_swagger3_object_vry(self.link_server)
+            ,p_versionid    => self.versionid
+         );
+      
+      END IF;
+
+   END traverse;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION key
    RETURN VARCHAR2
    AS

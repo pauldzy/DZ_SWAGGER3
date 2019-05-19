@@ -15,25 +15,45 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_encoding_typ(
        p_encoding_id            IN  VARCHAR2
-      ,p_encoding_contentType   IN  VARCHAR2
-      ,p_encoding_headers       IN  dz_swagger3_object_vry --dz_swagger3_header_list
-      ,p_encoding_style         IN  VARCHAR2
-      ,p_encoding_explode       IN  VARCHAR2
-      ,p_encoding_allowReserved IN  VARCHAR2
+      ,p_encoding_name          IN  VARCHAR2
+      ,p_versionid              IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
-   
+   /*
       self.encoding_id            := p_encoding_id;
       self.encoding_contentType   := p_encoding_contentType;
       self.encoding_headers       := p_encoding_headers;
       self.encoding_style         := p_encoding_style;
       self.encoding_explode       := p_encoding_explode;
       self.encoding_allowReserved := p_encoding_allowReserved;
-      
+   */ 
       RETURN; 
       
    END dz_swagger3_encoding_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER PROCEDURE traverse
+   AS
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Load the external docs
+      --------------------------------------------------------------------------
+      IF  self.encoding_headers IS NOT NULL
+      AND self.encoding_headers.COUNT > 0
+      THEN
+         dz_swagger3_loader.headertyp(
+             p_parent_id    => self.encoding_id
+            ,p_children_ids => self.encoding_headers
+            ,p_versionid    => self.versionid
+         );
+      
+      END IF;
+
+   END traverse;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

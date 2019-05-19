@@ -212,7 +212,6 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
        p_schema_id                IN  VARCHAR2
-      ,p_required                 IN  VARCHAR2
       ,p_parameters               IN  dz_swagger3_object_vry
       ,p_versionid                IN  VARCHAR2
       ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
@@ -232,8 +231,9 @@ AS
       -- Load the bare array to hold the parameter derived schema object
       --------------------------------------------------------------------------
       self.schema_id           := p_schema_id;
+      self.schema_type         := 'object';
       self.schema_category     := 'object';
-      self.schema_format       := 'object';
+      self.schema_nullable     := 'FALSE';
 
       --------------------------------------------------------------------------
       -- Step 30
@@ -266,13 +266,14 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
        p_schema_id                IN  VARCHAR2
-      ,p_required                 IN  VARCHAR2
       ,p_emulated_parameter_id    IN  VARCHAR2
       ,p_versionid                IN  VARCHAR2
       ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
       ,p_ref_brake                IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
+      str_inner_schema_id VARCHAR2(255 Char);
+
    BEGIN
    
       --------------------------------------------------------------------------
@@ -285,17 +286,108 @@ AS
       -- Step 20
       -- Load the bare array to hold the parameter derived schema object
       --------------------------------------------------------------------------
-      self.schema_id           := p_schema_id;
+      self.schema_id := p_schema_id;
       
       --------------------------------------------------------------------------
       -- Step 30
       -- Load the parameter details to emulate
       --------------------------------------------------------------------------
-      --self.schema_category     := 'object';
-      --self.schema_format       := 'object';
-   
+      SELECT
+       a.parameter_schema_id
+      ,a.parameter_description
+      ,a.parameter_required
+      ,a.parameter_example_string
+      ,a.parameter_example_number
+      ,a.parameter_list_hidden
+      INTO
+       str_inner_schema_id
+      ,self.schema_description
+      ,self.schema_required
+      ,self.schema_example_string
+      ,self.schema_example_number
+      ,self.property_list_hidden
+      FROM
+      dz_swagger3_parameter a
+      WHERE
+          a.parameter_id = p_emulated_parameter_id
+      AND a.versionid    = p_versionid;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Load the easy items using constructor
+      --------------------------------------------------------------------------
+      SELECT
+       a.schema_category
+      ,a.schema_type
+      ,a.schema_format
+      ,a.schema_default_string
+      ,a.schema_default_number
+      ,a.schema_multipleOf
+      ,a.schema_minimum
+      ,a.schema_exclusiveMinimum
+      ,a.schema_maximum 
+      ,a.schema_exclusiveMaximum
+      ,a.schema_minLength
+      ,a.schema_maxLength
+      ,a.schema_pattern
+      ,a.schema_minItems
+      ,a.schema_maxItems
+      ,a.schema_uniqueItems 
+      ,a.schema_minProperties
+      ,a.schema_maxProperties
+      INTO
+       self.schema_category
+      ,self.schema_type
+      ,self.schema_format
+      ,self.schema_default_string
+      ,self.schema_default_number
+      ,self.schema_multipleOf
+      ,self.schema_minimum
+      ,self.schema_exclusiveMinimum
+      ,self.schema_maximum 
+      ,self.schema_exclusiveMaximum
+      ,self.schema_minLength
+      ,self.schema_maxLength
+      ,self.schema_pattern
+      ,self.schema_minItems
+      ,self.schema_maxItems
+      ,self.schema_uniqueItems 
+      ,self.schema_minProperties
+      ,self.schema_maxProperties
+      FROM
+      dz_swagger3_schema a
+      WHERE
+          a.versionid = p_versionid
+      AND a.schema_id = str_inner_schema_id;
+      
       --------------------------------------------------------------------------
       -- Step 50
+      -- Collect the enumerations
+      --------------------------------------------------------------------------
+      SELECT
+      a.enum_string
+      BULK COLLECT INTO
+      self.schema_enum_string
+      FROM
+      dz_swagger3_schema_enum_map a
+      WHERE
+          a.versionid = p_versionid
+      AND a.schema_id = str_inner_schema_id
+      AND a.enum_string IS NOT NULL;
+      
+      SELECT
+      a.enum_number
+      BULK COLLECT INTO
+      self.schema_enum_number
+      FROM
+      dz_swagger3_schema_enum_map a
+      WHERE
+          a.versionid = p_versionid
+      AND a.schema_id = str_inner_schema_id
+      AND a.enum_number IS NOT NULL;
+   
+      --------------------------------------------------------------------------
+      -- Step 60
       -- Return completed object
       --------------------------------------------------------------------------
       RETURN;
@@ -1040,7 +1132,7 @@ AS
       -- Step 180
       -- Add parameters
       -------------------------------------------------------------------------
-      IF self.schema_properties IS NOT NULL 
+      IF  self.schema_properties IS NOT NULL 
       AND self.schema_properties.COUNT > 0
       THEN
          EXECUTE IMMEDIATE

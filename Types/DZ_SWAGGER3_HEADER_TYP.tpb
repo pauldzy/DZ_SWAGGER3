@@ -100,6 +100,44 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER PROCEDURE traverse
+   AS
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Load the external docs
+      --------------------------------------------------------------------------
+      IF  self.header_schema IS NOT NULL
+      AND self.header_schema.object_id IS NOT NULL
+      THEN
+         dz_swagger3_loader.schematyp(
+             p_parent_id    => self.header_id
+            ,p_children_ids => dz_swagger3_object_vry(self.header_schema)
+            ,p_versionid    => self.versionid
+         );
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Load the properties schemas
+      --------------------------------------------------------------------------
+      IF  self.header_examples IS NOT NULL
+      AND self.header_examples.COUNT > 0
+      THEN
+         dz_swagger3_loader.headertyp(
+             p_parent_id    => self.header_id
+            ,p_children_ids => self.header_examples
+            ,p_versionid    => self.versionid
+         );
+      
+      END IF;
+      
+   END traverse;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION isNULL
    RETURN VARCHAR2
    AS

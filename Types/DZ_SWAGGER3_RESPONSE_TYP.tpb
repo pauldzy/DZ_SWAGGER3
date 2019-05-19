@@ -133,6 +133,59 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   MEMBER PROCEDURE traverse
+   AS
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Load the external docs
+      --------------------------------------------------------------------------
+      IF  self.response_headers IS NOT NULL
+      AND self.response_headers.COUNT > 0
+      THEN
+         dz_swagger3_loader.headertyp(
+             p_parent_id    => self.response_id
+            ,p_children_ids => self.response_headers
+            ,p_versionid    => self.versionid
+         );
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Load the properties schemas
+      --------------------------------------------------------------------------
+      IF  self.response_content IS NOT NULL
+      AND self.response_content.COUNT > 0
+      THEN
+         dz_swagger3_loader.mediatyp(
+             p_parent_id    => self.response_id
+            ,p_children_ids => self.response_content
+            ,p_versionid    => self.versionid
+         );
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Load the combine schemas
+      --------------------------------------------------------------------------
+      IF  self.response_links IS NOT NULL
+      AND self.response_links.COUNT > 0
+      THEN
+         dz_swagger3_loader.linktyp(
+             p_parent_id    => self.response_id
+            ,p_children_ids => self.response_links
+            ,p_versionid    => self.versionid
+         );
+         
+      END IF;
+
+   END traverse;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    MEMBER FUNCTION isNULL
    RETURN VARCHAR2
    AS
@@ -234,7 +287,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -330,7 +382,7 @@ AS
          str_pad1 := ',';
          
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 50
       -- Add optional content objects
@@ -399,13 +451,13 @@ AS
          str_pad1 := ',';
          
       END IF;
-         
+
       --------------------------------------------------------------------------
       -- Step 60
       -- Add optional links map
       --------------------------------------------------------------------------
-      IF self.response_links IS NOT NULL 
-      OR self.response_links.COUNT > 0
+      IF  self.response_links IS NOT NULL 
+      AND self.response_links.COUNT > 0
       THEN
          EXECUTE IMMEDIATE
             'SELECT '
@@ -468,7 +520,7 @@ AS
          str_pad1 := ',';
          
       END IF;
-         
+
       --------------------------------------------------------------------------
       -- Step 70
       -- Add the left bracket

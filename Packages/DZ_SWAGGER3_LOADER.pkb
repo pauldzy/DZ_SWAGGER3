@@ -595,11 +595,51 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
-      str_otype VARCHAR2(255 Char) := 'responsetyp';
 
    BEGIN
    
-      NULL;
+      ary_ids := filter_ids(
+          p_children_ids
+         ,p_parent_id
+      );
+
+      INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,object_key
+          ,responsetyp
+          ,ordering_key
+      )
+      SELECT
+       a.object_id
+      ,a.object_type_id
+      ,a.object_key
+      ,dz_swagger3_response_typ(
+          p_response_id    => a.object_id
+         ,p_response_code  => a.object_key
+         ,p_versionid      => p_versionid
+       )
+      ,a.object_order
+      FROM 
+      TABLE(ary_ids) a;
+
+      FOR r IN (
+         SELECT 
+         a.responsetyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
+         )
+      )
+      LOOP
+         r.responsetyp.traverse();
+      END LOOP;
 
    END responsetyp;
 
@@ -620,6 +660,7 @@ AS
       INSERT INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
+          ,object_key
           ,object_required
           ,schematyp
           ,ordering_key
@@ -627,13 +668,13 @@ AS
       SELECT
        a.object_id
       ,a.object_type_id
+      ,a.object_key
       ,a.object_required
       ,CASE 
        WHEN a.object_subtype = 'emulated_item'
        THEN
          dz_swagger3_schema_typ(
              p_schema_id             => a.object_id
-            ,p_required              => a.object_required
             ,p_emulated_parameter_id => a.object_attribute
             ,p_versionid             => p_versionid
          )
@@ -699,7 +740,6 @@ AS
       ,a.object_key
       ,dz_swagger3_schema_typ(
           p_schema_id     => a.object_id
-         ,p_required      => a.object_required
          ,p_parameters    => p_parameter_ids
          ,p_versionid     => p_versionid
        )

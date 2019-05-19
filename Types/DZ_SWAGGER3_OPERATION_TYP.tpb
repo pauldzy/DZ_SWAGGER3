@@ -169,16 +169,16 @@ AS
          
       END IF;
          
-/*
       --------------------------------------------------------------------------
       -- Step 60
       -- Add the responses
       --------------------------------------------------------------------------
       SELECT
-      dz_swagger3_response_typ(
-          p_response_id        => b.response_id
-         ,p_response_code      => a.response_code
-         ,p_versionid          => p_versionid
+      dz_swagger3_object_typ(
+          p_object_id        => b.response_id
+         ,p_object_type_id   => 'responsetyp'
+         ,p_object_key       => a.response_code
+         ,p_object_order     => a.response_order
       )
       BULK COLLECT INTO self.operation_responses
       FROM
@@ -190,28 +190,46 @@ AS
       AND a.response_id = b.response_id
       WHERE
           a.versionid    = p_versionid
-      AND a.operation_id = p_operation_id
-      ORDER BY
-      a.response_order;
-      
+      AND a.operation_id = p_operation_id;
+
       --------------------------------------------------------------------------
       -- Step 70
       -- Add any callbacks
       --------------------------------------------------------------------------
+      SELECT
+      dz_swagger3_object_typ(
+          p_object_id        => a.callback_id
+         ,p_object_type_id   => 'callbacktyp'
+         ,p_object_key       => a.callback_name
+         ,p_object_order     => a.callback_order
+      )
+      BULK COLLECT INTO self.operation_callbacks
+      FROM
+      dz_swagger3_operation_call_map a
+      JOIN
+      dz_swagger3_path b
+      ON
+          a.versionid    = b.versionid
+      AND a.callback_id  = b.path_id
+      WHERE
+          a.versionid    = p_versionid
+      AND a.operation_id = p_operation_id;
       
       --------------------------------------------------------------------------
       -- Step 80
       -- Add any security
       --------------------------------------------------------------------------
       
+      
       --------------------------------------------------------------------------
       -- Step 90
       -- Add any servers
       --------------------------------------------------------------------------
       SELECT
-      dz_swagger3_server_typ(
-          p_server_id    => a.server_id
-         ,p_versionid    => p_versionid
+      dz_swagger3_object_typ(
+          p_object_id      => a.server_id
+         ,p_object_type_id => 'servertyp'
+         ,p_object_order   => a.server_order
       )
       BULK COLLECT INTO self.operation_servers
       FROM
@@ -219,7 +237,7 @@ AS
       WHERE
           a.versionid = p_versionid
       AND a.parent_id = p_operation_id;
-      */
+ 
       --------------------------------------------------------------------------
       -- Step 100
       -- Return the completed object
@@ -309,7 +327,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 20
+      -- Step 30
       -- Load the parameters
       --------------------------------------------------------------------------
       IF  self.operation_requestBody IS NOT NULL
@@ -334,6 +352,46 @@ AS
             );
 
          END IF;
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Load the responses
+      --------------------------------------------------------------------------
+      IF  self.operation_responses IS NOT NULL
+      AND self.operation_responses.COUNT > 0
+      THEN
+         dz_swagger3_loader.responsetyp(
+             p_parent_id    => self.operation_id
+            ,p_children_ids => self.operation_responses
+            ,p_versionid    => self.versionid
+         );
+      
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Load the callbacks
+      --------------------------------------------------------------------------
+      
+      --------------------------------------------------------------------------
+      -- Step 70
+      -- Load the security
+      --------------------------------------------------------------------------
+      
+      --------------------------------------------------------------------------
+      -- Step 80
+      -- Load the servers
+      --------------------------------------------------------------------------
+      IF  self.operation_servers IS NOT NULL
+      AND self.operation_servers.COUNT > 0
+      THEN
+         dz_swagger3_loader.servertyp(
+             p_parent_id    => self.operation_id
+            ,p_children_ids => self.operation_servers
+            ,p_versionid    => self.versionid
+         );
       
       END IF;
 
@@ -894,7 +952,7 @@ AS
          str_pad1 := ',';
 
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 130
       -- Add security array
