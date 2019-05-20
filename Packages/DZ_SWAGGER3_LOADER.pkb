@@ -52,6 +52,7 @@ AS
       dz_swagger3_object_typ(
           p_object_id           => a.object_id
          ,p_object_type_id      => a.object_type_id
+         ,p_object_key          => MAX(a.object_key)
          ,p_object_subtype      => MAX(a.object_subtype)
          ,p_object_attribute    => MAX(a.object_attribute)
       )
@@ -596,9 +597,7 @@ AS
    PROCEDURE requestbodytyp_emulated(
        p_parent_id           IN  VARCHAR2
       ,p_child_id            IN  dz_swagger3_object_typ
-      ,p_media_type          IN  VARCHAR2
       ,p_parameter_ids       IN  dz_swagger3_object_vry
-      ,p_inline_rb           IN  VARCHAR2
       ,p_versionid           IN  VARCHAR2
    )
    AS
@@ -621,9 +620,7 @@ AS
       ,a.object_type_id
       ,dz_swagger3_requestbody_typ(
           p_requestbody_id => a.object_id
-         ,p_media_type     => p_media_type
          ,p_parameters     => p_parameter_ids
-         ,p_inline_rb      => p_inline_rb
          ,p_versionid      => p_versionid
        )
       FROM 

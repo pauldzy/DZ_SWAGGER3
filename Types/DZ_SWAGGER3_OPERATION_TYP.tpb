@@ -118,9 +118,7 @@ AS
       WHERE
           b.versionid = p_versionid
       AND b.parent_id = p_operation_id
-      AND ( b.requestbody_flag IS NULL 
-         OR b.requestbody_flag = 'FALSE'
-      );
+      AND COALESCE(b.requestbody_flag,'FALSE') = 'FALSE';
 
       --------------------------------------------------------------------------
       -- Step 40
@@ -131,10 +129,11 @@ AS
       THEN
          SELECT
          dz_swagger3_object_typ(
-             p_object_id      => a.parameter_id
-            ,p_object_type_id => 'parametertyp'
-            ,p_object_key     => a.parameter_name
-            ,p_object_order   => b.parameter_order
+             p_object_id       => a.parameter_id
+            ,p_object_type_id  => 'parametertyp'
+            ,p_object_key      => a.parameter_name
+            ,p_object_required => a.parameter_required
+            ,p_object_order    => b.parameter_order
          )
          BULK COLLECT INTO self.operation_emulated_rbparms
          FROM
@@ -158,8 +157,6 @@ AS
                ,p_object_subtype   => 'emulated'
                ,p_object_attribute => self.operation_id
             );
-            self.operation_emulated_media_type := 'application/x-www-form-urlencoded';
-            self.operation_emulated_inline_rb  := 'TRUE';
          
          END IF;
          
@@ -290,9 +287,7 @@ AS
             dz_swagger3_loader.requestbodytyp_emulated(
                 p_parent_id      => self.operation_id
                ,p_child_id       => self.operation_requestBody
-               ,p_media_type     => self.operation_emulated_media_type
                ,p_parameter_ids  => self.operation_emulated_rbparms
-               ,p_inline_rb      => self.operation_emulated_inline_rb
                ,p_versionid      => self.versionid
             );
 
@@ -567,9 +562,12 @@ AS
          EXECUTE IMMEDIATE 
             'SELECT '
          || ' a.parametertyp.toJSON( '
-         || '    p_pretty_print  => :p01 + 2 '
-         || '   ,p_force_inline  => :p02 '
-         || '   ,p_short_id      => :p03 '
+         || '    p_pretty_print     => :p01 + 2 '
+         || '   ,p_force_inline     => :p02 '
+         || '   ,p_short_id         => :p03 '
+         || '   ,p_identifier       => a.object_id '
+         || '   ,p_short_identifier => a.short_id '
+         || '   ,p_reference_count  => a.reference_count '
          || ' ) '
          || ',b.object_key '
          || 'FROM '
@@ -640,9 +638,12 @@ AS
             EXECUTE IMMEDIATE 
                'SELECT '
             || 'a.requestbodytyp.toJSON( '
-            || '    p_pretty_print  => :p01 + 1 '
-            || '   ,p_force_inline  => :p02 '
-            || '   ,p_short_id      => :p03 '
+            || '    p_pretty_print     => :p01 + 1 '
+            || '   ,p_force_inline     => :p02 '
+            || '   ,p_short_id         => :p03 '
+            || '   ,p_identifier       => a.object_id '
+            || '   ,p_short_identifier => a.short_id '
+            || '   ,p_reference_count  => a.reference_count '
             || ') '
             || 'FROM dz_swagger3_xobjects a '
             || 'WHERE '
@@ -689,9 +690,12 @@ AS
          EXECUTE IMMEDIATE 
             'SELECT '
          || ' a.responsetyp.toJSON( '
-         || '    p_pretty_print  => :p01 + 2 '
-         || '   ,p_force_inline  => :p02 '
-         || '   ,p_short_id      => :p03 '
+         || '    p_pretty_print     => :p01 + 2 '
+         || '   ,p_force_inline     => :p02 '
+         || '   ,p_short_id         => :p03 '
+         || '   ,p_identifier       => a.object_id '
+         || '   ,p_short_identifier => a.short_id '
+         || '   ,p_reference_count  => a.reference_count '
          || ' ) '
          || ',b.object_key '
          || 'FROM '
@@ -759,9 +763,12 @@ AS
          EXECUTE IMMEDIATE 
             'SELECT '
          || 'a.pathtyp.toJSON( '
-         || '    p_pretty_print  => :p01 + 2 '
-         || '   ,p_force_inline  => :p02 '
-         || '   ,p_short_id      => :p03 '
+         || '    p_pretty_print     => :p01 + 2 '
+         || '   ,p_force_inline     => :p02 '
+         || '   ,p_short_id         => :p03 '
+         || '   ,p_identifier       => a.object_id '
+         || '   ,p_short_identifier => a.short_id '
+         || '   ,p_reference_count  => a.reference_count '
          || ') '
          || ',b.object_key '
          || 'FROM '
@@ -848,7 +855,7 @@ AS
 
       --------------------------------------------------------------------------
       -- Step 130
-      -- Add security array
+      -- Add security req array
       --------------------------------------------------------------------------
       IF  self.operation_security IS NOT NULL 
       AND self.operation_security.COUNT > 0
@@ -1171,11 +1178,14 @@ AS
          EXECUTE IMMEDIATE 
             'SELECT '
          || ' a.parametertyp.toYAML( '
-         || '    p_pretty_print   => :p01 + 3 '
-         || '   ,p_initial_indent => ''FALSE'' '
-         || '   ,p_final_linefeed => ''FALSE'' '
-         || '   ,p_force_inline   => :p02 '
-         || '   ,p_short_id       => :p03 '
+         || '    p_pretty_print     => :p01 + 3 '
+         || '   ,p_initial_indent   => ''FALSE'' '
+         || '   ,p_final_linefeed   => ''FALSE'' '
+         || '   ,p_force_inline     => :p02 '
+         || '   ,p_short_id         => :p03 '
+         || '   ,p_identifier       => a.object_id '
+         || '   ,p_short_identifier => a.short_id '
+         || '   ,p_reference_count  => a.reference_count '
          || ' ) '
          || ',b.object_key '
          || 'FROM '
@@ -1226,9 +1236,12 @@ AS
             EXECUTE IMMEDIATE 
                'SELECT '
             || 'a.requestbodytyp.toYAML( '
-            || '    p_pretty_print  => :p01 + 1 '
-            || '   ,p_force_inline  => :p02 '
-            || '   ,p_short_id      => :p03 '
+            || '    p_pretty_print     => :p01 + 1 '
+            || '   ,p_force_inline     => :p02 '
+            || '   ,p_short_id         => :p03 '
+            || '   ,p_identifier       => a.object_id '
+            || '   ,p_short_identifier => a.short_id '
+            || '   ,p_reference_count  => a.reference_count '
             || ') '
             || 'FROM '
             || 'dz_swagger3_xobjects a '
@@ -1272,15 +1285,18 @@ AS
          EXECUTE IMMEDIATE 
             'SELECT '
          || ' a.responsetyp.toYAML( '
-         || '    p_pretty_print  => :p01 + 3 '
-         || '   ,p_force_inline  => :p02 '
-         || '   ,p_short_id      => :p03 '
+         || '    p_pretty_print     => :p01 + 3 '
+         || '   ,p_force_inline     => :p02 '
+         || '   ,p_short_id         => :p03 '
+         || '   ,p_identifier       => a.object_id '
+         || '   ,p_short_identifier => a.short_id '
+         || '   ,p_reference_count  => a.reference_count '
          || ' ) '
          || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'JOIN '
-         || 'TABLE(:p01) b '
+         || 'TABLE(:p04) b '
          || 'ON '
          || '    a.object_type_id = b.object_type_id '
          || 'AND a.object_id      = b.object_id '
@@ -1317,20 +1333,23 @@ AS
       -- Write the optional variables map
       --------------------------------------------------------------------------
       IF  self.operation_callbacks IS NOT NULL 
-      AND self.operation_callbacks.COUNT = 0
+      AND self.operation_callbacks.COUNT > 0
       THEN
          EXECUTE IMMEDIATE 
             'SELECT '
          || ' a.pathtyp.toYAML( '
-         || '    p_pretty_print  => :p01 + 2 '
-         || '   ,p_force_inline  => :p02 '
-         || '   ,p_short_id      => :p03 '
+         || '    p_pretty_print     => :p01 + 2 '
+         || '   ,p_force_inline     => :p02 '
+         || '   ,p_short_id         => :p03 '
+         || '   ,p_identifier       => a.object_id '
+         || '   ,p_short_identifier => a.short_id '
+         || '   ,p_reference_count  => a.reference_count '
          || ' ) '
          || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'JOIN '
-         || 'TABLE(:p01) b '
+         || 'TABLE(:p04) b '
          || 'ON '
          || '    a.object_type_id = b.object_type_id '
          || 'AND a.object_id      = b.object_id '
@@ -1393,7 +1412,7 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'JOIN '
-         || 'TABLE(:p01) b '
+         || 'TABLE(:p04) b '
          || 'ON '
          || '    a.object_type_id = b.object_type_id '
          || 'AND a.object_id      = b.object_id '
@@ -1443,7 +1462,7 @@ AS
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'JOIN '
-         || 'TABLE(:p01) b '
+         || 'TABLE(:p04) b '
          || 'ON '
          || '    a.object_type_id = b.object_type_id '
          || 'AND a.object_id      = b.object_id '

@@ -252,6 +252,9 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -261,6 +264,7 @@ AS
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       clb_hash         CLOB;
       clb_tmp          CLOB;
+      str_identifier   VARCHAR2(255 Char);
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
@@ -289,578 +293,612 @@ AS
       str_pad1 := str_pad;
       
       --------------------------------------------------------------------------
-      -- Step 30
-      -- Add path summary
+      -- Step 20
+      -- Add  the ref object for callbacks
       --------------------------------------------------------------------------
-      IF self.path_summary IS NOT NULL
+      IF  COALESCE(p_force_inline,'FALSE') = 'FALSE'
+      AND p_reference_count > 1
       THEN
+         IF p_short_id = 'TRUE'
+         THEN
+            str_identifier := p_short_identifier;
+            
+         ELSE
+            str_identifier := p_identifier;
+            
+         END IF;
+
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
-                'summary'
-               ,self.path_summary
+                '$ref'
+               ,'#/components/callbacks/' || dz_swagger3_util.utl_url_escape(
+                  str_identifier
+                )
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
          );
          str_pad1 := ',';
-         
-      END IF;
+      
+      ELSE
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Add path summary
+      --------------------------------------------------------------------------
+         IF self.path_summary IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'summary'
+                  ,self.path_summary
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 40
       -- Add path description 
       --------------------------------------------------------------------------
-      IF self.path_description IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'description'
-               ,self.path_description
+         IF self.path_description IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'description'
+                  ,self.path_description
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-         
-      END IF;
+            );
+            str_pad1 := ',';
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 50
       -- Add get operation
       --------------------------------------------------------------------------
-      IF  self.path_get_operation IS NOT NULL
-      AND self.path_get_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            SELECT 
-            a.operationtyp.toJSON( 
-                p_pretty_print   => p_pretty_print + 1 
-               ,p_force_inline   => p_force_inline 
-               ,p_short_id       => p_short_id
-            )
-            INTO clb_tmp
-            FROM 
-            dz_swagger3_xobjects a 
-            WHERE 
-                a.object_type_id = self.path_get_operation.object_type_id
-            AND a.object_id      = self.path_get_operation.object_id;
-            
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
+         IF  self.path_get_operation IS NOT NULL
+         AND self.path_get_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               SELECT 
+               a.operationtyp.toJSON( 
+                   p_pretty_print   => p_pretty_print + 1 
+                  ,p_force_inline   => p_force_inline 
+                  ,p_short_id       => p_short_id
+               )
+               INTO clb_tmp
+               FROM 
+               dz_swagger3_xobjects a 
+               WHERE 
+                   a.object_type_id = self.path_get_operation.object_type_id
+               AND a.object_id      = self.path_get_operation.object_id;
                
-            WHEN OTHERS
-            THEN
-               RAISE_APPLICATION_ERROR(
-                   -20001
-                  ,SQLERRM || self.path_get_operation.object_id
-               );
-               
-         END;
-      
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                'get'
-               ,clb_tmp
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE_APPLICATION_ERROR(
+                      -20001
+                     ,SQLERRM || self.path_get_operation.object_id
+                  );
+                  
+            END;
+         
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.formatted2json(
+                   'get'
+                  ,clb_tmp
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
 
       --------------------------------------------------------------------------
       -- Step 60
       -- Add put operation
       --------------------------------------------------------------------------
-      IF  self.path_put_operation IS NOT NULL
-      AND self.path_put_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toJSON( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_put_operation.object_type_id
-            ,self.path_put_operation.object_id;
-            
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
+         IF  self.path_put_operation IS NOT NULL
+         AND self.path_put_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toJSON( '
+               || '    p_pretty_print   => :p01 + 1 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_put_operation.object_type_id
+               ,self.path_put_operation.object_id;
                
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
 
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                'put'
-               ,clb_tmp
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.formatted2json(
+                   'put'
+                  ,clb_tmp
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
 
       --------------------------------------------------------------------------
       -- Step 70
       -- Add post operation
       --------------------------------------------------------------------------
-      IF  self.path_post_operation IS NOT NULL
-      AND self.path_post_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toJSON( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_post_operation.object_type_id
-            ,self.path_post_operation.object_id;
-            
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
+         IF  self.path_post_operation IS NOT NULL
+         AND self.path_post_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toJSON( '
+               || '    p_pretty_print   => :p01 + 1 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_post_operation.object_type_id
+               ,self.path_post_operation.object_id;
                
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
 
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                'post'
-               ,clb_tmp
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.formatted2json(
+                   'post'
+                  ,clb_tmp
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
 
       --------------------------------------------------------------------------
       -- Step 80
       -- Add delete operation
       --------------------------------------------------------------------------
-      IF  self.path_delete_operation IS NOT NULL
-      AND self.path_delete_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toJSON( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_delete_operation.object_type_id
-            ,self.path_delete_operation.object_id;
-            
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
+         IF  self.path_delete_operation IS NOT NULL
+         AND self.path_delete_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toJSON( '
+               || '    p_pretty_print   => :p01 + 1 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_delete_operation.object_type_id
+               ,self.path_delete_operation.object_id;
                
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
 
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                'delete'
-               ,clb_tmp
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.formatted2json(
+                   'delete'
+                  ,clb_tmp
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 90
       -- Add options operation
       --------------------------------------------------------------------------
-      IF  self.path_options_operation IS NOT NULL
-      AND self.path_options_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toJSON( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_options_operation.object_type_id
-            ,self.path_options_operation.object_id;
+         IF  self.path_options_operation IS NOT NULL
+         AND self.path_options_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toJSON( '
+               || '    p_pretty_print   => :p01 + 1 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_options_operation.object_type_id
+               ,self.path_options_operation.object_id;
+               
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
             
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-         
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                'options'
-               ,clb_tmp
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.formatted2json(
+                   'options'
+                  ,clb_tmp
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 100
       -- Add head operation
       --------------------------------------------------------------------------
-      IF  self.path_head_operation IS NOT NULL
-      AND self.path_head_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toJSON( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_head_operation.object_type_id
-            ,self.path_head_operation.object_id;
+         IF  self.path_head_operation IS NOT NULL
+         AND self.path_head_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toJSON( '
+               || '    p_pretty_print   => :p01 + 1 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_head_operation.object_type_id
+               ,self.path_head_operation.object_id;
+               
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
             
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-         
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                'head'
-               ,clb_tmp
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.formatted2json(
+                   'head'
+                  ,clb_tmp
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 110
       -- Add patch operation
       --------------------------------------------------------------------------
-      IF  self.path_patch_operation IS NOT NULL
-      AND self.path_patch_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toJSON( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_patch_operation.object_type_id
-            ,self.path_patch_operation.object_id;
+         IF  self.path_patch_operation IS NOT NULL
+         AND self.path_patch_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toJSON( '
+               || '    p_pretty_print   => :p01 + 1 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_patch_operation.object_type_id
+               ,self.path_patch_operation.object_id;
+               
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
             
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-         
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                'patch'
-               ,clb_tmp
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.formatted2json(
+                   'patch'
+                  ,clb_tmp
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 120
       -- Add trace operation
       --------------------------------------------------------------------------
-      IF  self.path_trace_operation IS NOT NULL
-      AND self.path_trace_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toJSON( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_trace_operation.object_type_id
-            ,self.path_trace_operation.object_id;
+         IF  self.path_trace_operation IS NOT NULL
+         AND self.path_trace_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toJSON( '
+               || '    p_pretty_print   => :p01 + 1 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_trace_operation.object_type_id
+               ,self.path_trace_operation.object_id;
+               
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
             
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-         
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                'trace'
-               ,clb_tmp
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.formatted2json(
+                   'trace'
+                  ,clb_tmp
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
 
       --------------------------------------------------------------------------
       -- Step 130
       -- Add servers
       --------------------------------------------------------------------------
-      IF  self.path_servers IS NOT NULL 
-      AND self.path_servers.COUNT > 0
-      THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.servertyp.toJSON( '
-         || '    p_pretty_print   => :p01 + 1 '
-         || '   ,p_force_inline   => :p02 '
-         || '   ,p_short_id       => :p03 '
-         || ' ) '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      =  b.object_id '
-         || 'ORDER BY b.object_order '
-         BULK COLLECT INTO 
-          ary_clb
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.path_servers;
-         
-         str_pad2 := str_pad;
-         
-         IF p_pretty_print IS NULL
+         IF  self.path_servers IS NOT NULL 
+         AND self.path_servers.COUNT > 0
          THEN
-            clb_hash := dz_json_util.pretty('[',NULL);
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.servertyp.toJSON( '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
+            || ') '
+            || 'FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'JOIN '
+            || 'TABLE(:p04) b '
+            || 'ON '
+            || '    a.object_type_id = b.object_type_id '
+            || 'AND a.object_id      = b.object_id '
+            || 'ORDER BY b.object_order '
+            BULK COLLECT INTO 
+             ary_clb
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,p_short_id
+            ,self.path_servers;
             
-         ELSE
-            clb_hash := dz_json_util.pretty('[',-1);
+            str_pad2 := str_pad;
             
-         END IF;
-      
-         FOR i IN 1 .. ary_clb.COUNT
-         LOOP
+            IF p_pretty_print IS NULL
+            THEN
+               clb_hash := dz_json_util.pretty('[',NULL);
+               
+            ELSE
+               clb_hash := dz_json_util.pretty('[',-1);
+               
+            END IF;
+         
+            FOR i IN 1 .. ary_clb.COUNT
+            LOOP
+               clb_hash := clb_hash || dz_json_util.pretty(
+                   str_pad2 || ary_clb(i)
+                  ,p_pretty_print + 1
+               );
+               str_pad2 := ',';
+            
+            END LOOP;
+            
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || ary_clb(i)
+                ']'
+               ,p_pretty_print + 1,NULL,NULL
+            );
+            
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.formatted2json(
+                    'servers'
+                   ,clb_hash
+                   ,p_pretty_print + 1
+                )
                ,p_pretty_print + 1
             );
-            str_pad2 := ',';
-         
-         END LOOP;
-         
-         clb_hash := clb_hash || dz_json_util.pretty(
-             ']'
-            ,p_pretty_print + 1,NULL,NULL
-         );
-         
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                 'servers'
-                ,clb_hash
-                ,p_pretty_print + 1
-             )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-         
-      END IF;
+            str_pad1 := ',';
+            
+         END IF;
 
       --------------------------------------------------------------------------
       -- Step 140
       -- Add parameters
       --------------------------------------------------------------------------
-      IF  self.path_parameters IS NOT NULL 
-      AND self.path_parameters.COUNT > 0
-      THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.parametertyp.toJSON_ref( '
-         || '    p_pretty_print   => :p01 + 1 '
-         || '   ,p_force_inline   => :p02 '
-         || '   ,p_short_id       => :p03 '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'WHERE '
-         || 'COALESCE(a.parametertyp.parameter_list_hidden,''FALSE'') <> ''TRUE'' '
-         || 'ORDER BY b.object_order '
-         BULK COLLECT INTO 
-          ary_clb
-         ,ary_keys
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.path_parameters;
-         
-         str_pad2 := str_pad;
-         
-         IF p_pretty_print IS NULL
+         IF  self.path_parameters IS NOT NULL 
+         AND self.path_parameters.COUNT > 0
          THEN
-            clb_hash := dz_json_util.pretty('{',NULL);
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || ' a.parametertyp.toJSON( '
+            || '    p_pretty_print     => :p01 + 1 '
+            || '   ,p_force_inline     => :p02 '
+            || '   ,p_short_id         => :p03 '
+            || '   ,p_identifier       => a.object_id '
+            || '   ,p_short_identifier => a.short_id '
+            || '   ,p_reference_count  => a.reference_count '
+            || ' ) '
+            || ',b.object_key '
+            || 'FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'JOIN '
+            || 'TABLE(:p04) b '
+            || 'ON '
+            || '    a.object_type_id = b.object_type_id '
+            || 'AND a.object_id      = b.object_id '
+            || 'WHERE '
+            || 'COALESCE(a.parametertyp.parameter_list_hidden,''FALSE'') <> ''TRUE'' '
+            || 'ORDER BY b.object_order '
+            BULK COLLECT INTO 
+             ary_clb
+            ,ary_keys
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,p_short_id
+            ,self.path_parameters;
             
-         ELSE
-            clb_hash := dz_json_util.pretty('{',-1);
+            str_pad2 := str_pad;
             
-         END IF;
-      
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
+            IF p_pretty_print IS NULL
+            THEN
+               clb_hash := dz_json_util.pretty('{',NULL);
+               
+            ELSE
+               clb_hash := dz_json_util.pretty('{',-1);
+               
+            END IF;
+         
+            FOR i IN 1 .. ary_keys.COUNT
+            LOOP
+               clb_hash := clb_hash || dz_json_util.pretty(
+                   str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
+                  ,p_pretty_print + 1
+               );
+               str_pad2 := ',';
+                  
+            END LOOP;
+            
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
+                '}'
+               ,p_pretty_print + 1,NULL,NULL
+            );
+            
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.formatted2json(
+                    'parameters'
+                   ,clb_hash
+                   ,p_pretty_print + 1
+                )
                ,p_pretty_print + 1
             );
-            str_pad2 := ',';
-               
-         END LOOP;
-         
-         clb_hash := clb_hash || dz_json_util.pretty(
-             '}'
-            ,p_pretty_print + 1,NULL,NULL
-         );
-         
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                 'parameters'
-                ,clb_hash
-                ,p_pretty_print + 1
-             )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-         
-      END IF;
+            str_pad1 := ',';
+            
+         END IF;
 
+      END IF;
+      
       --------------------------------------------------------------------------
       -- Step 150
       -- Add the left bracket
@@ -886,11 +924,15 @@ AS
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       clb_tmp          CLOB;
+      str_identifier   VARCHAR2(255 Char);
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
@@ -901,507 +943,533 @@ AS
       -- Step 10
       -- Check incoming parameters
       --------------------------------------------------------------------------
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Write the summary
-      --------------------------------------------------------------------------
-      IF self.path_summary IS NOT NULL
+      IF  COALESCE(p_force_inline,'FALSE') = 'FALSE'
+      AND p_reference_count > 1
       THEN
+         IF p_short_id = 'TRUE'
+         THEN
+            str_identifier := p_short_identifier;
+            
+         ELSE
+            str_identifier := p_identifier;
+            
+         END IF;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
-             'summary: ' || dz_swagger3_util.yaml_text(
-                self.path_summary
+             '$ref: ' || dz_swagger3_util.yaml_text(
+                '#/components/callbacks/' || str_identifier
                ,p_pretty_print
             )
             ,p_pretty_print
             ,'  '
          );
-         
-      END IF;
+  
+      ELSE
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Write the summary
+      --------------------------------------------------------------------------
+         IF self.path_summary IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'summary: ' || dz_swagger3_util.yaml_text(
+                   self.path_summary
+                  ,p_pretty_print
+               )
+               ,p_pretty_print
+               ,'  '
+            );
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 30
       -- Write the description
       --------------------------------------------------------------------------
-      IF self.path_description IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'description: ' || dz_swagger3_util.yaml_text(
-                self.path_description
+         IF self.path_description IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'description: ' || dz_swagger3_util.yaml_text(
+                   self.path_description
+                  ,p_pretty_print
+               )
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
-      END IF;
+               ,'  '
+            );
+            
+         END IF;
 
       --------------------------------------------------------------------------
       -- Step 40
       -- Write the get operation
       --------------------------------------------------------------------------
-      IF  self.path_get_operation IS NOT NULL
-      AND self.path_get_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toYAML( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_get_operation.object_type_id
-            ,self.path_get_operation.object_id;
-            
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
+         IF  self.path_get_operation IS NOT NULL
+         AND self.path_get_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toYAML( '
+               || '    p_pretty_print   => :p01 + 0 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_get_operation.object_type_id
+               ,self.path_get_operation.object_id;
                
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
 
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'get: ' 
-            ,p_pretty_print
-            ,'  '
-         ) || clb_tmp;
-         
-      END IF;
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'get: ' 
+               ,p_pretty_print
+               ,'  '
+            ) || clb_tmp;
+            
+         END IF;
 
       --------------------------------------------------------------------------
       -- Step 50
       -- Write the get operation
       --------------------------------------------------------------------------
-      IF  self.path_put_operation IS NOT NULL
-      AND self.path_put_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toYAML( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_put_operation.object_type_id
-            ,self.path_put_operation.object_id;
+         IF  self.path_put_operation IS NOT NULL
+         AND self.path_put_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toYAML( '
+               || '    p_pretty_print   => :p01 + 0 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_put_operation.object_type_id
+               ,self.path_put_operation.object_id;
+               
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
             
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-         
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'put: ' 
-            ,p_pretty_print
-            ,'  '
-         ) || clb_tmp;
-         
-      END IF;
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'put: ' 
+               ,p_pretty_print
+               ,'  '
+            ) || clb_tmp;
+            
+         END IF;
 
       --------------------------------------------------------------------------
       -- Step 60
       -- Write the post operation
       --------------------------------------------------------------------------
-      IF  self.path_post_operation IS NOT NULL
-      AND self.path_post_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toYAML( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_post_operation.object_type_id
-            ,self.path_post_operation.object_id;
+         IF  self.path_post_operation IS NOT NULL
+         AND self.path_post_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toYAML( '
+               || '    p_pretty_print   => :p01 + 0 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_post_operation.object_type_id
+               ,self.path_post_operation.object_id;
+               
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
             
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-         
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'post: ' 
-            ,p_pretty_print
-            ,'  '
-         ) || clb_tmp;
-         
-      END IF;
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'post: ' 
+               ,p_pretty_print
+               ,'  '
+            ) || clb_tmp;
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 70
       -- Write the delete operation
       --------------------------------------------------------------------------
-      IF  self.path_delete_operation IS NOT NULL
-      AND self.path_delete_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toYAML( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_delete_operation.object_type_id
-            ,self.path_delete_operation.object_id;
+         IF  self.path_delete_operation IS NOT NULL
+         AND self.path_delete_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toYAML( '
+               || '    p_pretty_print   => :p01 + 0 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_delete_operation.object_type_id
+               ,self.path_delete_operation.object_id;
+               
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
             
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-         
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'delete: ' 
-            ,p_pretty_print
-            ,'  '
-         ) || clb_tmp;
-         
-      END IF;
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'delete: ' 
+               ,p_pretty_print
+               ,'  '
+            ) || clb_tmp;
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 80
       -- Write the options operation
       --------------------------------------------------------------------------
-      IF  self.path_options_operation IS NOT NULL
-      AND self.path_options_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toYAML( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_options_operation.object_type_id
-            ,self.path_options_operation.object_id;
+         IF  self.path_options_operation IS NOT NULL
+         AND self.path_options_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toYAML( '
+               || '    p_pretty_print   => :p01 + 0 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_options_operation.object_type_id
+               ,self.path_options_operation.object_id;
+               
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
             
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-         
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'options: ' 
-            ,p_pretty_print
-            ,'  '
-         ) || clb_tmp;
-         
-      END IF;
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'options: ' 
+               ,p_pretty_print
+               ,'  '
+            ) || clb_tmp;
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 90
       -- Write the head operation
       --------------------------------------------------------------------------
-      IF  self.path_head_operation IS NOT NULL
-      AND self.path_head_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toYAML( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_head_operation.object_type_id
-            ,self.path_head_operation.object_id;
+         IF  self.path_head_operation IS NOT NULL
+         AND self.path_head_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toYAML( '
+               || '    p_pretty_print   => :p01 + 0 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_head_operation.object_type_id
+               ,self.path_head_operation.object_id;
+               
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
             
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-         
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'head: ' 
-            ,p_pretty_print
-            ,'  '
-         ) || clb_tmp;
-         
-      END IF;
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'head: ' 
+               ,p_pretty_print
+               ,'  '
+            ) || clb_tmp;
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 100
       -- Write the patch operation
       --------------------------------------------------------------------------
-      IF  self.path_patch_operation IS NOT NULL
-      AND self.path_patch_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toYAML( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_patch_operation.object_type_id
-            ,self.path_patch_operation.object_id;
+         IF  self.path_patch_operation IS NOT NULL
+         AND self.path_patch_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toYAML( '
+               || '    p_pretty_print   => :p01 + 0 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_patch_operation.object_type_id
+               ,self.path_patch_operation.object_id;
+               
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
             
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-         
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'patch: ' 
-            ,p_pretty_print
-            ,'  '
-         ) || clb_tmp;
-         
-      END IF;
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'patch: ' 
+               ,p_pretty_print
+               ,'  '
+            ) || clb_tmp;
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 110
       -- Write the trace operation
       --------------------------------------------------------------------------
-      IF  self.path_trace_operation IS NOT NULL
-      AND self.path_trace_operation.object_id IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toYAML( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.path_trace_operation.object_type_id
-            ,self.path_trace_operation.object_id;
+         IF  self.path_trace_operation IS NOT NULL
+         AND self.path_trace_operation.object_id IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.operationtyp.toYAML( '
+               || '    p_pretty_print   => :p01 + 0 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.path_trace_operation.object_type_id
+               ,self.path_trace_operation.object_id;
+               
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
             
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-         
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'trace: ' 
-            ,p_pretty_print
-            ,'  '
-         ) || clb_tmp;
-         
-      END IF;
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'trace: ' 
+               ,p_pretty_print
+               ,'  '
+            ) || clb_tmp;
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 120
       -- Write the server array
       --------------------------------------------------------------------------
-      IF  self.path_servers IS NOT NULL 
-      AND self.path_servers.COUNT > 0
-      THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || 'a.servertyp.toJSON( '
-         || '    p_pretty_print   => :p01 + 1 '
-         || '   ,p_force_inline   => :p02 '
-         || '   ,p_short_id       => :p03 '
-         || ') '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
-         BULK COLLECT INTO 
-         ary_clb
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.path_servers;
+         IF  self.path_servers IS NOT NULL 
+         AND self.path_servers.COUNT > 0
+         THEN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || 'a.servertyp.toJSON( '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
+            || ') '
+            || 'FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'JOIN '
+            || 'TABLE(:p04) b '
+            || 'ON '
+            || '    a.object_type_id = b.object_type_id '
+            || 'AND a.object_id      = b.object_id '
+            || 'ORDER BY b.object_order '
+            BULK COLLECT INTO 
+            ary_clb
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,p_short_id
+            ,self.path_servers;
 
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'servers: '
-            ,p_pretty_print + 1
-            ,'  '
-         );
-         
-         FOR i IN 1 .. ary_clb.COUNT
-         LOOP
-            clb_output := clb_output || dz_json_util.pretty(
-                '- '
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'servers: '
                ,p_pretty_print + 1
                ,'  '
-            ) || ary_clb(i);
+            );
             
-         END LOOP;
-         
-      END IF;
+            FOR i IN 1 .. ary_clb.COUNT
+            LOOP
+               clb_output := clb_output || dz_json_util.pretty(
+                   '- '
+                  ,p_pretty_print + 1
+                  ,'  '
+               ) || ary_clb(i);
+               
+            END LOOP;
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 130
       -- Write the parameters map
       --------------------------------------------------------------------------
-      IF  self.path_parameters IS NOT NULL 
-      AND self.path_parameters.COUNT > 0
-      THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.parametertyp.toYAML( '
-         || '    p_pretty_print   => :p01 + 1 '
-         || '   ,p_force_inline   => :p02 '
-         || '   ,p_short_id       => :p03 '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || 'a.object_type_id = b.object_type_id '
-         || 'a.object_id      = b.object_id '
-         || 'WHERE '
-         || 'COALESCE(a.parametertyp.parameter_list_hidden,''FALSE'') <> ''TRUE'' '
-         || 'ORDER BY b.object_order '
-         BULK COLLECT INTO 
-          ary_clb
-         ,ary_keys
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.path_parameters;
-         
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'parameters: '
-            ,p_pretty_print + 1
-            ,'  '
-         );
-         
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
-            clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
-               ,p_pretty_print + 2
+         IF  self.path_parameters IS NOT NULL 
+         AND self.path_parameters.COUNT > 0
+         THEN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || ' a.parametertyp.toYAML( '
+            || '    p_pretty_print     => :p01 + 1 '
+            || '   ,p_force_inline     => :p02 '
+            || '   ,p_short_id         => :p03 '
+            || '   ,p_identifier       => a.object_id '
+            || '   ,p_short_identifier => a.short_id '
+            || '   ,p_reference_count  => a.reference_count '
+            || ' ) '
+            || ',b.object_key '
+            || 'FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'JOIN '
+            || 'TABLE(:p04) b '
+            || 'ON '
+            || 'a.object_type_id = b.object_type_id '
+            || 'a.object_id      = b.object_id '
+            || 'WHERE '
+            || 'COALESCE(a.parametertyp.parameter_list_hidden,''FALSE'') <> ''TRUE'' '
+            || 'ORDER BY b.object_order '
+            BULK COLLECT INTO 
+             ary_clb
+            ,ary_keys
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,p_short_id
+            ,self.path_parameters;
+            
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'parameters: '
+               ,p_pretty_print + 1
                ,'  '
-            ) || ary_clb(i);
-         
-         END LOOP;
-         
+            );
+            
+            FOR i IN 1 .. ary_keys.COUNT
+            LOOP
+               clb_output := clb_output || dz_json_util.pretty(
+                   '''' || ary_keys(i) || ''': '
+                  ,p_pretty_print + 2
+                  ,'  '
+               ) || ary_clb(i);
+            
+            END LOOP;
+            
+         END IF;
+      
       END IF;
       
       --------------------------------------------------------------------------

@@ -249,9 +249,11 @@ AS
          self.schema_properties(i) := dz_swagger3_object_typ(
              p_object_id        => 'rb.' || p_parameters(i).object_id
             ,p_object_type_id   => 'schematyp'
-            ,p_object_key       => 'rb.' || p_parameters(i).object_id
+            ,p_object_key       => p_parameters(i).object_key
             ,p_object_subtype   => 'emulated_item'
             ,p_object_attribute => p_parameters(i).object_id
+            ,p_object_required  => p_parameters(i).object_required
+            ,p_object_order     => p_parameters(i).object_order
          );
          
       END LOOP;
@@ -294,6 +296,7 @@ AS
       --------------------------------------------------------------------------
       SELECT
        a.parameter_schema_id
+      ,a.parameter_name || ' rb'
       ,a.parameter_description
       ,a.parameter_required
       ,a.parameter_example_string
@@ -301,6 +304,7 @@ AS
       ,a.parameter_list_hidden
       INTO
        str_inner_schema_id
+      ,self.schema_title
       ,self.schema_description
       ,self.schema_required
       ,self.schema_example_string
@@ -466,6 +470,9 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_reference_count     IN  INTEGER   DEFAULT NULL
       ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
@@ -475,16 +482,21 @@ AS
       AND self.combine_schemas.COUNT > 0
       THEN
          RETURN self.toJSON_combine(
-             p_pretty_print   => p_pretty_print
-            ,p_force_inline   => p_force_inline
-            ,p_jsonschema     => p_jsonschema
+             p_pretty_print     => p_pretty_print
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_jsonschema       => p_jsonschema
          );
          
       ELSE
          RETURN self.toJSON_schema(
-             p_pretty_print   => p_pretty_print
-            ,p_force_inline   => p_force_inline
-            ,p_jsonschema     => p_jsonschema
+             p_pretty_print     => p_pretty_print
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => p_identifier
+            ,p_short_identifier => p_short_identifier
+            ,p_reference_count  => p_reference_count 
+            ,p_jsonschema       => p_jsonschema
          );
          
       END IF;
@@ -493,41 +505,13 @@ AS
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON_component(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
-   AS
-   BEGIN
-   
-      IF  self.combine_schemas IS NOT NULL
-      AND self.combine_schemas.COUNT > 0
-      THEN
-         RETURN self.toJSON_combine(
-             p_pretty_print   => p_pretty_print
-            ,p_force_inline   => p_force_inline
-            ,p_jsonschema     => p_jsonschema
-         );
-         
-      ELSE
-         RETURN self.toJSON_schema(
-             p_pretty_print   => p_pretty_print
-            ,p_force_inline   => p_force_inline
-            ,p_jsonschema     => p_jsonschema
-         );
-         
-      END IF;
-      
-   END toJSON_component;
-   
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_schema(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_reference_count     IN  INTEGER   DEFAULT NULL
       ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
@@ -541,9 +525,9 @@ AS
       ary_required     MDSYS.SDO_STRING2_ARRAY;
       clb_hash         CLOB;
       clb_tmp          CLOB;
-      str_tmp          VARCHAR2(4000 Char);
       int_counter      PLS_INTEGER;
       boo_temp         BOOLEAN;
+      str_identifier   VARCHAR2(255 Char);
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
@@ -578,583 +562,235 @@ AS
       str_pad1 := str_pad;
       
       --------------------------------------------------------------------------
-      -- Step 40
-      -- Add optional title object
+      -- Step 20
+      -- Add  the ref object
       --------------------------------------------------------------------------
-      IF self.inject_jsonschema = 'TRUE'
+      IF  COALESCE(p_force_inline,'FALSE') = 'FALSE'
+      AND p_reference_count > 1
       THEN
+         IF p_short_id = 'TRUE'
+         THEN
+            str_identifier := p_short_identifier;
+            
+         ELSE
+            str_identifier := p_identifier;
+            
+         END IF;
+         
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
-                '$schema'
-               ,'http://json-schema.org/draft-04/schema#'
+                '$ref'
+               ,'#/components/schemas/' || dz_swagger3_util.utl_url_escape(
+                  str_identifier
+                )
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
          );
          str_pad1 := ',';
-      
-      END IF;
+         
+      ELSE
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Add optional title object
+      --------------------------------------------------------------------------
+         IF self.inject_jsonschema = 'TRUE'
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   '$schema'
+                  ,'http://json-schema.org/draft-04/schema#'
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+         
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 30
       -- Add base attributes
       --------------------------------------------------------------------------
-      IF str_jsonschema = 'TRUE'
-      AND self.schema_nullable = 'TRUE'
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'type'
-               ,MDSYS.SDO_STRING2_ARRAY(self.schema_type,'null')
+         IF str_jsonschema = 'TRUE'
+         AND self.schema_nullable = 'TRUE'
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'type'
+                  ,MDSYS.SDO_STRING2_ARRAY(self.schema_type,'null')
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      ELSE
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'type'
-               ,self.schema_type
+            );
+            str_pad1 := ',';
+         
+         ELSE
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'type'
+                  ,self.schema_type
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
+            );
+            str_pad1 := ',';
+         
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 40
       -- Add optional title object
       --------------------------------------------------------------------------
-      IF self.schema_title IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'title'
-               ,self.schema_title
+         IF self.schema_title IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'title'
+                  ,self.schema_title
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
+            );
+            str_pad1 := ',';
+         
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 50
       -- Add optional description object
       --------------------------------------------------------------------------
-      IF self.schema_description IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'description'
-               ,self.schema_description
+         IF self.schema_description IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'description'
+                  ,self.schema_description
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
+            );
+            str_pad1 := ',';
+         
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 60
       -- Add optional description object
       --------------------------------------------------------------------------
-      IF self.schema_format IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'format'
-               ,self.schema_format
+         IF self.schema_format IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'format'
+                  ,self.schema_format
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
+            );
+            str_pad1 := ',';
+         
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 70
       -- Add optional enum array
       --------------------------------------------------------------------------
-      IF  self.schema_enum_string IS NOT NULL
-      AND self.schema_enum_string.COUNT > 0
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'enum'
-               ,self.schema_enum_string
+         IF  self.schema_enum_string IS NOT NULL
+         AND self.schema_enum_string.COUNT > 0
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'enum'
+                  ,self.schema_enum_string
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      ELSIF  self.schema_enum_number IS NOT NULL
-      AND self.schema_enum_number.COUNT > 0
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'enum'
-               ,self.schema_enum_number
+            );
+            str_pad1 := ',';
+         
+         ELSIF  self.schema_enum_number IS NOT NULL
+         AND self.schema_enum_number.COUNT > 0
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'enum'
+                  ,self.schema_enum_number
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
+            );
+            str_pad1 := ',';
+         
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 80
       -- Add optional description object
       --------------------------------------------------------------------------
-      IF  self.schema_nullable IS NOT NULL
-      AND str_jsonschema <> 'TRUE'
-      THEN
-         IF LOWER(self.schema_nullable) = 'true'
+         IF  self.schema_nullable IS NOT NULL
+         AND str_jsonschema <> 'TRUE'
          THEN
-            boo_temp := TRUE;
+            IF LOWER(self.schema_nullable) = 'true'
+            THEN
+               boo_temp := TRUE;
+               
+            ELSE
+               boo_temp := FALSE;
             
-         ELSE
-            boo_temp := FALSE;
+            END IF;
+         
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'nullable'
+                  ,boo_temp
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
          
          END IF;
-      
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'nullable'
-               ,boo_temp
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
       
       --------------------------------------------------------------------------
       -- Step 90
       -- Add optional description object
       --------------------------------------------------------------------------
-      IF self.schema_discriminator IS NOT NULL
-      AND str_jsonschema <> 'TRUE'
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'discriminator'
-               ,self.schema_discriminator
+         IF self.schema_discriminator IS NOT NULL
+         AND str_jsonschema <> 'TRUE'
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'discriminator'
+                  ,self.schema_discriminator
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
+            );
+            str_pad1 := ',';
+         
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 100
       -- Add optional readOnly and writeOnly attributes
       --------------------------------------------------------------------------
-      IF self.schema_readOnly IS NOT NULL
-      AND str_jsonschema <> 'TRUE'
-      THEN
-         IF LOWER(self.schema_readOnly) = 'true'
+         IF self.schema_readOnly IS NOT NULL
+         AND str_jsonschema <> 'TRUE'
          THEN
-            boo_temp := TRUE;
-            
-         ELSE
-            boo_temp := FALSE;
-         
-         END IF;
-      
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'readOnly'
-               ,boo_temp
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
-      
-      IF self.schema_writeOnly IS NOT NULL
-      AND str_jsonschema <> 'TRUE'
-      THEN
-         IF LOWER(self.schema_writeOnly) = 'true'
-         THEN
-            boo_temp := TRUE;
-            
-         ELSE
-            boo_temp := FALSE;
-         
-         END IF;
-      
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'writeOnly'
-               ,boo_temp
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 110
-      -- Add optional minItems and MaxItems attribute
-      --------------------------------------------------------------------------
-      IF self.schema_maxItems IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'maxItems'
-               ,self.schema_maxItems
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
-      
-      IF self.schema_minItems IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'minItems'
-               ,self.schema_minItems
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 120
-      -- Add optional minProperties and MaxProperties attribute
-      --------------------------------------------------------------------------
-      IF self.schema_maxProperties IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'maxProperties'
-               ,self.schema_maxProperties
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
-      
-      IF self.schema_minProperties IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'minProperties'
-               ,self.schema_minProperties
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 130
-      -- Add optional externalDocs
-      --------------------------------------------------------------------------
-      IF  self.schema_externalDocs IS NOT NULL
-      AND str_jsonschema <> 'TRUE'
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.extrdocstyp.toJSON( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') '
-            || 'FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.schema_externalDocs.object_type_id 
-            ,self.schema_externalDocs.object_id;
-         
-         EXCEPTION
-            WHEN NO_DATA_FOUND
+            IF LOWER(self.schema_readOnly) = 'true'
             THEN
-               clb_tmp := NULL;
+               boo_temp := TRUE;
                
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END; 
-      
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.formatted2json(
-                'externalDocs'
-               ,clb_tmp
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad := ',';
-
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 140
-      -- Add optional example scalars
-      --------------------------------------------------------------------------
-      IF self.schema_example_string IS NOT NULL
-      AND str_jsonschema <> 'TRUE'
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'example'
-               ,self.schema_example_string
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      ELSIF self.schema_example_number IS NOT NULL
-      AND str_jsonschema <> 'TRUE'
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'example'
-               ,self.schema_example_number
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 150
-      -- Add optional deprecated object
-      --------------------------------------------------------------------------
-      IF  LOWER(self.schema_deprecated) = 'true'
-      AND str_jsonschema <> 'TRUE'
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'deprecated'
-               ,TRUE
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 160
-      -- Add schema items
-      --------------------------------------------------------------------------
-      IF self.schema_items_schema IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.schematyp.toJSON( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') '
-            || 'FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO 
-            clb_tmp
-            USING
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.schema_items_schema.object_type_id
-            ,self.schema_items_schema.object_id;
-         
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                'items'
-               ,clb_tmp
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 170
-      -- Add optional xml object
-      --------------------------------------------------------------------------
-      IF str_jsonschema = 'FALSE'
-      THEN
-         IF self.xml_name      IS NOT NULL
-         OR self.xml_namespace IS NOT NULL
-         OR self.xml_prefix    IS NOT NULL
-         OR self.xml_attribute IS NOT NULL
-         OR self.xml_wrapped   IS NOT NULL
-         THEN
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                   'xml'
-                  ,dz_swagger3_xml_typ(
-                      p_xml_name       => self.xml_name
-                     ,p_xml_namespace  => self.xml_namespace
-                     ,p_xml_prefix     => self.xml_prefix
-                     ,p_xml_attribute  => self.xml_attribute
-                     ,p_xml_wrapped    => self.xml_wrapped
-                   ).toJSON(
-                      p_pretty_print   => p_pretty_print + 1
-                     ,p_force_inline   => p_force_inline
-                   )
-                  ,p_pretty_print + 1
-                )
-               ,p_pretty_print + 1
-            );
-            str_pad1 := ',';
+            ELSE
+               boo_temp := FALSE;
             
-         END IF;
-         
-      END IF;
-      
-      -------------------------------------------------------------------------
-      -- Step 180
-      -- Add parameters
-      -------------------------------------------------------------------------
-      IF  self.schema_properties IS NOT NULL 
-      AND self.schema_properties.COUNT > 0
-      THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.schematyp.toJSON( '
-         || '    p_pretty_print   => :p01 + 2 '
-         || '   ,p_force_inline   => :p02 '
-         || '   ,p_short_id       => :p03 '
-         || ' ) '
-         || ',b.object_key '
-         || ',b.object_required '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'WHERE '
-         || 'COALESCE(a.schematyp.property_list_hidden,''FALSE'') <> ''TRUE'' '
-         || 'ORDER BY b.object_order '
-         BULK COLLECT INTO 
-          ary_clb
-         ,ary_keys
-         ,ary_required
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.schema_properties; 
-
-         str_pad2 := str_pad;
-         ary_items := MDSYS.SDO_STRING2_ARRAY();
-         
-         IF p_pretty_print IS NULL
-         THEN
-            clb_hash := dz_json_util.pretty('{',NULL);
-            
-         ELSE
-            clb_hash := dz_json_util.pretty('{',-1);
-            
-         END IF;
-
-         int_counter := 1;
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
-            clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
-               ,p_pretty_print + 2
-            );
-            str_pad2 := ',';
-            
-            IF ary_required(i) = 'TRUE'
-            THEN
-               ary_items.EXTEND();
-               ary_items(int_counter) := ary_keys(i);
-               int_counter := int_counter + 1;
-
             END IF;
          
-         END LOOP;
-         
-         clb_hash := clb_hash || dz_json_util.pretty(
-             '}'
-            ,p_pretty_print + 1,NULL,NULL
-         );
-         
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                 'properties'
-                ,clb_hash
-                ,p_pretty_print + 1
-             )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-         
-      -------------------------------------------------------------------------
-      -- Step 190
-      -- Add required array
-      -------------------------------------------------------------------------
-         IF ary_items IS NOT NULL
-         AND ary_items.COUNT > 0
-         THEN
             clb_output := clb_output || dz_json_util.pretty(
                 str_pad1 || dz_json_main.value2json(
-                   'required'
-                  ,ary_items
+                   'readOnly'
+                  ,boo_temp
                   ,p_pretty_print + 1
                )
                ,p_pretty_print + 1
@@ -1163,6 +799,391 @@ AS
          
          END IF;
          
+         IF self.schema_writeOnly IS NOT NULL
+         AND str_jsonschema <> 'TRUE'
+         THEN
+            IF LOWER(self.schema_writeOnly) = 'true'
+            THEN
+               boo_temp := TRUE;
+               
+            ELSE
+               boo_temp := FALSE;
+            
+            END IF;
+         
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'writeOnly'
+                  ,boo_temp
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+         
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 110
+      -- Add optional minItems and MaxItems attribute
+      --------------------------------------------------------------------------
+         IF self.schema_maxItems IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'maxItems'
+                  ,self.schema_maxItems
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+         
+         END IF;
+         
+         IF self.schema_minItems IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'minItems'
+                  ,self.schema_minItems
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+         
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 120
+      -- Add optional minProperties and MaxProperties attribute
+      --------------------------------------------------------------------------
+         IF self.schema_maxProperties IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'maxProperties'
+                  ,self.schema_maxProperties
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+         
+         END IF;
+         
+         IF self.schema_minProperties IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'minProperties'
+                  ,self.schema_minProperties
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+         
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 130
+      -- Add optional externalDocs
+      --------------------------------------------------------------------------
+         IF  self.schema_externalDocs IS NOT NULL
+         AND str_jsonschema <> 'TRUE'
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.extrdocstyp.toJSON( '
+               || '    p_pretty_print   => :p01 + 1 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') '
+               || 'FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.schema_externalDocs.object_type_id 
+               ,self.schema_externalDocs.object_id;
+            
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END; 
+         
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad || dz_json_main.formatted2json(
+                   'externalDocs'
+                  ,clb_tmp
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad := ',';
+
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 140
+      -- Add optional example scalars
+      --------------------------------------------------------------------------
+         IF self.schema_example_string IS NOT NULL
+         AND str_jsonschema <> 'TRUE'
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'example'
+                  ,self.schema_example_string
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+         
+         ELSIF self.schema_example_number IS NOT NULL
+         AND str_jsonschema <> 'TRUE'
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'example'
+                  ,self.schema_example_number
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+         
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 150
+      -- Add optional deprecated object
+      --------------------------------------------------------------------------
+         IF  LOWER(self.schema_deprecated) = 'true'
+         AND str_jsonschema <> 'TRUE'
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'deprecated'
+                  ,TRUE
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+         
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 160
+      -- Add schema items
+      --------------------------------------------------------------------------
+         IF self.schema_items_schema IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.schematyp.toJSON( '
+               || '    p_pretty_print     => :p01 + 1 '
+               || '   ,p_force_inline     => :p02 '
+               || '   ,p_short_id         => :p03 '
+               || '   ,p_identifier       => a.object_id '
+               || '   ,p_short_identifier => a.short_id '
+               || '   ,p_reference_count  => a.reference_count '
+               || ') '
+               || 'FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO 
+               clb_tmp
+               USING
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.schema_items_schema.object_type_id
+               ,self.schema_items_schema.object_id;
+            
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
+
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.formatted2json(
+                   'items'
+                  ,clb_tmp
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 170
+      -- Add optional xml object
+      --------------------------------------------------------------------------
+         IF str_jsonschema = 'FALSE'
+         THEN
+            IF self.xml_name      IS NOT NULL
+            OR self.xml_namespace IS NOT NULL
+            OR self.xml_prefix    IS NOT NULL
+            OR self.xml_attribute IS NOT NULL
+            OR self.xml_wrapped   IS NOT NULL
+            THEN
+               clb_output := clb_output || dz_json_util.pretty(
+                   str_pad1 || dz_json_main.formatted2json(
+                      'xml'
+                     ,dz_swagger3_xml_typ(
+                         p_xml_name       => self.xml_name
+                        ,p_xml_namespace  => self.xml_namespace
+                        ,p_xml_prefix     => self.xml_prefix
+                        ,p_xml_attribute  => self.xml_attribute
+                        ,p_xml_wrapped    => self.xml_wrapped
+                      ).toJSON(
+                         p_pretty_print   => p_pretty_print + 1
+                        ,p_force_inline   => p_force_inline
+                      )
+                     ,p_pretty_print + 1
+                   )
+                  ,p_pretty_print + 1
+               );
+               str_pad1 := ',';
+               
+            END IF;
+            
+         END IF;
+      
+      -------------------------------------------------------------------------
+      -- Step 180
+      -- Add parameters
+      -------------------------------------------------------------------------
+         IF  self.schema_properties IS NOT NULL 
+         AND self.schema_properties.COUNT > 0
+         THEN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || ' a.schematyp.toJSON( '
+            || '    p_pretty_print     => :p01 + 2 '
+            || '   ,p_force_inline     => :p02 '
+            || '   ,p_short_id         => :p03 '
+            || '   ,p_identifier       => a.object_id '
+            || '   ,p_short_identifier => a.short_id '
+            || '   ,p_reference_count  => a.reference_count '
+            || ' ) '
+            || ',b.object_key '
+            || ',b.object_required '
+            || 'FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'JOIN '
+            || 'TABLE(:p04) b '
+            || 'ON '
+            || '    a.object_type_id = b.object_type_id '
+            || 'AND a.object_id      = b.object_id '
+            || 'WHERE '
+            || 'COALESCE(a.schematyp.property_list_hidden,''FALSE'') <> ''TRUE'' '
+            || 'ORDER BY b.object_order '
+            BULK COLLECT INTO 
+             ary_clb
+            ,ary_keys
+            ,ary_required
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,p_short_id
+            ,self.schema_properties; 
+
+            str_pad2 := str_pad;
+            ary_items := MDSYS.SDO_STRING2_ARRAY();
+            
+            IF p_pretty_print IS NULL
+            THEN
+               clb_hash := dz_json_util.pretty('{',NULL);
+               
+            ELSE
+               clb_hash := dz_json_util.pretty('{',-1);
+               
+            END IF;
+
+            int_counter := 1;
+            FOR i IN 1 .. ary_keys.COUNT
+            LOOP
+               clb_hash := clb_hash || dz_json_util.pretty(
+                   str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
+                  ,p_pretty_print + 2
+               );
+               str_pad2 := ',';
+               
+               IF ary_required(i) = 'TRUE'
+               THEN
+                  ary_items.EXTEND();
+                  ary_items(int_counter) := ary_keys(i);
+                  int_counter := int_counter + 1;
+
+               END IF;
+            
+            END LOOP;
+            
+            clb_hash := clb_hash || dz_json_util.pretty(
+                '}'
+               ,p_pretty_print + 1,NULL,NULL
+            );
+            
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.formatted2json(
+                    'properties'
+                   ,clb_hash
+                   ,p_pretty_print + 1
+                )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+         
+      -------------------------------------------------------------------------
+      -- Step 190
+      -- Add required array
+      -------------------------------------------------------------------------
+            IF ary_items IS NOT NULL
+            AND ary_items.COUNT > 0
+            THEN
+               clb_output := clb_output || dz_json_util.pretty(
+                   str_pad1 || dz_json_main.value2json(
+                      'required'
+                     ,ary_items
+                     ,p_pretty_print + 1
+                  )
+                  ,p_pretty_print + 1
+               );
+               str_pad1 := ',';
+            
+            END IF;
+            
+         END IF;
+            
       END IF;
 
       --------------------------------------------------------------------------
@@ -1181,81 +1202,6 @@ AS
       RETURN clb_output;
            
    END toJSON_schema;
-   
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON_ref(
-       p_identifier          IN  VARCHAR2
-      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
-   AS
-      str_jsonschema   VARCHAR2(4000 Char) := UPPER(p_jsonschema);
-      clb_output       CLOB;
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      
-   BEGIN
-      
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Check incoming parameters
-      --------------------------------------------------------------------------
-      IF str_jsonschema IS NULL
-      OR str_jsonschema NOT IN ('TRUE','FALSE')
-      THEN
-         str_jsonschema := 'FALSE';
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Build the wrapper
-      --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         
-      ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
-         str_pad  := ' ';
-         
-      END IF;
-      
-      str_pad1 := str_pad;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Add base attributes
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.value2json(
-             '$ref'
-            ,'#/components/schemas/' || dz_swagger3_util.utl_url_escape(
-               p_identifier
-             )
-            ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
-      --------------------------------------------------------------------------
-      -- Step 180
-      -- Add the left bracket
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 190
-      -- Cough it out
-      --------------------------------------------------------------------------
-      RETURN clb_output;
-           
-   END toJSON_ref;
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
@@ -1294,10 +1240,13 @@ AS
       EXECUTE IMMEDIATE
          'SELECT '
       || ' a.schematyp.toJSON( '
-      || '    p_pretty_print   => :p01 + 1 '
-      || '   ,p_force_inline   => :p02 '
-      || '   ,p_short_id       => :p03 '
-      || '   ,p_jsonschema     => :p04 '
+      || '    p_pretty_print     => :p01 + 2 '
+      || '   ,p_force_inline     => :p02 '
+      || '   ,p_short_id         => :p03 '
+      || '   ,p_identifier       => a.object_id '
+      || '   ,p_short_identifier => a.short_id '
+      || '   ,p_reference_count  => a.reference_count '
+      || '   ,p_jsonschema       => :p04 '
       || ' ) '
       || ',b.object_key '
       || 'FROM '
@@ -1438,63 +1387,39 @@ AS
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
    BEGIN
+
       IF  self.combine_schemas IS NOT NULL
       AND self.combine_schemas.COUNT > 0
       THEN
          RETURN self.toYAML_combine(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-            ,p_force_inline    => p_force_inline
+             p_pretty_print     => p_pretty_print
+            ,p_initial_indent   => p_initial_indent
+            ,p_final_linefeed   => p_final_linefeed
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
          );
          
       ELSE
          RETURN self.toYAML_schema(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-            ,p_force_inline    => p_force_inline
+             p_pretty_print     => p_pretty_print
+            ,p_initial_indent   => p_initial_indent
+            ,p_final_linefeed   => p_final_linefeed
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => p_identifier
+            ,p_short_identifier => p_short_identifier
+            ,p_reference_count  => p_reference_count 
          );
          
       END IF;
       
    END toYAML;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toYAML_component(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
-   AS
-   BEGIN
-      IF  self.combine_schemas IS NOT NULL
-      AND self.combine_schemas.COUNT > 0
-      THEN
-         RETURN self.toYAML_combine(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-            ,p_force_inline    => p_force_inline
-         );
-         
-      ELSE
-         RETURN self.toYAML_schema(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-            ,p_force_inline    => p_force_inline
-         );
-         
-      END IF;
-      
-   END toYAML_component;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -1504,6 +1429,9 @@ AS
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -1512,9 +1440,9 @@ AS
       ary_required     MDSYS.SDO_STRING2_ARRAY;
       clb_hash         CLOB;
       clb_tmp          CLOB;
-      str_tmp          VARCHAR2(4000 Char);
       int_counter      PLS_INTEGER;
       boo_check        BOOLEAN;
+      str_identifier   VARCHAR2(255 Char);
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
@@ -1525,448 +1453,470 @@ AS
       -- Step 10
       -- Check incoming parameters
       --------------------------------------------------------------------------
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Do the type element
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty_str(
-          'type: ' || self.schema_type
-         ,p_pretty_print
-         ,'  '
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Add optional title object
-      --------------------------------------------------------------------------
-      IF self.schema_title IS NOT NULL
+      IF  COALESCE(p_force_inline,'FALSE') = 'FALSE'
+      AND p_reference_count > 1
       THEN
+         IF p_short_id = 'TRUE'
+         THEN
+            str_identifier := p_short_identifier;
+            
+         ELSE
+            str_identifier := p_identifier;
+            
+         END IF;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
-             'title: ' || dz_swagger3_util.yamlq(self.schema_title)
-            ,p_pretty_print
-            ,'  '
-         );
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Add optional description object
-      --------------------------------------------------------------------------
-      IF self.schema_description IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'description: ' || dz_swagger3_util.yaml_text(
-                REGEXP_REPLACE(self.schema_description,CHR(10) || '$','')
+             '$ref: ' || dz_swagger3_util.yaml_text(
+                '#/components/schemas/' || str_identifier
                ,p_pretty_print
             )
             ,p_pretty_print
             ,'  '
          );
+         
+      ELSE
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Do the type element
+      --------------------------------------------------------------------------
+         clb_output := clb_output || dz_json_util.pretty_str(
+             'type: ' || self.schema_type
+            ,p_pretty_print
+            ,'  '
+         );
       
-      END IF;
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Add optional title object
+      --------------------------------------------------------------------------
+         IF self.schema_title IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'title: ' || dz_swagger3_util.yamlq(self.schema_title)
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Add optional description object
+      --------------------------------------------------------------------------
+         IF self.schema_description IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'description: ' || dz_swagger3_util.yaml_text(
+                   REGEXP_REPLACE(self.schema_description,CHR(10) || '$','')
+                  ,p_pretty_print
+               )
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 50
       -- Add optional format attribute
       --------------------------------------------------------------------------
-      IF self.schema_format IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'format: ' || self.schema_format
-            ,p_pretty_print
-            ,'  '
-         );
-      
-      END IF;
+         IF self.schema_format IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'format: ' || self.schema_format
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 60
       -- Add optional nullable attribute
       --------------------------------------------------------------------------
-      IF self.schema_nullable IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'nullable: ' || LOWER(self.schema_nullable)
-            ,p_pretty_print
-            ,'  '
-         );
-      
-      END IF;
+         IF self.schema_nullable IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'nullable: ' || LOWER(self.schema_nullable)
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 70
       -- Add optional enum array
       --------------------------------------------------------------------------
-      IF  self.schema_enum_string IS NOT NULL
-      AND self.schema_enum_string.COUNT > 0
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'enum: '
-            ,p_pretty_print
-            ,'  '
-         );
-         
-         FOR i IN 1 .. self.schema_enum_string.COUNT
-         LOOP
-            clb_output := clb_output || dz_json_util.pretty_str(
-                '- ' || dz_swagger3_util.yamlq(self.schema_enum_string(i))
-               ,p_pretty_print + 1
-               ,'  '
-            );
-            
-         END LOOP;
-      
-      ELSIF  self.schema_enum_number IS NOT NULL
-      AND self.schema_enum_number.COUNT > 0
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'enum: '
-            ,p_pretty_print
-            ,'  '
-         );
-         
-         FOR i IN 1 .. self.schema_enum_number.COUNT
-         LOOP
-            clb_output := clb_output || dz_json_util.pretty_str(
-                '- ' || self.schema_enum_number(i)
-               ,p_pretty_print + 1
-               ,'  '
-            );
-            
-         END LOOP;
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 80
-      -- Add optional discriminator attribute
-      --------------------------------------------------------------------------
-      IF self.schema_discriminator IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'discriminator: ' || self.schema_discriminator
-            ,p_pretty_print
-            ,'  '
-         );
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 90
-      -- Add optional readonly and writeonly booleans
-      --------------------------------------------------------------------------
-      IF self.schema_readOnly IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'readOnly: ' || LOWER(self.schema_readOnly)
-            ,p_pretty_print
-            ,'  '
-         );
-      
-      END IF;
-      
-      IF self.schema_writeOnly IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'writeOnly: ' || LOWER(self.schema_writeOnly)
-            ,p_pretty_print
-            ,'  '
-         );
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 100
-      -- Add optional maxitems and minitems
-      --------------------------------------------------------------------------
-      IF self.schema_minItems IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'minItems: ' || self.schema_minItems
-            ,p_pretty_print
-            ,'  '
-         );
-      
-      END IF;
-      
-      IF self.schema_maxItems IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'maxItems: ' || self.schema_maxItems
-            ,p_pretty_print
-            ,'  '
-         );
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 110
-      -- Add optional maxProperties and minProperties
-      --------------------------------------------------------------------------
-      IF self.schema_minProperties IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'minProperties: ' || self.schema_minProperties
-            ,p_pretty_print
-            ,'  '
-         );
-      
-      END IF;
-      
-      IF self.schema_maxProperties IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'maxProperties: ' || self.schema_maxProperties
-            ,p_pretty_print
-            ,'  '
-         );
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 120
-      -- Write the optional externalDocs object
-      --------------------------------------------------------------------------
-      IF  self.schema_externalDocs IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.extrdocstyp.toYAML( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') '
-            || 'FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.schema_externalDocs.object_type_id
-            ,self.schema_externalDocs.object_id; 
-         
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-      
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'externalDocs: ' 
-            ,p_pretty_print
-            ,'  '
-         ) || clb_tmp;
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 130
-      -- Add optional description object
-      --------------------------------------------------------------------------
-      IF self.schema_example_string IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'example: ' || dz_swagger3_util.yamlq(self.schema_example_string)
-            ,p_pretty_print
-            ,'  '
-         );
-      
-      ELSIF self.schema_example_number IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'example: ' || self.schema_example_number
-            ,p_pretty_print
-            ,'  '
-         );
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 140
-      -- Add optional deprecated flag
-      --------------------------------------------------------------------------
-      IF self.schema_deprecated IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'deprecated: ' || LOWER(self.schema_deprecated)
-            ,p_pretty_print
-            ,'  '
-         );
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 150
-      -- Write the optional externalDocs object
-      --------------------------------------------------------------------------
-      IF  self.schema_items_schema IS NOT NULL
-      THEN
-         BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.schematyp.toYAML( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') '
-            || 'FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
-            INTO 
-            clb_tmp
-            USING
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.schema_items_schema.object_type_id
-            ,self.schema_items_schema.object_id;
-            
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-      
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'items: ' 
-            ,p_pretty_print
-            ,'  '
-         ) || clb_tmp;
-         
-      END IF;
-
-      --------------------------------------------------------------------------
-      -- Step 160
-      -- Add optional xml object
-      --------------------------------------------------------------------------
-      IF self.xml_name      IS NOT NULL
-      OR self.xml_namespace IS NOT NULL
-      OR self.xml_prefix    IS NOT NULL
-      OR self.xml_attribute IS NOT NULL
-      OR self.xml_wrapped   IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'xml: '
-            ,p_pretty_print
-            ,'  '
-         ) || dz_swagger3_xml_typ(
-             p_xml_name      => self.xml_name
-            ,p_xml_namespace => self.xml_namespace
-            ,p_xml_prefix    => self.xml_prefix
-            ,p_xml_attribute => self.xml_attribute
-            ,p_xml_wrapped   => self.xml_wrapped
-         ).toYAML(
-             p_pretty_print   => p_pretty_print + 1
-            ,p_force_inline   => p_force_inline
-         );
-      
-      END IF;
-      
-      -------------------------------------------------------------------------
-      -- Step 170
-      -- Write the properties map
-      -------------------------------------------------------------------------
-      IF  self.schema_properties IS NOT NULL 
-      AND self.schema_properties.COUNT > 0
-      THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.schematyp.toYAML( '
-         || '    p_pretty_print   => :p01 + 1 '
-         || '   ,p_force_inline   => :p02 '
-         || '   ,p_short_id       => :p03 '
-         || ' ) '
-         || ',b.object_key '
-         || ',b.object_required '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'WHERE '
-         || 'COALESCE(a.schematyp.property_list_hidden,''FALSE'') <> ''TRUE'' '
-         || 'ORDER BY b.object_order '
-         BULK COLLECT INTO 
-          ary_clb
-         ,ary_keys
-         ,ary_required
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.schema_properties;          
-         
-         boo_check    := FALSE;
-         int_counter  := 1;
-         ary_items    := MDSYS.SDO_STRING2_ARRAY();
-         
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'properties: '
-            ,p_pretty_print
-            ,'  '
-         );
-
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
-            clb_output := clb_output || dz_json_util.pretty(
-                dz_swagger3_util.yamlq(ary_keys(i)) || ': '
-               ,p_pretty_print + 1
-               ,'  '
-            ) || ary_clb(i);
-            
-            IF ary_required(i) = 'TRUE'
-            THEN
-               ary_items.EXTEND();
-               ary_items(int_counter) := ary_keys(i);
-               int_counter := int_counter + 1;
-               boo_check   := TRUE;
-
-            END IF;
-         
-         END LOOP;
-         
-      --------------------------------------------------------------------------
-      -- Step 180
-      -- Add requirements array
-      --------------------------------------------------------------------------
-         IF boo_check
+         IF  self.schema_enum_string IS NOT NULL
+         AND self.schema_enum_string.COUNT > 0
          THEN
             clb_output := clb_output || dz_json_util.pretty_str(
-                'required: '
+                'enum: '
                ,p_pretty_print
                ,'  '
             );
             
-            FOR i IN 1 .. ary_items.COUNT
+            FOR i IN 1 .. self.schema_enum_string.COUNT
             LOOP
                clb_output := clb_output || dz_json_util.pretty_str(
-                   '- ' || dz_swagger3_util.yamlq(ary_items(i))
+                   '- ' || dz_swagger3_util.yamlq(self.schema_enum_string(i))
                   ,p_pretty_print + 1
                   ,'  '
                );
                
             END LOOP;
+         
+         ELSIF  self.schema_enum_number IS NOT NULL
+         AND self.schema_enum_number.COUNT > 0
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'enum: '
+               ,p_pretty_print
+               ,'  '
+            );
+            
+            FOR i IN 1 .. self.schema_enum_number.COUNT
+            LOOP
+               clb_output := clb_output || dz_json_util.pretty_str(
+                   '- ' || self.schema_enum_number(i)
+                  ,p_pretty_print + 1
+                  ,'  '
+               );
+               
+            END LOOP;
+         
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 80
+      -- Add optional discriminator attribute
+      --------------------------------------------------------------------------
+         IF self.schema_discriminator IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'discriminator: ' || self.schema_discriminator
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 90
+      -- Add optional readonly and writeonly booleans
+      --------------------------------------------------------------------------
+         IF self.schema_readOnly IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'readOnly: ' || LOWER(self.schema_readOnly)
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         END IF;
+         
+         IF self.schema_writeOnly IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'writeOnly: ' || LOWER(self.schema_writeOnly)
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 100
+      -- Add optional maxitems and minitems
+      --------------------------------------------------------------------------
+         IF self.schema_minItems IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'minItems: ' || self.schema_minItems
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         END IF;
+         
+         IF self.schema_maxItems IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'maxItems: ' || self.schema_maxItems
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 110
+      -- Add optional maxProperties and minProperties
+      --------------------------------------------------------------------------
+         IF self.schema_minProperties IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'minProperties: ' || self.schema_minProperties
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         END IF;
+         
+         IF self.schema_maxProperties IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'maxProperties: ' || self.schema_maxProperties
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 120
+      -- Write the optional externalDocs object
+      --------------------------------------------------------------------------
+         IF  self.schema_externalDocs IS NOT NULL
+         THEN
+            BEGIN
+               EXECUTE IMMEDIATE
+                  'SELECT '
+               || 'a.extrdocstyp.toYAML( '
+               || '    p_pretty_print   => :p01 + 1 '
+               || '   ,p_force_inline   => :p02 '
+               || '   ,p_short_id       => :p03 '
+               || ') '
+               || 'FROM '
+               || 'dz_swagger3_xobjects a '
+               || 'WHERE '
+               || '    a.object_type_id = :p04 '
+               || 'AND a.object_id      = :p05 '
+               INTO clb_tmp
+               USING 
+                p_pretty_print
+               ,p_force_inline
+               ,p_short_id
+               ,self.schema_externalDocs.object_type_id
+               ,self.schema_externalDocs.object_id; 
+            
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
+         
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'externalDocs: ' 
+               ,p_pretty_print
+               ,'  '
+            ) || clb_tmp;
+            
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 130
+      -- Add optional description object
+      --------------------------------------------------------------------------
+         IF self.schema_example_string IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'example: ' || dz_swagger3_util.yamlq(self.schema_example_string)
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         ELSIF self.schema_example_number IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'example: ' || self.schema_example_number
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 140
+      -- Add optional deprecated flag
+      --------------------------------------------------------------------------
+         IF self.schema_deprecated IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'deprecated: ' || LOWER(self.schema_deprecated)
+               ,p_pretty_print
+               ,'  '
+            );
+         
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 150
+      -- Write the optional externalDocs object
+      --------------------------------------------------------------------------
+         IF  self.schema_items_schema IS NOT NULL
+         AND self.schema_items_schema.object_id IS NOT NULL
+         THEN
+            BEGIN
+               SELECT 
+               a.schematyp.toYAML( 
+                   p_pretty_print     => p_pretty_print + 1 
+                  ,p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id 
+                  ,p_short_identifier => a.short_id 
+                  ,p_reference_count  => a.reference_count 
+               )
+               INTO clb_tmp
+               FROM 
+               dz_swagger3_xobjects a 
+               WHERE 
+                   a.object_type_id = self.schema_items_schema.object_type_id
+               AND a.object_id      = self.schema_items_schema.object_id;
+               
+            EXCEPTION
+               WHEN NO_DATA_FOUND
+               THEN
+                  clb_tmp := NULL;
+                  
+               WHEN OTHERS
+               THEN
+                  RAISE;
+                  
+            END;
+         
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'items: ' 
+               ,p_pretty_print
+               ,'  '
+            ) || clb_tmp;
+            
+         END IF;
+
+      --------------------------------------------------------------------------
+      -- Step 160
+      -- Add optional xml object
+      --------------------------------------------------------------------------
+         IF self.xml_name      IS NOT NULL
+         OR self.xml_namespace IS NOT NULL
+         OR self.xml_prefix    IS NOT NULL
+         OR self.xml_attribute IS NOT NULL
+         OR self.xml_wrapped   IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'xml: '
+               ,p_pretty_print
+               ,'  '
+            ) || dz_swagger3_xml_typ(
+                p_xml_name      => self.xml_name
+               ,p_xml_namespace => self.xml_namespace
+               ,p_xml_prefix    => self.xml_prefix
+               ,p_xml_attribute => self.xml_attribute
+               ,p_xml_wrapped   => self.xml_wrapped
+            ).toYAML(
+                p_pretty_print   => p_pretty_print + 1
+               ,p_force_inline   => p_force_inline
+            );
+         
+         END IF;
+      
+      -------------------------------------------------------------------------
+      -- Step 170
+      -- Write the properties map
+      -------------------------------------------------------------------------
+         IF  self.schema_properties IS NOT NULL 
+         AND self.schema_properties.COUNT > 0
+         THEN
+            EXECUTE IMMEDIATE
+               'SELECT '
+            || ' a.schematyp.toYAML( '
+            || '    p_pretty_print     => :p01 + 2 '
+            || '   ,p_force_inline     => :p02 '
+            || '   ,p_short_id         => :p03 '
+            || '   ,p_identifier       => a.object_id '
+            || '   ,p_short_identifier => a.short_id '
+            || '   ,p_reference_count  => a.reference_count '
+            || ' ) '
+            || ',b.object_key '
+            || ',b.object_required '
+            || 'FROM '
+            || 'dz_swagger3_xobjects a '
+            || 'JOIN '
+            || 'TABLE(:p04) b '
+            || 'ON '
+            || '    a.object_type_id = b.object_type_id '
+            || 'AND a.object_id      = b.object_id '
+            || 'WHERE '
+            || 'COALESCE(a.schematyp.property_list_hidden,''FALSE'') <> ''TRUE'' '
+            || 'ORDER BY b.object_order '
+            BULK COLLECT INTO 
+             ary_clb
+            ,ary_keys
+            ,ary_required
+            USING
+             p_pretty_print
+            ,p_force_inline
+            ,p_short_id
+            ,self.schema_properties;          
+            
+            boo_check    := FALSE;
+            int_counter  := 1;
+            ary_items    := MDSYS.SDO_STRING2_ARRAY();
+            
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'properties: '
+               ,p_pretty_print
+               ,'  '
+            );
+
+            FOR i IN 1 .. ary_keys.COUNT
+            LOOP
+               clb_output := clb_output || dz_json_util.pretty(
+                   dz_swagger3_util.yamlq(ary_keys(i)) || ': '
+                  ,p_pretty_print + 1
+                  ,'  '
+               ) || ary_clb(i);
+               
+               IF ary_required(i) = 'TRUE'
+               THEN
+                  ary_items.EXTEND();
+                  ary_items(int_counter) := ary_keys(i);
+                  int_counter := int_counter + 1;
+                  boo_check   := TRUE;
+
+               END IF;
+            
+            END LOOP;
+         
+      --------------------------------------------------------------------------
+      -- Step 180
+      -- Add requirements array
+      --------------------------------------------------------------------------
+            IF boo_check
+            THEN
+               clb_output := clb_output || dz_json_util.pretty_str(
+                   'required: '
+                  ,p_pretty_print
+                  ,'  '
+               );
+               
+               FOR i IN 1 .. ary_items.COUNT
+               LOOP
+                  clb_output := clb_output || dz_json_util.pretty_str(
+                      '- ' || dz_swagger3_util.yamlq(ary_items(i))
+                     ,p_pretty_print + 1
+                     ,'  '
+                  );
+                  
+               END LOOP;
+               
+            END IF;
             
          END IF;
          
@@ -1991,57 +1941,6 @@ AS
       RETURN clb_output;
       
    END toYAML_schema;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toYAML_ref(
-       p_identifier          IN  VARCHAR2
-      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-   ) RETURN CLOB
-   AS
-      clb_output       CLOB;
-      
-   BEGIN
-      
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Check incoming parameters
-      --------------------------------------------------------------------------
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Do the type element
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty_str(
-          '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/schemas/' || p_identifier
-            ,p_pretty_print
-         )
-         ,p_pretty_print
-         ,'  '
-      );
-
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Cough it out with adjustments as needed
-      --------------------------------------------------------------------------
-      IF p_initial_indent = 'FALSE'
-      THEN
-         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
-       
-      END IF;
-      
-      IF p_final_linefeed = 'FALSE'
-      THEN
-         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
-         
-      END IF;
-               
-      RETURN clb_output;
-      
-   END toYAML_ref;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -2076,11 +1975,14 @@ AS
       EXECUTE IMMEDIATE
          'SELECT '
       || ' a.schematyp.toYAML( '
-      || '    p_pretty_print   => :p01 + 1 '
-      || '   ,p_initial_indent => ''FALSE'' '
-      || '   ,p_final_linefeed => ''FALSE'' '
-      || '   ,p_force_inline   => :p02 '
-      || '   ,p_short_id       => :p03 '
+      || '    p_pretty_print     => :p01 + 2 '
+      || '   ,p_initial_indent   => ''FALSE'' '
+      || '   ,p_final_linefeed   => ''FALSE'' '
+      || '   ,p_force_inline     => :p02 '
+      || '   ,p_short_id         => :p03 '
+      || '   ,p_identifier       => a.object_id '
+      || '   ,p_short_identifier => a.short_id '
+      || '   ,p_reference_count  => a.reference_count '
       || ' ) '
       || ',b.object_key '
       || 'FROM '

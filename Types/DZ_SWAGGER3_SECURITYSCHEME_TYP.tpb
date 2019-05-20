@@ -49,11 +49,15 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
       str_pad          VARCHAR2(1 Char);
       str_pad1         VARCHAR2(1 Char);
+      str_identifier   VARCHAR2(255 Char);
       
    BEGIN
       
@@ -79,150 +83,179 @@ AS
       str_pad1 := str_pad;
       
       --------------------------------------------------------------------------
-      -- Step 30
-      -- Add scheme type
+      -- Step 20
+      -- Add  the ref object
       --------------------------------------------------------------------------
-      IF self.securityscheme_type IS NOT NULL
+      IF  COALESCE(p_force_inline,'FALSE') = 'FALSE'
+      AND p_reference_count > 1
       THEN
+         IF p_short_id = 'TRUE'
+         THEN
+            str_identifier := p_short_identifier;
+            
+         ELSE
+            str_identifier := p_identifier;
+            
+         END IF;
+         
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
-                'type'
-               ,self.securityscheme_type
+                '$ref'
+               ,'#/components/securitySchemes/' || str_identifier
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
          );
          str_pad1 := ',';
+      
+      ELSE
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Add scheme type
+      --------------------------------------------------------------------------
+         IF self.securityscheme_type IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'type'
+                  ,self.securityscheme_type
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 40
       -- Add scheme description
       --------------------------------------------------------------------------
-      IF self.securityscheme_description IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'description'
-               ,self.securityscheme_description
+         IF self.securityscheme_description IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'description'
+                  ,self.securityscheme_description
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 50
       -- Add scheme name
       --------------------------------------------------------------------------
-      IF self.securityscheme_name IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'name'
-               ,self.securityscheme_name
+         IF self.securityscheme_name IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'name'
+                  ,self.securityscheme_name
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 60
       -- Add scheme in
       --------------------------------------------------------------------------
-      IF self.securityscheme_in IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'in'
-               ,self.securityscheme_in
+         IF self.securityscheme_in IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'in'
+                  ,self.securityscheme_in
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 70
       -- Add scheme auth
       --------------------------------------------------------------------------
-      IF self.securityscheme_auth IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'auth'
-               ,self.securityscheme_auth
+         IF self.securityscheme_auth IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'auth'
+                  ,self.securityscheme_auth
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 80
       -- Add scheme bearerFormat
       --------------------------------------------------------------------------
-      IF self.securityscheme_bearerFormat IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'bearerFormat'
-               ,self.securityscheme_bearerFormat
+         IF self.securityscheme_bearerFormat IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'bearerFormat'
+                  ,self.securityscheme_bearerFormat
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 90
       -- Add flows object
       --------------------------------------------------------------------------
-      IF  self.securityscheme_flows IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                'flows'
-               ,self.securityscheme_flows.toJSON(
-                   p_pretty_print   => p_pretty_print + 1
-                  ,p_force_inline   => p_force_inline   
-                )
+         IF  self.securityscheme_flows IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.formatted2json(
+                   'flows'
+                  ,self.securityscheme_flows.toJSON(
+                      p_pretty_print   => p_pretty_print + 1
+                     ,p_force_inline   => p_force_inline   
+                   )
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 100
       -- Add scheme openIdConnectUrl
       --------------------------------------------------------------------------
-      IF self.securityscheme_openIdConUrl IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'openIdConnectUrl'
-               ,self.securityscheme_openIdConUrl
+         IF self.securityscheme_openIdConUrl IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'openIdConnectUrl'
+                  ,self.securityscheme_openIdConUrl
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
+            );
+            str_pad1 := ',';
 
+         END IF;
+         
       END IF;
          
       --------------------------------------------------------------------------
@@ -244,80 +277,19 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON_ref(
-       p_identifier          IN  VARCHAR2
-      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
-   ) RETURN CLOB
-   AS
-      clb_output       CLOB;
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      
-   BEGIN
-      
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Check incoming parameters
-      --------------------------------------------------------------------------
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Build the wrapper
-      --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         
-      ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
-         str_pad     := ' ';
-         
-      END IF;
-      
-      str_pad1 := str_pad;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Add optional description
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.value2json(
-             '$ref'
-            ,'#/components/securitySchemes/' || p_identifier
-            ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Add the left bracket
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Cough it out
-      --------------------------------------------------------------------------
-      RETURN clb_output;
-           
-   END toJSON_ref;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      clb_output        CLOB;
+      clb_output       CLOB;
+      str_identifier   VARCHAR2(255 Char);
       
    BEGIN
    
@@ -325,140 +297,163 @@ AS
       -- Step 10
       -- Check incoming parameters
       --------------------------------------------------------------------------
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Write the yaml scheme type
-      --------------------------------------------------------------------------
-      IF self.securityscheme_type IS NOT NULL
+      IF  COALESCE(p_force_inline,'FALSE') = 'FALSE'
+      AND p_reference_count > 1
       THEN
+         IF p_short_id = 'TRUE'
+         THEN
+            str_identifier := p_short_identifier;
+            
+         ELSE
+            str_identifier := p_identifier;
+            
+         END IF;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
-             'type: ' || dz_swagger3_util.yaml_text(
-                self.securityscheme_type
+             '$ref: ' || dz_swagger3_util.yaml_text(
+                '#/components/securitySchemes/' || str_identifier
                ,p_pretty_print
             )
             ,p_pretty_print
             ,'  '
          );
          
-      END IF;
+      ELSE
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Write the yaml scheme type
+      --------------------------------------------------------------------------
+         IF self.securityscheme_type IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'type: ' || dz_swagger3_util.yaml_text(
+                   self.securityscheme_type
+                  ,p_pretty_print
+               )
+               ,p_pretty_print
+               ,'  '
+            );
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 30
       -- Write the yaml scheme description
       --------------------------------------------------------------------------
-      IF self.securityscheme_description IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'description: ' || dz_swagger3_util.yaml_text(
-                self.securityscheme_description
+         IF self.securityscheme_description IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'description: ' || dz_swagger3_util.yaml_text(
+                   self.securityscheme_description
+                  ,p_pretty_print
+               )
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
-      END IF;
+               ,'  '
+            );
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 40
       -- Write the yaml scheme name
       --------------------------------------------------------------------------
-      IF self.securityscheme_name IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'name: ' || dz_swagger3_util.yaml_text(
-                self.securityscheme_name
+         IF self.securityscheme_name IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'name: ' || dz_swagger3_util.yaml_text(
+                   self.securityscheme_name
+                  ,p_pretty_print
+               )
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
-      END IF;
+               ,'  '
+            );
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 50
       -- Write the yaml scheme in
       --------------------------------------------------------------------------
-      IF self.securityscheme_in IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'in: ' || dz_swagger3_util.yaml_text(
-                self.securityscheme_in
+         IF self.securityscheme_in IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'in: ' || dz_swagger3_util.yaml_text(
+                   self.securityscheme_in
+                  ,p_pretty_print
+               )
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
-      END IF;
+               ,'  '
+            );
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 60
       -- Write the yaml scheme auth
       --------------------------------------------------------------------------
-      IF self.securityscheme_auth IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'scheme: ' || dz_swagger3_util.yaml_text(
-                self.securityscheme_auth
+         IF self.securityscheme_auth IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'scheme: ' || dz_swagger3_util.yaml_text(
+                   self.securityscheme_auth
+                  ,p_pretty_print
+               )
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
-      END IF;
+               ,'  '
+            );
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 70
       -- Write the yaml scheme in
       --------------------------------------------------------------------------
-      IF self.securityscheme_bearerFormat IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'bearerFormat: ' || dz_swagger3_util.yaml_text(
-                self.securityscheme_bearerFormat
+         IF self.securityscheme_bearerFormat IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'bearerFormat: ' || dz_swagger3_util.yaml_text(
+                   self.securityscheme_bearerFormat
+                  ,p_pretty_print
+               )
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
-      END IF;
+               ,'  '
+            );
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 80
       -- Write the yaml scheme in
       --------------------------------------------------------------------------
-      IF self.securityscheme_flows IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'flows: '
-            ,p_pretty_print
-            ,'  '
-         ) || self.securityscheme_flows.toYAML(
-             p_pretty_print   => p_pretty_print + 1
-            ,p_force_inline   => p_force_inline
-         );  
-         
-      END IF;
+         IF self.securityscheme_flows IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'flows: '
+               ,p_pretty_print
+               ,'  '
+            ) || self.securityscheme_flows.toYAML(
+                p_pretty_print   => p_pretty_print + 1
+               ,p_force_inline   => p_force_inline
+            );  
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 90
       -- Write the yaml scheme in
       --------------------------------------------------------------------------
-      IF self.securityscheme_openIdConUrl IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'openIdConnectUrl: ' || dz_swagger3_util.yaml_text(
-                self.securityscheme_openIdConUrl
+         IF self.securityscheme_openIdConUrl IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'openIdConnectUrl: ' || dz_swagger3_util.yaml_text(
+                   self.securityscheme_openIdConUrl
+                  ,p_pretty_print
+               )
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
+               ,'  '
+            );
+            
+         END IF;
          
       END IF;
       
@@ -481,58 +476,6 @@ AS
       RETURN clb_output;
       
    END toYAML;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toYAML_ref(
-       p_identifier          IN  VARCHAR2
-      ,p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-   ) RETURN CLOB
-   AS
-      clb_output       CLOB;
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Check incoming parameters
-      --------------------------------------------------------------------------
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Write the yaml description
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty_str(
-          '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/securitySchemes/' || p_identifier
-            ,p_pretty_print
-         )
-         ,p_pretty_print
-         ,'  '
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Cough it out 
-      --------------------------------------------------------------------------
-      IF p_initial_indent = 'FALSE'
-      THEN
-         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
-       
-      END IF;
-      
-      IF p_final_linefeed = 'FALSE'
-      THEN
-         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
-         
-      END IF;
-               
-      RETURN clb_output;
-      
-   END toYAML_ref;
    
 END;
 /

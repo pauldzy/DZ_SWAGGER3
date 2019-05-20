@@ -26,9 +26,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
        p_requestbody_id           IN  VARCHAR2
-      ,p_media_type               IN  VARCHAR2
       ,p_parameters               IN  dz_swagger3_object_vry --dz_swagger3_parameter_list
-      ,p_inline_rb                IN  VARCHAR2
       ,p_versionid                IN  VARCHAR2
    ) RETURN SELF AS RESULT
     
@@ -42,15 +40,11 @@ AS OBJECT (
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_reference_count     IN  INTEGER   DEFAULT NULL
     ) RETURN CLOB
     
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toJSON_ref(
-       p_identifier          IN  VARCHAR2
-      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
-    ) RETURN CLOB
-   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(
@@ -59,15 +53,9 @@ AS OBJECT (
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toYAML_ref(
-       p_identifier          IN  VARCHAR2
-      ,p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
 
 );

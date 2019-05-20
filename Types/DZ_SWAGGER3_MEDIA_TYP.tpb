@@ -242,9 +242,12 @@ AS
          BEGIN
             SELECT 
             a.schematyp.toJSON( 
-                p_pretty_print   => p_pretty_print + 1 
-               ,p_force_inline   => p_force_inline
-               ,p_short_id       => p_short_id
+                p_pretty_print     => p_pretty_print + 1 
+               ,p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id 
+               ,p_short_identifier => a.short_id 
+               ,p_reference_count  => a.reference_count 
             )
             INTO clb_tmp
             FROM 
@@ -316,11 +319,14 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.exampletyp.toJSON( '
-         || '    p_pretty_print   => :p01 + 1 '
-         || '   ,p_force_inline   => :p02 '
-         || '   ,p_short_id       => :p03 '
+         || '    p_pretty_print     => :p01 + 1 '
+         || '   ,p_force_inline     => :p02 '
+         || '   ,p_short_id         => :p03 '
+         || '   ,p_identifier       => a.object_id '
+         || '   ,p_short_identifier => a.short_id '
+         || '   ,p_reference_count  => a.reference_count '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'JOIN '
@@ -390,7 +396,7 @@ AS
          || '   ,p_force_inline   => :p02 '
          || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'JOIN '
@@ -497,9 +503,12 @@ AS
          BEGIN
             EXECUTE IMMEDIATE
                'SELECT a.schematyp.toYAML( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
+            || '    p_pretty_print     => :p01 + 1 '
+            || '   ,p_force_inline     => :p02 '
+            || '   ,p_short_id         => :p03 '
+            || '   ,p_identifier       => a.object_id '
+            || '   ,p_short_identifier => a.short_id '
+            || '   ,p_reference_count  => a.reference_count ' 
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
@@ -570,11 +579,14 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.exampletyp.toYAML( '
-         || '    p_pretty_print   => :p01 + 3 '
-         || '   ,p_force_inline   => :p02 '
-         || '   ,p_short_id       => :p03 '
+         || '    p_pretty_print     => :p01 + 3 '
+         || '   ,p_force_inline     => :p02 '
+         || '   ,p_short_id         => :p03 '
+         || '   ,p_identifier       => a.object_id '
+         || '   ,p_short_identifier => a.short_id '
+         || '   ,p_reference_count  => a.reference_count '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'JOIN '
@@ -624,7 +636,7 @@ AS
          || '   ,p_force_inline   => :p02 '
          || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'JOIN '

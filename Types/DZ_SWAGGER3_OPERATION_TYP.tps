@@ -17,8 +17,6 @@ AS OBJECT (
    ,operation_operationId         VARCHAR2(255 Char)
    ,operation_parameters          dz_swagger3_object_vry --dz_swagger3_parameter_list
    ,operation_emulated_rbparms    dz_swagger3_object_vry --dz_swagger3_parameter_list
-   ,operation_emulated_media_type VARCHAR2(255 Char)
-   ,operation_emulated_inline_rb  VARCHAR2(5 Char)
    ,operation_requestBody         dz_swagger3_object_typ --dz_swagger3_requestbody_typ
    ,operation_responses           dz_swagger3_object_vry --dz_swagger3_response_list
    ,operation_callbacks           dz_swagger3_object_vry --dz_swagger3_path_list

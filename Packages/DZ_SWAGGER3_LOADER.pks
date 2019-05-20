@@ -96,9 +96,7 @@ AS
    PROCEDURE requestbodytyp_emulated(
        p_parent_id           IN  VARCHAR2
       ,p_child_id            IN  dz_swagger3_object_typ
-      ,p_media_type          IN  VARCHAR2
       ,p_parameter_ids       IN  dz_swagger3_object_vry
-      ,p_inline_rb           IN  VARCHAR2
       ,p_versionid           IN  VARCHAR2
    );
    

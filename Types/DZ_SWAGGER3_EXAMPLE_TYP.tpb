@@ -59,10 +59,15 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
       str_pad          VARCHAR2(1 Char);
+      str_pad1         VARCHAR2(1 Char);
+      str_identifier   VARCHAR2(255 Char);
       
    BEGIN
       
@@ -70,7 +75,7 @@ AS
       -- Step 10
       -- Check incoming parameters
       --------------------------------------------------------------------------
-      
+
       --------------------------------------------------------------------------
       -- Step 20
       -- Build the wrapper
@@ -85,90 +90,121 @@ AS
          
       END IF;
       
+      str_pad1 := str_pad;
+      
       --------------------------------------------------------------------------
-      -- Step 30
-      -- Add optional summary
+      -- Step 20
+      -- Add  the ref object
       --------------------------------------------------------------------------
-      IF self.example_summary IS NOT NULL
+      IF  COALESCE(p_force_inline,'FALSE') = 'FALSE'
+      AND p_reference_count > 1
       THEN
+         IF p_short_id = 'TRUE'
+         THEN
+            str_identifier := p_short_identifier;
+            
+         ELSE
+            str_identifier := p_identifier;
+            
+         END IF;
+         
          clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.value2json(
-                'summary'
-               ,self.example_summary
+             str_pad1 || dz_json_main.value2json(
+                '$ref'
+               ,'#/components/examples/' || str_identifier
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
          );
-         str_pad := ',';
-         
-      END IF;
+         str_pad1 := ',';
+      
+      ELSE
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Add optional summary
+      --------------------------------------------------------------------------
+         IF self.example_summary IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'summary'
+                  ,self.example_summary
+                  ,p_pretty_print + 1
+               )
+               ,p_pretty_print + 1
+            );
+            str_pad1 := ',';
+            
+         END IF;
          
       --------------------------------------------------------------------------
       -- Step 40
       -- Add optional description 
       --------------------------------------------------------------------------
-      IF self.example_description IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.value2json(
-                'description'
-               ,self.example_description
+         IF self.example_description IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'description'
+                  ,self.example_description
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 50
       -- Add optional value
       --------------------------------------------------------------------------
-      IF self.example_value_string IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.value2json(
-                'value'
-               ,self.example_value_string
+         IF self.example_value_string IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'value'
+                  ,self.example_value_string
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad := ',';
+            );
+            str_pad1 := ',';
 
-      ELSIF self.example_value_number IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.value2json(
-                'value'
-               ,self.example_value_number
+         ELSIF self.example_value_number IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'value'
+                  ,self.example_value_number
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 60
       -- Add optional externalValue
       --------------------------------------------------------------------------
-      IF self.example_externalValue IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.value2json(
-                'externalValue'
-               ,self.example_externalValue
+         IF self.example_externalValue IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'externalValue'
+                  ,self.example_externalValue
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad := ',';
+            );
+            str_pad1 := ',';
 
-      END IF;
+         END IF;
  
+      END IF;
+
       --------------------------------------------------------------------------
       -- Step 70
       -- Add the left bracket
@@ -188,80 +224,19 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON_ref(
-       p_identifier          IN  VARCHAR2
-      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
-   ) RETURN CLOB
-   AS
-      clb_output       CLOB;
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      
-   BEGIN
-      
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Check incoming parameters
-      --------------------------------------------------------------------------
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Build the wrapper
-      --------------------------------------------------------------------------
-      IF  p_pretty_print IS NULL
-      THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         
-      ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
-         str_pad     := ' ';
-         
-      END IF;
-      
-      str_pad1 := str_pad;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Add optional summary
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.value2json(
-             '$ref'
-            ,'#/components/examples/' || p_identifier
-            ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
-         
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Add the left bracket
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Cough it out
-      --------------------------------------------------------------------------
-      RETURN clb_output;
-           
-   END toJSON_ref;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
        p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output        CLOB;
+      str_identifier   VARCHAR2(255 Char);
       
    BEGIN
    
@@ -272,81 +247,109 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Write the yaml summary
+      -- Add  the ref object
       --------------------------------------------------------------------------
-      IF self.example_summary IS NOT NULL
+      IF  COALESCE(p_force_inline,'FALSE') = 'FALSE'
+      AND p_reference_count > 1
       THEN
+         IF p_short_id = 'TRUE'
+         THEN
+            str_identifier := p_short_identifier;
+            
+         ELSE
+            str_identifier := p_identifier;
+            
+         END IF;
+         
          clb_output := clb_output || dz_json_util.pretty_str(
-             'summary: ' || dz_swagger3_util.yaml_text(
-                self.example_summary
+             '$ref: ' || dz_swagger3_util.yaml_text(
+                '#/components/examples/' || str_identifier
                ,p_pretty_print
             )
             ,p_pretty_print
             ,'  '
          );
-         
-      END IF;
+      
+      ELSE
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Write the yaml summary
+      --------------------------------------------------------------------------
+         IF self.example_summary IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'summary: ' || dz_swagger3_util.yaml_text(
+                   self.example_summary
+                  ,p_pretty_print
+               )
+               ,p_pretty_print
+               ,'  '
+            );
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 30
       -- Write the optional license url
       --------------------------------------------------------------------------
-      IF self.example_description IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'description: ' || dz_swagger3_util.yaml_text(
-                self.example_description
+         IF self.example_description IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'description: ' || dz_swagger3_util.yaml_text(
+                   self.example_description
+                  ,p_pretty_print
+               )
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
-      END IF;
+               ,'  '
+            );
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 30
       -- Write the optional value
       --------------------------------------------------------------------------
-      IF self.example_value_string IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'value: ' || dz_swagger3_util.yaml_text(
-                self.example_value_string
+         IF self.example_value_string IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'value: ' || dz_swagger3_util.yaml_text(
+                   self.example_value_string
+                  ,p_pretty_print
+               )
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
-      ELSIF self.example_value_number IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'value: ' || dz_swagger3_util.yaml_text(
-                self.example_value_number
+               ,'  '
+            );
+            
+         ELSIF self.example_value_number IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'value: ' || dz_swagger3_util.yaml_text(
+                   self.example_value_number
+                  ,p_pretty_print
+               )
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
-      END IF;
+               ,'  '
+            );
+            
+         END IF;
       
       --------------------------------------------------------------------------
       -- Step 30
       -- Write the optional license url
       --------------------------------------------------------------------------
-      IF self.example_externalValue IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'externalValue: ' || dz_swagger3_util.yaml_text(
-                self.example_externalValue
+         IF self.example_externalValue IS NOT NULL
+         THEN
+            clb_output := clb_output || dz_json_util.pretty_str(
+                'externalValue: ' || dz_swagger3_util.yaml_text(
+                   self.example_externalValue
+                  ,p_pretty_print
+               )
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
+               ,'  '
+            );
+            
+         END IF;
+      
       END IF;
       
       --------------------------------------------------------------------------
@@ -368,57 +371,6 @@ AS
       RETURN clb_output;
    
    END toYAML;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toYAML_ref(
-       p_identifier          IN  VARCHAR2
-      ,p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-   ) RETURN CLOB
-   AS
-      clb_output        CLOB;
-      
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Check incoming parameters
-      --------------------------------------------------------------------------
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Write the yaml summary
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty_str(
-          '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/examples/' || p_identifier
-            ,p_pretty_print
-         )
-         ,p_pretty_print
-         ,'  '
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 110
-      -- Cough it out without final line feed
-      --------------------------------------------------------------------------
-      IF p_initial_indent = 'FALSE'
-      THEN
-         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
-       
-      END IF;
-      
-      IF p_final_linefeed = 'FALSE'
-      THEN
-         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
-         
-      END IF;
-               
-      RETURN clb_output;   
-      
-   END toYAML_ref;
    
 END;
 /

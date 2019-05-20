@@ -674,7 +674,6 @@ AS
       str_pad1         VARCHAR2(1 Char);
       str_pad2         VARCHAR2(1 Char);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      ary_hidden       MDSYS.SDO_STRING2_ARRAY;
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
@@ -714,11 +713,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.schematyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p03,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -731,7 +736,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id; 
          
          IF  ary_keys IS NOT NULL
@@ -789,11 +794,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.responsetyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p03,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -805,7 +816,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -863,11 +874,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.parametertyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print     => :p01 + 2 '
+         || '   ,p_force_inline     => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p03,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -878,10 +895,9 @@ AS
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
-         ,ary_hidden
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -939,11 +955,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.exampletyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p02,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -955,7 +977,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -1013,11 +1035,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.requestbodytyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p02,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -1029,7 +1057,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
 
          IF  ary_keys IS NOT NULL
@@ -1087,11 +1115,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.headertyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p03,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -1103,7 +1137,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -1151,7 +1185,7 @@ AS
          
       --------------------------------------------------------------------------
       -- Step 90
-      -- Add headers map
+      -- Add security scheme map
       --------------------------------------------------------------------------
       IF p_force_inline = 'TRUE'
       THEN
@@ -1161,11 +1195,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.securityschemetyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p03,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -1177,7 +1217,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -1235,23 +1275,29 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.linktyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p03,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
          || '    a.object_type_id = ''linktyp'' '
          || 'AND a.reference_count > 1 '
-         || 'ORDER BY a.ordering_id '
+         || 'ORDER BY a.object_id '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -1309,15 +1355,21 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.pathtyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p03,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''pathtyp'' '
+         || '    a.object_type_id = ''callbacktyp'' '
          || 'AND a.reference_count > 1 '
          || 'ORDER BY a.object_id '
          BULK COLLECT INTO 
@@ -1325,7 +1377,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -1566,6 +1618,7 @@ AS
          ) || self.toYAML_components(
              p_pretty_print   => p_pretty_print + 1
             ,p_force_inline   => p_force_inline
+            ,p_short_id       => p_short_id
          );
          
       END IF;
@@ -1743,7 +1796,6 @@ AS
    AS
       clb_output       CLOB;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      ary_hidden       MDSYS.SDO_STRING2_ARRAY;
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
@@ -1767,11 +1819,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.schematyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p03,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -1784,7 +1842,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
 
          IF  ary_keys IS NOT NULL
@@ -1824,11 +1882,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.responsetyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p02,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -1840,7 +1904,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -1880,11 +1944,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.parametertyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p02,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -1897,7 +1967,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -1911,20 +1981,13 @@ AS
             
             FOR i IN 1 .. ary_keys.COUNT
             LOOP
-               IF ary_hidden(i) = 'TRUE'
-               THEN
-                  NULL;
-                  
-               ELSE
-                  clb_output := clb_output || dz_json_util.pretty(
-                      dz_swagger3_util.yamlq(
-                        ary_keys(i)
-                      ) || ': '
-                     ,p_pretty_print + 1
-                     ,'  '
-                  ) || ary_clb(i);
-                  
-               END IF;
+               clb_output := clb_output || dz_json_util.pretty(
+                   dz_swagger3_util.yamlq(
+                     ary_keys(i)
+                   ) || ': '
+                  ,p_pretty_print + 1
+                  ,'  '
+               ) || ary_clb(i);
             
             END LOOP;
             
@@ -1944,11 +2007,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.exampletyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p02,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -1960,7 +2029,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -2000,11 +2069,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.requestbodytyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p02,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -2016,7 +2091,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -2056,11 +2131,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.headertyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p02,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -2072,7 +2153,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -2112,11 +2193,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.securityschemetyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p02,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -2128,7 +2215,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -2168,11 +2255,17 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.linktyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p02,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
@@ -2184,7 +2277,7 @@ AS
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
@@ -2224,23 +2317,29 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.pathtyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
-         || '  ,p_short_id       => :p03 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => ''FALSE'' '
+         || '   ,p_short_id       => :p02 '
          || ' ) '
-         || ',a.object_id '
+         || ',CASE '
+         || ' WHEN COALESCE(:p02,''FALSE'') = ''TRUE'' '
+         || ' THEN '
+         || '   a.short_id '
+         || ' ELSE '
+         || '   a.object_id '
+         || ' END '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
          || 'WHERE '
-         || '    a.object_type_id = ''pathtyp'' '
+         || '    a.object_type_id = ''callbacktyp'' '
          || 'AND a.reference_count > 1 '
-         || 'ORDER BY a.ordering_id '
+         || 'ORDER BY a.object_id '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
-         ,p_force_inline
+         ,p_short_id
          ,p_short_id;
          
          IF  ary_keys IS NOT NULL
