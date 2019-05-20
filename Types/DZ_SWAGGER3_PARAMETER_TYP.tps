@@ -30,99 +30,44 @@ AS OBJECT (
    ,CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
        p_parameter_id              IN  VARCHAR2
       ,p_versionid                 IN  VARCHAR2
-      ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_ref_brake                 IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
     
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
-       p_parameter_id               IN  VARCHAR2
-      ,p_parameter_name             IN  VARCHAR2
-      ,p_parameter_in               IN  VARCHAR2
-      ,p_parameter_description      IN  VARCHAR2
-      ,p_parameter_required         IN  VARCHAR2
-      ,p_parameter_deprecated       IN  VARCHAR2
-      ,p_parameter_allowEmptyValue  IN  VARCHAR2
-      ,p_parameter_style            IN  VARCHAR2
-      ,p_parameter_explode          IN  VARCHAR2
-      ,p_parameter_allowReserved    IN  VARCHAR2
-      ,p_parameter_schema           IN  dz_swagger3_object_typ --dz_swagger3_schema_typ_nf
-      ,p_parameter_example_string   IN  VARCHAR2
-      ,p_parameter_example_number   IN  NUMBER
-      ,p_parameter_examples         IN  dz_swagger3_object_vry --dz_swagger3_example_list
-      ,p_parameter_force_inline     IN  VARCHAR2
-      ,p_parameter_list_hidden      IN  VARCHAR2
-      ,p_parameter_requestbody_flag IN  VARCHAR2 DEFAULT 'FALSE'
-      ,p_load_components            IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_versionid                  IN  VARCHAR2
-   ) RETURN SELF AS RESULT
-   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER PROCEDURE traverse
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION key
-    RETURN VARCHAR2
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION isNULL
-    RETURN VARCHAR2
-    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION doRef
-    RETURN VARCHAR2
-    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
-       p_pretty_print         IN  INTEGER   DEFAULT NULL
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'TRUE'
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
     ) RETURN CLOB
     
    -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toJSON_schema(
-       p_pretty_print         IN  INTEGER   DEFAULT NULL
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'TRUE'
-    ) RETURN CLOB
-    
-    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON_ref(
-       p_pretty_print         IN  INTEGER   DEFAULT NULL
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'TRUE'
+       p_identifier          IN  VARCHAR2
+      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
     ) RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(
-       p_pretty_print         IN  INTEGER   DEFAULT 0
-      ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'TRUE'
-   ) RETURN CLOB
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toYAML_schema(
-       p_pretty_print         IN  INTEGER   DEFAULT 0
-      ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'TRUE'
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML_ref(
-       p_pretty_print         IN  INTEGER   DEFAULT 0
-      ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'TRUE'
+       p_identifier          IN  VARCHAR2
+      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
 
 );

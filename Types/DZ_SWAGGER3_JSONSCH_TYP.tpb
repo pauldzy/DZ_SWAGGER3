@@ -210,7 +210,8 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-      p_pretty_print      IN  INTEGER   DEFAULT NULL
+       p_pretty_print         IN  INTEGER  DEFAULT NULL
+      ,p_short_id             IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN CLOB
    AS 
    BEGIN
@@ -220,7 +221,7 @@ AS
       -- Check incoming parameters
       --------------------------------------------------------------------------
       IF self.schema_obj IS NULL
-      OR self.schema_obj.isNULL() = 'TRUE'
+      OR self.schema_obj.schema_id IS NULL
       THEN
          RETURN NULL;
          
@@ -233,6 +234,7 @@ AS
       RETURN self.schema_obj.toJSON(
           p_pretty_print   => p_pretty_print
          ,p_force_inline   => 'TRUE'
+         ,p_short_id       => p_short_id
          ,p_jsonschema     => 'TRUE'
       );
            

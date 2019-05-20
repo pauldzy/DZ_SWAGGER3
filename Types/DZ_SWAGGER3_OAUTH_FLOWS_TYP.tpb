@@ -36,6 +36,7 @@ AS
    MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -56,7 +57,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -174,6 +174,7 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;

@@ -46,69 +46,19 @@ AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_server_var_typ(
-       p_server_var_id      IN  VARCHAR2
-      ,p_server_var_name    IN  VARCHAR2
-      ,p_enum               IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_default_value      IN  VARCHAR2
-      ,p_description        IN  VARCHAR2
-      ,p_versionid          IN  VARCHAR2
-   ) RETURN SELF AS RESULT
-   AS
-   BEGIN
-
-      self.server_var_id     := p_server_var_id;
-      self.server_var_name   := p_server_var_name;
-      self.enum              := p_enum;
-      self.default_value     := p_default_value;
-      self.description       := p_description;
-      self.versionid         := p_versionid;
-
-      RETURN;
-
-   END dz_swagger3_server_var_typ;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER PROCEDURE traverse
    AS
    BEGIN
       NULL;
+      
    END traverse;
-
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION key
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      RETURN self.server_var_id;
-
-   END key;
-
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION isNULL
-   RETURN VARCHAR2
-   AS
-   BEGIN
-
-      IF self.server_var_id IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-
-      ELSE
-         RETURN 'TRUE';
-
-      END IF;
-
-   END isNULL;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -201,6 +151,7 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;

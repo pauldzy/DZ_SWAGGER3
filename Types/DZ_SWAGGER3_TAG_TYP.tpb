@@ -54,29 +54,6 @@ AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_tag_typ(
-       p_tag_id             IN  VARCHAR2
-      ,p_tag_name           IN  VARCHAR2
-      ,p_tag_description    IN  VARCHAR2
-      ,p_tag_externalDocs   IN  dz_swagger3_object_typ --dz_swagger3_extrdocs_typ
-      ,p_load_components    IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_versionid          IN  VARCHAR2
-   ) RETURN SELF AS RESULT 
-   AS 
-   BEGIN 
-   
-      self.tag_id            := p_tag_id;
-      self.tag_name          := p_tag_name;
-      self.tag_description   := p_tag_description;
-      self.tag_externalDocs  := p_tag_externalDocs;
-      self.versionid         := p_versionid;
-
-      RETURN; 
-      
-   END dz_swagger3_tag_typ;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER PROCEDURE traverse
    AS
    BEGIN
@@ -99,27 +76,10 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION isNULL
-   RETURN VARCHAR2
-   AS
-   BEGIN
-   
-      IF self.tag_name IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-         
-      ELSE
-         RETURN 'TRUE';
-         
-      END IF;
-   
-   END isNULL;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -189,17 +149,20 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.extrdocs.toJSON( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
-            || ') FROM '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
+            || ') '
+            || 'FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.tag_externalDocs.object_type_id
             ,self.tag_externalDocs.object_id;
             
@@ -250,6 +213,7 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;
@@ -302,17 +266,20 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.extrdocs.toYAML( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
-            || ') FROM '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
+            || ') '
+            || 'FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.tag_externalDocs.object_type_id
             ,self.tag_externalDocs.object_id;
            

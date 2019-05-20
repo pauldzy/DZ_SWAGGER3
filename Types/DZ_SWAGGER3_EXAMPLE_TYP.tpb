@@ -16,8 +16,6 @@ AS
    CONSTRUCTOR FUNCTION dz_swagger3_example_typ(
        p_example_id              IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
-      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS 
    BEGIN
@@ -48,113 +46,19 @@ AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_example_typ(
-       p_example_id              IN  VARCHAR2
-      ,p_example_summary         IN  VARCHAR2
-      ,p_example_description     IN  VARCHAR2
-      ,p_example_value_string    IN  VARCHAR2
-      ,p_example_value_number    IN  NUMBER
-      ,p_example_externalValue   IN  VARCHAR2
-      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_versionid               IN  VARCHAR2
-   ) RETURN SELF AS RESULT 
-   AS 
-   BEGIN 
-   
-      self.example_id            := p_example_id;
-      self.example_summary       := p_example_summary;
-      self.example_description   := p_example_description;
-      self.example_value_string  := p_example_value_string;
-      self.example_value_number  := p_example_value_number;
-      self.example_externalValue := p_example_externalValue;
-      self.versionid             := p_versionid;
-      
-      RETURN; 
-      
-   END dz_swagger3_example_typ;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER PROCEDURE traverse
    AS
    BEGIN
       NULL;
+      
    END traverse;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION isNULL
-   RETURN VARCHAR2
-   AS
-   BEGIN
-   
-      IF self.example_summary       IS NOT NULL
-      OR self.example_description   IS NOT NULL
-      OR self.example_value_string  IS NOT NULL
-      OR self.example_value_number  IS NOT NULL
-      OR self.example_externalValue IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-         
-      ELSE
-         RETURN 'TRUE';
-         
-      END IF;
-   
-   END isNULL;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION key
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      RETURN self.example_id;
-      
-   END key;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION doRef
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      RETURN 'TRUE';
-      
-   END doRef;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
-   AS
-   BEGIN
-   
-      IF self.doREF() = 'TRUE'
-      AND p_force_inline <> 'TRUE'
-      THEN
-         RETURN toJSON_ref(
-             p_pretty_print  => p_pretty_print
-            ,p_force_inline  => p_force_inline
-         );
-   
-      ELSE
-         RETURN toJSON_schema(
-             p_pretty_print  => p_pretty_print
-            ,p_force_inline  => p_force_inline
-         );
-      
-      END IF;
-   
-   END toJSON;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON_schema(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -174,7 +78,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -281,13 +184,13 @@ AS
       --------------------------------------------------------------------------
       RETURN clb_output;
            
-   END toJSON_schema;
+   END toJSON;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_ref(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+       p_identifier          IN  VARCHAR2
+      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -306,10 +209,8 @@ AS
       -- Build the wrapper
       --------------------------------------------------------------------------
       IF  p_pretty_print IS NULL
-      AND p_force_inline <> 'TRUE'
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -326,10 +227,7 @@ AS
       clb_output := clb_output || dz_json_util.pretty(
           str_pad1 || dz_json_main.value2json(
              '$ref'
-            ,'#/components/examples/' || dz_swagger3_main.short(
-                p_object_id   => self.example_id
-               ,p_object_type => 'example'
-             )
+            ,'#/components/examples/' || p_identifier
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1
@@ -360,38 +258,7 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
-   AS      
-   BEGIN
-   
-      IF self.doRef() = 'TRUE'
-      THEN
-         RETURN self.toYAML_ref(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-            ,p_force_inline    => p_force_inline
-         );
-         
-      ELSE
-         RETURN self.toYAML_schema(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-            ,p_force_inline    => p_force_inline
-         );
-      
-      END IF;
-   
-   END toYAML;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toYAML_schema(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;
@@ -500,15 +367,15 @@ AS
                
       RETURN clb_output;
    
-   END toYAML_schema;
+   END toYAML;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML_ref(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
+       p_identifier          IN  VARCHAR2
+      ,p_pretty_print        IN  INTEGER   DEFAULT 0
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;
@@ -526,10 +393,7 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/examples/' || dz_swagger3_main.short(
-                p_object_id   => self.example_id
-               ,p_object_type => 'example'
-             )
+             '#/components/examples/' || p_identifier
             ,p_pretty_print
          )
          ,p_pretty_print

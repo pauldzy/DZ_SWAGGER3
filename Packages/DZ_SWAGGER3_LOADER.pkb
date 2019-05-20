@@ -22,7 +22,16 @@ AS
       FROM
       TABLE(p_children_ids) a
       WHERE
-      a.object_id IS NOT NULL;
+      NOT EXISTS (
+         SELECT 1 FROM dz_swagger3_xrelates b 
+         WHERE 
+             b.parent_object_id = p_parent_id
+         AND b.child_object_id  = a.object_id
+      )
+      AND a.object_id IS NOT NULL
+      GROUP BY
+       a.object_id
+      ,a.object_type_id;
 
    END;
    
@@ -41,14 +50,10 @@ AS
    
       SELECT
       dz_swagger3_object_typ(
-          p_object_id        => a.object_id
-         ,p_object_type_id   => a.object_type_id
-         ,p_object_subtype   => a.object_subtype
-         ,p_object_attribute => a.object_attribute
-         ,p_object_key       => a.object_key
-         ,p_object_hidden    => a.object_hidden
-         ,p_object_required  => a.object_required
-         ,p_object_order     => a.object_order
+          p_object_id           => a.object_id
+         ,p_object_type_id      => a.object_type_id
+         ,p_object_subtype      => MAX(a.object_subtype)
+         ,p_object_attribute    => MAX(a.object_attribute)
       )
       BULK COLLECT INTO ary_output
       FROM
@@ -60,7 +65,10 @@ AS
       AND a.object_type_id = b.object_type_id
       WHERE 
           b.object_id IS NULL 
-      AND a.object_id IS NOT NULL;
+      AND a.object_id IS NOT NULL
+      GROUP BY
+       a.object_id
+      ,a.object_type_id;
       
       RETURN ary_output;
       
@@ -74,8 +82,45 @@ AS
       ,p_versionid           IN  VARCHAR2
    )
    AS
+      ary_ids   dz_swagger3_object_vry;
+
    BEGIN
-      NULL;
+   
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
+
+      INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,encodingtyp
+      )
+      SELECT
+       a.object_id
+      ,a.object_type_id
+      ,dz_swagger3_encoding_typ(
+          p_encoding_id   => a.object_id
+         ,p_versionid     => p_versionid
+      )
+      FROM 
+      TABLE(ary_ids) a;
+
+      FOR r IN (
+         SELECT 
+         a.encodingtyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
+         )
+      )
+      LOOP
+         r.encodingtyp.traverse();
+      END LOOP;
+      
    END encodingtyp;
 
    -----------------------------------------------------------------------------
@@ -96,7 +141,6 @@ AS
            object_id
           ,object_type_id
           ,exampletyp
-          ,ordering_key
       )
       SELECT
        a.object_id
@@ -105,9 +149,10 @@ AS
           p_example_id => a.object_id
          ,p_versionid  => p_versionid
        )
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
+      
+      -- No subobjects
 
    END exampletyp;
    
@@ -129,7 +174,6 @@ AS
            object_id
           ,object_type_id
           ,extrdocstyp
-          ,ordering_key
       )
       SELECT
        a.object_id
@@ -138,9 +182,10 @@ AS
           p_externaldoc_id => a.object_id
          ,p_versionid      => p_versionid
        )
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
+      
+      -- No subobjects
 
    END extrdocstyp;
    
@@ -162,18 +207,34 @@ AS
            object_id
           ,object_type_id
           ,headertyp
-          ,ordering_key
       )
       SELECT
        a.object_id
       ,a.object_type_id
       ,dz_swagger3_header_typ(
-          p_header_id => a.object_id
-         ,p_versionid      => p_versionid
+          p_header_id    => a.object_id
+         ,p_versionid    => p_versionid
        )
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
+
+      FOR r IN (
+         SELECT 
+         a.headertyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
+         )
+      )
+      LOOP
+         r.headertyp.traverse();
+      END LOOP;
 
    END headertyp;
    
@@ -185,12 +246,44 @@ AS
       ,p_versionid           IN  VARCHAR2
    )
    AS
-      ary_ids   dz_swagger3_object_vry;
-      str_otype VARCHAR2(255 Char) := 'linktyp';
+      ary_ids dz_swagger3_object_vry;
 
    BEGIN
    
-      NULL;
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
+
+      INSERT INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,linktyp
+      )
+      SELECT
+       a.object_id
+      ,a.object_type_id
+      ,dz_swagger3_link_typ(
+          p_link_id    => a.object_id
+         ,p_versionid  => p_versionid
+       )
+      FROM 
+      TABLE(ary_ids) a;
+
+      FOR r IN (
+         SELECT 
+         a.linktyp
+         FROM 
+         dz_swagger3_xobjects a
+         WHERE
+         (a.object_id,a.object_type_id) IN (
+            SELECT
+             b.object_id
+            ,b.object_type_id
+            FROM
+            TABLE(ary_ids) b
+         )
+      )
+      LOOP
+         r.linktyp.traverse();
+      END LOOP;
 
    END linktyp;
    
@@ -212,20 +305,15 @@ AS
       INTO dz_swagger3_xobjects(
           object_id
          ,object_type_id
-         ,object_key
          ,mediatyp
-         ,ordering_key 
       )
       SELECT
        a.object_id
       ,a.object_type_id
-      ,a.object_key
       ,dz_swagger3_media_typ(
           p_media_id    => a.object_id
-         ,p_media_type  => a.object_key
          ,p_versionid   => p_versionid
        )
-      ,a.object_order
       FROM
       TABLE(ary_ids) a;
       
@@ -270,21 +358,16 @@ AS
       INSERT INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
-          ,object_key
           ,mediatyp
-          ,ordering_key
       )
       SELECT
        a.object_id
       ,a.object_type_id
-      ,a.object_key
       ,dz_swagger3_media_typ(
           p_media_id       => a.object_id
-         ,p_media_type     => a.object_key
          ,p_parameters     => p_parameter_ids
          ,p_versionid      => p_versionid
        )
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
 
@@ -327,7 +410,6 @@ AS
           object_id
          ,object_type_id
          ,operationtyp
-         ,ordering_key 
       )
       SELECT
        a.object_id
@@ -336,7 +418,6 @@ AS
           p_operation_id => a.object_id
          ,p_versionid    => p_versionid
        )
-      ,a.object_order
       FROM
       TABLE(ary_ids) a;
       
@@ -377,21 +458,15 @@ AS
       INSERT INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
-          ,object_key
-          ,object_hidden
           ,parametertyp
-          ,ordering_key
       )
       SELECT
        a.object_id
       ,a.object_type_id
-      ,a.object_key
-      ,a.object_hidden
       ,dz_swagger3_parameter_typ(
           p_parameter_id => a.object_id
          ,p_versionid    => p_versionid
        )
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
 
@@ -432,19 +507,15 @@ AS
       INSERT INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
-          ,object_key
           ,pathtyp
-          ,ordering_key
       )
       SELECT
        a.object_id
       ,a.object_type_id
-      ,a.object_key
       ,dz_swagger3_path_typ(
           p_path_id    => a.object_id
          ,p_versionid  => p_versionid
        )
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
       
@@ -488,19 +559,15 @@ AS
       INSERT INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
-          ,object_key
           ,requestbodytyp
-          ,ordering_key
       )
       SELECT
        a.object_id
       ,a.object_type_id
-      ,a.object_key
       ,dz_swagger3_requestbody_typ(
           p_requestbody_id => a.object_id
          ,p_versionid      => p_versionid
        )
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
       
@@ -547,14 +614,11 @@ AS
       INSERT INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
-          ,object_key
           ,requestbodytyp
-          ,ordering_key
       )
       SELECT
        a.object_id
       ,a.object_type_id
-      ,a.object_key
       ,dz_swagger3_requestbody_typ(
           p_requestbody_id => a.object_id
          ,p_media_type     => p_media_type
@@ -562,7 +626,6 @@ AS
          ,p_inline_rb      => p_inline_rb
          ,p_versionid      => p_versionid
        )
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
 
@@ -606,20 +669,16 @@ AS
       INSERT INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
-          ,object_key
           ,responsetyp
-          ,ordering_key
       )
       SELECT
        a.object_id
       ,a.object_type_id
-      ,a.object_key
       ,dz_swagger3_response_typ(
           p_response_id    => a.object_id
          ,p_response_code  => a.object_key
          ,p_versionid      => p_versionid
        )
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
 
@@ -660,16 +719,11 @@ AS
       INSERT INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
-          ,object_key
-          ,object_required
           ,schematyp
-          ,ordering_key
       )
       SELECT
        a.object_id
       ,a.object_type_id
-      ,a.object_key
-      ,a.object_required
       ,CASE 
        WHEN a.object_subtype = 'emulated_item'
        THEN
@@ -681,11 +735,9 @@ AS
        ELSE
          dz_swagger3_schema_typ(
              p_schema_id             => a.object_id
-            ,p_required              => a.object_required
             ,p_versionid             => p_versionid
          )
        END
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
       
@@ -730,20 +782,16 @@ AS
       INSERT INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
-          ,object_key
           ,schematyp
-          ,ordering_key
       )
       SELECT
        a.object_id
       ,a.object_type_id
-      ,a.object_key
       ,dz_swagger3_schema_typ(
           p_schema_id     => a.object_id
          ,p_parameters    => p_parameter_ids
          ,p_versionid     => p_versionid
        )
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
 
@@ -786,7 +834,6 @@ AS
            object_id
           ,object_type_id
           ,servertyp
-          ,ordering_key
       )
       SELECT
        a.object_id
@@ -795,7 +842,6 @@ AS
           p_server_id   => a.object_id
          ,p_versionid   => p_versionid
        )
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
       
@@ -837,21 +883,19 @@ AS
       INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
-          ,object_key
           ,servervartyp
-          ,ordering_key
       )
       SELECT
        a.object_id
       ,a.object_type_id
-      ,a.object_key
       ,dz_swagger3_server_var_typ(
           p_server_var_id  => a.object_id
          ,p_versionid      => p_versionid
        )
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
+      
+      -- No subobjects
       
    END servervartyp;
    
@@ -875,7 +919,6 @@ AS
            object_id
           ,object_type_id
           ,stringhashtyp
-          ,ordering_key
       )
       SELECT
        a.object_id
@@ -885,9 +928,10 @@ AS
          ,p_string_value   => a.object_key
          ,p_versionid      => p_versionid
        )
-      ,a.object_order
       FROM 
       TABLE(ary_ids) a;
+      
+      -- No subobjects
       
    END stringhashtyp;
    
@@ -910,19 +954,15 @@ AS
       INTO dz_swagger3_xobjects(
            object_id
           ,object_type_id
-          ,object_key
           ,tagtyp
-          ,ordering_key
       )
       SELECT
        a.object_id
       ,a.object_type_id
-      ,a.object_key
       ,dz_swagger3_tag_typ(
           p_tag_id        => a.object_id
          ,p_versionid     => p_versionid
        )
-      ,a.object_order
       FROM
       TABLE(ary_ids) a;
       

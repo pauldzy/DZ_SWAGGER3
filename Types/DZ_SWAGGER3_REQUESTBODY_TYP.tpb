@@ -16,8 +16,6 @@ AS
    CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
        p_requestbody_id          IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
-      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
    BEGIN
@@ -86,7 +84,6 @@ AS
       ,p_media_type               IN  VARCHAR2
       ,p_parameters               IN  dz_swagger3_object_vry --dz_swagger3_parameter_list
       ,p_inline_rb                IN  VARCHAR2
-      ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
       ,p_versionid                IN  VARCHAR2
    ) RETURN SELF AS RESULT
    AS
@@ -123,31 +120,6 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_requestbody_typ(
-       p_requestbody_id           IN  VARCHAR2
-      ,p_requestbody_description  IN  VARCHAR2
-      ,p_requestBody_force_inline IN  VARCHAR2
-      ,p_requestbody_content      IN  dz_swagger3_object_vry --dz_swagger3_media_list
-      ,p_requestbody_required     IN  VARCHAR2
-      ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_versionid                IN  VARCHAR2
-   ) RETURN SELF AS RESULT 
-   AS 
-   BEGIN 
-   
-      self.requestbody_id           := p_requestbody_id;
-      self.requestbody_description  := p_requestbody_description;
-      self.requestBody_force_inline := p_requestBody_force_inline;
-      self.requestbody_content      := p_requestbody_content;
-      self.requestbody_required     := p_requestbody_required;
-      self.versionid                := p_versionid;
-
-      RETURN; 
-      
-   END dz_swagger3_requestbody_typ;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER PROCEDURE traverse
    AS
    BEGIN
@@ -178,84 +150,10 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION isNULL
-   RETURN VARCHAR2
-   AS
-   BEGIN
-   
-      IF self.requestbody_description IS NOT NULL
-      OR self.requestbody_content     IS NOT NULL
-      OR self.requestbody_required    IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-         
-      ELSE
-         RETURN 'TRUE';
-         
-      END IF;
-   
-   END isNULL;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION key
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      RETURN self.requestBody_id;
-      
-   END key;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION doRef
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      
-      IF self.requestBody_force_inline = 'TRUE'
-      OR self.requestBody_inline = 'TRUE'
-      THEN
-         RETURN 'FALSE';
-         
-      END IF;
-      
-      RETURN 'TRUE';
-      
-   END doRef;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print         IN  INTEGER   DEFAULT NULL
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE' 
-   ) RETURN CLOB
-   AS
-   BEGIN
-   
-      IF self.doREF() = 'TRUE'
-      AND p_force_inline <> 'TRUE'
-      THEN
-         RETURN toJSON_ref(
-             p_pretty_print  => p_pretty_print
-            ,p_force_inline  => p_force_inline
-         );
-   
-      ELSE
-         RETURN toJSON_schema(
-             p_pretty_print  => p_pretty_print
-            ,p_force_inline  => p_force_inline
-         );
-      
-      END IF;
-   
-   END toJSON;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON_schema(
-       p_pretty_print         IN  INTEGER   DEFAULT NULL
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE' 
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -312,7 +210,7 @@ AS
          
       --------------------------------------------------------------------------
       -- Step 40
-      -- Add optional description 
+      -- Add media content
       --------------------------------------------------------------------------
       IF  self.requestbody_content IS NOT NULL 
       AND self.requestbody_content.COUNT > 0
@@ -320,25 +218,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.mediatyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.requestbody_content; 
          
          str_pad2 := str_pad;
@@ -421,13 +320,13 @@ AS
       --------------------------------------------------------------------------
       RETURN clb_output;
            
-   END toJSON_schema;
+   END toJSON;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_ref(
-       p_pretty_print         IN  INTEGER   DEFAULT NULL
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE' 
+       p_identifier          IN  VARCHAR2
+      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -465,10 +364,7 @@ AS
           str_pad1 || dz_json_main.value2json(
              '$ref'
             ,'#/components/requestBodies/' || dz_swagger3_util.utl_url_escape(
-               dz_swagger3_main.short(
-                   p_object_id   => self.requestbody_id
-                  ,p_object_type => 'requestbody'
-                )
+               p_identifier
              ) 
             ,p_pretty_print + 1
          )
@@ -496,43 +392,11 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-       p_pretty_print         IN  INTEGER   DEFAULT 0
-      ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE' 
-   ) RETURN CLOB
-   AS      
-   BEGIN
-   
-      IF self.doRef() = 'TRUE'
-      AND p_force_inline <> 'TRUE'
-      THEN
-         RETURN self.toYAML_ref(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-            ,p_force_inline    => p_force_inline
-         );
-         
-      ELSE
-         RETURN self.toYAML_schema(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-            ,p_force_inline    => p_force_inline
-         );
-      
-      END IF;
-   
-   END toYAML;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toYAML_schema(
-       p_pretty_print         IN  INTEGER   DEFAULT 0
-      ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE' 
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -575,25 +439,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.mediatyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.requestbody_content; 
          
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -646,19 +511,18 @@ AS
                
       RETURN clb_output;
       
-   END toYAML_schema;
+   END toYAML;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML_ref(
-       p_pretty_print         IN  INTEGER   DEFAULT 0
-      ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE' 
+       p_identifier          IN  VARCHAR2
+      ,p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
       
    BEGIN
    
@@ -673,10 +537,7 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/requestBodies/' || dz_swagger3_main.short(
-                p_object_id   => self.requestbody_id
-               ,p_object_type => 'requestbody'
-             )
+             '#/components/requestBodies/' || p_identifier
             ,p_pretty_print
          )
          ,p_pretty_print

@@ -15,9 +15,7 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_media_typ(
        p_media_id                IN  VARCHAR2
-      ,p_media_type              IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
-      ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
    BEGIN
@@ -26,7 +24,7 @@ AS
       -- Step 10
       -- Initialize the object
       --------------------------------------------------------------------------
-      self.versionid                  := p_versionid;
+      self.versionid := p_versionid;
 
       --------------------------------------------------------------------------
       -- Step 20
@@ -103,10 +101,8 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_media_typ(
        p_media_id                 IN  VARCHAR2
-      ,p_media_type               IN  VARCHAR2
       ,p_parameters               IN  dz_swagger3_object_vry --dz_swagger3_parameter_list
       ,p_versionid                IN  VARCHAR2
-      ,p_ref_brake                IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
    BEGIN
@@ -122,7 +118,6 @@ AS
       -- Emulate the post request body
       --------------------------------------------------------------------------
       self.media_id     := p_media_id;
-      self.media_type   := p_media_type;
       self.media_schema := dz_swagger3_object_typ(
           p_object_id      => 'sc.' || p_media_id
          ,p_object_type_id => 'schematyp'
@@ -134,32 +129,6 @@ AS
          
    END dz_swagger3_media_typ;
 
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_media_typ(
-       p_media_id                 IN  VARCHAR2
-      ,p_media_schema             IN  dz_swagger3_object_typ --dz_swagger3_schema_typ_nf
-      ,p_media_example_string     IN  VARCHAR2
-      ,p_media_example_number     IN  NUMBER
-      ,p_media_examples           IN  dz_swagger3_object_vry --dz_swagger3_example_list
-      ,p_media_encoding           IN  dz_swagger3_object_vry --dz_swagger3_encoding_list
-      ,p_versionid                IN  VARCHAR2
-   ) RETURN SELF AS RESULT 
-   AS 
-   BEGIN 
-   
-      self.media_id              := p_media_id;
-      self.media_schema          := p_media_schema;
-      self.media_example_string  := p_media_example_string;
-      self.media_example_number  := p_media_example_number;
-      self.media_examples        := p_media_examples;
-      self.media_encoding        := p_media_encoding;
-      self.versionid             := p_versionid;
-      
-      RETURN; 
-      
-   END dz_swagger3_media_typ;
-   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER PROCEDURE traverse
@@ -222,38 +191,10 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION isNULL
-   RETURN VARCHAR2
-   AS
-   BEGIN
-   
-      IF self.media_id     IS NOT NULL
-      OR self.media_schema IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-         
-      ELSE
-         RETURN 'TRUE';
-         
-      END IF;
-   
-   END isNULL;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION key
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      RETURN self.media_id;
-      
-   END key;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -299,21 +240,18 @@ AS
       AND self.media_schema.object_id IS NOT NULL
       THEN
          BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT a.schematyp.toJSON( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            SELECT 
+            a.schematyp.toJSON( 
+                p_pretty_print   => p_pretty_print + 1 
+               ,p_force_inline   => p_force_inline
+               ,p_short_id       => p_short_id
+            )
             INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,self.media_schema.object_type_id
-            ,self.media_schema.object_id; 
+            FROM 
+            dz_swagger3_xobjects a 
+            WHERE 
+                a.object_type_id = self.media_schema.object_type_id
+            AND a.object_id      = self.media_schema.object_id; 
             
          EXCEPTION
             WHEN NO_DATA_FOUND
@@ -378,25 +316,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.exampletyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 1 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
          || ',a.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.media_examples;
          
          str_pad2 := str_pad;
@@ -447,25 +386,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.encodingtyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 1 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
          || ',a.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.media_encoding;
          
          str_pad2 := str_pad;
@@ -530,6 +470,7 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -556,17 +497,19 @@ AS
          BEGIN
             EXECUTE IMMEDIATE
                'SELECT a.schematyp.toYAML( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.media_schema.object_type_id
             ,self.media_schema.object_id; 
             
@@ -627,25 +570,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.exampletyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 3 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 3 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
          || ',a.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.media_examples;
          
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -676,25 +620,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.encodingtyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 3 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 3 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
          || ',a.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.media_encoding;
          
          clb_output := clb_output || dz_json_util.pretty_str(

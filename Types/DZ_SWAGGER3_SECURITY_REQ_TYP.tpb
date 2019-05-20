@@ -14,14 +14,14 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_security_req_typ(
-       p_hash_key           IN  VARCHAR2
+       p_security_req_name  IN  VARCHAR2
       ,p_scope_names        IN  MDSYS.SDO_STRING2_ARRAY
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
    
-      self.hash_key        := p_hash_key;
-      self.scope_names     := p_scope_names;
+      self.security_req_name := p_security_req_name;
+      self.scope_names       := p_scope_names;
       
       RETURN; 
       
@@ -29,37 +29,10 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION key
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      RETURN self.hash_key;
-
-   END key;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION isNULL
-   RETURN VARCHAR2
-   AS
-   BEGIN
-   
-      IF self.hash_key IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-         
-      ELSE
-         RETURN 'TRUE';
-         
-      END IF;
-   
-   END isNULL;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -79,7 +52,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('[',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('[',-1);
@@ -130,6 +102,7 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;

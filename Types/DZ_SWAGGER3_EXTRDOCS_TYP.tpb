@@ -20,13 +20,17 @@ AS
    AS 
    BEGIN 
    
+      self.versionid := p_versionid;
+      
       BEGIN
          SELECT
-         dz_swagger3_extrdocs_typ(
-             p_externaldoc_description  => a.externaldoc_description
-            ,p_externaldoc_url          => a.externaldoc_url
-         )
-         INTO SELF
+          a.externaldoc_id
+         ,a.externaldoc_description
+         ,a.externaldoc_url
+         INTO
+          self.externaldoc_id
+         ,self.externaldoc_description
+         ,self.externaldoc_url
          FROM
          dz_swagger3_externaldoc a
          WHERE
@@ -52,47 +56,24 @@ AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_extrdocs_typ(
-       p_externaldoc_description IN  VARCHAR2
-      ,p_externaldoc_url         IN  VARCHAR2
-   ) RETURN SELF AS RESULT 
-   AS 
-   BEGIN 
-   
-      self.externaldoc_description := p_externaldoc_description;
-      self.externaldoc_url         := p_externaldoc_url;
-      
-      RETURN; 
-      
-   END dz_swagger3_extrdocs_typ;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION isNULL
-   RETURN VARCHAR2
+   MEMBER PROCEDURE traverse
    AS
    BEGIN
-   
-      IF self.externaldoc_url         IS NOT NULL
-      OR self.externaldoc_description IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-         
-      ELSE
-         RETURN 'TRUE';
-         
-      END IF;
-   
-   END isNULL;
+       NULL;
+       
+   END traverse;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
+      str_pad          VARCHAR2(1 Char);
+      str_pad1         VARCHAR2(1 Char);
       
    BEGIN
       
@@ -111,21 +92,25 @@ AS
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
+         str_pad     := ' ';
          
       END IF;
+
+      str_pad1 := str_pad;
       
       --------------------------------------------------------------------------
       -- Step 30
       -- Add name element
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
-          ' ' || dz_json_main.value2json(
+          str_pad1 || dz_json_main.value2json(
              'description'
             ,self.externaldoc_description
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1
       );
+      str_pad1 := ',';
          
       --------------------------------------------------------------------------
       -- Step 40
@@ -134,13 +119,14 @@ AS
       IF self.externaldoc_url IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty(
-             ',' || dz_json_main.value2json(
+             str_pad1 || dz_json_main.value2json(
                 'url'
                ,self.externaldoc_url
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
          );
+         str_pad1 := ',';
 
       END IF;
  
@@ -168,6 +154,7 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output        CLOB;

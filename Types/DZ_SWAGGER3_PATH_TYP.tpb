@@ -16,8 +16,6 @@ AS
    CONSTRUCTOR FUNCTION dz_swagger3_path_typ(
        p_path_id                   IN  VARCHAR2
       ,p_versionid                 IN  VARCHAR2
-      ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_ref_brake                 IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS   
    BEGIN 
@@ -193,46 +191,6 @@ AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_path_typ(
-       p_path_id                   IN  VARCHAR2
-      ,p_path_summary              IN  VARCHAR2
-      ,p_path_description          IN  VARCHAR2
-      ,p_path_get_operation        IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
-      ,p_path_put_operation        IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
-      ,p_path_post_operation       IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
-      ,p_path_delete_operation     IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
-      ,p_path_options_operation    IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
-      ,p_path_head_operation       IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
-      ,p_path_patch_operation      IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
-      ,p_path_trace_operation      IN  dz_swagger3_object_typ --dz_swagger3_operation_typ
-      ,p_path_servers              IN  dz_swagger3_object_vry --dz_swagger3_server_list
-      ,p_path_parameters           IN  dz_swagger3_object_vry --dz_swagger3_parameter_list
-      ,p_versionid                 IN  VARCHAR2
-   ) RETURN SELF AS RESULT 
-   AS 
-   BEGIN 
-   
-      self.path_id                 := p_path_id;
-      self.path_summary            := p_path_summary;
-      self.path_description        := p_path_description;
-      self.path_get_operation      := p_path_get_operation;
-      self.path_put_operation      := p_path_put_operation;
-      self.path_post_operation     := p_path_post_operation;
-      self.path_delete_operation   := p_path_delete_operation;
-      self.path_options_operation  := p_path_options_operation;
-      self.path_head_operation     := p_path_head_operation;
-      self.path_patch_operation    := p_path_patch_operation;
-      self.path_trace_operation    := p_path_trace_operation;
-      self.path_servers            := p_path_servers;
-      self.path_parameters         := p_path_parameters;
-      self.versionid               := p_versionid;
-      
-      RETURN; 
-      
-   END dz_swagger3_path_typ;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER PROCEDURE traverse
    AS
    BEGIN
@@ -290,37 +248,10 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION isNULL
-   RETURN VARCHAR2
-   AS
-   BEGIN
-   
-      IF self.path_id IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-         
-      ELSE
-         RETURN 'TRUE';
-         
-      END IF;
-   
-   END isNULL;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION key
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      RETURN self.path_id;
-      
-   END key;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -330,7 +261,6 @@ AS
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       clb_hash         CLOB;
       clb_tmp          CLOB;
-      ary_hidden       MDSYS.SDO_STRING2_ARRAY;
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
@@ -402,22 +332,18 @@ AS
       AND self.path_get_operation.object_id IS NOT NULL
       THEN
          BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.operationtyp.toJSON( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            SELECT 
+            a.operationtyp.toJSON( 
+                p_pretty_print   => p_pretty_print + 1 
+               ,p_force_inline   => p_force_inline 
+               ,p_short_id       => p_short_id
+            )
             INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,self.path_get_operation.object_type_id
-            ,self.path_get_operation.object_id;
+            FROM 
+            dz_swagger3_xobjects a 
+            WHERE 
+                a.object_type_id = self.path_get_operation.object_type_id
+            AND a.object_id      = self.path_get_operation.object_id;
             
          EXCEPTION
             WHEN NO_DATA_FOUND
@@ -456,17 +382,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toJSON( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_put_operation.object_type_id
             ,self.path_put_operation.object_id;
             
@@ -504,17 +432,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toJSON( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_post_operation.object_type_id
             ,self.path_post_operation.object_id;
             
@@ -552,17 +482,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toJSON( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_delete_operation.object_type_id
             ,self.path_delete_operation.object_id;
             
@@ -600,17 +532,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toJSON( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_options_operation.object_type_id
             ,self.path_options_operation.object_id;
             
@@ -648,17 +582,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toJSON( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_head_operation.object_type_id
             ,self.path_head_operation.object_id;
             
@@ -696,17 +632,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toJSON( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_patch_operation.object_type_id
             ,self.path_patch_operation.object_id;
             
@@ -744,17 +682,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toJSON( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_trace_operation.object_type_id
             ,self.path_trace_operation.object_id;
             
@@ -791,23 +731,24 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.servertyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 1 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      =  b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.path_servers;
          
          str_pad2 := str_pad;
@@ -858,27 +799,28 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.parametertyp.toJSON_ref( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 1 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
-         || ',a.object_hidden '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
          || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'COALESCE(a.parametertyp.parameter_list_hidden,''FALSE'') <> ''TRUE'' '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
-         ,ary_hidden
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.path_parameters;
          
          str_pad2 := str_pad;
@@ -894,19 +836,12 @@ AS
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            IF ary_hidden(i) = 'TRUE'
-            THEN
-               NULL;
+            clb_hash := clb_hash || dz_json_util.pretty(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
+               ,p_pretty_print + 1
+            );
+            str_pad2 := ',';
                
-            ELSE
-               clb_hash := clb_hash || dz_json_util.pretty(
-                   str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
-                  ,p_pretty_print + 1
-               );
-               str_pad2 := ',';
-               
-            END IF;
-         
          END LOOP;
          
          clb_hash := clb_hash || dz_json_util.pretty(
@@ -950,11 +885,11 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      ary_hidden       MDSYS.SDO_STRING2_ARRAY;
       clb_tmp          CLOB;
       
       TYPE clob_table IS TABLE OF CLOB;
@@ -1012,17 +947,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toYAML( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_get_operation.object_type_id
             ,self.path_get_operation.object_id;
             
@@ -1056,17 +993,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toYAML( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_put_operation.object_type_id
             ,self.path_put_operation.object_id;
             
@@ -1100,17 +1039,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toYAML( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_post_operation.object_type_id
             ,self.path_post_operation.object_id;
             
@@ -1144,17 +1085,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toYAML( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_delete_operation.object_type_id
             ,self.path_delete_operation.object_id;
             
@@ -1188,17 +1131,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toYAML( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_options_operation.object_type_id
             ,self.path_options_operation.object_id;
             
@@ -1232,17 +1177,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toYAML( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_head_operation.object_type_id
             ,self.path_head_operation.object_id;
             
@@ -1276,17 +1223,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toYAML( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_patch_operation.object_type_id
             ,self.path_patch_operation.object_id;
             
@@ -1320,17 +1269,19 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.operationtyp.toYAML( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
             || ') FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.path_trace_operation.object_type_id
             ,self.path_trace_operation.object_id;
             
@@ -1365,21 +1316,22 @@ AS
          || 'a.servertyp.toJSON( '
          || '    p_pretty_print   => :p01 + 1 '
          || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ') '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
          ary_clb
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.path_servers;
 
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -1410,27 +1362,28 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.parametertyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 1 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
-         || ',a.object_hidden '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || 'a.object_type_id = b.object_type_id '
+         || 'a.object_id      = b.object_id '
          || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'COALESCE(a.parametertyp.parameter_list_hidden,''FALSE'') <> ''TRUE'' '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
-         ,ary_hidden
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.path_parameters;
          
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -1441,18 +1394,11 @@ AS
          
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            IF ary_hidden(i) = 'TRUE'
-            THEN
-               NULL;
-               
-            ELSE
-               clb_output := clb_output || dz_json_util.pretty(
-                   '''' || ary_keys(i) || ''': '
-                  ,p_pretty_print + 2
-                  ,'  '
-               ) || ary_clb(i);
-               
-            END IF;
+            clb_output := clb_output || dz_json_util.pretty(
+                '''' || ary_keys(i) || ''': '
+               ,p_pretty_print + 2
+               ,'  '
+            ) || ary_clb(i);
          
          END LOOP;
          

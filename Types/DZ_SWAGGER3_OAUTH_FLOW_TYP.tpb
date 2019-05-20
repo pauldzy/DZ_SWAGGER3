@@ -33,39 +33,10 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION oauth_scopes_keys
-   RETURN MDSYS.SDO_STRING2_ARRAY
-   AS
-      int_index  PLS_INTEGER;
-      ary_output MDSYS.SDO_STRING2_ARRAY;
-      
-   BEGIN
-      IF self.oauth_scopes IS NULL
-      OR self.oauth_scopes.COUNT = 0
-      THEN
-         RETURN NULL;
-         
-      END IF;
-/*
-      int_index  := 1;
-      ary_output := MDSYS.SDO_STRING2_ARRAY();
-      FOR i IN 1 .. self.oauth_scopes.COUNT
-      LOOP
-         ary_output.EXTEND();
-         ary_output(int_index) := self.oauth_scopes(i).hash_key;
-         int_index := int_index + 1;
-      
-      END LOOP;
-*/
-      RETURN ary_output;
-   
-   END oauth_scopes_keys;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -92,7 +63,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -166,8 +136,9 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.stringhashtyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
          || ',a.object_key '
          || 'FROM '
@@ -181,6 +152,7 @@ AS
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.oauth_scopes;
          
          str_pad2 := str_pad;
@@ -245,6 +217,7 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -321,8 +294,9 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.stringhashtyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
          || ',a.object_key '
          || 'FROM '
@@ -336,6 +310,7 @@ AS
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.oauth_scopes;
          
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -375,51 +350,6 @@ AS
       RETURN clb_output;
       
    END toYAML;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-   BEGIN
-   
-      INSERT INTO dz_swagger3_xrelates(
-          parent_object_id
-         ,child_object_id
-         ,child_object_type_id
-      )
-      SELECT
-       p_parent_id
-      ,a.column_value
-      ,'extrdocs'
-      FROM
-      TABLE(p_children_ids) a;
-
-      EXECUTE IMMEDIATE 
-      'INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,extrdocstyp
-          ,ordering_key
-      )
-      SELECT
-       a.column_value
-      ,''extrdocstyp''
-      ,dz_swagger3_extrdocs_typ(
-          p_externaldoc_id => a.column_value
-         ,p_versionid      => :p01
-       )
-      ,10
-      FROM 
-      TABLE(:p02) a'
-      USING p_versionid,p_children_ids;
-      
-      COMMIT;
-
-   END;
    
 END;
 /

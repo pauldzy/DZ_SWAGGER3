@@ -15,10 +15,7 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_schema_typ(
        p_schema_id               IN  VARCHAR2
-      ,p_required                IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
-      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
    BEGIN
@@ -161,13 +158,16 @@ AS
 
       --------------------------------------------------------------------------
       -- Step 40
-      -- Use schema category to more efficiently search for children schemas
+      -- Load the schema properties
       --------------------------------------------------------------------------
       SELECT
       dz_swagger3_object_typ(
-          p_object_id      => a.property_schema_id 
-         ,p_object_type_id => 'schematyp'
-         ,p_object_order   => a.property_order
+          p_object_id           => a.property_schema_id 
+         ,p_object_type_id      => 'schematyp'
+         ,p_object_key          => a.property_name
+         ,p_object_required     => a.property_required
+         ,p_object_force_inline => b.schema_force_inline
+         ,p_object_order        => a.property_order
       )
       BULK COLLECT INTO self.schema_properties
       FROM
@@ -181,10 +181,16 @@ AS
           a.versionid        = p_versionid
       AND a.parent_schema_id = self.schema_id;
       
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Load the schema combines
+      --------------------------------------------------------------------------
       SELECT
       dz_swagger3_object_typ(
           p_object_id      => a.combine_schema_id
          ,p_object_type_id => 'schematyp'
+         ,p_object_key     => a.combine_keyword
+         ,p_object_order   => a.combine_order
       )
       BULK COLLECT INTO self.combine_schemas
       FROM
@@ -196,12 +202,10 @@ AS
       AND a.combine_schema_id = b.schema_id
       WHERE
           a.versionid         = p_versionid
-      AND a.schema_id         = self.schema_id
-      ORDER BY
-      a.combine_order;  
+      AND a.schema_id         = self.schema_id;  
 
       --------------------------------------------------------------------------
-      -- Step 50
+      -- Step 60
       -- Return completed object
       --------------------------------------------------------------------------
       RETURN;
@@ -214,8 +218,6 @@ AS
        p_schema_id                IN  VARCHAR2
       ,p_parameters               IN  dz_swagger3_object_vry
       ,p_versionid                IN  VARCHAR2
-      ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_ref_brake                IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
    BEGIN
@@ -268,8 +270,6 @@ AS
        p_schema_id                IN  VARCHAR2
       ,p_emulated_parameter_id    IN  VARCHAR2
       ,p_versionid                IN  VARCHAR2
-      ,p_load_components          IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_ref_brake                IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
       str_inner_schema_id VARCHAR2(255 Char);
@@ -460,72 +460,13 @@ AS
 
    END traverse;
    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION isNULL
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      IF self.schema_id IS NOT NULL
-      OR self.schema_type IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-         
-      ELSE
-         RETURN 'TRUE';
-
-      END IF;
-      
-   END isNULL;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION key
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      RETURN self.schema_id;
-      
-   END key;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION doRef
-   RETURN VARCHAR2
-   AS
-   BEGIN
-   
-      IF self.schema_force_inline = 'TRUE'
-      THEN
-         RETURN 'FALSE';
-
-      ELSIF self.schema_type = 'object'
-      AND SUBSTR(LOWER(self.schema_id),-5) IN ('.root')
-      THEN
-         RETURN 'FALSE';
-         
-      ELSIF self.schema_type = 'object'
-      THEN
-         RETURN 'TRUE';
-         
-      ELSIF LENGTH(self.schema_description) > 8
-      OR self.schema_title IS NOT NULL
-      THEN
-         RETURN 'TRUE';
-         
-      ELSE
-         RETURN 'FALSE';
-      
-      END IF;
-      
-   END doRef;
-   
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE' 
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
    BEGIN
@@ -540,23 +481,11 @@ AS
          );
          
       ELSE
-         IF  self.doRef() = 'TRUE'
-         AND p_force_inline <> 'TRUE'
-         THEN
-            RETURN self.toJSON_ref(
-                p_pretty_print   => p_pretty_print
-               ,p_force_inline   => p_force_inline
-               ,p_jsonschema     => p_jsonschema
-            );
-
-         ELSE
-            RETURN self.toJSON_schema(
-                p_pretty_print   => p_pretty_print
-               ,p_force_inline   => p_force_inline
-               ,p_jsonschema     => p_jsonschema
-            );
-            
-         END IF;
+         RETURN self.toJSON_schema(
+             p_pretty_print   => p_pretty_print
+            ,p_force_inline   => p_force_inline
+            ,p_jsonschema     => p_jsonschema
+         );
          
       END IF;
       
@@ -567,7 +496,8 @@ AS
    MEMBER FUNCTION toJSON_component(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE' 
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
    BEGIN
@@ -597,7 +527,8 @@ AS
    MEMBER FUNCTION toJSON_schema(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE' 
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       str_jsonschema   VARCHAR2(4000 Char) := UPPER(p_jsonschema);
@@ -608,7 +539,6 @@ AS
       ary_items        MDSYS.SDO_STRING2_ARRAY;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       ary_required     MDSYS.SDO_STRING2_ARRAY;
-      ary_hidden       MDSYS.SDO_STRING2_ARRAY;
       clb_hash         CLOB;
       clb_tmp          CLOB;
       str_tmp          VARCHAR2(4000 Char);
@@ -638,7 +568,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad  := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -956,17 +885,20 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.extrdocstyp.toJSON( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
-            || ') FROM '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
+            || ') '
+            || 'FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.schema_externalDocs.object_type_id 
             ,self.schema_externalDocs.object_id;
          
@@ -1053,20 +985,22 @@ AS
          BEGIN
             EXECUTE IMMEDIATE
                'SELECT '
-            || ' a.schematyp.toJSON( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
-            || ' ) '
+            || 'a.schematyp.toJSON( '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
+            || ') '
             || 'FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO 
             clb_tmp
             USING
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.schema_items_schema.object_type_id
             ,self.schema_items_schema.object_id;
          
@@ -1138,29 +1072,30 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.schematyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
-         || ',a.object_required '
-         || ',a.object_hidden '
+         || ',b.object_key '
+         || ',b.object_required '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
          || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'COALESCE(a.schematyp.property_list_hidden,''FALSE'') <> ''TRUE'' '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          ,ary_required
-         ,ary_hidden
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.schema_properties; 
 
          str_pad2 := str_pad;
@@ -1178,25 +1113,18 @@ AS
          int_counter := 1;
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            IF ary_hidden(i) = 'TRUE'
+            clb_hash := clb_hash || dz_json_util.pretty(
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
+               ,p_pretty_print + 2
+            );
+            str_pad2 := ',';
+            
+            IF ary_required(i) = 'TRUE'
             THEN
-               NULL;
-               
-            ELSE
-               clb_hash := clb_hash || dz_json_util.pretty(
-                   str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
-                  ,p_pretty_print + 2
-               );
-               str_pad2 := ',';
-               
-               IF ary_required(i) = 'TRUE'
-               THEN
-                  ary_items.EXTEND();
-                  ary_items(int_counter) := ary_keys(i);
-                  int_counter := int_counter + 1;
+               ary_items.EXTEND();
+               ary_items(int_counter) := ary_keys(i);
+               int_counter := int_counter + 1;
 
-               END IF;
-               
             END IF;
          
          END LOOP;
@@ -1257,9 +1185,9 @@ AS
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_ref(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE' 
+       p_identifier          IN  VARCHAR2
+      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       str_jsonschema   VARCHAR2(4000 Char) := UPPER(p_jsonschema);
@@ -1287,7 +1215,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad  := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -1305,10 +1232,7 @@ AS
           str_pad1 || dz_json_main.value2json(
              '$ref'
             ,'#/components/schemas/' || dz_swagger3_util.utl_url_escape(
-               dz_swagger3_main.short(
-                   p_object_id   => self.schema_id
-                  ,p_object_type => 'schema'
-               )
+               p_identifier
              )
             ,p_pretty_print + 1
          )
@@ -1338,7 +1262,8 @@ AS
    MEMBER FUNCTION toJSON_combine(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE' 
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       str_jsonschema   VARCHAR2(4000 Char) := UPPER(p_jsonschema);
@@ -1369,25 +1294,31 @@ AS
       EXECUTE IMMEDIATE
          'SELECT '
       || ' a.schematyp.toJSON( '
-      || '   p_pretty_print   => :p01 + 1 '
-      || '  ,p_force_inline   => :p02 '
-      || '  ,p_jsonschema     => :p03 '
+      || '    p_pretty_print   => :p01 + 1 '
+      || '   ,p_force_inline   => :p02 '
+      || '   ,p_short_id       => :p03 '
+      || '   ,p_jsonschema     => :p04 '
       || ' ) '
-      || ',a.object_key '
+      || ',b.object_key '
       || 'FROM '
       || 'dz_swagger3_xobjects a '
-      || 'WHERE '
-      || 'a.object_id IN (SELECT column_name FROM TABLE(:p04)) '
+      || 'JOIN '
+      || 'TABLE(:p05) b '
+      || 'ON '
+      || '    a.object_type_id = b.object_type_id '
+      || 'AND a.object_id      = b.object_id '
+      || 'ORDER BY b.object_order '
       BULK COLLECT INTO 
        ary_clb
       ,ary_keys
       USING
        p_pretty_print
       ,p_force_inline
+      ,p_short_id
       ,p_jsonschema
-      ,self.schema_properties; 
+      ,self.combine_schemas; 
        
-      IF ary_keys(1) = 'not'
+      IF ary_keys.COUNT = 1 AND ary_keys(1) = 'not'
       THEN
          boo_is_not := TRUE;
       
@@ -1400,7 +1331,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad  := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -1409,7 +1339,7 @@ AS
       END IF;
       
       str_pad1 := str_pad;
-      
+
       --------------------------------------------------------------------------
       -- Step 30
       -- Add base attributes
@@ -1507,6 +1437,7 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
    BEGIN
@@ -1521,25 +1452,12 @@ AS
          );
          
       ELSE
-         IF  self.doRef() = 'TRUE'
-         AND p_force_inline <> 'TRUE'
-         THEN
-            RETURN self.toYAML_ref(
-                p_pretty_print    => p_pretty_print
-               ,p_initial_indent  => p_initial_indent
-               ,p_final_linefeed  => p_final_linefeed
-               ,p_force_inline    => p_force_inline
-            );
-         
-         ELSE
-            RETURN self.toYAML_schema(
-                p_pretty_print    => p_pretty_print
-               ,p_initial_indent  => p_initial_indent
-               ,p_final_linefeed  => p_final_linefeed
-               ,p_force_inline    => p_force_inline
-            );
-            
-         END IF;
+         RETURN self.toYAML_schema(
+             p_pretty_print    => p_pretty_print
+            ,p_initial_indent  => p_initial_indent
+            ,p_final_linefeed  => p_final_linefeed
+            ,p_force_inline    => p_force_inline
+         );
          
       END IF;
       
@@ -1552,6 +1470,7 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
    BEGIN
@@ -1584,13 +1503,13 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
       ary_items        MDSYS.SDO_STRING2_ARRAY;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       ary_required     MDSYS.SDO_STRING2_ARRAY;
-      ary_hidden       MDSYS.SDO_STRING2_ARRAY;
       clb_hash         CLOB;
       clb_tmp          CLOB;
       str_tmp          VARCHAR2(4000 Char);
@@ -1814,18 +1733,22 @@ AS
       THEN
          BEGIN
             EXECUTE IMMEDIATE
-               'SELECT a.extrdocstyp.toYAML( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
-            || ') FROM '
+               'SELECT '
+            || 'a.extrdocstyp.toYAML( '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
+            || ') '
+            || 'FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.schema_externalDocs.object_type_id
             ,self.schema_externalDocs.object_id; 
          
@@ -1893,20 +1816,22 @@ AS
          BEGIN
             EXECUTE IMMEDIATE
                'SELECT '
-            || ' a.schematyp.toYAML( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
-            || ' ) '
+            || 'a.schematyp.toYAML( '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
+            || ') '
             || 'FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO 
             clb_tmp
             USING
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.schema_items_schema.object_type_id
             ,self.schema_items_schema.object_id;
             
@@ -1966,29 +1891,30 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.schematyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 1 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
-         || ',a.object_required '
-         || ',a.object_hidden '
+         || ',b.object_key '
+         || ',b.object_required '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
          || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'COALESCE(a.schematyp.property_list_hidden,''FALSE'') <> ''TRUE'' '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          ,ary_required
-         ,ary_hidden
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.schema_properties;          
          
          boo_check    := FALSE;
@@ -2003,26 +1929,19 @@ AS
 
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            IF ary_hidden(i) = 'TRUE'
+            clb_output := clb_output || dz_json_util.pretty(
+                dz_swagger3_util.yamlq(ary_keys(i)) || ': '
+               ,p_pretty_print + 1
+               ,'  '
+            ) || ary_clb(i);
+            
+            IF ary_required(i) = 'TRUE'
             THEN
-               NULL;
-               
-            ELSE
-               clb_output := clb_output || dz_json_util.pretty(
-                   dz_swagger3_util.yamlq(ary_keys(i)) || ': '
-                  ,p_pretty_print + 1
-                  ,'  '
-               ) || ary_clb(i);
-               
-               IF ary_required(i) = 'TRUE'
-               THEN
-                  ary_items.EXTEND();
-                  ary_items(int_counter) := ary_keys(i);
-                  int_counter := int_counter + 1;
-                  boo_check   := TRUE;
+               ary_items.EXTEND();
+               ary_items(int_counter) := ary_keys(i);
+               int_counter := int_counter + 1;
+               boo_check   := TRUE;
 
-               END IF;
-               
             END IF;
          
          END LOOP;
@@ -2076,10 +1995,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML_ref(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
+       p_identifier          IN  VARCHAR2
+      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -2097,10 +2016,7 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/schemas/' || dz_swagger3_main.short(
-                p_object_id   => self.schema_id
-               ,p_object_type => 'schema'
-            )
+             '#/components/schemas/' || p_identifier
             ,p_pretty_print
          )
          ,p_pretty_print
@@ -2134,6 +2050,7 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -2159,25 +2076,31 @@ AS
       EXECUTE IMMEDIATE
          'SELECT '
       || ' a.schematyp.toYAML( '
-      || '   p_pretty_print   => :p01 + 1 '
-      || '  ,p_initial_indent => ''FALSE'' '
-      || '  ,p_final_linefeed => ''FALSE'' '
-      || '  ,p_force_inline   => :p02 '
+      || '    p_pretty_print   => :p01 + 1 '
+      || '   ,p_initial_indent => ''FALSE'' '
+      || '   ,p_final_linefeed => ''FALSE'' '
+      || '   ,p_force_inline   => :p02 '
+      || '   ,p_short_id       => :p03 '
       || ' ) '
-      || ',a.object_key '
+      || ',b.object_key '
       || 'FROM '
       || 'dz_swagger3_xobjects a '
-      || 'WHERE '
-      || 'a.object_id IN (SELECT column_name FROM TABLE(:p03)) '
+      || 'JOIN '
+      || 'TABLE(:p04) b '
+      || 'ON '
+      || '    a.object_type_id = b.object_type_id '
+      || 'AND a.object_id      = b.object_id '
+      || 'ORDER BY b.object_order '
       BULK COLLECT INTO 
        ary_clb
       ,ary_keys
       USING
        p_pretty_print
       ,p_force_inline
-      ,self.schema_properties;
+      ,p_short_id
+      ,self.combine_schemas;
          
-      IF ary_keys(1) = 'not'
+      IF ary_keys.COUNT = 1 AND ary_keys(1) = 'not'
       THEN
          boo_is_not := TRUE;
       

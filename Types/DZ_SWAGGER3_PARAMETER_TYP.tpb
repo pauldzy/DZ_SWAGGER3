@@ -16,8 +16,6 @@ AS
    CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
        p_parameter_id              IN  VARCHAR2
       ,p_versionid                 IN  VARCHAR2
-      ,p_load_components           IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_ref_brake                 IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS      
    BEGIN
@@ -29,7 +27,7 @@ AS
       self.versionid := p_versionid;
       
       --------------------------------------------------------------------------
-      -- Step 10 
+      -- Step 20 
       -- Load the parameter self and schema id
       --------------------------------------------------------------------------
       BEGIN
@@ -95,7 +93,7 @@ AS
       END;
       
       --------------------------------------------------------------------------
-      -- Step 20 
+      -- Step 30 
       -- Load any example ids
       --------------------------------------------------------------------------
       SELECT
@@ -111,59 +109,14 @@ AS
           a.parent_id = p_parameter_id
       AND a.versionid = p_versionid;
       
+      --------------------------------------------------------------------------
+      -- Step 40 
+      -- Return the object
+      --------------------------------------------------------------------------
       RETURN;
 
    END;
 
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_parameter_typ(
-       p_parameter_id               IN  VARCHAR2
-      ,p_parameter_name             IN  VARCHAR2
-      ,p_parameter_in               IN  VARCHAR2
-      ,p_parameter_description      IN  VARCHAR2
-      ,p_parameter_required         IN  VARCHAR2
-      ,p_parameter_deprecated       IN  VARCHAR2
-      ,p_parameter_allowEmptyValue  IN  VARCHAR2
-      ,p_parameter_style            IN  VARCHAR2
-      ,p_parameter_explode          IN  VARCHAR2
-      ,p_parameter_allowReserved    IN  VARCHAR2
-      ,p_parameter_schema           IN  dz_swagger3_object_typ --dz_swagger3_schema_typ_nf
-      ,p_parameter_example_string   IN  VARCHAR2
-      ,p_parameter_example_number   IN  NUMBER
-      ,p_parameter_examples         IN  dz_swagger3_object_vry --dz_swagger3_example_list
-      ,p_parameter_force_inline     IN  VARCHAR2
-      ,p_parameter_list_hidden      IN  VARCHAR2
-      ,p_parameter_requestbody_flag IN  VARCHAR2 DEFAULT 'FALSE'
-      ,p_load_components            IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_versionid                  IN  VARCHAR2
-   ) RETURN SELF AS RESULT 
-   AS 
-   BEGIN 
-    
-      self.parameter_id               := p_parameter_id;
-      self.parameter_name             := p_parameter_name;
-      self.parameter_in               := p_parameter_in;
-      self.parameter_description      := p_parameter_description;
-      self.parameter_required         := p_parameter_required;
-      self.parameter_deprecated       := p_parameter_deprecated;
-      self.parameter_allowEmptyValue  := p_parameter_allowEmptyValue;
-      self.parameter_style            := p_parameter_style;
-      self.parameter_explode          := p_parameter_explode;
-      self.parameter_allowReserved    := p_parameter_allowReserved;
-      self.parameter_schema           := p_parameter_schema;
-      self.parameter_example_string   := p_parameter_example_string;
-      self.parameter_example_number   := p_parameter_example_number;
-      self.parameter_examples         := p_parameter_examples;
-      self.parameter_force_inline     := p_parameter_force_inline;
-      self.parameter_list_hidden      := p_parameter_list_hidden;
-      self.parameter_requestbody_flag := p_parameter_requestbody_flag;
-      self.versionid                  := p_versionid;
-
-      RETURN; 
-      
-   END dz_swagger3_parameter_typ;
-   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER PROCEDURE traverse
@@ -199,74 +152,10 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION isNULL
-   RETURN VARCHAR2
-   AS
-   BEGIN
-   
-      IF self.parameter_id IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-         
-      ELSE
-         RETURN 'TRUE';
-         
-      END IF;
-   
-   END isNULL;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION key
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      RETURN self.parameter_id;
-      
-   END key;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION doRef
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      RETURN 'TRUE';
-      
-   END doRef;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print         IN  INTEGER   DEFAULT NULL
       ,p_force_inline         IN  VARCHAR2  DEFAULT 'TRUE'
-   ) RETURN CLOB
-   AS
-   BEGIN
-   
-      IF  self.doREF() = 'TRUE'
-      AND p_force_inline <> 'TRUE'
-      THEN
-         RETURN toJSON_ref(
-             p_pretty_print  => p_pretty_print
-            ,p_force_inline  => p_force_inline
-         );
-   
-      ELSE
-         RETURN toJSON_schema(
-             p_pretty_print  => p_pretty_print
-            ,p_force_inline  => p_force_inline
-         );
-      
-      END IF;
-      
-   END toJSON;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON_schema(
-       p_pretty_print         IN  INTEGER   DEFAULT NULL
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_short_id             IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -497,17 +386,20 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.schematyp.toJSON( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
-            || ') FROM '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
+            || ') '
+            || 'FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.parameter_schema.object_type_id
             ,self.parameter_schema.object_id;
             
@@ -574,25 +466,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.exampletyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 1 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.parameter_examples;
          
          str_pad2 := str_pad;
@@ -648,22 +541,18 @@ AS
       --------------------------------------------------------------------------
       RETURN clb_output;
            
-   END toJSON_schema;
+   END toJSON;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_ref(
-       p_pretty_print         IN  INTEGER   DEFAULT NULL
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'TRUE'
+       p_identifier          IN  VARCHAR2
+      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
-      boo_temp         BOOLEAN;
       str_pad          VARCHAR2(1 Char);
       str_pad1         VARCHAR2(1 Char);
-      str_pad2         VARCHAR2(1 Char);
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      clb_hash         CLOB;
       
    BEGIN
       
@@ -679,7 +568,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -697,10 +585,7 @@ AS
           str_pad1 || dz_json_main.value2json(
              '$ref'
             ,'#/components/parameters/' || dz_swagger3_util.utl_url_escape(
-                dz_swagger3_main.short(
-                   p_object_id   => self.parameter_id
-                  ,p_object_type => 'parameter'
-                )
+               p_identifier
              )
             ,p_pretty_print + 1
          )
@@ -731,40 +616,8 @@ AS
        p_pretty_print         IN  INTEGER   DEFAULT 0
       ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'TRUE'
-   ) RETURN CLOB
-   AS
-   BEGIN
-   
-      IF  self.doRef() = 'TRUE'
-      AND p_force_inline <> 'TRUE'
-      THEN
-         RETURN self.toYAML_ref(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-            ,p_force_inline    => p_force_inline
-         );
-         
-      ELSE
-         RETURN self.toYAML_schema(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-            ,p_force_inline    => p_force_inline
-         );
-      
-      END IF;
-
-   END toYAML;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toYAML_schema(
-       p_pretty_print         IN  INTEGER   DEFAULT 0
-      ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id             IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -924,17 +777,20 @@ AS
             EXECUTE IMMEDIATE
                'SELECT '
             || 'a.schematyp.toYAML( '
-            || '   p_pretty_print   => :p01 + 1 '
-            || '  ,p_force_inline   => :p02 '
-            || ') FROM '
+            || '    p_pretty_print   => :p01 + 1 '
+            || '   ,p_force_inline   => :p02 '
+            || '   ,p_short_id       => :p03 '
+            || ') '
+            || 'FROM '
             || 'dz_swagger3_xobjects a '
             || 'WHERE '
-            || '    a.object_type_id = :p03 '
-            || 'AND a.object_id      = :p04 '
+            || '    a.object_type_id = :p04 '
+            || 'AND a.object_id      = :p05 '
             INTO clb_tmp
             USING 
              p_pretty_print
             ,p_force_inline
+            ,p_short_id
             ,self.parameter_schema.object_type_id
             ,self.parameter_schema.object_id;
             
@@ -995,25 +851,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.exampletyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 1 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 1 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p01) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.parameter_examples; 
          
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -1052,15 +909,15 @@ AS
                
       RETURN clb_output;
       
-   END toYAML_schema;
+   END toYAML;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML_ref(
-       p_pretty_print         IN  INTEGER   DEFAULT 0
-      ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'TRUE'
+       p_identifier          IN  VARCHAR2
+      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -1078,10 +935,7 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/parameters/' || dz_swagger3_main.short(
-                p_object_id   => self.parameter_id
-               ,p_object_type => 'parameter'
-             )
+             '#/components/parameters/' || p_identifier
             ,p_pretty_print
          )
          ,p_pretty_print

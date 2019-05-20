@@ -22,8 +22,9 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
-      p_pretty_print          IN  INTEGER  DEFAULT NULL
-    ) RETURN CLOB
+       p_pretty_print         IN  INTEGER  DEFAULT NULL
+      ,p_short_id             IN  VARCHAR2 DEFAULT 'FALSE'
+   ) RETURN CLOB
 
 );
 /

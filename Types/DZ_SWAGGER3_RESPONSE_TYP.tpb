@@ -17,120 +17,109 @@ AS
        p_response_id             IN  VARCHAR2
       ,p_response_code           IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
-      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_ref_brake               IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN SELF AS RESULT
    AS
-      str_ref_brake VARCHAR2(255 Char) := p_ref_brake;
-      
    BEGIN 
-   /*
+ 
       --------------------------------------------------------------------------
       -- Step 10
-      -- Pull the object information
-      -------------------------------------------------------------------------- 
-      BEGIN
-         SELECT
-         dz_swagger3_response_typ(
-             p_hash_key              => p_response_code
-            ,p_response_id           => a.response_id
-            ,p_response_description  => a.response_description
-            ,p_response_headers      => NULL
-            ,p_response_content      => NULL
-            ,p_response_links        => NULL
-            ,p_load_components       => p_load_components 
-         )
-         INTO SELF
-         FROM
-         dz_swagger3_response a
-         WHERE
-             a.versionid   = p_versionid
-         AND a.response_id = p_response_id;
-         
-      EXCEPTION
-         WHEN NO_DATA_FOUND
-         THEN
-            RETURN;
-            
-         WHEN OTHERS
-         THEN
-            RAISE;
-            
-      END;
+      -- Set up the object
+      --------------------------------------------------------------------------
+      self.versionid := p_versionid;
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Collect the media content
+      -- Pull the object information
       --------------------------------------------------------------------------
-      IF  p_ref_brake = 'TRUE'
-      AND self.doREF() = 'TRUE'
-      THEN
-         NULL;
-         
-      ELSE
-         IF str_ref_brake = 'FIRE'
-         THEN
-            str_ref_brake := 'TRUE';
-            
-         END IF;
-         
-         SELECT
-         dz_swagger3_media_typ(
-             p_media_id              => b.media_id
-            ,p_media_type            => a.media_type
-            ,p_versionid             => p_versionid
-            ,p_ref_brake             => str_ref_brake
-         )
-         BULK COLLECT INTO self.response_content
-         FROM
-         dz_swagger3_parent_media_map a
-         JOIN
-         dz_swagger3_media b
-         ON
-             a.versionid  = b.versionid
-         AND a.media_id   = b.media_id
-         WHERE
-             a.versionid = p_versionid
-         AND a.parent_id = p_response_id
-         ORDER BY
-          a.media_order
-         ,a.media_type;
+      SELECT
+       a.response_id
+      ,a.response_description
+      INTO
+       self.response_id
+      ,self.response_description
+      FROM
+      dz_swagger3_response a
+      WHERE
+          a.versionid   = p_versionid
+      AND a.response_id = p_response_id;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Collect the response headers
+      --------------------------------------------------------------------------
+      SELECT
+      dz_swagger3_object_typ(
+          p_object_id          => b.header_id
+         ,p_object_type_id     => 'headertyp'
+         ,p_object_key         => a.header_name
+         ,p_object_order       => a.header_order
+      )
+      BULK COLLECT INTO self.response_headers
+      FROM
+      dz_swagger3_response_headr_map a
+      JOIN
+      dz_swagger3_header b
+      ON
+          a.versionid   = b.versionid
+      AND a.header_id   = b.header_id
+      WHERE
+          a.versionid   = p_versionid
+      AND a.response_id = p_response_id;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Collect the response media content
+      --------------------------------------------------------------------------
+      SELECT
+      dz_swagger3_object_typ(
+          p_object_id          => b.media_id
+         ,p_object_type_id     => 'mediatyp'
+         ,p_object_key         => a.media_type
+         ,p_object_order       => a.media_order
+      )
+      BULK COLLECT INTO self.response_content
+      FROM
+      dz_swagger3_parent_media_map a
+      JOIN
+      dz_swagger3_media b
+      ON
+          a.versionid  = b.versionid
+      AND a.media_id   = b.media_id
+      WHERE
+          a.versionid  = p_versionid
+      AND a.parent_id  = p_response_id;
 
-      END IF;
-      */
       --------------------------------------------------------------------------
-      -- Step 
+      -- Step 50
+      -- Collect the response links
+      --------------------------------------------------------------------------
+      SELECT
+      dz_swagger3_object_typ(
+          p_object_id          => b.link_id
+         ,p_object_type_id     => 'linktyp'
+         ,p_object_key         => a.link_name
+         ,p_object_order       => a.link_order
+      )
+      BULK COLLECT INTO self.response_links
+      FROM
+      dz_swagger3_response_link_map a
+      JOIN
+      dz_swagger3_link b
+      ON
+          a.versionid   = b.versionid
+      AND a.link_id     = b.link_id
+      WHERE
+          a.versionid   = p_versionid
+      AND a.response_id = p_response_id;
+      
+      --------------------------------------------------------------------------
+      -- Step 60
       -- Return the completed object
       --------------------------------------------------------------------------   
       RETURN; 
       
    END dz_swagger3_response_typ;
 
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_response_typ(
-       p_response_id             IN  VARCHAR2
-      ,p_response_description    IN  VARCHAR2
-      ,p_response_headers        IN  dz_swagger3_object_vry --dz_swagger3_header_list
-      ,p_response_content        IN  dz_swagger3_object_vry --dz_swagger3_media_list
-      ,p_response_links          IN  dz_swagger3_object_vry --dz_swagger3_link_list
-      ,p_load_components         IN  VARCHAR2 DEFAULT 'TRUE'
-      ,p_versionid               IN  VARCHAR2
-   ) RETURN SELF AS RESULT 
-   AS 
-   BEGIN 
-   
-      self.response_id             := p_response_id;
-      self.response_description    := p_response_description;
-      self.response_headers        := p_response_headers;
-      self.response_content        := p_response_content;
-      self.response_links          := p_response_links;
-      self.versionid               := p_versionid;
- 
-      RETURN; 
-      
-   END dz_swagger3_response_typ;
-   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER PROCEDURE traverse
@@ -151,7 +140,7 @@ AS
          );
       
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 20
       -- Load the properties schemas
@@ -186,80 +175,10 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION isNULL
-   RETURN VARCHAR2
-   AS
-   BEGIN
-   
-      IF self.response_id IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-         
-      ELSE
-         RETURN 'TRUE';
-         
-      END IF;
-   
-   END isNULL;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION key
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      RETURN self.response_id;
-      
-   END key;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION doRef
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      IF self.response_force_inline = 'TRUE'
-      THEN
-         RETURN 'FALSE';
-         
-      END IF;
-      
-      RETURN 'TRUE';
-      
-   END doRef;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print         IN  INTEGER   DEFAULT NULL
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
-   AS
-   BEGIN
-   
-      IF  self.doREF() = 'TRUE'
-      AND p_force_inline <> 'TRUE'
-      THEN
-         RETURN toJSON_ref(
-             p_pretty_print  => p_pretty_print
-            ,p_force_inline  => p_force_inline
-         );
-   
-      ELSE
-         RETURN toJSON_schema(
-             p_pretty_print  => p_pretty_print
-            ,p_force_inline  => p_force_inline
-         );
-      
-      END IF;
-      
-   END toJSON;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON_schema(
-       p_pretty_print         IN  INTEGER   DEFAULT NULL
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE'
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -324,25 +243,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.headertyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.response_headers; 
          
          str_pad2 := str_pad;
@@ -393,25 +313,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.mediatyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.response_content; 
 
          str_pad2 := str_pad;
@@ -462,25 +383,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.linktyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.response_links; 
          
          str_pad2 := str_pad;
@@ -536,13 +458,13 @@ AS
       --------------------------------------------------------------------------
       RETURN clb_output;
            
-   END toJSON_schema;
+   END toJSON;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_ref(
-       p_pretty_print         IN  INTEGER   DEFAULT NULL
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE'
+       p_identifier          IN  VARCHAR2
+      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -563,7 +485,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -581,10 +502,7 @@ AS
           str_pad1 || dz_json_main.value2json(
              '$ref'
             ,'#/components/responses/' || dz_swagger3_util.utl_url_escape(
-               dz_swagger3_main.short(
-                   p_object_id   => self.response_id
-                  ,p_object_type => 'response'
-               )
+               p_identifier
              )
             ,p_pretty_print + 1
          )
@@ -609,46 +527,14 @@ AS
            
    END toJSON_ref;
    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
        p_pretty_print         IN  INTEGER   DEFAULT 0
       ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
-   AS      
-   BEGIN
-   
-      IF self.doRef() = 'TRUE'
-      AND p_force_inline <> 'TRUE'
-      THEN
-         RETURN self.toYAML_ref(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-            ,p_force_inline    => p_force_inline
-         );
-         
-      ELSE
-         RETURN self.toYAML_schema(
-             p_pretty_print    => p_pretty_print
-            ,p_initial_indent  => p_initial_indent
-            ,p_final_linefeed  => p_final_linefeed
-            ,p_force_inline    => p_force_inline
-         );
-      
-      END IF;
-   
-   END toYAML;
-   
-   ----------------------------------------------------------------------------
-   ----------------------------------------------------------------------------
-   MEMBER FUNCTION toYAML_schema(
-       p_pretty_print         IN  INTEGER   DEFAULT 0
-      ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -691,25 +577,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.headertyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p01) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.response_headers; 
 
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -740,25 +627,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.mediatyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p01) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.response_content; 
 
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -789,25 +677,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.linktyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
-         || 'ORDER BY a.ordering_key '
+         || 'JOIN '
+         || 'TABLE(:p04) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.response_links; 
          
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -846,15 +735,15 @@ AS
                
       RETURN clb_output;
       
-   END toYAML_schema;
+   END toYAML;
    
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML_ref(
-       p_pretty_print         IN  INTEGER   DEFAULT 0
-      ,p_initial_indent       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed       IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE'
+       p_identifier          IN  VARCHAR2
+      ,p_pretty_print        IN  INTEGER   DEFAULT NULL
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -872,10 +761,7 @@ AS
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty_str(
           '$ref: ' || dz_swagger3_util.yaml_text(
-             '#/components/responses/' || dz_swagger3_main.short(
-                p_object_id   => self.response_id
-               ,p_object_type => 'response'
-             )
+             '#/components/responses/' || p_identifier
             ,p_pretty_print
          )
          ,p_pretty_print

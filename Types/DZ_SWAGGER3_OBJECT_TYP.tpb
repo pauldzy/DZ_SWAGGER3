@@ -14,14 +14,15 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_object_typ(
-       p_object_id          IN  VARCHAR2
-      ,p_object_type_id     IN  VARCHAR2
-      ,p_object_subtype     IN  VARCHAR2 DEFAULT NULL
-      ,p_object_attribute   IN  VARCHAR2 DEFAULT NULL
-      ,p_object_key         IN  VARCHAR2 DEFAULT NULL
-      ,p_object_hidden      IN  VARCHAR2 DEFAULT NULL
-      ,p_object_required    IN  VARCHAR2 DEFAULT NULL
-      ,p_object_order       IN  INTEGER  DEFAULT 10
+       p_object_id           IN  VARCHAR2
+      ,p_object_type_id      IN  VARCHAR2
+      ,p_object_subtype      IN  VARCHAR2 DEFAULT NULL
+      ,p_object_attribute    IN  VARCHAR2 DEFAULT NULL
+      ,p_object_key          IN  VARCHAR2 DEFAULT NULL
+      ,p_object_hidden       IN  VARCHAR2 DEFAULT NULL
+      ,p_object_required     IN  VARCHAR2 DEFAULT NULL
+      ,p_object_force_inline IN  VARCHAR2 DEFAULT NULL
+      ,p_object_order        IN  INTEGER  DEFAULT 10
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 

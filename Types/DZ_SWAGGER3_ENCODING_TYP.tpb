@@ -15,19 +15,67 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_encoding_typ(
        p_encoding_id            IN  VARCHAR2
-      ,p_encoding_name          IN  VARCHAR2
       ,p_versionid              IN  VARCHAR2
    ) RETURN SELF AS RESULT 
    AS 
    BEGIN 
-   /*
-      self.encoding_id            := p_encoding_id;
-      self.encoding_contentType   := p_encoding_contentType;
-      self.encoding_headers       := p_encoding_headers;
-      self.encoding_style         := p_encoding_style;
-      self.encoding_explode       := p_encoding_explode;
-      self.encoding_allowReserved := p_encoding_allowReserved;
-   */ 
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Set up the object
+      --------------------------------------------------------------------------
+      self.versionid := p_versionid;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Pull the object information
+      --------------------------------------------------------------------------
+      SELECT
+       a.encoding_id
+      ,a.encoding_contentType
+      ,a.encoding_style
+      ,a.encoding_explode
+      ,a.encoding_allowReserved
+      INTO
+       self.encoding_id
+      ,self.encoding_contentType
+      ,self.encoding_style 
+      ,self.encoding_explode 
+      ,self.encoding_allowReserved
+      FROM
+      dz_swagger3_encoding a
+      WHERE
+          a.versionid   = p_versionid
+      AND a.encoding_id = p_encoding_id;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Collect the response headers
+      --------------------------------------------------------------------------
+      /*
+      SELECT
+      dz_swagger3_object_typ(
+          p_object_id          => b.header_id
+         ,p_object_type_id     => 'headertyp'
+         ,p_object_key         => a.header_name
+         ,p_object_order       => a.header_order
+      )
+      BULK COLLECT INTO self.encoding_headers 
+      FROM
+      dz_swagger3_response_headr_map a
+      JOIN
+      dz_swagger3_header b
+      ON
+          a.versionid   = b.versionid
+      AND a.header_id   = b.header_id
+      WHERE
+          a.versionid   = p_versionid
+      AND a.response_id = p_encoding_headers;
+*/
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Return the completed object
+      --------------------------------------------------------------------------
       RETURN; 
       
    END dz_swagger3_encoding_typ;
@@ -57,37 +105,10 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION isNULL
-   RETURN VARCHAR2
-   AS
-   BEGIN
-   
-      IF self.encoding_id IS NOT NULL
-      THEN
-         RETURN 'FALSE';
-         
-      ELSE
-         RETURN 'TRUE';
-         
-      END IF;
-   
-   END isNULL;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION key
-   RETURN VARCHAR2
-   AS
-   BEGIN
-      RETURN self.encoding_id;
-      
-   END key;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -115,7 +136,6 @@ AS
       IF p_pretty_print IS NULL
       THEN
          clb_output  := dz_json_util.pretty('{',NULL);
-         str_pad     := '';
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
@@ -152,24 +172,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.headertyp.toJSON( '
-         || '   p_pretty_print   => :p01 + 2 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 2 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
+         || 'JOIN '
+         || 'TABLE(:p01) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.encoding_headers;
       
          str_pad2 := str_pad;
@@ -306,6 +328,7 @@ AS
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -348,24 +371,26 @@ AS
          EXECUTE IMMEDIATE
             'SELECT '
          || ' a.headertyp.toYAML( '
-         || '   p_pretty_print   => :p01 + 3 '
-         || '  ,p_force_inline   => :p02 '
+         || '    p_pretty_print   => :p01 + 3 '
+         || '   ,p_force_inline   => :p02 '
+         || '   ,p_short_id       => :p03 '
          || ' ) '
-         || ',a.object_key '
+         || ',b.object_key '
          || 'FROM '
          || 'dz_swagger3_xobjects a '
-         || 'WHERE '
-         || '(a.object_type_id,a.object_id) IN ( '
-         || '   SELECT '
-         || '   b.object_type_id,b.object_id '
-         || '   FROM TABLE(:p03) b '
-         || ') '
+         || 'JOIN '
+         || 'TABLE(:p01) b '
+         || 'ON '
+         || '    a.object_type_id = b.object_type_id '
+         || 'AND a.object_id      = b.object_id '
+         || 'ORDER BY b.object_order '
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
          USING
           p_pretty_print
          ,p_force_inline
+         ,p_short_id
          ,self.encoding_headers;
          
          clb_output := clb_output || dz_json_util.pretty_str(
@@ -450,51 +475,6 @@ AS
       RETURN clb_output;
       
    END toYAML;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-   BEGIN
-   
-      INSERT INTO dz_swagger3_xrelates(
-          parent_object_id
-         ,child_object_id
-         ,child_object_type_id
-      )
-      SELECT
-       p_parent_id
-      ,a.column_value
-      ,'extrdocs'
-      FROM
-      TABLE(p_children_ids) a;
-
-      EXECUTE IMMEDIATE 
-      'INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,extrdocstyp
-          ,ordering_key
-      )
-      SELECT
-       a.column_value
-      ,''extrdocstyp''
-      ,dz_swagger3_extrdocs_typ(
-          p_externaldoc_id => a.column_value
-         ,p_versionid      => :p01
-       )
-      ,10
-      FROM 
-      TABLE(:p02) a'
-      USING p_versionid,p_children_ids;
-      
-      COMMIT;
-
-   END;
    
 END;
 /

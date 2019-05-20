@@ -5,6 +5,7 @@ AS OBJECT (
    ,oauth_tokenUrl               VARCHAR2(255 Char)
    ,oauth_refreshUrl             VARCHAR2(255 Char)
    ,oauth_scopes                 MDSYS.SDO_STRING2_ARRAY --dz_swagger3_string_hash_list
+   ,versionid                    VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -22,14 +23,10 @@ AS OBJECT (
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION oauth_scopes_keys
-    RETURN MDSYS.SDO_STRING2_ARRAY
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
     ) RETURN CLOB
     
    -----------------------------------------------------------------------------
@@ -39,15 +36,8 @@ AS OBJECT (
       ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,STATIC PROCEDURE loader(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  MDSYS.SDO_STRING2_ARRAY
-      ,p_versionid           IN  VARCHAR2
-   )
 
 );
 /
