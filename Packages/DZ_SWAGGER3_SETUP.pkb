@@ -80,8 +80,8 @@ AS
               || '   ,info_desc_author     VARCHAR2(30 Char) '
               || '   ,info_desc_notes      VARCHAR2(255 Char) '
               || '   ,doc_externalDocs_id  VARCHAR2(255 Char) '
-              || '   ,is_default           VARCHAR2(5 Char) NOT NULL '
-              || '   ,versionid            VARCHAR2(40 Char) NOT NULL '
+              || '   ,is_default           VARCHAR2(5 Char)   NOT NULL '
+              || '   ,versionid            VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -121,14 +121,14 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 40
-      -- Build DOC table
+      -- Build GROUP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_group('
               || '    group_id                  VARCHAR2(255 Char) NOT NULL '
               || '   ,doc_id                    VARCHAR2(255 Char) NOT NULL '
               || '   ,path_id                   VARCHAR2(255 Char) NOT NULL '
-              || '   ,path_order                INTEGER NOT NULL '
-              || '   ,versionid                 VARCHAR2(40 Char) NOT NULL '
+              || '   ,path_order                INTEGER            NOT NULL '
+              || '   ,versionid                 VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -171,12 +171,13 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 50
-      -- Build HEAD_TO_SERVER table
+      -- Build SERVER MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_parent_server_map('
               || '    parent_id           VARCHAR2(255 Char) NOT NULL '
               || '   ,server_id           VARCHAR2(255 Char) NOT NULL '
-              || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
+              || '   ,server_order        INTEGER            NOT NULL '
+              || '   ,versionid           VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -259,15 +260,60 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 70
+      -- Build SERVER VAR MAP table
+      --------------------------------------------------------------------------
+      str_sql := 'CREATE TABLE dz_swagger3_server_var_map('
+              || '    server_id              VARCHAR2(255 Char) NOT NULL '
+              || '   ,server_var_id          VARCHAR2(255 Char) NOT NULL '
+              || '   ,server_var_order       INTEGER            NOT NULL '
+              || '   ,versionid              VARCHAR2(40 Char)  NOT NULL '
+              || ') ';
+              
+      IF p_table_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_server_var_map '
+              || 'ADD CONSTRAINT dz_swagger3_server_var_map_pk '
+              || 'PRIMARY KEY(versionid,server_id,server_var_id) ';
+              
+      IF p_index_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_server_var_map '
+              || 'ADD( '
+              || '    CONSTRAINT dz_swagger3_server_var_map_c01 '
+              || '    CHECK (server_id = TRIM(server_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_server_var_map_c02 '
+              || '    CHECK (server_var_id = TRIM(server_var_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_server_var_map_c03 '
+              || '    CHECK (versionid = TRIM(versionid)) '
+              || '    ENABLE VALIDATE '
+              || ') ';
+              
+      EXECUTE IMMEDIATE str_sql;
+      
+      --------------------------------------------------------------------------
+      -- Step 80
       -- Build SERVER VARIABLE table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_server_variable('
-              || '    server_id              VARCHAR2(255 Char) NOT NULL '
+              || '    server_var_id          VARCHAR2(255 Char) NOT NULL '
               || '   ,server_var_name        VARCHAR2(255 Char) NOT NULL '
               || '   ,server_var_enum        VARCHAR2(4000 Char) '
               || '   ,server_var_default     VARCHAR2(255 Char) NOT NULL '
               || '   ,server_var_description VARCHAR2(4000 Char) '
-              || '   ,server_var_order       INTEGER '
               || '   ,versionid              VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
@@ -281,7 +327,7 @@ AS
       
       str_sql := 'ALTER TABLE dz_swagger3_server_variable '
               || 'ADD CONSTRAINT dz_swagger3_server_variable_pk '
-              || 'PRIMARY KEY(versionid,server_id,server_var_name) ';
+              || 'PRIMARY KEY(versionid,server_var_id) ';
               
       IF p_index_tablespace IS NOT NULL
       THEN
@@ -294,7 +340,7 @@ AS
       str_sql := 'ALTER TABLE dz_swagger3_server_variable '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_server_variablec01 '
-              || '    CHECK (server_id = TRIM(server_id)) '
+              || '    CHECK (server_var_id = TRIM(server_var_id)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_server_variablec02 '
               || '    CHECK (server_var_name = TRIM(server_var_name)) '
@@ -306,8 +352,9 @@ AS
               
       EXECUTE IMMEDIATE str_sql;
       
+      
       --------------------------------------------------------------------------
-      -- Step 80
+      -- Step 90
       -- Build PATH table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_path('
@@ -365,8 +412,8 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 90
-      -- Build PARENT_TO_PARM table
+      -- Step 100
+      -- Build PARENT PARM MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_parent_parm_map('
               || '    parent_id              VARCHAR2(255 Char) NOT NULL '
@@ -415,7 +462,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 100
+      -- Step 110
       -- Build PARM table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_parameter('
@@ -498,7 +545,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 110
+      -- Step 120
       -- Build OPERATION table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_operation('
@@ -563,7 +610,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 120
+      -- Step 130
       -- Build OPERATION REPONSE MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_operation_resp_map('
@@ -571,7 +618,7 @@ AS
               || '   ,response_code       VARCHAR2(255 Char) NOT NULL '
               || '   ,response_id         VARCHAR2(255 Char) NOT NULL '
               || '   ,response_order      INTEGER '
-              || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid           VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -613,7 +660,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 130
+      -- Step 140
       -- Build OPERATION REPONSE MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_operation_call_map('
@@ -621,7 +668,7 @@ AS
               || '   ,callback_name       VARCHAR2(255 Char) NOT NULL '
               || '   ,callback_id         VARCHAR2(255 Char) NOT NULL '
               || '   ,callback_order      INTEGER '
-              || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid           VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -663,7 +710,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 140
+      -- Step 150
       -- Build REQUESTBODY table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_requestbody('
@@ -671,7 +718,7 @@ AS
               || '   ,requestbody_description   VARCHAR2(4000 Char) '
               || '   ,requestbody_required      VARCHAR2(5 Char) '
               || '   ,requestbody_force_inline  VARCHAR2(5 Char) '
-              || '   ,versionid                 VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid                 VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -713,14 +760,14 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 150
+      -- Step 160
       -- Build OPERATION TAG MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_operation_tag_map('
               || '    operation_id        VARCHAR2(255 Char) NOT NULL '
               || '   ,tag_name            VARCHAR2(255 Char) NOT NULL '
               || '   ,tag_id              VARCHAR2(255 Char) '
-              || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid           VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -762,7 +809,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 160
+      -- Step 170
       -- Build RESPONSE table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_response('
@@ -772,7 +819,7 @@ AS
               || '   ,response_desc_updated DATE '
               || '   ,response_desc_author  VARCHAR2(30 Char) '
               || '   ,response_desc_notes   VARCHAR2(255 Char) '
-              || '   ,versionid             VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid             VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -811,7 +858,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 170
+      -- Step 180
       -- Build MEDIA TO PARENT table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_parent_media_map('
@@ -819,7 +866,7 @@ AS
               || '   ,media_type          VARCHAR2(255 Char) NOT NULL '
               || '   ,media_id            VARCHAR2(255 Char) NOT NULL '
               || '   ,media_order         INTEGER '
-              || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid           VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -861,7 +908,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 180
+      -- Step 190
       -- Build MEDIA table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_media('
@@ -869,7 +916,7 @@ AS
               || '   ,media_schema_id       VARCHAR2(255 Char) NOT NULL '
               || '   ,media_example_string  VARCHAR2(4000 Char) '
               || '   ,media_example_number  NUMBER '
-              || '   ,versionid             VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid             VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -905,7 +952,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 190
+      -- Step 200
       -- Build SCHEMA table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_schema('
@@ -949,7 +996,7 @@ AS
               || '   ,schema_desc_updated      DATE '
               || '   ,schema_desc_author       VARCHAR2(30 Char) '
               || '   ,schema_desc_notes        VARCHAR2(255 Char) '
-              || '   ,versionid                VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid                VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1041,7 +1088,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 200
+      -- Step 210
       -- Build SCHEMA PROPERTY MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_schema_prop_map('
@@ -1050,7 +1097,7 @@ AS
               || '   ,property_schema_id       VARCHAR2(255 Char) NOT NULL '
               || '   ,property_order           INTEGER NOT NULL '
               || '   ,property_required        VARCHAR2(5 Char) '
-              || '   ,versionid                VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid                VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1095,7 +1142,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 210
+      -- Step 220
       -- Build SCHEMA ENUM MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_schema_enum_map('
@@ -1103,7 +1150,7 @@ AS
               || '   ,enum_string              VARCHAR2(255 Char) '
               || '   ,enum_number              NUMBER '
               || '   ,enum_order               INTEGER '
-              || '   ,versionid                VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid                VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1142,15 +1189,15 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 220
+      -- Step 230
       -- Build SCHEMA COMBO MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_schema_combine_map('
               || '    schema_id                VARCHAR2(255 Char) NOT NULL '
-              || '   ,combine_keyword          VARCHAR2(16 Char) NOT NULL '
+              || '   ,combine_keyword          VARCHAR2(16 Char)  NOT NULL '
               || '   ,combine_schema_id        VARCHAR2(255 Char) NOT NULL '
               || '   ,combine_order            INTEGER '
-              || '   ,versionid                VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid                VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1192,7 +1239,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
  
       --------------------------------------------------------------------------
-      -- Step 230
+      -- Step 240
       -- Build EXAMPLE table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_example('
@@ -1202,7 +1249,7 @@ AS
               || '   ,example_value_string   VARCHAR2(255 Char) '
               || '   ,example_value_number   NUMBER '
               || '   ,example_externalValue  VARCHAR2(255 Char) '
-              || '   ,versionid              VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid              VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1238,7 +1285,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 240
+      -- Step 250
       -- Build PARENT EXAMPLE MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_parent_example_map('
@@ -1288,7 +1335,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
   
       --------------------------------------------------------------------------
-      -- Step 250
+      -- Step 260
       -- Build ENCODING table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_encoding('
@@ -1297,7 +1344,7 @@ AS
               || '   ,encoding_style         VARCHAR2(255 Char) '
               || '   ,encoding_explode       VARCHAR2(5 Char) '
               || '   ,encoding_allowReserved VARCHAR2(5 Char) '
-              || '   ,versionid              VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid              VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1339,7 +1386,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 260
+      -- Step 270
       -- Build MEDIA ENCODING MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_media_encoding_map('
@@ -1347,7 +1394,7 @@ AS
               || '   ,encoding_name       VARCHAR2(255 Char) NOT NULL '
               || '   ,encoding_id         VARCHAR2(255 Char) NOT NULL '
               || '   ,encoding_order      INTEGER '
-              || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid           VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1389,7 +1436,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 270
+      -- Step 280
       -- Build LINK table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_link('
@@ -1398,7 +1445,7 @@ AS
               || '   ,link_operationId       VARCHAR2(255 Char) '
               || '   ,link_description       VARCHAR2(4000 Char) '
               || '   ,link_server_id         VARCHAR2(255 Char) '
-              || '   ,versionid              VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid              VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1434,7 +1481,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 280
+      -- Step 290
       -- Build HEADER table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_header('
@@ -1453,7 +1500,7 @@ AS
               || '   ,header_desc_updated    DATE '
               || '   ,header_desc_author     VARCHAR2(30 Char) '
               || '   ,header_desc_notes      VARCHAR2(255 Char) '
-              || '   ,versionid            VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid              VARCHAR2(40 Char) NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1504,7 +1551,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 290
+      -- Step 300
       -- Build RESPONSE HEADER MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_response_headr_map('
@@ -1554,7 +1601,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 300
+      -- Step 310
       -- Build RESPONSE LINK MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_response_link_map('
@@ -1604,14 +1651,14 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 310
+      -- Step 320
       -- Build EXTERNALDOC table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_externaldoc('
               || '    externaldoc_id           VARCHAR2(255 Char) NOT NULL '
               || '   ,externaldoc_description  VARCHAR2(4000 Char) '
               || '   ,externaldoc_url          VARCHAR2(245 Char) '
-              || '   ,versionid                VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid                VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1647,7 +1694,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 320
+      -- Step 330
       -- Build SECURITY SCHEME table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_securityScheme('
@@ -1662,7 +1709,7 @@ AS
               || '   ,OAuth_tokenUrl              VARCHAR2(255 Char) '
               || '   ,OAuth_refreshUrl            VARCHAR2(255 Char) '
               || '   ,OAuth_scopes                CLOB '              
-              || '   ,versionid                   VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid                   VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1698,7 +1745,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 330
+      -- Step 340
       -- Build TAG table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_tag('
@@ -1706,7 +1753,7 @@ AS
               || '   ,tag_name             VARCHAR2(255 Char) NOT NULL '
               || '   ,tag_description      VARCHAR2(4000 Char) '
               || '   ,tag_externalDocs_id  VARCHAR2(255 Char) '
-              || '   ,versionid            VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid            VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1745,7 +1792,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 340
+      -- Step 350
       -- Build CACHE table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_cache('
@@ -1756,7 +1803,7 @@ AS
               || '   ,yaml_payload         CLOB '
               || '   ,extraction_timestamp TIMESTAMP '
               || '   ,shorten_logic        VARCHAR2(255 Char) '
-              || '   ,versionid            VARCHAR2(40 Char) NOT NULL '
+              || '   ,versionid            VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1778,30 +1825,78 @@ AS
       END IF;
       
       EXECUTE IMMEDIATE str_sql;
-
+      
+   END create_storage_tables;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE create_temp_tables(
+       p_table_tablespace VARCHAR2 DEFAULT dz_swagger3_constants.c_table_tablespace
+      ,p_index_tablespace VARCHAR2 DEFAULT dz_swagger3_constants.c_index_tablespace
+   )
+   AS
+      str_sql VARCHAR2(4000 Char);
+      
+   BEGIN
+   
       --------------------------------------------------------------------------
-      -- Step 350
-      -- Build COMPONENTS table
+      -- Step 10
+      -- Build XRELATES table
       --------------------------------------------------------------------------
-      str_sql := 'CREATE GLOBAL TEMPORARY TABLE dz_swagger3_components('
-              || '    object_id            VARCHAR2(255 Char) '
-              || '   ,object_type          VARCHAR2(255 Char) '
-              || '   ,hash_key             VARCHAR2(255 Char) '
-              || '   ,schema_required      VARCHAR2(5 Char) '
-              || '   ,response_code        VARCHAR2(255 Char)'
-              || '   ,short_id             VARCHAR2(255 Char) '
+      str_sql := 'CREATE GLOBAL TEMPORARY TABLE dz_swagger3_xrelates('
+              || '    parent_object_id     VARCHAR2(255 Char) NOT NULL '
+              || '   ,child_object_id      VARCHAR2(255 Char) NOT NULL '
+              || '   ,child_object_type_id VARCHAR2(255 Char) NOT NULL '
               || ') '
               || 'ON COMMIT PRESERVE ROWS ';
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_components '
-              || 'ADD CONSTRAINT dz_swagger3_components_pk '
-              || 'PRIMARY KEY(object_type,object_id) ';
+      str_sql := 'ALTER TABLE dz_swagger3_xrelates '
+              || 'ADD CONSTRAINT dz_swagger3_xrelates_pk '
+              || 'PRIMARY KEY(parent_object_id,child_object_id) ';
       
       EXECUTE IMMEDIATE str_sql;
       
-   END create_storage_tables;
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Build XOBJECTS table
+      --------------------------------------------------------------------------
+      str_sql := 'CREATE GLOBAL TEMPORARY TABLE dz_swagger3_xobjects('
+              || '    object_id            VARCHAR2(255 Char) NOT NULL '
+              || '   ,object_type_id       VARCHAR2(255 Char) NOT NULL '
+              || '   ,short_id             VARCHAR2(255 Char) '
+              || '   ,reference_count      INTEGER '
+              || '   ,servertyp            dz_swagger3_server_typ '
+              || '   ,servervartyp         dz_swagger3_server_var_typ '
+              || '   ,pathtyp              dz_swagger3_path_typ '
+              || '   ,operationtyp         dz_swagger3_operation_typ '
+              || '   ,parametertyp         dz_swagger3_parameter_typ '
+              || '   ,headertyp            dz_swagger3_header_typ '
+              || '   ,linktyp              dz_swagger3_link_typ '
+              || '   ,requestbodytyp       dz_swagger3_requestBody_typ '
+              || '   ,responsetyp          dz_swagger3_response_typ '
+              || '   ,mediatyp             dz_swagger3_media_typ '
+              || '   ,schematyp            dz_swagger3_schema_typ '
+              || '   ,exampletyp           dz_swagger3_example_typ '
+              || '   ,extrdocstyp          dz_swagger3_extrdocs_typ '
+              || '   ,securityreqtyp       dz_swagger3_security_req_typ '
+              || '   ,securityschemetyp    dz_swagger3_securityscheme_typ '
+              || '   ,encodingtyp          dz_swagger3_encoding_typ '
+              || '   ,tagtyp               dz_swagger3_tag_typ '
+              || '   ,stringhashtyp        dz_swagger3_string_hash_typ '
+              || ') '
+              || 'ON COMMIT PRESERVE ROWS ';
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_xobjects '
+              || 'ADD CONSTRAINT dz_swagger3_xobjects_pk '
+              || 'PRIMARY KEY(object_type_id,object_id) ';
+      
+      EXECUTE IMMEDIATE str_sql;
+   
+   END create_temp_tables;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -1843,6 +1938,7 @@ AS
          ,'DZ_SWAGGER3_SECURITYSCHEME'
          ,'DZ_SWAGGER3_SERVER'
          ,'DZ_SWAGGER3_SERVER_VARIABLE'
+         ,'DZ_SWAGGER3_SERVER_VAR_MAP'
          ,'DZ_SWAGGER3_TAG'
          ,'DZ_SWAGGER3_VERS'
       );
