@@ -859,41 +859,46 @@ AS
             ,p_short_id
             ,self.path_parameters;
             
-            str_pad2 := str_pad;
+            IF  ary_keys IS NOT NULL
+            AND ary_keys.COUNT > 0
+            THEN            
+               str_pad2 := str_pad;
+               
+               IF p_pretty_print IS NULL
+               THEN
+                  clb_hash := dz_json_util.pretty('{',NULL);
+                  
+               ELSE
+                  clb_hash := dz_json_util.pretty('{',-1);
+                  
+               END IF;
             
-            IF p_pretty_print IS NULL
-            THEN
-               clb_hash := dz_json_util.pretty('{',NULL);
+               FOR i IN 1 .. ary_keys.COUNT
+               LOOP
+                  clb_hash := clb_hash || dz_json_util.pretty(
+                      str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
+                     ,p_pretty_print + 1
+                  );
+                  str_pad2 := ',';
+                     
+               END LOOP;
                
-            ELSE
-               clb_hash := dz_json_util.pretty('{',-1);
-               
-            END IF;
-         
-            FOR i IN 1 .. ary_keys.COUNT
-            LOOP
                clb_hash := clb_hash || dz_json_util.pretty(
-                   str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
+                   '}'
+                  ,p_pretty_print + 1,NULL,NULL
+               );
+               
+               clb_output := clb_output || dz_json_util.pretty(
+                   str_pad1 || dz_json_main.formatted2json(
+                       'parameters'
+                      ,clb_hash
+                      ,p_pretty_print + 1
+                   )
                   ,p_pretty_print + 1
                );
-               str_pad2 := ',';
-                  
-            END LOOP;
-            
-            clb_hash := clb_hash || dz_json_util.pretty(
-                '}'
-               ,p_pretty_print + 1,NULL,NULL
-            );
-            
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                    'parameters'
-                   ,clb_hash
-                   ,p_pretty_print + 1
-                )
-               ,p_pretty_print + 1
-            );
-            str_pad1 := ',';
+               str_pad1 := ',';
+               
+            END IF;
             
          END IF;
 
@@ -1452,21 +1457,26 @@ AS
             ,p_short_id
             ,self.path_parameters;
             
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'parameters: '
-               ,p_pretty_print + 1
-               ,'  '
-            );
-            
-            FOR i IN 1 .. ary_keys.COUNT
-            LOOP
-               clb_output := clb_output || dz_json_util.pretty(
-                   '''' || ary_keys(i) || ''': '
-                  ,p_pretty_print + 2
+            IF  ary_keys IS NOT NULL
+            AND ary_keys.COUNT > 0
+            THEN
+               clb_output := clb_output || dz_json_util.pretty_str(
+                   'parameters: '
+                  ,p_pretty_print + 1
                   ,'  '
-               ) || ary_clb(i);
-            
-            END LOOP;
+               );
+               
+               FOR i IN 1 .. ary_keys.COUNT
+               LOOP
+                  clb_output := clb_output || dz_json_util.pretty(
+                      '''' || ary_keys(i) || ''': '
+                     ,p_pretty_print + 2
+                     ,'  '
+                  ) || ary_clb(i);
+               
+               END LOOP;
+               
+            END IF;
             
          END IF;
       
