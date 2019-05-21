@@ -181,6 +181,8 @@ AS
          a.versionid = str_versionid
       AND a.media_id = str_media_id;
       
+      self.schema_obj.traverse();
+      
       IF p_title IS NULL
       THEN
          self.schema_obj.schema_title := p_path_id || '|' || p_http_method || '|' || p_response_code || '|' || p_media_type;
