@@ -53,6 +53,7 @@ AS
    ) RETURN CLOB
    AS
       clb_output       CLOB;
+      str_pad          VARCHAR2(1 Char);
       
    BEGIN
       
@@ -71,6 +72,7 @@ AS
          
       ELSE
          clb_output  := dz_json_util.pretty('{',-1);
+         str_pad     := ' ';
          
       END IF;
       
@@ -79,13 +81,14 @@ AS
       -- Add name element
       --------------------------------------------------------------------------
       clb_output := clb_output || dz_json_util.pretty(
-          ' ' || dz_json_main.value2json(
+          str_pad || dz_json_main.value2json(
              'name'
             ,self.license_name
             ,p_pretty_print + 1
          )
          ,p_pretty_print + 1
       );
+      str_pad := ',';
          
       --------------------------------------------------------------------------
       -- Step 40
@@ -94,13 +97,14 @@ AS
       IF self.license_url IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty(
-             ',' || dz_json_main.value2json(
+             str_pad || dz_json_main.value2json(
                 'url'
                ,self.license_url
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
          );
+         str_pad := ',';
 
       END IF;
  
