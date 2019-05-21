@@ -74,9 +74,17 @@ AS
          ,p_shorten_logic => p_shorten_logic 
       );
    
-      out_json        := obj_core.toJSON();
-      out_json_pretty := obj_core.toJSON(0);
-      out_yaml        := obj_core.toYAML(0);
+      out_json        := obj_core.toJSON(
+         p_short_id      => 'TRUE'   
+      );
+      out_json_pretty := obj_core.toJSON(
+          p_pretty_print => 0
+         ,p_short_id     => 'TRUE'
+      );
+      out_yaml        := obj_core.toYAML(
+          p_pretty_print => 0
+         ,p_short_id     => 'TRUE'
+      );
       
       BEGIN
          INSERT INTO dz_swagger3_cache(
