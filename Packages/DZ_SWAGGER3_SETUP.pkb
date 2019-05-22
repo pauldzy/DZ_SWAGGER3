@@ -1444,6 +1444,7 @@ AS
               || '   ,link_operationRef      VARCHAR2(255 Char) '
               || '   ,link_operationId       VARCHAR2(255 Char) '
               || '   ,link_description       VARCHAR2(4000 Char) '
+              || '   ,link_requestBody       VARCHAR2(4000 Char) '
               || '   ,link_server_id         VARCHAR2(255 Char) '
               || '   ,versionid              VARCHAR2(40 Char)  NOT NULL '
               || ') ';
