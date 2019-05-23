@@ -10,7 +10,9 @@ BEGIN
    user_tables a
    WHERE 
    a.table_name IN (
-      SELECT * FROM TABLE(dz_swagger3_setup.dz_swagger3_table_list())
+      SELECT * FROM TABLE(
+         dz_swagger3_setup.dz_swagger3_storage_table_list()
+      )
    );
    
    -- Note the tablespaces are controlled via constants package

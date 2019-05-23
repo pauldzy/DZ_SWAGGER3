@@ -765,8 +765,8 @@ AS
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_operation_tag_map('
               || '    operation_id        VARCHAR2(255 Char) NOT NULL '
-              || '   ,tag_name            VARCHAR2(255 Char) NOT NULL '
-              || '   ,tag_id              VARCHAR2(255 Char) '
+              || '   ,tag_id              VARCHAR2(255 Char) NOT NULL '
+              || '   ,tag_order           INTEGER            NOT NULL '
               || '   ,versionid           VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
@@ -780,7 +780,7 @@ AS
       
       str_sql := 'ALTER TABLE dz_swagger3_operation_tag_map '
               || 'ADD CONSTRAINT dz_swagger3_operation_tag_mapk '
-              || 'PRIMARY KEY(versionid,operation_id,tag_name ) ';
+              || 'PRIMARY KEY(versionid,operation_id,tag_id) ';
               
       IF p_index_tablespace IS NOT NULL
       THEN
@@ -794,9 +794,6 @@ AS
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_operation_tag_mc01 '
               || '    CHECK (operation_id = TRIM(operation_id)) '
-              || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_operation_tag_mc02 '
-              || '    CHECK (tag_name = TRIM(tag_name)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_operation_tag_mc03 '
               || '    CHECK (tag_id = TRIM(tag_id)) '
@@ -1901,7 +1898,7 @@ AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   FUNCTION dz_swagger3_table_list
+   FUNCTION dz_swagger3_storage_table_list
    RETURN MDSYS.SDO_STRING2_ARRAY
    AS
    
@@ -1944,7 +1941,22 @@ AS
          ,'DZ_SWAGGER3_VERS'
       );
    
-   END dz_swagger3_table_list;
+   END dz_swagger3_storage_table_list;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION dz_swagger3_temp_table_list
+   RETURN MDSYS.SDO_STRING2_ARRAY
+   AS
+   
+   BEGIN
+   
+      RETURN MDSYS.SDO_STRING2_ARRAY(
+          'DZ_SWAGGER3_XRELATES'
+         ,'DZ_SWAGGER3_XOBJECTS'
+      );
+   
+   END dz_swagger3_temp_table_list;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
