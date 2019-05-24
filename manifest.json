@@ -3,7 +3,9 @@
       "DZ_JSON"
     ]
    ,"constants": [
-       "JOBNAME": "DZ_SWAGGER3"
+       {
+          "JOBNAME": "DZ_SWAGGER3"
+       }
     ]
    ,"phase": 10
    ,"target": "./dz_swagger3_deploy.sql"
