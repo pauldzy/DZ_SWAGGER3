@@ -338,6 +338,101 @@ AS
       END IF;
       
    END a_in_b;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE conc(
+       p_c                IN OUT NOCOPY CLOB
+      ,p_v                IN OUT NOCOPY VARCHAR2
+      ,p_in_c             IN  VARCHAR2 DEFAULT NULL
+      ,p_in_v             IN  CLOB     DEFAULT NULL
+   )
+   AS
+   BEGIN
+      
+      IF  p_in_c IS NOT NULL
+      AND p_in_v IS NOT NULL
+      THEN
+         RAISE_APPLICATION_ERROR(
+             -20001
+            ,'only one var or clb exclusive'
+         );
+         
+      ELSIF p_in_c IS NOT NULL
+      AND   p_in_v IS NULL
+      THEN
+         IF  p_c IS NULL
+         AND p_v IS NULL
+         THEN
+            p_c := p_in_c;
+            
+         ELSIF p_c IS NULL
+         AND   p_v IS NOT NULL
+         THEN
+            p_c := p_v;
+            DBMS_LOB.APPEND(p_c,p_in_c);
+
+            p_v := NULL;   
+         
+         ELSIF p_c IS NOT NULL
+         AND   p_v IS NULL
+         THEN
+            DBMS_LOB.APPEND(p_c,p_in_c); 
+         
+         ELSIF p_c IS NOT NULL
+         AND   p_v IS NOT NULL
+         THEN
+            DBMS_LOB.WRITEAPPEND(
+                lob_loc => p_c
+               ,amount  => LENGTH(p_v)
+               ,buffer  => p_v
+            );
+            
+            p_v := NULL;
+
+            DBMS_LOB.APPEND(p_c,p_in_c);
+            
+         END IF;
+         
+      ELSIF p_in_c IS NULL
+      AND   p_in_v IS NOT NULL
+      THEN
+         BEGIN
+            p_v := p_v || p_in_v;
+      
+         EXCEPTION
+            WHEN VALUE_ERROR
+            THEN
+               IF p_c IS NULL
+               THEN
+                  p_c := p_v;
+                  
+               ELSE
+                  IF p_v IS NOT NULL
+                  THEN
+                     DBMS_LOB.WRITEAPPEND(
+                         lob_loc => p_c
+                        ,amount  => LENGTH(p_v)
+                        ,buffer  => p_v
+                     );
+                     
+                  END IF;
+                  
+               END IF;
+
+               p_v := p_in_v;
+               
+            WHEN OTHERS
+            THEN
+               RAISE;
+
+         END;
+         
+      END IF;
+      
+      RETURN;
+
+   END conc;
 
 END dz_swagger3_util;
 /

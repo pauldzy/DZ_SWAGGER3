@@ -10,44 +10,53 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION yamlq(
-       p_input        IN  VARCHAR2
+       p_input            IN  VARCHAR2
    ) RETURN VARCHAR2;
   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION yaml_text(
-       p_input        IN  VARCHAR2 
-      ,p_pretty_print IN  NUMBER DEFAULT 0
+       p_input            IN  VARCHAR2 
+      ,p_pretty_print     IN  NUMBER DEFAULT 0
    ) RETURN VARCHAR2;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION yaml_text(
-       p_input        IN  NUMBER 
-      ,p_pretty_print IN  NUMBER DEFAULT 0
+       p_input            IN  NUMBER 
+      ,p_pretty_print     IN  NUMBER DEFAULT 0
    ) RETURN VARCHAR2;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION yaml_text(
-       p_input        IN  BOOLEAN
-      ,p_pretty_print IN  NUMBER DEFAULT 0
+       p_input            IN  BOOLEAN
+      ,p_pretty_print     IN  NUMBER DEFAULT 0
    ) RETURN VARCHAR2;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION utl_url_escape(
-       p_input_url       IN VARCHAR2 CHARACTER SET ANY_CS
-      ,p_escape_reserved IN VARCHAR2 DEFAULT NULL
-      ,p_url_charset     IN VARCHAR2 DEFAULT NULL
+       p_input_url        IN  VARCHAR2 CHARACTER SET ANY_CS
+      ,p_escape_reserved  IN  VARCHAR2 DEFAULT NULL
+      ,p_url_charset      IN  VARCHAR2 DEFAULT NULL
    )  RETURN VARCHAR2 CHARACTER SET p_input_url%CHARSET;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION a_in_b(
-       p_input_a          IN VARCHAR2
-      ,p_input_b          IN MDSYS.SDO_STRING2_ARRAY
+       p_input_a          IN  VARCHAR2
+      ,p_input_b          IN  MDSYS.SDO_STRING2_ARRAY
    ) RETURN VARCHAR2 DETERMINISTIC;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE conc(
+       p_c                IN OUT NOCOPY CLOB
+      ,p_v                IN OUT NOCOPY VARCHAR2
+      ,p_in_c             IN  VARCHAR2 DEFAULT NULL
+      ,p_in_v             IN  CLOB     DEFAULT NULL
+   );
  
  END dz_swagger3_util;
 /
