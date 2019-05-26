@@ -445,11 +445,18 @@ AS
    
       IF p_v IS NOT NULL
       THEN
-         DBMS_LOB.WRITEAPPEND(
-             lob_loc => p_c
-            ,amount  => LENGTH(p_v)
-            ,buffer  => p_v
-         );
+         IF p_c IS NULL
+         THEN
+            p_c := TO_CLOB(p_v);
+
+         ELSE
+            DBMS_LOB.WRITEAPPEND(
+                lob_loc => p_c
+               ,amount  => LENGTH(p_v)
+               ,buffer  => p_v
+            );
+
+         END IF;
 
          p_v := NULL;
 

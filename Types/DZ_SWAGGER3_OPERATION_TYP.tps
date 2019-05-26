@@ -7,7 +7,6 @@ AS OBJECT (
    ,operation_summary             VARCHAR2(255 Char)
    ,operation_description         VARCHAR2(4000 Char)
    ,operation_externalDocs        dz_swagger3_object_typ --dz_swagger3_extrdocs_typ
-   ,operation_operationId         VARCHAR2(255 Char)
    ,operation_parameters          dz_swagger3_object_vry --dz_swagger3_parameter_list
    ,operation_emulated_rbparms    dz_swagger3_object_vry --dz_swagger3_parameter_list
    ,operation_requestBody         dz_swagger3_object_typ --dz_swagger3_requestbody_typ
@@ -41,6 +40,8 @@ AS OBJECT (
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
     ) RETURN CLOB
 
    -----------------------------------------------------------------------------
@@ -51,6 +52,8 @@ AS OBJECT (
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB
 
 );

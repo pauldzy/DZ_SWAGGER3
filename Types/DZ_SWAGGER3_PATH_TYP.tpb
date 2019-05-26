@@ -367,9 +367,11 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print   => p_pretty_print + 1 
-                  ,p_force_inline   => p_force_inline 
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 1 
+                  ,p_force_inline     => p_force_inline 
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp
                FROM 
@@ -414,9 +416,11 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print   => p_pretty_print + 1 
-                  ,p_force_inline   => p_force_inline 
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 1 
+                  ,p_force_inline     => p_force_inline 
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp
                FROM 
@@ -458,9 +462,11 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print   => p_pretty_print + 1 
-                  ,p_force_inline   => p_force_inline 
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 1 
+                  ,p_force_inline     => p_force_inline 
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp
                FROM 
@@ -502,9 +508,11 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print   => p_pretty_print + 1 
-                  ,p_force_inline   => p_force_inline 
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 1 
+                  ,p_force_inline     => p_force_inline 
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp
                FROM 
@@ -546,9 +554,11 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print   => p_pretty_print + 1 
-                  ,p_force_inline   => p_force_inline 
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 1 
+                  ,p_force_inline     => p_force_inline 
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp
                FROM 
@@ -590,9 +600,11 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print   => p_pretty_print + 1 
-                  ,p_force_inline   => p_force_inline 
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 1 
+                  ,p_force_inline     => p_force_inline 
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp
                FROM 
@@ -634,9 +646,11 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print   => p_pretty_print + 1 
-                  ,p_force_inline   => p_force_inline 
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 1 
+                  ,p_force_inline     => p_force_inline 
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp
                FROM 
@@ -678,9 +692,11 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print   => p_pretty_print + 1 
-                  ,p_force_inline   => p_force_inline 
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 1 
+                  ,p_force_inline     => p_force_inline 
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp
                FROM 
@@ -959,9 +975,11 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print   => p_pretty_print + 0
-                  ,p_force_inline   => p_force_inline
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 0
+                  ,p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp 
                FROM
@@ -999,9 +1017,11 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print   => p_pretty_print + 0
-                  ,p_force_inline   => p_force_inline
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 0
+                  ,p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp 
                FROM
@@ -1039,9 +1059,11 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print   => p_pretty_print + 0
-                  ,p_force_inline   => p_force_inline
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 0
+                  ,p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp 
                FROM
@@ -1079,9 +1101,11 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print   => p_pretty_print + 0
-                  ,p_force_inline   => p_force_inline
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 0
+                  ,p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp 
                FROM
@@ -1119,9 +1143,11 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print   => p_pretty_print + 0
-                  ,p_force_inline   => p_force_inline
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 0
+                  ,p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp 
                FROM
@@ -1159,9 +1185,11 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print   => p_pretty_print + 0
-                  ,p_force_inline   => p_force_inline
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 0
+                  ,p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp 
                FROM
@@ -1199,9 +1227,11 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print   => p_pretty_print + 0
-                  ,p_force_inline   => p_force_inline
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 0
+                  ,p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp 
                FROM
@@ -1239,9 +1269,11 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print   => p_pretty_print + 0
-                  ,p_force_inline   => p_force_inline
-                  ,p_short_id       => p_short_id
+                   p_pretty_print     => p_pretty_print + 0
+                  ,p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
                )
                INTO clb_tmp 
                FROM

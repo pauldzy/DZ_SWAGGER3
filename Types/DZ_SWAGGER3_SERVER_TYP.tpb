@@ -188,7 +188,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_keys(i)
+                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
                ,p_pretty_print + 2
             );
             str_pad2 := ',';
@@ -317,7 +317,7 @@ AS
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
             clb_output := clb_output || dz_json_util.pretty(
-                '''' || ary_keys(i) || ''': '
+                dz_swagger3_util.yamlq(ary_keys(i)) || ': '
                ,p_pretty_print + 1
                ,'  '
             ) || ary_clb(i);

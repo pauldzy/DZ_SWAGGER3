@@ -20,8 +20,16 @@ AS
    AS
    BEGIN
 
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Initialize the object
+      --------------------------------------------------------------------------
       self.versionid         := p_versionid;
       
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Pull the object information
+      --------------------------------------------------------------------------
       SELECT
        a.server_var_id
       ,a.server_var_name
@@ -40,6 +48,10 @@ AS
           a.server_var_id = p_server_var_id
       AND a.versionid     = p_versionid;
       
+      --------------------------------------------------------------------------
+      -- Step 100
+      -- Return the completed object
+      --------------------------------------------------------------------------
       RETURN;
 
    END dz_swagger3_server_var_typ;
@@ -89,43 +101,56 @@ AS
       -- Step 30
       -- Add elem element
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad || dz_json_main.value2json(
-             'enum'
-            ,self.enum
+      IF  self.enum IS NOT NULL
+      AND self.enum.COUNT > 0
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad || dz_json_main.value2json(
+                'enum'
+               ,self.enum
+               ,p_pretty_print + 1
+            )
             ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad := ',';
+         );
+         str_pad := ',';
+         
+      END IF;
 
       --------------------------------------------------------------------------
       -- Step 40
       -- Add optional default
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad || dz_json_main.value2json(
-             'default'
-            ,self.default_value
+      IF self.default_value IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad || dz_json_main.value2json(
+                'default'
+               ,self.default_value
+               ,p_pretty_print + 1
+            )
             ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad := ',';
+         );
+         str_pad := ',';
+         
+      END IF;
 
       --------------------------------------------------------------------------
       -- Step 50
       -- Add optional description
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad || dz_json_main.value2json(
-             'description'
-            ,self.description
+      IF self.description IS NOT NULL
+      THEN
+         clb_output := clb_output || dz_json_util.pretty(
+             str_pad || dz_json_main.value2json(
+                'description'
+               ,self.description
+               ,p_pretty_print + 1
+            )
             ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad := ',';
+         );
+         str_pad := ',';
+         
+      END IF;
 
       --------------------------------------------------------------------------
       -- Step 60

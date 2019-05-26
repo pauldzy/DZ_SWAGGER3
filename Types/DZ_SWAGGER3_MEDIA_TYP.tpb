@@ -93,6 +93,10 @@ AS
           a.versionid   = p_versionid
       AND a.media_id   = p_media_id;
       
+      --------------------------------------------------------------------------
+      -- Step 100
+      -- Return the completed object
+      --------------------------------------------------------------------------
       RETURN; 
       
    END dz_swagger3_media_typ;

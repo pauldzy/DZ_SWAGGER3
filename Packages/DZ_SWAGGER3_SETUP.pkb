@@ -554,7 +554,6 @@ AS
               || '   ,operation_summary         VARCHAR2(4000 Char) '
               || '   ,operation_description     VARCHAR2(4000 Char) '
               || '   ,operation_externalDocs_id VARCHAR2(255 Char) '
-              || '   ,operation_operationID     VARCHAR2(255 Char) '
               || '   ,operation_requestBody_id  VARCHAR2(255 Char) '
               || '   ,operation_inline_rb       VARCHAR2(5 Char) '
               || '   ,operation_deprecated      VARCHAR2(5 Char) '
@@ -592,9 +591,6 @@ AS
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_operation_c02 '
               || '    CHECK (operation_type IN (''get'',''put'',''post'',''delete'',''options'',''head'',''patch'',''trace'')) '
-              || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_operation_c03 '
-              || '    CHECK (operation_operationID = TRIM(operation_operationID)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_operation_c04 '
               || '    CHECK (operation_inline_rb IN (''TRUE'',''FALSE'')) '
@@ -1695,19 +1691,67 @@ AS
       -- Step 330
       -- Build SECURITY SCHEME table
       --------------------------------------------------------------------------
-      str_sql := 'CREATE TABLE dz_swagger3_securityScheme('
-              || '    securityScheme_id           VARCHAR2(255 Char) NOT NULL '
-              || '   ,securityScheme_type         VARCHAR2(255 Char) NOT NULL '
-              || '   ,securityScheme_description  VARCHAR2(4000 Char) '
-              || '   ,securityScheme_name         VARCHAR2(255 Char) '
-              || '   ,securityScheme_in           VARCHAR2(255 Char) '
-              || '   ,securityScheme_scheme       VARCHAR2(255 Char) '
-              || '   ,securityScheme_bearerFormat VARCHAR2(255 Char) '
-              || '   ,OAuth_authorizationUrl      VARCHAR2(255 Char) '
-              || '   ,OAuth_tokenUrl              VARCHAR2(255 Char) '
-              || '   ,OAuth_refreshUrl            VARCHAR2(255 Char) '
-              || '   ,OAuth_scopes                CLOB '              
+      str_sql := 'CREATE TABLE dz_swagger3_parent_secSchm_map('
+              || '    parent_id                   VARCHAR2(255 Char) NOT NULL '
+              || '   ,securityScheme_id           VARCHAR2(255 Char) NOT NULL '
+              || '   ,securityScheme_name         VARCHAR2(255 Char) NOT NULL '
+              || '   ,securityScheme_order        INTEGER            NOT NULL '              
               || '   ,versionid                   VARCHAR2(40 Char)  NOT NULL '
+              || ') ';
+              
+      IF p_table_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE    dz_swagger3_parent_secSchm_map '
+              || 'ADD CONSTRAINT dz_swagger3_parent_secSchm_mpk '
+              || 'PRIMARY KEY(versionid,parent_id,securityScheme_id) ';
+              
+      IF p_index_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_parent_secSchm_map '
+              || 'ADD( '
+              || '    CONSTRAINT dz_swagger3_parent_secSchm_c01 '
+              || '    CHECK (parent_id = TRIM(parent_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_parent_secSchm_c02 '
+              || '    CHECK (securityScheme_id = TRIM(securityScheme_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_parent_secSchm_c03 '
+              || '    CHECK (versionid = TRIM(versionid)) '
+              || '    ENABLE VALIDATE '
+              || ') ';
+              
+      EXECUTE IMMEDIATE str_sql;
+
+      --------------------------------------------------------------------------
+      -- Step 340
+      -- Build SECURITY SCHEME table
+      --------------------------------------------------------------------------
+      str_sql := 'CREATE TABLE dz_swagger3_securityScheme('
+              || '    securityScheme_id             VARCHAR2(255 Char) NOT NULL '
+              || '   ,securityScheme_type           VARCHAR2(255 Char) NOT NULL '
+              || '   ,securityScheme_description    VARCHAR2(4000 Char) '
+              || '   ,securityScheme_name           VARCHAR2(255 Char) '
+              || '   ,securityScheme_in             VARCHAR2(255 Char) '
+              || '   ,securityScheme_scheme         VARCHAR2(255 Char) '
+              || '   ,securityScheme_bearerFormat   VARCHAR2(255 Char) '
+              || '   ,oauth_flow_implicit           VARCHAR2(255 Char) '
+              || '   ,oauth_flow_password           VARCHAR2(255 Char) '
+              || '   ,oauth_flow_clientcredentials  VARCHAR2(255 Char) '
+              || '   ,oauth_flow_authorizationcode  VARCHAR2(255 Char) '
+              || '   ,securityscheme_openidcrednts  VARCHAR2(255 Char) '              
+              || '   ,versionid                     VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -1743,7 +1787,97 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 340
+      -- Step 350
+      -- Build OAUTH FLOW table
+      --------------------------------------------------------------------------
+      str_sql := 'CREATE TABLE dz_swagger3_oauth_flow('
+              || '    oauth_flow_id          VARCHAR2(255 Char) NOT NULL '
+              || '   ,oauth_authorizationurl VARCHAR2(255 Char) '
+              || '   ,oauth_tokenurl         VARCHAR2(255 Char) '
+              || '   ,oauth_refreshurl       VARCHAR2(255 Char) '
+              || '   ,versionid              VARCHAR2(255 Char) NOT NULL '
+              || ') ';
+              
+      IF p_table_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_oauth_flow '
+              || 'ADD CONSTRAINT dz_swagger3_oauth_flow_pk '
+              || 'PRIMARY KEY(versionid,oauth_flow_id) ';
+              
+      IF p_index_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_oauth_flow '
+              || 'ADD( '
+              || '    CONSTRAINT dz_swagger3_oauth_flow_c01 '
+              || '    CHECK (oauth_flow_id = TRIM(oauth_flow_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_oauth_flow_c02 '
+              || '    CHECK (versionid = TRIM(versionid)) '
+              || '    ENABLE VALIDATE '
+              || ') ';
+              
+      EXECUTE IMMEDIATE str_sql;
+      
+      --------------------------------------------------------------------------
+      -- Step 360
+      -- Build OAUTH FLOW SCOPE table
+      --------------------------------------------------------------------------
+      str_sql := 'CREATE TABLE dz_swagger3_oauth_flow_scope('
+              || '    oauth_flow_id          VARCHAR2(255 Char) NOT NULL '
+              || '   ,oauth_flow_scope_name  VARCHAR2(255 Char) NOT NULL '
+              || '   ,oauth_flow_scope_desc  VARCHAR2(255 Char) NOT NULL '
+              || '   ,versionid              VARCHAR2(40 Char)  NOT NULL '
+              || ') ';
+              
+      IF p_table_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_oauth_flow_scope '
+              || 'ADD CONSTRAINT dz_swagger3_oauth_flow_scopepk '
+              || 'PRIMARY KEY(versionid,oauth_flow_id,oauth_flow_scope_name) ';
+              
+      IF p_index_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_oauth_flow_scope '
+              || 'ADD( '
+              || '    CONSTRAINT dz_swagger3_oauth_flow_scopc01 '
+              || '    CHECK (oauth_flow_id = TRIM(oauth_flow_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_oauth_flow_scopc02 '
+              || '    CHECK (oauth_flow_scope_name = TRIM(oauth_flow_scope_name)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_oauth_flow_scopc03 '
+              || '    CHECK (versionid = TRIM(versionid)) '
+              || '    ENABLE VALIDATE '
+              || ') ';
+              
+      EXECUTE IMMEDIATE str_sql;
+      
+      --------------------------------------------------------------------------
+      -- Step 370
       -- Build TAG table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_tag('
@@ -1790,7 +1924,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 350
+      -- Step 380
       -- Build CACHE table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_cache('
@@ -1915,6 +2049,8 @@ AS
          ,'DZ_SWAGGER3_LINK'
          ,'DZ_SWAGGER3_MEDIA'
          ,'DZ_SWAGGER3_MEDIA_ENCODING_MAP'
+         ,'DZ_SWAGGER3_OAUTH_FLOW'
+         ,'DZ_SWAGGER3_OAUTH_FLOW_SCOPE'
          ,'DZ_SWAGGER3_OPERATION'
          ,'DZ_SWAGGER3_OPERATION_CALL_MAP'
          ,'DZ_SWAGGER3_OPERATION_RESP_MAP'
@@ -1923,7 +2059,8 @@ AS
          ,'DZ_SWAGGER3_PARENT_EXAMPLE_MAP'
          ,'DZ_SWAGGER3_PARENT_MEDIA_MAP'
          ,'DZ_SWAGGER3_PARENT_PARM_MAP'
-         ,'DZ_SWAGGER3_PARENT_SERVER_MAP' 
+         ,'DZ_SWAGGER3_PARENT_SECSCHM_MAP'
+         ,'DZ_SWAGGER3_PARENT_SERVER_MAP'
          ,'DZ_SWAGGER3_PATH'
          ,'DZ_SWAGGER3_REQUESTBODY'
          ,'DZ_SWAGGER3_RESPONSE'

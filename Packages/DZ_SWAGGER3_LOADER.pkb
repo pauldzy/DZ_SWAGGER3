@@ -815,6 +815,39 @@ AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   PROCEDURE securityschemetyp(
+       p_parent_id           IN  VARCHAR2
+      ,p_children_ids        IN  dz_swagger3_object_vry
+      ,p_versionid           IN  VARCHAR2
+   )
+   AS
+      ary_ids   dz_swagger3_object_vry;
+      
+   BEGIN
+   
+      ary_ids := filter_ids(p_children_ids,p_parent_id);
+
+      INSERT 
+      INTO dz_swagger3_xobjects(
+           object_id
+          ,object_type_id
+          ,securityschemetyp
+      )
+      SELECT
+       a.object_id
+      ,a.object_type_id
+      ,dz_swagger3_securityscheme_typ(
+          p_securityscheme_id       => a.object_id
+         ,p_securityscheme_fullname => a.object_key
+         ,p_versionid               => p_versionid
+       )
+      FROM 
+      TABLE(ary_ids) a;
+
+   END securityschemetyp;
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    PROCEDURE servertyp(
        p_parent_id           IN  VARCHAR2
       ,p_children_ids        IN  dz_swagger3_object_vry

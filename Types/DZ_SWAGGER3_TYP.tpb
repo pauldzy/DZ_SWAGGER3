@@ -194,6 +194,29 @@ AS
       -- Step 60
       -- Load the security items
       --------------------------------------------------------------------------
+      SELECT
+      dz_swagger3_object_typ(
+          p_object_id      => a.securityScheme_id
+         ,p_object_type_id => 'securityschemetyp'
+         ,p_object_key     => a.securityScheme_name
+         ,p_object_order   => a.securityScheme_order
+      )
+      BULK COLLECT INTO self.security 
+      FROM
+      dz_swagger3_parent_secschm_map a
+      WHERE
+          a.versionid = str_versionid
+      AND a.parent_id = str_doc_id;
+      
+      IF self.security.COUNT > 0
+      THEN
+         dz_swagger3_loader.securitySchemetyp(
+             p_parent_id    => 'root'
+            ,p_children_ids => self.security 
+            ,p_versionid    => str_versionid
+         );
+         
+      END IF;
 
       --------------------------------------------------------------------------
       -- Step 70
@@ -924,17 +947,9 @@ AS
       --------------------------------------------------------------------------
          SELECT
           a.securityschemetyp.toJSON(
-             p_pretty_print   => p_pretty_print + 3
-            ,p_force_inline   => 'FALSE'
-            ,p_short_id       => p_short_id
+            p_pretty_print     => p_pretty_print + 3
           )
-         ,CASE
-          WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
-          THEN
-            a.short_id
-          ELSE
-            a.object_id
-          END
+         ,a.securityschemetyp.securityscheme_fullname
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
@@ -942,7 +957,6 @@ AS
          dz_swagger3_xobjects a
          WHERE
              a.object_type_id = 'securityschemetyp'
-         AND a.reference_count > 1
          ORDER BY a.object_id;
             
          IF  ary_keys IS NOT NULL
@@ -1148,10 +1162,8 @@ AS
       AND self.security.COUNT > 0
       THEN
          SELECT 
-         a.securityreqtyp.toJSON( 
-            p_pretty_print   => p_pretty_print + 2 
-           ,p_force_inline   => p_force_inline 
-           ,p_short_id       => p_short_id
+         a.securityschemetyp.toJSON_req( 
+            p_pretty_print     => p_pretty_print + 2 
          ) 
          BULK COLLECT INTO ary_clb
          FROM 
@@ -1977,17 +1989,9 @@ AS
       --------------------------------------------------------------------------
          SELECT
           a.securityschemetyp.toYAML(
-             p_pretty_print   => p_pretty_print + 3
-            ,p_force_inline   => 'FALSE'
-            ,p_short_id       => p_short_id
+            p_pretty_print     => p_pretty_print + 3
           )
-         ,CASE
-          WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
-          THEN
-            a.short_id
-          ELSE
-            a.object_id
-          END
+         ,a.securityschemetyp.securityscheme_fullname
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
@@ -1995,7 +1999,6 @@ AS
          dz_swagger3_xobjects a
          WHERE
              a.object_type_id = 'securityschemetyp'
-         AND a.reference_count > 1
          ORDER BY a.object_id;
             
          IF  ary_keys IS NOT NULL
@@ -2176,11 +2179,9 @@ AS
       AND self.security.COUNT > 0
       THEN
          SELECT
-         a.securityreqtyp.toYAML(
-             p_pretty_print   => p_pretty_print + 2
-            ,p_initial_indent => 'FALSE'
-            ,p_force_inline   => p_force_inline
-            ,p_short_id       => p_short_id
+         a.securityschemetyp.toYAML_req(
+             p_pretty_print     => p_pretty_print + 2
+            ,p_initial_indent   => 'FALSE'
          )
          BULK COLLECT INTO ary_clb
          FROM
@@ -2211,7 +2212,7 @@ AS
                ,p_in_c => NULL
                ,p_in_v =>  dz_json_util.pretty_str(
                    '- '
-                  ,p_pretty_print
+                  ,p_pretty_print + 1
                   ,'  '
                   ,NULL
                 )

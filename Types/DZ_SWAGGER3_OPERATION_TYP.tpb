@@ -45,7 +45,6 @@ AS
        ELSE
          NULL
        END
-      ,a.operation_operationID
       ,CASE
        WHEN a.operation_requestbody_id IS NOT NULL
        THEN
@@ -64,7 +63,6 @@ AS
       ,self.operation_summary
       ,self.operation_description
       ,self.operation_externalDocs  
-      ,self.operation_operationId 
       ,self.operation_requestBody
       ,self.operation_inline_rb 
       ,self.operation_deprecated 
@@ -210,9 +208,20 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 80
-      -- Add any security
+      -- Load the security items
       --------------------------------------------------------------------------
-      
+      SELECT
+      dz_swagger3_object_typ(
+          p_object_id      => a.securityScheme_id
+         ,p_object_type_id => 'securityschemetyp'
+         ,p_object_order   => a.securityScheme_order
+      )
+      BULK COLLECT INTO self.operation_security
+      FROM
+      dz_swagger3_parent_secschm_map a
+      WHERE
+          a.versionid = p_versionid
+      AND a.parent_id = p_operation_id;
       
       --------------------------------------------------------------------------
       -- Step 90
@@ -336,11 +345,31 @@ AS
       -- Step 60
       -- Load the callbacks
       --------------------------------------------------------------------------
+      IF  self.operation_callbacks IS NOT NULL
+      AND self.operation_callbacks.COUNT > 0
+      THEN
+         dz_swagger3_loader.pathtyp(
+             p_parent_id    => self.operation_id
+            ,p_children_ids => self.operation_callbacks
+            ,p_versionid    => self.versionid
+         );
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 70
       -- Load the security
       --------------------------------------------------------------------------
+      IF  self.operation_security IS NOT NULL
+      AND self.operation_security.COUNT > 0
+      THEN
+         dz_swagger3_loader.securitySchemetyp(
+             p_parent_id    => self.operation_id
+            ,p_children_ids => self.operation_security 
+            ,p_versionid    => self.versionid
+         );
+         
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 80
@@ -365,6 +394,8 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT NULL
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
@@ -375,6 +406,7 @@ AS
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       clb_hash         CLOB;
       clb_tmp          CLOB;
+      str_identifier   VARCHAR2(255 Char);
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
@@ -543,12 +575,21 @@ AS
       -- Step 70
       -- Add optional operationId 
       --------------------------------------------------------------------------
-      IF self.operation_operationId IS NOT NULL
+      IF p_short_id = 'TRUE'
+      THEN
+         str_identifier := p_short_identifier;
+         
+      ELSE
+         str_identifier := p_identifier;
+      
+      END IF;
+      
+      IF str_identifier IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty(
              str_pad1 || dz_json_main.value2json(
                 'operationId'
-               ,self.operation_operationId
+               ,str_identifier
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -847,10 +888,8 @@ AS
       AND self.operation_security.COUNT > 0
       THEN
          SELECT
-         a.securityreqtyp.toJSON(
-             p_pretty_print  => p_pretty_print + 2
-            ,p_force_inline  => p_force_inline
-            ,p_short_id      => p_short_id
+         a.securityschemetyp.toJSON_req(
+            p_pretty_print     => p_pretty_print + 2
          )
          BULK COLLECT INTO ary_clb
          FROM
@@ -908,10 +947,8 @@ AS
       AND self.operation_servers.COUNT > 0
       THEN
          SELECT
-         a.securityreqtyp.toJSON(
-             p_pretty_print  => p_pretty_print + 2
-            ,p_force_inline  => p_force_inline
-            ,p_short_id      => p_short_id
+         a.securityschemetyp.toJSON_req(
+            p_pretty_print  => p_pretty_print + 2
          )
          BULK COLLECT INTO ary_clb
          FROM
@@ -986,11 +1023,14 @@ AS
       ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output       CLOB;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       clb_tmp          CLOB;
+      str_identifier   VARCHAR2(255 Char);
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
@@ -1117,11 +1157,20 @@ AS
       -- Step 60
       -- Write the operationId
       --------------------------------------------------------------------------
-      IF self.operation_operationId IS NOT NULL
+      IF p_short_id = 'TRUE'
+      THEN
+         str_identifier := p_short_identifier;
+         
+      ELSE
+         str_identifier := p_identifier;
+      
+      END IF;
+
+      IF str_identifier IS NOT NULL
       THEN
          clb_output := clb_output || dz_json_util.pretty_str(
              'operationId: ' || dz_swagger3_util.yaml_text(
-                self.operation_operationId
+                str_identifier
                ,p_pretty_print + 1
             )
             ,p_pretty_print + 1
@@ -1196,7 +1245,7 @@ AS
          BEGIN
             SELECT
             a.requestbodytyp.toYAML(
-                p_pretty_print     => p_pretty_print + 1
+                p_pretty_print     => p_pretty_print + 2
                ,p_force_inline     => p_force_inline
                ,p_short_id         => p_short_id
                ,p_identifier       => a.object_id
@@ -1345,10 +1394,8 @@ AS
       AND self.operation_security.COUNT > 0
       THEN
          SELECT
-         a.securityreqtyp.toYAML(
-             p_pretty_print  => p_pretty_print + 2
-            ,p_force_inline  => p_force_inline
-            ,p_short_id      => p_short_id
+         a.securityschemetyp.toYAML_req(
+            p_pretty_print     => p_pretty_print + 2
          )
          BULK COLLECT INTO ary_clb
          FROM

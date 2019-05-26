@@ -125,7 +125,9 @@ AS
       -- Step 10
       -- Load the media types
       --------------------------------------------------------------------------
-      IF self.requestBody_content(1).object_subtype = 'emulated'
+      IF  self.requestBody_content IS NOT NULL
+      AND self.requestBody_content.COUNT > 0
+      AND self.requestBody_content(1).object_subtype = 'emulated'
       THEN
          dz_swagger3_loader.mediatyp_emulated(
              p_parent_id      => self.requestBody_id
