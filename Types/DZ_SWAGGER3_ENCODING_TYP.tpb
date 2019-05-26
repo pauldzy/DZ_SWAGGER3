@@ -169,33 +169,27 @@ AS
       IF  self.encoding_headers IS NOT NULL 
       AND self.encoding_headers.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.headertyp.toJSON( '
-         || '    p_pretty_print     => :p01 + 2 '
-         || '   ,p_force_inline     => :p02 '
-         || '   ,p_short_id         => :p03 '
-         || '   ,p_identifier       => a.object_id '
-         || '   ,p_short_identifier => a.short_id '
-         || '   ,p_reference_count  => a.reference_count '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p01) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.headertyp.toJSON(
+             p_pretty_print     => p_pretty_print + 2
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+            ,p_reference_count  => a.reference_count
+          )
+         ,b.object_key
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.encoding_headers;
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.encoding_headers) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
       
          str_pad2 := str_pad;
          
@@ -371,33 +365,27 @@ AS
       IF  self.encoding_headers IS NOT NULL 
       AND self.encoding_headers.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.headertyp.toYAML( '
-         || '    p_pretty_print     => :p01 + 3 '
-         || '   ,p_force_inline     => :p02 '
-         || '   ,p_short_id         => :p03 '
-         || '   ,p_identifier       => a.object_id '
-         || '   ,p_short_identifier => a.short_id '
-         || '   ,p_reference_count  => a.reference_count '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p01) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.headertyp.toYAML(
+             p_pretty_print     => p_pretty_print + 3
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+            ,p_reference_count  => a.reference_count
+          )
+         ,b.object_key
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.encoding_headers;
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.encoding_headers) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'headers: '

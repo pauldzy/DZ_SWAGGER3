@@ -146,25 +146,18 @@ AS
       IF self.tag_externalDocs IS NOT NULL
       THEN
          BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.extrdocs.toJSON( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') '
-            || 'FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
+            SELECT
+            a.extrdocstyp.toJSON(
+                p_pretty_print   => p_pretty_print + 1
+               ,p_force_inline   => p_force_inline
+               ,p_short_id       => p_short_id
+            )
             INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.tag_externalDocs.object_type_id
-            ,self.tag_externalDocs.object_id;
+            FROM
+            dz_swagger3_xobjects a
+            WHERE
+                a.object_type_id = self.tag_externalDocs.object_type_id
+            AND a.object_id      = self.tag_externalDocs.object_id;
             
          EXCEPTION
             WHEN NO_DATA_FOUND
@@ -263,25 +256,18 @@ AS
       IF self.tag_externalDocs IS NOT NULL
       THEN
          BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || 'a.extrdocs.toYAML( '
-            || '    p_pretty_print   => :p01 + 1 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ') '
-            || 'FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
+            SELECT
+            a.extrdocstyp.toYAML(
+                p_pretty_print   => p_pretty_print + 1
+               ,p_force_inline   => p_force_inline
+               ,p_short_id       => p_short_id
+            )
             INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.tag_externalDocs.object_type_id
-            ,self.tag_externalDocs.object_id;
+            FROM
+            dz_swagger3_xobjects a
+            WHERE
+                a.object_type_id = self.tag_externalDocs.object_type_id
+            AND a.object_id      = self.tag_externalDocs.object_id;
            
          EXCEPTION
             WHEN NO_DATA_FOUND

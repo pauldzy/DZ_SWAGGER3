@@ -750,7 +750,8 @@ AS
             ,b.object_type_id
             FROM
             TABLE(ary_ids) b
-         )
+         ) 
+         AND a.schematyp IS NOT NULL
       )
       LOOP
          r.schematyp.traverse();

@@ -533,35 +533,28 @@ AS
       IF  self.combine_schemas IS NOT NULL
       AND self.combine_schemas.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.schematyp.toJSON( '
-         || '    p_pretty_print     => :p01 + 2 '
-         || '   ,p_force_inline     => :p02 '
-         || '   ,p_short_id         => :p03 '
-         || '   ,p_identifier       => a.object_id '
-         || '   ,p_short_identifier => a.short_id '
-         || '   ,p_reference_count  => a.reference_count '
-         || '   ,p_jsonschema       => :p04 '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p05) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.schematyp.toJSON(
+             p_pretty_print     => p_pretty_print + 2
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+            ,p_reference_count  => a.reference_count
+            ,p_jsonschema       => p_jsonschema
+          )
+         ,b.object_key
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,p_jsonschema
-         ,self.combine_schemas; 
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.combine_schemas) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order; 
           
          IF ary_keys.COUNT = 1 AND ary_keys(1) = 'not'
          THEN
@@ -977,25 +970,18 @@ AS
             AND str_jsonschema <> 'TRUE'
             THEN
                BEGIN
-                  EXECUTE IMMEDIATE
-                     'SELECT '
-                  || 'a.extrdocstyp.toJSON( '
-                  || '    p_pretty_print   => :p01 + 1 '
-                  || '   ,p_force_inline   => :p02 '
-                  || '   ,p_short_id       => :p03 '
-                  || ') '
-                  || 'FROM '
-                  || 'dz_swagger3_xobjects a '
-                  || 'WHERE '
-                  || '    a.object_type_id = :p04 '
-                  || 'AND a.object_id      = :p05 '
+                  SELECT
+                  a.extrdocstyp.toJSON(
+                      p_pretty_print   => p_pretty_print + 1
+                     ,p_force_inline   => p_force_inline
+                     ,p_short_id       => p_short_id
+                  )
                   INTO clb_tmp
-                  USING 
-                   p_pretty_print
-                  ,p_force_inline
-                  ,p_short_id
-                  ,self.schema_externalDocs.object_type_id 
-                  ,self.schema_externalDocs.object_id;
+                  FROM
+                  dz_swagger3_xobjects a
+                  WHERE
+                      a.object_type_id = self.schema_externalDocs.object_type_id 
+                  AND a.object_id      = self.schema_externalDocs.object_id;
                
                EXCEPTION
                   WHEN NO_DATA_FOUND
@@ -1078,29 +1064,21 @@ AS
             IF self.schema_items_schema IS NOT NULL
             THEN
                BEGIN
-                  EXECUTE IMMEDIATE
-                     'SELECT '
-                  || 'a.schematyp.toJSON( '
-                  || '    p_pretty_print     => :p01 + 1 '
-                  || '   ,p_force_inline     => :p02 '
-                  || '   ,p_short_id         => :p03 '
-                  || '   ,p_identifier       => a.object_id '
-                  || '   ,p_short_identifier => a.short_id '
-                  || '   ,p_reference_count  => a.reference_count '
-                  || ') '
-                  || 'FROM '
-                  || 'dz_swagger3_xobjects a '
-                  || 'WHERE '
-                  || '    a.object_type_id = :p04 '
-                  || 'AND a.object_id      = :p05 '
-                  INTO 
-                  clb_tmp
-                  USING
-                   p_pretty_print
-                  ,p_force_inline
-                  ,p_short_id
-                  ,self.schema_items_schema.object_type_id
-                  ,self.schema_items_schema.object_id;
+                  SELECT
+                  a.schematyp.toJSON(
+                      p_pretty_print     => p_pretty_print + 1
+                     ,p_force_inline     => p_force_inline
+                     ,p_short_id         => p_short_id
+                     ,p_identifier       => a.object_id
+                     ,p_short_identifier => a.short_id
+                     ,p_reference_count  => a.reference_count
+                  )
+                  INTO clb_tmp
+                  FROM
+                  dz_swagger3_xobjects a
+                  WHERE
+                      a.object_type_id = self.schema_items_schema.object_type_id
+                  AND a.object_id      = self.schema_items_schema.object_id;
                
                EXCEPTION
                   WHEN NO_DATA_FOUND
@@ -1167,37 +1145,31 @@ AS
             IF  self.schema_properties IS NOT NULL 
             AND self.schema_properties.COUNT > 0
             THEN
-               EXECUTE IMMEDIATE
-                  'SELECT '
-               || ' a.schematyp.toJSON( '
-               || '    p_pretty_print     => :p01 + 2 '
-               || '   ,p_force_inline     => :p02 '
-               || '   ,p_short_id         => :p03 '
-               || '   ,p_identifier       => a.object_id '
-               || '   ,p_short_identifier => a.short_id '
-               || '   ,p_reference_count  => a.reference_count '
-               || ' ) '
-               || ',b.object_key '
-               || ',b.object_required '
-               || 'FROM '
-               || 'dz_swagger3_xobjects a '
-               || 'JOIN '
-               || 'TABLE(:p04) b '
-               || 'ON '
-               || '    a.object_type_id = b.object_type_id '
-               || 'AND a.object_id      = b.object_id '
-               || 'WHERE '
-               || 'COALESCE(a.schematyp.property_list_hidden,''FALSE'') <> ''TRUE'' '
-               || 'ORDER BY b.object_order '
+               SELECT
+                a.schematyp.toJSON(
+                   p_pretty_print     => p_pretty_print + 2
+                  ,p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
+                )
+               ,b.object_key
+               ,b.object_required
                BULK COLLECT INTO 
                 ary_clb
                ,ary_keys
                ,ary_required
-               USING
-                p_pretty_print
-               ,p_force_inline
-               ,p_short_id
-               ,self.schema_properties; 
+               FROM
+               dz_swagger3_xobjects a
+               JOIN
+               TABLE(self.schema_properties) b
+               ON
+                   a.object_type_id = b.object_type_id
+               AND a.object_id      = b.object_id
+               WHERE
+               COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE'
+               ORDER BY b.object_order; 
 
                str_pad2 := str_pad;
                ary_items := MDSYS.SDO_STRING2_ARRAY();
@@ -1328,35 +1300,29 @@ AS
       IF  self.combine_schemas IS NOT NULL
       AND self.combine_schemas.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.schematyp.toYAML( '
-         || '    p_pretty_print     => :p01 + 2 '
-         || '   ,p_initial_indent   => ''FALSE'' '
-         || '   ,p_final_linefeed   => ''FALSE'' '
-         || '   ,p_force_inline     => :p02 '
-         || '   ,p_short_id         => :p03 '
-         || '   ,p_identifier       => a.object_id '
-         || '   ,p_short_identifier => a.short_id '
-         || '   ,p_reference_count  => a.reference_count '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.schematyp.toYAML(
+             p_pretty_print     => p_pretty_print + 2
+            ,p_initial_indent   => 'FALSE'
+            ,p_final_linefeed   => 'FALSE'
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+            ,p_reference_count  => a.reference_count
+          )
+         ,b.object_key
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.combine_schemas;
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.combine_schemas) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
             
          IF ary_keys.COUNT = 1 AND ary_keys(1) = 'not'
          THEN
@@ -1643,25 +1609,18 @@ AS
             AND self.schema_externalDocs.object_id IS NOT NULL
             THEN
                BEGIN
-                  EXECUTE IMMEDIATE
-                     'SELECT '
-                  || 'a.extrdocstyp.toYAML( '
-                  || '    p_pretty_print   => :p01 + 1 '
-                  || '   ,p_force_inline   => :p02 '
-                  || '   ,p_short_id       => :p03 '
-                  || ') '
-                  || 'FROM '
-                  || 'dz_swagger3_xobjects a '
-                  || 'WHERE '
-                  || '    a.object_type_id = :p04 '
-                  || 'AND a.object_id      = :p05 '
+                  SELECT
+                  a.extrdocstyp.toYAML(
+                      p_pretty_print   => p_pretty_print + 1
+                     ,p_force_inline   => p_force_inline
+                     ,p_short_id       => p_short_id
+                  )
                   INTO clb_tmp
-                  USING 
-                   p_pretty_print
-                  ,p_force_inline
-                  ,p_short_id
-                  ,self.schema_externalDocs.object_type_id
-                  ,self.schema_externalDocs.object_id; 
+                  FROM
+                  dz_swagger3_xobjects a
+                  WHERE
+                      a.object_type_id = self.schema_externalDocs.object_type_id
+                  AND a.object_id      = self.schema_externalDocs.object_id; 
                
                EXCEPTION
                   WHEN NO_DATA_FOUND
@@ -1795,37 +1754,31 @@ AS
             IF  self.schema_properties IS NOT NULL 
             AND self.schema_properties.COUNT > 0
             THEN
-               EXECUTE IMMEDIATE
-                  'SELECT '
-               || ' a.schematyp.toYAML( '
-               || '    p_pretty_print     => :p01 + 2 '
-               || '   ,p_force_inline     => :p02 '
-               || '   ,p_short_id         => :p03 '
-               || '   ,p_identifier       => a.object_id '
-               || '   ,p_short_identifier => a.short_id '
-               || '   ,p_reference_count  => a.reference_count '
-               || ' ) '
-               || ',b.object_key '
-               || ',b.object_required '
-               || 'FROM '
-               || 'dz_swagger3_xobjects a '
-               || 'JOIN '
-               || 'TABLE(:p04) b '
-               || 'ON '
-               || '    a.object_type_id = b.object_type_id '
-               || 'AND a.object_id      = b.object_id '
-               || 'WHERE '
-               || 'COALESCE(a.schematyp.property_list_hidden,''FALSE'') <> ''TRUE'' '
-               || 'ORDER BY b.object_order '
+               SELECT
+                a.schematyp.toYAML(
+                   p_pretty_print     => p_pretty_print + 2
+                  ,p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
+                )
+               ,b.object_key
+               ,b.object_required
                BULK COLLECT INTO 
                 ary_clb
                ,ary_keys
                ,ary_required
-               USING
-                p_pretty_print
-               ,p_force_inline
-               ,p_short_id
-               ,self.schema_properties;          
+               FROM
+               dz_swagger3_xobjects a
+               JOIN
+               TABLE(self.schema_properties) b
+               ON
+                   a.object_type_id = b.object_type_id
+               AND a.object_id      = b.object_id
+               WHERE
+               COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE'
+               ORDER BY b.object_order;          
                
                boo_check    := FALSE;
                int_counter  := 1;

@@ -379,28 +379,21 @@ AS
          IF self.header_schema IS NOT NULL
          THEN
             BEGIN
-               EXECUTE IMMEDIATE
-                  'SELECT '
-               || 'a.schematyp.toJSON( '
-               || '    p_pretty_print     => :p01 + 1 '
-               || '   ,p_force_inline     => :p02 '
-               || '   ,p_short_id         => :p03 '
-               || '   ,p_identifier       => a.object_id '
-               || '   ,p_short_identifier => a.short_id '
-               || '   ,p_reference_count  => a.reference_count '
-               || ') '
-               || 'FROM '
-               || 'dz_swagger3_xobjects a '
-               || 'WHERE '
-               || '    a.object_type_id = :p04 '
-               || 'AND a.object_id      = :p05 '
+               SELECT
+               a.schematyp.toJSON(
+                   p_pretty_print     => p_pretty_print + 1
+                  ,p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
+               )
                INTO clb_tmp
-               USING 
-                p_pretty_print
-               ,p_force_inline
-               ,p_short_id
-               ,self.header_schema.object_type_id
-               ,self.header_schema.object_id;
+               FROM
+               dz_swagger3_xobjects a
+               WHERE
+                   a.object_type_id = self.header_schema.object_type_id
+               AND a.object_id      = self.header_schema.object_id;
                
             EXCEPTION
                WHEN NO_DATA_FOUND
@@ -462,33 +455,27 @@ AS
          IF  self.header_examples IS NOT NULL 
          AND self.header_examples.COUNT > 0
          THEN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || ' a.exampletyp.toJSON( '
-            || '    p_pretty_print     => :p01 + 2 '
-            || '   ,p_force_inline     => :p02 '
-            || '   ,p_short_id         => :p03 '
-            || '   ,p_identifier       => a.object_id '
-            || '   ,p_short_identifier => a.short_id '
-            || '   ,p_reference_count  => a.reference_count '
-            || ' ) '
-            || ',b.object_key '
-            || 'FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'JOIN '
-            || 'TABLE(:p04) b '
-            || 'ON '
-            || '    a.object_type_id = b.object_type_id '
-            || 'AND a.object_id      = b.object_id '
-            || 'ORDER BY b.object_order '
+            SELECT
+             a.exampletyp.toJSON(
+                p_pretty_print     => p_pretty_print + 2
+               ,p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count
+             )
+            ,b.object_key
             BULK COLLECT INTO 
              ary_clb
             ,ary_keys
-            USING
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.header_examples; 
+            FROM
+            dz_swagger3_xobjects a
+            JOIN
+            TABLE(self.header_examples) b
+            ON
+                a.object_type_id = b.object_type_id
+            AND a.object_id      = b.object_id
+            ORDER BY b.object_order; 
             
             str_pad2 := str_pad;
             
@@ -708,28 +695,21 @@ AS
          IF self.header_schema IS NOT NULL
          THEN
             BEGIN
-               EXECUTE IMMEDIATE
-                  'SELECT '
-               || 'a.schematyp.toYAML( '
-               || '    p_pretty_print     => :p01 + 1 '
-               || '   ,p_force_inline     => :p02 '
-               || '   ,p_short_id         => :p03 '
-               || '   ,p_identifier       => a.object_id '
-               || '   ,p_short_identifier => a.short_id '
-               || '   ,p_reference_count  => a.reference_count '
-               || ') '
-               || 'FROM '
-               || 'dz_swagger3_xobjects a '
-               || 'WHERE '
-               || '    a.object_type_id = :p04 '
-               || 'AND a.object_id      = :p05 '
+               SELECT
+               a.schematyp.toYAML(
+                   p_pretty_print     => p_pretty_print + 1
+                  ,p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
+               )
                INTO clb_tmp
-               USING 
-                p_pretty_print
-               ,p_force_inline
-               ,p_short_id
-               ,self.header_schema.object_type_id
-               ,self.header_schema.object_id;
+               FROM
+               dz_swagger3_xobjects a
+               WHERE
+                   a.object_type_id = self.header_schema.object_type_id
+               AND a.object_id      = self.header_schema.object_id;
                
             EXCEPTION
                WHEN NO_DATA_FOUND
@@ -785,33 +765,27 @@ AS
          IF  self.header_examples IS NULL 
          AND self.header_examples.COUNT = 0
          THEN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || ' a.exampletyp.toYAML( '
-            || '    p_pretty_print     => :p01 + 2 '
-            || '   ,p_force_inline     => :p02 '
-            || '   ,p_short_id         => :p03 '
-            || '   ,p_identifier       => a.object_id '
-            || '   ,p_short_identifier => a.short_id '
-            || '   ,p_reference_count  => a.reference_count '
-            || ' ) '
-            || ',b.object_key '
-            || 'FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'JOIN '
-            || 'TABLE(:p01) b '
-            || 'ON '
-            || '    a.object_type_id = b.object_type_id '
-            || 'AND a.object_id      = b.object_id '
-            || 'ORDER BY b.object_order '
+            SELECT
+             a.exampletyp.toYAML(
+                p_pretty_print     => p_pretty_print + 2
+               ,p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count
+             )
+            ,b.object_key
             BULK COLLECT INTO 
              ary_clb
             ,ary_keys
-            USING
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.header_examples;
+            FROM
+            dz_swagger3_xobjects a
+            JOIN
+            TABLE(self.header_examples) b
+            ON
+                a.object_type_id = b.object_type_id
+            AND a.object_id      = b.object_id
+            ORDER BY b.object_order;
          
             clb_output := clb_output || dz_json_util.pretty_str(
                 'examples: '

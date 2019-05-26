@@ -247,6 +247,21 @@ AS
 
       --------------------------------------------------------------------------
       -- Step 10
+      -- Load the external docs
+      --------------------------------------------------------------------------
+      IF  self.operation_externalDocs IS NOT NULL
+      AND self.operation_externalDocs.object_id IS NOT NULL
+      THEN
+         dz_swagger3_loader.extrdocstyp(
+             p_parent_id    => self.operation_id
+            ,p_children_ids => dz_swagger3_object_vry(self.operation_externalDocs)
+            ,p_versionid    => self.versionid
+         );
+         
+      END IF;
+
+      --------------------------------------------------------------------------
+      -- Step 20
       -- Load the tags
       --------------------------------------------------------------------------
       IF  self.operation_tags IS NOT NULL
@@ -261,7 +276,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 20
+      -- Step 30
       -- Load the parameters
       --------------------------------------------------------------------------
       IF  self.operation_parameters IS NOT NULL
@@ -276,7 +291,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 30
+      -- Step 40
       -- Load the parameters
       --------------------------------------------------------------------------
       IF  self.operation_requestBody IS NOT NULL
@@ -303,7 +318,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 50
       -- Load the responses
       --------------------------------------------------------------------------
       IF  self.operation_responses IS NOT NULL
@@ -318,7 +333,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 50
+      -- Step 60
       -- Load the callbacks
       --------------------------------------------------------------------------
       
@@ -394,21 +409,17 @@ AS
       IF  self.operation_tags IS NOT NULL
       AND self.operation_tags.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || 'a.tagtyp.tag_name '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
-         BULK COLLECT INTO
-         ary_keys
-         USING 
-         self.operation_tags;
+         SELECT
+         a.tagtyp.tag_name
+         BULK COLLECT INTO ary_keys
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.operation_tags) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
 
          str_pad2 := str_pad;
          
@@ -492,24 +503,18 @@ AS
       AND self.operation_externalDocs.object_id IS NOT NULL
       THEN
          BEGIN
-            EXECUTE IMMEDIATE 
-               'SELECT '
-            || 'a.extrdocstyp.toJSON( '
-            || '    p_pretty_print => :p01 + 1 '
-            || '   ,p_force_inline => :p02 '
-            || '   ,p_short_id     => :p03 '
-            || ') '
-            || 'FROM dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
+            SELECT
+            a.extrdocstyp.toJSON(
+                p_pretty_print => p_pretty_print + 1
+               ,p_force_inline => p_force_inline
+               ,p_short_id     => p_short_id
+            )
             INTO clb_tmp
-            USING
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.operation_externalDocs.object_type_id
-            ,self.operation_externalDocs.object_id;
+            FROM 
+            dz_swagger3_xobjects a
+            WHERE
+                a.object_type_id = self.operation_externalDocs.object_type_id
+            AND a.object_id      = self.operation_externalDocs.object_id;
             
          EXCEPTION
             WHEN NO_DATA_FOUND
@@ -559,35 +564,29 @@ AS
       IF  self.operation_parameters IS NOT NULL 
       AND self.operation_parameters.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || ' a.parametertyp.toJSON( '
-         || '    p_pretty_print     => :p01 + 2 '
-         || '   ,p_force_inline     => :p02 '
-         || '   ,p_short_id         => :p03 '
-         || '   ,p_identifier       => a.object_id '
-         || '   ,p_short_identifier => a.short_id '
-         || '   ,p_reference_count  => a.reference_count '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'WHERE '
-         || 'COALESCE(a.parametertyp.parameter_list_hidden,''FALSE'') <> ''TRUE'' '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.parametertyp.toJSON(
+             p_pretty_print     => p_pretty_print + 2
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+            ,p_reference_count  => a.reference_count
+          )
+         ,b.object_key
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.operation_parameters;
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.operation_parameters) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         WHERE
+         COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE'
+         ORDER BY b.object_order;
 
          str_pad2 := str_pad;
          
@@ -640,27 +639,21 @@ AS
       AND self.operation_requestBody.object_id IS NOT NULL
       THEN
          BEGIN
-            EXECUTE IMMEDIATE 
-               'SELECT '
-            || 'a.requestbodytyp.toJSON( '
-            || '    p_pretty_print     => :p01 + 1 '
-            || '   ,p_force_inline     => :p02 '
-            || '   ,p_short_id         => :p03 '
-            || '   ,p_identifier       => a.object_id '
-            || '   ,p_short_identifier => a.short_id '
-            || '   ,p_reference_count  => a.reference_count '
-            || ') '
-            || 'FROM dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
+            SELECT
+            a.requestbodytyp.toJSON(
+                p_pretty_print     => p_pretty_print + 1
+               ,p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count
+            )
             INTO clb_tmp
-            USING
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.operation_requestBody.object_type_id
-            ,self.operation_requestBody.object_id;
+            FROM 
+            dz_swagger3_xobjects a
+            WHERE
+                a.object_type_id = self.operation_requestBody.object_type_id
+            AND a.object_id      = self.operation_requestBody.object_id;
             
          EXCEPTION
             WHEN NO_DATA_FOUND
@@ -692,33 +685,27 @@ AS
       IF  self.operation_responses IS NOT NULL 
       AND self.operation_responses.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || ' a.responsetyp.toJSON( '
-         || '    p_pretty_print     => :p01 + 2 '
-         || '   ,p_force_inline     => :p02 '
-         || '   ,p_short_id         => :p03 '
-         || '   ,p_identifier       => a.object_id '
-         || '   ,p_short_identifier => a.short_id '
-         || '   ,p_reference_count  => a.reference_count '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.responsetyp.toJSON(
+             p_pretty_print     => p_pretty_print + 2
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+            ,p_reference_count  => a.reference_count
+          )
+         ,b.object_key
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.operation_responses;
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.operation_responses) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
          
          str_pad2 := str_pad;
          
@@ -765,33 +752,27 @@ AS
       IF  self.operation_callbacks IS NOT NULL 
       AND self.operation_callbacks.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || 'a.pathtyp.toJSON( '
-         || '    p_pretty_print     => :p01 + 2 '
-         || '   ,p_force_inline     => :p02 '
-         || '   ,p_short_id         => :p03 '
-         || '   ,p_identifier       => a.object_id '
-         || '   ,p_short_identifier => a.short_id '
-         || '   ,p_reference_count  => a.reference_count '
-         || ') '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+         a.pathtyp.toJSON(
+             p_pretty_print     => p_pretty_print + 2
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+            ,p_reference_count  => a.reference_count
+         )
+         ,b.object_key
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.operation_callbacks;
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.operation_callbacks) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
          
          str_pad2 := str_pad;
          
@@ -865,28 +846,21 @@ AS
       IF  self.operation_security IS NOT NULL 
       AND self.operation_security.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || 'a.securityreqtyp.toJSON( '
-         || '    p_pretty_print  => :p01 + 2 '
-         || '   ,p_force_inline  => :p02 '
-         || '   ,p_short_id      => :p03 '
-         || ') '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
-         BULK COLLECT INTO
-         ary_clb
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.operation_security;
+         SELECT
+         a.securityreqtyp.toJSON(
+             p_pretty_print  => p_pretty_print + 2
+            ,p_force_inline  => p_force_inline
+            ,p_short_id      => p_short_id
+         )
+         BULK COLLECT INTO ary_clb
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.operation_security) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
 
          str_pad2 := str_pad;
          
@@ -933,28 +907,21 @@ AS
       IF  self.operation_servers IS NOT NULL 
       AND self.operation_servers.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || 'a.securitytyp.toJSON( '
-         || '    p_pretty_print  => :p01 + 2 '
-         || '   ,p_force_inline  => :p02 '
-         || '   ,p_short_id      => :p03 '
-         || ') '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
-         BULK COLLECT INTO
-         ary_clb
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.operation_servers;
+         SELECT
+         a.securityreqtyp.toJSON(
+             p_pretty_print  => p_pretty_print + 2
+            ,p_force_inline  => p_force_inline
+            ,p_short_id      => p_short_id
+         )
+         BULK COLLECT INTO ary_clb
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.operation_servers) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
          
          str_pad2 := str_pad;
          
@@ -1042,21 +1009,17 @@ AS
       IF  self.operation_tags IS NOT NULL
       AND self.operation_tags.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || 'a.tagtyp.tag_name '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p01) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
-         BULK COLLECT INTO
-         ary_keys
-         USING 
-         self.operation_tags;
+         SELECT
+         a.tagtyp.tag_name
+         BULK COLLECT INTO ary_keys
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.operation_tags) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
       
          clb_output := clb_output || dz_json_util.pretty_str(
              'tags: '
@@ -1118,24 +1081,18 @@ AS
       AND self.operation_externalDocs.object_id IS NOT NULL
       THEN
          BEGIN
-            EXECUTE IMMEDIATE 
-               'SELECT '
-            || 'a.extrdocstyp.toYAML( '
-            || '    p_pretty_print =>  :p01 + 1 '
-            || '   ,p_force_inline =>  :p02 '
-            || '   ,p_short_id      => :p03 '
-            || ') '
-            || 'FROM dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
+            SELECT
+            a.extrdocstyp.toYAML(
+                p_pretty_print => p_pretty_print + 2
+               ,p_force_inline => p_force_inline
+               ,p_short_id     => p_short_id
+            )
             INTO clb_tmp
-            USING
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.operation_externalDocs.object_type_id
-            ,self.operation_externalDocs.object_id;
+            FROM 
+            dz_swagger3_xobjects a
+            WHERE
+                a.object_type_id = self.operation_externalDocs.object_type_id
+            AND a.object_id      = self.operation_externalDocs.object_id;
 
          EXCEPTION
             WHEN NO_DATA_FOUND
@@ -1180,37 +1137,31 @@ AS
       IF  self.operation_parameters IS NOT NULL 
       AND self.operation_parameters.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || ' a.parametertyp.toYAML( '
-         || '    p_pretty_print     => :p01 + 3 '
-         || '   ,p_initial_indent   => ''FALSE'' '
-         || '   ,p_final_linefeed   => ''FALSE'' '
-         || '   ,p_force_inline     => :p02 '
-         || '   ,p_short_id         => :p03 '
-         || '   ,p_identifier       => a.object_id '
-         || '   ,p_short_identifier => a.short_id '
-         || '   ,p_reference_count  => a.reference_count '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'WHERE '
-         || 'COALESCE(a.parametertyp.parameter_list_hidden,''FALSE'') <> ''TRUE'' '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.parametertyp.toYAML(
+             p_pretty_print     => p_pretty_print + 3
+            ,p_initial_indent   => 'FALSE'
+            ,p_final_linefeed   => 'FALSE'
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+            ,p_reference_count  => a.reference_count
+          )
+         ,b.object_key
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.operation_parameters;
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.operation_parameters) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         WHERE
+         COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE'
+         ORDER BY b.object_order;
          
          IF  ary_keys IS NOT NULL
          AND ary_keys.COUNT > 0
@@ -1243,28 +1194,21 @@ AS
       AND self.operation_requestBody.object_id IS NOT NULL
       THEN
          BEGIN
-            EXECUTE IMMEDIATE 
-               'SELECT '
-            || 'a.requestbodytyp.toYAML( '
-            || '    p_pretty_print     => :p01 + 1 '
-            || '   ,p_force_inline     => :p02 '
-            || '   ,p_short_id         => :p03 '
-            || '   ,p_identifier       => a.object_id '
-            || '   ,p_short_identifier => a.short_id '
-            || '   ,p_reference_count  => a.reference_count '
-            || ') '
-            || 'FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
+            SELECT
+            a.requestbodytyp.toYAML(
+                p_pretty_print     => p_pretty_print + 1
+               ,p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count
+            )
             INTO clb_tmp
-            USING
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.operation_requestBody.object_type_id
-            ,self.operation_requestBody.object_id;
+            FROM
+            dz_swagger3_xobjects a
+            WHERE
+                a.object_type_id = self.operation_requestBody.object_type_id
+            AND a.object_id      = self.operation_requestBody.object_id;
 
             clb_output := clb_output || dz_json_util.pretty_str(
                 'requestBody: ' 
@@ -1292,33 +1236,27 @@ AS
       IF  self.operation_responses IS NOT NULL 
       AND self.operation_responses.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || ' a.responsetyp.toYAML( '
-         || '    p_pretty_print     => :p01 + 3 '
-         || '   ,p_force_inline     => :p02 '
-         || '   ,p_short_id         => :p03 '
-         || '   ,p_identifier       => a.object_id '
-         || '   ,p_short_identifier => a.short_id '
-         || '   ,p_reference_count  => a.reference_count '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.responsetyp.toYAML(
+             p_pretty_print     => p_pretty_print + 3
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+            ,p_reference_count  => a.reference_count
+          )
+         ,b.object_key
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.operation_responses;
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.operation_responses) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
       
          clb_output := clb_output || dz_json_util.pretty_str(
              'responses: '
@@ -1345,33 +1283,27 @@ AS
       IF  self.operation_callbacks IS NOT NULL 
       AND self.operation_callbacks.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || ' a.pathtyp.toYAML( '
-         || '    p_pretty_print     => :p01 + 2 '
-         || '   ,p_force_inline     => :p02 '
-         || '   ,p_short_id         => :p03 '
-         || '   ,p_identifier       => a.object_id '
-         || '   ,p_short_identifier => a.short_id '
-         || '   ,p_reference_count  => a.reference_count '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.pathtyp.toYAML(
+             p_pretty_print     => p_pretty_print + 2
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+            ,p_reference_count  => a.reference_count
+          )
+         ,b.object_key
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.operation_callbacks;
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.operation_callbacks) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'callbacks: '
@@ -1412,28 +1344,21 @@ AS
       IF  self.operation_security IS NOT NULL 
       AND self.operation_security.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || 'a.securityreqtyp.toYAML( '
-         || '    p_pretty_print  => :p01 + 2 '
-         || '   ,p_force_inline  => :p02 '
-         || '   ,p_short_id      => :p03 '
-         || ') '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
-         BULK COLLECT INTO
-         ary_clb
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.operation_security;
+         SELECT
+         a.securityreqtyp.toYAML(
+             p_pretty_print  => p_pretty_print + 2
+            ,p_force_inline  => p_force_inline
+            ,p_short_id      => p_short_id
+         )
+         BULK COLLECT INTO ary_clb
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.operation_security) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'security: '
@@ -1460,30 +1385,23 @@ AS
       IF  self.operation_servers IS NOT NULL 
       AND self.operation_servers.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || 'a.securitytyp.toYAML( '
-         || '    p_pretty_print   => :p01 + 3 '
-         || '   ,p_initial_indent => ''FALSE'' '
-         || '   ,p_final_linefeed => ''FALSE'' '
-         || '   ,p_force_inline   => :p02 '
-         || '   ,p_short_id       => :p03 '
-         || ') '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
-         BULK COLLECT INTO
-         ary_clb
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.operation_servers;
+         SELECT
+         a.servertyp.toYAML(
+             p_pretty_print   => p_pretty_print + 3
+            ,p_initial_indent => 'FALSE'
+            ,p_final_linefeed => 'FALSE'
+            ,p_force_inline   => p_force_inline
+            ,p_short_id       => p_short_id
+         )
+         BULK COLLECT INTO ary_clb
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.operation_servers) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'servers: '

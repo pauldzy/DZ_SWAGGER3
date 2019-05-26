@@ -155,30 +155,24 @@ AS
       IF  self.server_variables IS NOT NULL 
       AND self.server_variables.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || ' a.servervartyp.toJSON( '
-         || '    p_pretty_print  => :p01 + 2 '
-         || '   ,p_force_inline  => :p02 '
-         || '   ,p_short_id      => :p03 '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p01) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.servervartyp.toJSON(
+             p_pretty_print  => p_pretty_print + 2
+            ,p_force_inline  => p_force_inline
+            ,p_short_id      => p_short_id
+          )
+         ,b.object_key
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.server_variables;   
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.server_variables) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;   
       
          str_pad2 := str_pad;
          
@@ -295,30 +289,24 @@ AS
       IF  self.server_variables IS NOT NULL 
       AND self.server_variables.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE 
-            'SELECT '
-         || ' a.servervartyp.toYAML( '
-         || '    p_pretty_print  => :p01 + 2 '
-         || '   ,p_force_inline  => :p02 '
-         || '   ,p_short_id      => :p03 '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p01) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.servervartyp.toYAML(
+             p_pretty_print  => p_pretty_print + 2
+            ,p_force_inline  => p_force_inline
+            ,p_short_id      => p_short_id
+          )
+         ,b.object_key
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
-         USING 
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.server_variables; 
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.server_variables) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order; 
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'variables: '

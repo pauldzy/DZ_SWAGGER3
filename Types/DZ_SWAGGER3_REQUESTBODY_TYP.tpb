@@ -245,30 +245,24 @@ AS
          IF  self.requestbody_content IS NOT NULL 
          AND self.requestbody_content.COUNT > 0
          THEN 
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || ' a.mediatyp.toJSON( '
-            || '    p_pretty_print   => :p01 + 2 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ' ) '
-            || ',b.object_key '
-            || 'FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'JOIN '
-            || 'TABLE(:p04) b '
-            || 'ON '
-            || '    a.object_type_id = b.object_type_id '
-            || 'AND a.object_id      = b.object_id '
-            || 'ORDER BY b.object_order '
+            SELECT
+             a.mediatyp.toJSON(
+                p_pretty_print   => p_pretty_print + 2
+               ,p_force_inline   => p_force_inline
+               ,p_short_id       => p_short_id
+             )
+            ,b.object_key
             BULK COLLECT INTO 
              ary_clb
             ,ary_keys
-            USING
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.requestbody_content; 
+            FROM
+            dz_swagger3_xobjects a
+            JOIN
+            TABLE(self.requestbody_content) b
+            ON
+                a.object_type_id = b.object_type_id
+            AND a.object_id      = b.object_id
+            ORDER BY b.object_order; 
             
             str_pad2 := str_pad;
             
@@ -425,30 +419,24 @@ AS
          IF  self.requestbody_content IS NOT NULL 
          AND self.requestbody_content.COUNT > 0
          THEN
-            EXECUTE IMMEDIATE
-               'SELECT '
-            || ' a.mediatyp.toYAML( '
-            || '    p_pretty_print   => :p01 + 3 '
-            || '   ,p_force_inline   => :p02 '
-            || '   ,p_short_id       => :p03 '
-            || ' ) '
-            || ',b.object_key '
-            || 'FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'JOIN '
-            || 'TABLE(:p04) b '
-            || 'ON '
-            || '    a.object_type_id = b.object_type_id '
-            || 'AND a.object_id      = b.object_id '
-            || 'ORDER BY b.object_order '
+            SELECT
+             a.mediatyp.toYAML(
+                p_pretty_print   => p_pretty_print + 3
+               ,p_force_inline   => p_force_inline
+               ,p_short_id       => p_short_id
+             )
+            ,b.object_key
             BULK COLLECT INTO 
              ary_clb
             ,ary_keys
-            USING
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.requestbody_content; 
+            FROM
+            dz_swagger3_xobjects a
+            JOIN
+            TABLE(self.requestbody_content) b
+            ON
+                a.object_type_id = b.object_type_id
+            AND a.object_id      = b.object_id
+            ORDER BY b.object_order; 
             
             clb_output := clb_output || dz_json_util.pretty_str(
                 'content: '

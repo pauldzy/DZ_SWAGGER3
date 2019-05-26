@@ -316,33 +316,27 @@ AS
       IF  self.media_examples IS NOT NULL 
       AND self.media_examples.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.exampletyp.toJSON( '
-         || '    p_pretty_print     => :p01 + 1 '
-         || '   ,p_force_inline     => :p02 '
-         || '   ,p_short_id         => :p03 '
-         || '   ,p_identifier       => a.object_id '
-         || '   ,p_short_identifier => a.short_id '
-         || '   ,p_reference_count  => a.reference_count '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.exampletyp.toJSON(
+             p_pretty_print     => p_pretty_print + 1
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+            ,p_reference_count  => a.reference_count
+          )
+         ,b.object_key
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.media_examples;
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.media_examples) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
          
          str_pad2 := str_pad;
          
@@ -389,30 +383,24 @@ AS
       IF  self.media_encoding IS NOT NULL 
       AND self.media_encoding.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.encodingtyp.toJSON( '
-         || '    p_pretty_print   => :p01 + 1 '
-         || '   ,p_force_inline   => :p02 '
-         || '   ,p_short_id       => :p03 '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.encodingtyp.toJSON(
+             p_pretty_print   => p_pretty_print + 1
+            ,p_force_inline   => p_force_inline
+            ,p_short_id       => p_short_id
+          )
+         ,b.object_key
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.media_encoding;
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.media_encoding) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
          
          str_pad2 := str_pad;
          
@@ -501,26 +489,21 @@ AS
       AND self.media_schema.object_id IS NOT NULL
       THEN
          BEGIN
-            EXECUTE IMMEDIATE
-               'SELECT a.schematyp.toYAML( '
-            || '    p_pretty_print     => :p01 + 1 '
-            || '   ,p_force_inline     => :p02 '
-            || '   ,p_short_id         => :p03 '
-            || '   ,p_identifier       => a.object_id '
-            || '   ,p_short_identifier => a.short_id '
-            || '   ,p_reference_count  => a.reference_count ' 
-            || ') FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'WHERE '
-            || '    a.object_type_id = :p04 '
-            || 'AND a.object_id      = :p05 '
+            SELECT 
+            a.schematyp.toYAML(
+                p_pretty_print     => p_pretty_print + 1
+               ,p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count 
+            )
             INTO clb_tmp
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.media_schema.object_type_id
-            ,self.media_schema.object_id; 
+            FROM
+            dz_swagger3_xobjects a
+            WHERE
+                a.object_type_id = self.media_schema.object_type_id
+            AND a.object_id      = self.media_schema.object_id; 
             
          EXCEPTION
             WHEN NO_DATA_FOUND
@@ -576,33 +559,27 @@ AS
       IF  self.media_examples IS NOT NULL 
       AND self.media_examples.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.exampletyp.toYAML( '
-         || '    p_pretty_print     => :p01 + 3 '
-         || '   ,p_force_inline     => :p02 '
-         || '   ,p_short_id         => :p03 '
-         || '   ,p_identifier       => a.object_id '
-         || '   ,p_short_identifier => a.short_id '
-         || '   ,p_reference_count  => a.reference_count '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.exampletyp.toYAML(
+             p_pretty_print     => p_pretty_print + 3
+            ,p_force_inline     => p_force_inline
+            ,p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+            ,p_reference_count  => a.reference_count
+          )
+         ,b.object_key
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.media_examples;
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.media_examples) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'examples: '
@@ -629,30 +606,24 @@ AS
       IF  self.media_encoding IS NOT NULL 
       AND self.media_encoding.COUNT > 0
       THEN
-         EXECUTE IMMEDIATE
-            'SELECT '
-         || ' a.encodingtyp.toYAML( '
-         || '    p_pretty_print   => :p01 + 3 '
-         || '   ,p_force_inline   => :p02 '
-         || '   ,p_short_id       => :p03 '
-         || ' ) '
-         || ',b.object_key '
-         || 'FROM '
-         || 'dz_swagger3_xobjects a '
-         || 'JOIN '
-         || 'TABLE(:p04) b '
-         || 'ON '
-         || '    a.object_type_id = b.object_type_id '
-         || 'AND a.object_id      = b.object_id '
-         || 'ORDER BY b.object_order '
+         SELECT
+          a.encodingtyp.toYAML(
+             p_pretty_print   => p_pretty_print + 3
+            ,p_force_inline   => p_force_inline
+            ,p_short_id       => p_short_id
+          )
+         ,b.object_key
          BULK COLLECT INTO 
           ary_clb
          ,ary_keys
-         USING
-          p_pretty_print
-         ,p_force_inline
-         ,p_short_id
-         ,self.media_encoding;
+         FROM
+         dz_swagger3_xobjects a
+         JOIN
+         TABLE(self.media_encoding) b
+         ON
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id
+         ORDER BY b.object_order;
          
          clb_output := clb_output || dz_json_util.pretty_str(
              'encoding: '

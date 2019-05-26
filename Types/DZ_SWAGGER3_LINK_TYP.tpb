@@ -223,35 +223,29 @@ AS
          IF  self.link_parameters IS NOT NULL
          AND self.link_parameters.COUNT > 0
          THEN
-            EXECUTE IMMEDIATE 
-               'SELECT '
-            || ' a.parameteryp.toJSON( '
-            || '    p_pretty_print     => :p01 + 2 '
-            || '   ,p_force_inline     => :p02 '
-            || '   ,p_short_id         => :p03 '
-            || '   ,p_identifier       => a.object_id '
-            || '   ,p_short_identifier => a.short_id '
-            || '   ,p_reference_count  => a.reference_count '
-            || ' ) '
-            || ',b.object_key '
-            || 'FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'JOIN '
-            || 'TABLE(:p04) b '
-            || 'ON '
-            || '    a.object_type_id = b.object_type_id '
-            || 'AND a.object_id      = b.object_id '
-            || 'WHERE '
-            || 'COALESCE(a.parametertyp.parameter_list_hidden,''FALSE'') <> ''TRUE'' '
-            || 'ORDER BY b.object_order '
+            SELECT
+             a.parametertyp.toJSON(
+                p_pretty_print     => p_pretty_print + 2
+               ,p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count
+             )
+            ,b.object_key
             BULK COLLECT INTO
              ary_clb
             ,ary_keys
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.link_parameters;
+            FROM
+            dz_swagger3_xobjects a
+            JOIN
+            TABLE(self.link_parameters) b
+            ON
+                a.object_type_id = b.object_type_id
+            AND a.object_id      = b.object_id
+            WHERE
+            COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE'
+            ORDER BY b.object_order;
          
             IF  ary_keys IS NOT NULL
             AND ary_keys.COUNT > 0
@@ -339,24 +333,17 @@ AS
          IF self.link_server IS NOT NULL
          THEN
             BEGIN
-               EXECUTE IMMEDIATE 
-                  'SELECT '
-               || 'a.servertyp.toJSON( '
-               || '    p_pretty_print  => :p01 + 1 '
-               || '   ,p_force_inline  => :p02 '
-               || '   ,p_short_id      => :p03 '
-               || ') '
-               || 'FROM dz_swagger3_xobjects a '
-               || 'WHERE '
-               || '    a.object_type_id = :p04 '
-               || 'AND a.object_id      = :p05 '
+               SELECT
+               a.servertyp.toJSON(
+                   p_pretty_print  => p_pretty_print + 1
+                  ,p_force_inline  => p_force_inline
+                  ,p_short_id      => p_short_id
+               )
                INTO clb_tmp
-               USING
-                p_pretty_print
-               ,p_force_inline
-               ,p_short_id
-               ,self.link_server.object_type_id
-               ,self.link_server.object_id;
+               FROM dz_swagger3_xobjects a
+               WHERE
+                   a.object_type_id = self.link_server.object_type_id
+               AND a.object_id      = self.link_server.object_id;
                
             EXCEPTION
                WHEN NO_DATA_FOUND
@@ -490,35 +477,29 @@ AS
          IF  self.link_parameters IS NULL 
          AND self.link_parameters.COUNT = 0
          THEN
-            EXECUTE IMMEDIATE 
-               'SELECT '
-            || ' a.parametertyp.toYAML( '
-            || '    p_pretty_print  => :p01 + 2 '
-            || '   ,p_force_inline  => :p02 '
-            || '   ,p_short_id      => :p03 '
-            || '   ,p_identifier       => a.object_id '
-            || '   ,p_short_identifier => a.short_id '
-            || '   ,p_reference_count  => a.reference_count '
-            || ' ) '
-            || ',b.object_key '
-            || 'FROM '
-            || 'dz_swagger3_xobjects a '
-            || 'JOIN '
-            || 'TABLE(:p01) b '
-            || 'ON '
-            || '    a.object_type_id = b.object_type_id '
-            || 'AND a.object_id      = b.object_id '
-            || 'WHERE '
-            || 'COALESCE(a.parametertyp.parameter_list_hidden,''FALSE'') <> ''TRUE'' '
-            || 'ORDER BY b.object_order '
+            SELECT
+             a.parametertyp.toYAML(
+                p_pretty_print     => p_pretty_print + 2
+               ,p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count
+             )
+            ,b.object_key
             BULK COLLECT INTO
              ary_clb
             ,ary_keys
-            USING 
-             p_pretty_print
-            ,p_force_inline
-            ,p_short_id
-            ,self.link_parameters;
+            FROM
+            dz_swagger3_xobjects a
+            JOIN
+            TABLE(self.link_parameters) b
+            ON
+                a.object_type_id = b.object_type_id
+            AND a.object_id      = b.object_id
+            WHERE
+            COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE'
+            ORDER BY b.object_order;
          
             IF  ary_keys IS NOT NULL
             AND ary_keys.COUNT > 0
@@ -584,24 +565,18 @@ AS
          IF self.link_server IS NOT NULL
          THEN
             BEGIN
-               EXECUTE IMMEDIATE 
-                  'SELECT '
-               || 'a.servertyp.toYAML( '
-               || '    p_pretty_print  => :p01 + 1 '
-               || '   ,p_force_inline  => :p02 '
-               || '   ,p_short_id      => :p03 '
-               || ') '
-               || 'FROM dz_swagger3_xobjects a '
-               || 'WHERE '
-               || '    a.object_type_id = :p04 '
-               || 'AND a.object_id      = :p05 '
+               SELECT
+               a.servertyp.toYAML(
+                   p_pretty_print  => p_pretty_print + 1
+                  ,p_force_inline  => p_force_inline
+                  ,p_short_id      => p_short_id
+               )
                INTO clb_tmp
-               USING
-                p_pretty_print
-               ,p_force_inline
-               ,p_short_id
-               ,self.link_server.object_type_id
-               ,self.link_server.object_id;
+               FROM 
+               dz_swagger3_xobjects a
+               WHERE
+                   a.object_type_id = self.link_server.object_type_id
+               AND a.object_id      = self.link_server.object_id;
                
             EXCEPTION
                WHEN NO_DATA_FOUND

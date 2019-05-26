@@ -25,7 +25,7 @@ AS
    -----------------------------------------------------------------------------
    FUNCTION yaml_quote(
        p_input        IN  VARCHAR2
-   ) RETURN VARCHAR2
+   ) RETURN VARCHAR2 DETERMINISTIC
    AS
    BEGIN
       
@@ -61,7 +61,7 @@ AS
    -----------------------------------------------------------------------------
    FUNCTION yamlq(
        p_input        IN  VARCHAR2
-   ) RETURN VARCHAR2
+   ) RETURN VARCHAR2 DETERMINISTIC
    AS
       str_format  VARCHAR2(4000 Char);
       
@@ -97,7 +97,7 @@ AS
    FUNCTION yaml_text(
        p_input        IN  VARCHAR2 
       ,p_pretty_print IN  NUMBER DEFAULT 0
-   ) RETURN VARCHAR2
+   ) RETURN VARCHAR2 DETERMINISTIC
    AS
       str_output  VARCHAR2(32000 Char) := p_input;
       str_format  VARCHAR2(4000 Char);
@@ -203,7 +203,7 @@ AS
    FUNCTION yaml_text(
        p_input        IN  NUMBER 
       ,p_pretty_print IN  NUMBER DEFAULT 0
-   ) RETURN VARCHAR2
+   ) RETURN VARCHAR2 DETERMINISTIC
    AS
    BEGIN
    
@@ -221,7 +221,7 @@ AS
    FUNCTION yaml_text(
        p_input        IN  BOOLEAN 
       ,p_pretty_print IN  NUMBER DEFAULT 0
-   ) RETURN VARCHAR2
+   ) RETURN VARCHAR2 DETERMINISTIC
    AS
    BEGIN
    
@@ -246,7 +246,7 @@ AS
        p_input_url       IN VARCHAR2 CHARACTER SET ANY_CS
       ,p_escape_reserved IN VARCHAR2 DEFAULT NULL
       ,p_url_charset     IN VARCHAR2 DEFAULT NULL
-   )  RETURN VARCHAR2 CHARACTER SET p_input_url%CHARSET
+   )  RETURN VARCHAR2 CHARACTER SET p_input_url%CHARSET DETERMINISTIC
    AS
       str_escape_reserved VARCHAR2(4000 Char) := UPPER(p_escape_reserved);
       boo_escape_reserved BOOLEAN;
@@ -344,8 +344,8 @@ AS
    PROCEDURE conc(
        p_c                IN OUT NOCOPY CLOB
       ,p_v                IN OUT NOCOPY VARCHAR2
-      ,p_in_c             IN  VARCHAR2 DEFAULT NULL
-      ,p_in_v             IN  CLOB     DEFAULT NULL
+      ,p_in_c             IN  CLOB     DEFAULT NULL
+      ,p_in_v             IN  VARCHAR2 DEFAULT NULL
    )
    AS
    BEGIN
@@ -433,6 +433,29 @@ AS
       RETURN;
 
    END conc;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   PROCEDURE fconc(
+       p_c                IN OUT NOCOPY CLOB
+      ,p_v                IN OUT NOCOPY VARCHAR2
+   )
+   AS
+   BEGIN
+   
+      IF p_v IS NOT NULL
+      THEN
+         DBMS_LOB.WRITEAPPEND(
+             lob_loc => p_c
+            ,amount  => LENGTH(p_v)
+            ,buffer  => p_v
+         );
+
+         p_v := NULL;
+
+      END IF;
+   
+   END fconc;
 
 END dz_swagger3_util;
 /
