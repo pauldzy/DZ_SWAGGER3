@@ -60,15 +60,16 @@ AS
        p_pretty_print        IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
-      clb_hash         CLOB;
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      str_pad2         VARCHAR2(1 Char);
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      cb            CLOB;
+      v2            VARCHAR2(32000);
+      
+      str_pad       VARCHAR2(1 Char);
+      str_pad1      VARCHAR2(1 Char);
+      str_pad2      VARCHAR2(1 Char);
+      ary_keys      MDSYS.SDO_STRING2_ARRAY;
       
       TYPE clob_table IS TABLE OF CLOB;
-      ary_clb          clob_table;
+      ary_clb       clob_table;
       
    BEGIN
       
@@ -83,12 +84,22 @@ AS
       --------------------------------------------------------------------------
       IF p_pretty_print IS NULL
       THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',NULL)
+         );
+
       ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',-1)
+         );
          str_pad     := ' ';
-         
+
       END IF;
       
       str_pad1 := str_pad;
@@ -99,13 +110,18 @@ AS
       --------------------------------------------------------------------------
       IF self.oauth_flow_authorizationUrl IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'authorizationUrl'
-               ,self.oauth_flow_authorizationUrl
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'authorizationUrl'
+                  ,self.oauth_flow_authorizationUrl
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -117,13 +133,18 @@ AS
       --------------------------------------------------------------------------
       IF self.oauth_flow_tokenUrl IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'tokenUrl'
-               ,self.oauth_flow_tokenUrl
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'tokenUrl'
+                  ,self.oauth_flow_tokenUrl
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -135,13 +156,18 @@ AS
       --------------------------------------------------------------------------
       IF self.oauth_flow_refreshUrl IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'refreshUrl'
-               ,self.oauth_flow_refreshUrl
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'refreshUrl'
+                  ,self.oauth_flow_refreshUrl
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -154,58 +180,67 @@ AS
       IF self.oauth_flow_scope_names IS NOT NULL
       AND self.oauth_flow_scope_names.COUNT > 0
       THEN
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(str_pad1 || '"scopes":' || str_pad || '{',p_pretty_print + 1)
+         );
+      
          str_pad2 := str_pad;
          
-         IF p_pretty_print IS NULL
-         THEN
-            clb_hash := dz_json_util.pretty('{',NULL);
-            
-         ELSE
-            clb_hash := dz_json_util.pretty('{',-1);
-            
-         END IF;
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. self.oauth_flow_scope_names.COUNT
          LOOP
-            clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || self.oauth_flow_scope_names(i) || '":' || str_pad || self.oauth_flow_scope_desc(i)
-               ,p_pretty_print + 1
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"' || self.oauth_flow_scope_names(i) || '":' || str_pad || '"' || self.oauth_flow_scope_desc(i) || '"'
+                  ,p_pretty_print + 2
+               )
             );
             str_pad2 := ',';
          
          END LOOP;
          
-         clb_hash := clb_hash || dz_json_util.pretty(
-             '}'
-            ,p_pretty_print + 1,NULL,NULL
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                '}'
+               ,p_pretty_print + 1
+            )
          );
+         str_pad1 := ',';
          
       END IF;
-         
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.formatted2json(
-              'scopes'
-             ,clb_hash
-             ,p_pretty_print + 1
-          )
-         ,p_pretty_print + 1
-      );
-      str_pad1 := ',';
          
       --------------------------------------------------------------------------
       -- Step 70
       -- Add the left bracket
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
+      dz_swagger3_util.conc(
+          p_c    => cb
+         ,p_v    => v2
+         ,p_in_c => NULL
+         ,p_in_v => dz_json_util.pretty(
+             '}'
+            ,p_pretty_print,NULL,NULL
+         )
       );
-      
+
       --------------------------------------------------------------------------
       -- Step 80
       -- Cough it out
       --------------------------------------------------------------------------
-      RETURN clb_output;
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
+      RETURN cb;
            
    END toJSON;
    

@@ -39,6 +39,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON_req(
        p_pretty_print            IN  INTEGER   DEFAULT NULL
+      ,p_oauth_scope_flows       IN  VARCHAR2  DEFAULT NULL
     ) RETURN CLOB
     
    -----------------------------------------------------------------------------
@@ -55,6 +56,7 @@ AS OBJECT (
        p_pretty_print            IN  INTEGER   DEFAULT 0
       ,p_initial_indent          IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_final_linefeed          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_oauth_scope_flows       IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB
 
 );

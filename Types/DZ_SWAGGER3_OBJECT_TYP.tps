@@ -4,7 +4,7 @@ AS OBJECT (
     object_id           VARCHAR2(255 Char)
    ,object_type_id      VARCHAR2(255 Char)
    ,object_subtype      VARCHAR2(255 Char)
-   ,object_attribute    VARCHAR2(255 Char)
+   ,object_attribute    VARCHAR2(4000 Char)
    ,object_key          VARCHAR2(255 Char)
    ,object_hidden       VARCHAR2(5 Char)
    ,object_required     VARCHAR2(5 Char)

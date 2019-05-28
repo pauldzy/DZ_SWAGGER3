@@ -100,6 +100,7 @@ AS
       dz_swagger3_object_typ(
           p_object_id      => a.example_id
          ,p_object_type_id => 'exampletyp'
+         ,p_object_key     => a.example_name
          ,p_object_order   => a.example_order
       )
       BULK COLLECT INTO self.parameter_examples
@@ -161,13 +162,13 @@ AS
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
+      cb               CLOB;
+      v2               VARCHAR2(32000);
       boo_temp         BOOLEAN;
       str_pad          VARCHAR2(1 Char);
       str_pad1         VARCHAR2(1 Char);
       str_pad2         VARCHAR2(1 Char);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      clb_hash         CLOB;
       clb_tmp          CLOB;
       str_identifier   VARCHAR2(255 Char);
       
@@ -187,14 +188,23 @@ AS
       --------------------------------------------------------------------------
       IF p_pretty_print IS NULL
       THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',NULL)
+         );
+
       ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',-1)
+         );
          str_pad     := ' ';
-         
+
       END IF;
-      
       str_pad1 := str_pad;
       
       --------------------------------------------------------------------------
@@ -213,44 +223,59 @@ AS
             
          END IF;
 
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                '$ref'
-               ,'#/components/parameters/' || dz_swagger3_util.utl_url_escape(
-                  str_identifier
-                )
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   '$ref'
+                  ,'#/components/parameters/' || dz_swagger3_util.utl_url_escape(
+                     str_identifier
+                   )
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
       
       ELSE
       --------------------------------------------------------------------------
       -- Step 30
-      -- Add mandatory parameter name attribute
+      -- Add parameter name attribute
       --------------------------------------------------------------------------
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'name'
-               ,self.parameter_name
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'name'
+                  ,self.parameter_name
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
       
       --------------------------------------------------------------------------
       -- Step 30
-      -- Add optional in attribute
+      -- Add parameter in attribute
       --------------------------------------------------------------------------
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'in'
-               ,self.parameter_in
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'in'
+                  ,self.parameter_in
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -260,13 +285,18 @@ AS
       --------------------------------------------------------------------------
          IF self.parameter_description IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'description'
-                  ,self.parameter_description
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.value2json(
+                      'description'
+                     ,self.parameter_description
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -287,13 +317,18 @@ AS
                
             END IF;
             
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'required'
-                  ,boo_temp
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.value2json(
+                      'required'
+                     ,boo_temp
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -306,13 +341,18 @@ AS
          IF  self.parameter_deprecated IS NOT NULL
          AND LOWER(self.parameter_deprecated) = 'true'
          THEN
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'deprecated'
-                  ,TRUE
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.value2json(
+                      'deprecated'
+                     ,TRUE
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -325,13 +365,18 @@ AS
          IF self.parameter_allowEmptyValue IS NOT NULL
          AND LOWER(self.parameter_allowEmptyValue) = 'true'
          THEN
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'allowEmptyValue'
-                  ,TRUE
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.value2json(
+                      'allowEmptyValue'
+                     ,TRUE
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -343,13 +388,18 @@ AS
       --------------------------------------------------------------------------
          IF self.parameter_style IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'style'
-                  ,self.parameter_style
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.value2json(
+                      'style'
+                     ,self.parameter_style
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -370,13 +420,18 @@ AS
                
             END IF;
             
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'explode'
-                  ,boo_temp
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.value2json(
+                      'explode'
+                     ,boo_temp
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -397,13 +452,18 @@ AS
                
             END IF;
             
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'allowReserved'
-                  ,boo_temp
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.value2json(
+                      'allowReserved'
+                     ,boo_temp
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -443,13 +503,18 @@ AS
                   
             END;
 
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                   'schema'
-                  ,clb_tmp
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.formatted2json(
+                      'schema'
+                     ,clb_tmp
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
+               ,p_in_v => NULL
             );
             str_pad1 := ',';
 
@@ -457,36 +522,6 @@ AS
 
       --------------------------------------------------------------------------
       -- Step 110
-      -- Add optional example
-      --------------------------------------------------------------------------
-         IF self.parameter_example_string IS NOT NULL
-         THEN
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'example'
-                  ,self.parameter_example_string
-                  ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
-            );
-            str_pad1 := ',';
-
-         ELSIF self.parameter_example_number IS NOT NULL
-         THEN
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'example'
-                  ,self.parameter_example_number
-                  ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
-            );
-            str_pad1 := ',';
-
-         END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 120
       -- Add optional variables map
       --------------------------------------------------------------------------
          IF  self.parameter_examples IS NOT NULL 
@@ -494,7 +529,7 @@ AS
          THEN
             SELECT
              a.exampletyp.toJSON(
-                p_pretty_print     => p_pretty_print + 1
+                p_pretty_print     => p_pretty_print + 2
                ,p_force_inline     => p_force_inline
                ,p_short_id         => p_short_id
                ,p_identifier       => a.object_id
@@ -515,58 +550,111 @@ AS
             ORDER BY b.object_order;
             
             str_pad2 := str_pad;
-            
-            IF p_pretty_print IS NULL
-            THEN
-               clb_hash := dz_json_util.pretty('{',NULL);
-               
-            ELSE
-               clb_hash := dz_json_util.pretty('{',-1);
-               
-            END IF;
-
-            FOR i IN 1 .. ary_keys.COUNT
-            LOOP
-               clb_hash := clb_hash || dz_json_util.pretty(
-                   str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
+         
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad1 || '"examples":' || str_pad || '{'
                   ,p_pretty_print + 1
+                )
+            );
+         
+            FOR i IN 1 .. ary_clb.COUNT
+            LOOP
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => dz_json_util.pretty(
+                      str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
+                     ,p_pretty_print + 2
+                  )
+                  ,p_in_v => NULL
                );
                str_pad2 := ',';
             
             END LOOP;
             
-            clb_hash := clb_hash || dz_json_util.pretty(
-                '}'
-               ,p_pretty_print + 1,NULL,NULL
-            );
-            
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                    'examples'
-                   ,clb_hash
-                   ,p_pretty_print + 1
-                )
-               ,p_pretty_print + 1
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   '}'
+                  ,p_pretty_print + 1
+               )
             );
             str_pad1 := ',';
             
+         ELSE
+      --------------------------------------------------------------------------
+      -- Step 110
+      -- Add optional example
+      --------------------------------------------------------------------------
+            IF self.parameter_example_string IS NOT NULL
+            THEN
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => dz_json_util.pretty(
+                      str_pad1 || dz_json_main.value2json(
+                         'example'
+                        ,self.parameter_example_string
+                        ,p_pretty_print + 1
+                     )
+                     ,p_pretty_print + 1
+                  )
+               );
+               str_pad1 := ',';
+
+            ELSIF self.parameter_example_number IS NOT NULL
+            THEN
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => dz_json_util.pretty(
+                      str_pad1 || dz_json_main.value2json(
+                         'example'
+                        ,self.parameter_example_number
+                        ,p_pretty_print + 1
+                     )
+                     ,p_pretty_print + 1
+                  )
+               );
+               str_pad1 := ',';
+
+            END IF;
+         
          END IF;
-      
-      END IF;
+         
+      END IF;      
       --------------------------------------------------------------------------
       -- Step 130
       -- Add the left bracket
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
+      dz_swagger3_util.conc(
+          p_c    => cb
+         ,p_v    => v2
+         ,p_in_c => NULL
+         ,p_in_v => dz_json_util.pretty(
+             '}'
+            ,p_pretty_print,NULL,NULL
+         )
       );
-      
+
       --------------------------------------------------------------------------
       -- Step 140
       -- Cough it out
       --------------------------------------------------------------------------
-      RETURN clb_output;
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
+      RETURN cb;
            
    END toJSON;
    
@@ -583,7 +671,8 @@ AS
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
+      cb               CLOB;
+      v2               VARCHAR2(32000);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       clb_tmp          CLOB;
       str_identifier   VARCHAR2(255 Char);
@@ -609,13 +698,18 @@ AS
             
          END IF;
          
-         clb_output := clb_output || dz_json_util.pretty_str(
-             '$ref: ' || dz_swagger3_util.yaml_text(
-                '#/components/parameters/' || str_identifier
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty_str(
+                '$ref: ' || dz_swagger3_util.yaml_text(
+                   '#/components/parameters/' || str_identifier
+                  ,p_pretty_print
+               )
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
+               ,'  '
+            ) 
          );
   
       ELSE
@@ -623,26 +717,36 @@ AS
       -- Step 20
       -- Write the mandatory parameter name
       --------------------------------------------------------------------------
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'name: ' || dz_swagger3_util.yaml_text(
-                self.parameter_name
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty_str(
+                'name: ' || dz_swagger3_util.yaml_text(
+                   self.parameter_name
+                  ,p_pretty_print
+               )
                ,p_pretty_print
+               ,'  '
             )
-            ,p_pretty_print
-            ,'  '
          );
       
       --------------------------------------------------------------------------
       -- Step 30
       -- Write the mandatory parameter in attribute
       --------------------------------------------------------------------------
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'in: ' || dz_swagger3_util.yaml_text(
-                self.parameter_in
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty_str(
+                'in: ' || dz_swagger3_util.yaml_text(
+                   self.parameter_in
+                  ,p_pretty_print
+               )
                ,p_pretty_print
+               ,'  '
             )
-            ,p_pretty_print
-            ,'  '
          );
       
       --------------------------------------------------------------------------
@@ -651,16 +755,18 @@ AS
       --------------------------------------------------------------------------
          IF self.parameter_description IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'description: ' || dz_swagger3_util.yaml_text(
-                   REGEXP_REPLACE(
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'description: ' || dz_swagger3_util.yaml_text(
                       self.parameter_description
-                     ,CHR(10) || '$'
-                     ,'')
+                     ,p_pretty_print
+                  )
                   ,p_pretty_print
+                  ,'  '
                )
-               ,p_pretty_print
-               ,'  '
             );
             
          END IF;
@@ -671,10 +777,15 @@ AS
       --------------------------------------------------------------------------
          IF self.parameter_required IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'required: ' || LOWER(self.parameter_required)
-               ,p_pretty_print
-               ,'  '
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'required: ' || LOWER(self.parameter_required)
+                  ,p_pretty_print
+                  ,'  '
+               )
             );
             
          END IF;
@@ -685,10 +796,15 @@ AS
       --------------------------------------------------------------------------
          IF self.parameter_deprecated IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'deprecated: ' || LOWER(self.parameter_deprecated)
-               ,p_pretty_print
-               ,'  '
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'deprecated: ' || LOWER(self.parameter_deprecated)
+                  ,p_pretty_print
+                  ,'  '
+               )
             );
             
          END IF;
@@ -699,10 +815,15 @@ AS
       --------------------------------------------------------------------------
          IF self.parameter_allowEmptyValue IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'allowEmptyValue: ' || LOWER(self.parameter_allowEmptyValue)
-               ,p_pretty_print
-               ,'  '
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'allowEmptyValue: ' || LOWER(self.parameter_allowEmptyValue)
+                  ,p_pretty_print
+                  ,'  '
+               )
             );
             
          END IF;
@@ -713,13 +834,18 @@ AS
       --------------------------------------------------------------------------
          IF self.parameter_style IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'style: ' || dz_swagger3_util.yaml_text(
-                   self.parameter_style
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'style: ' || dz_swagger3_util.yaml_text(
+                      self.parameter_style
+                     ,p_pretty_print
+                  )
                   ,p_pretty_print
+                  ,'  '
                )
-               ,p_pretty_print
-               ,'  '
             );
             
          END IF;
@@ -730,10 +856,15 @@ AS
       --------------------------------------------------------------------------
          IF self.parameter_explode IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'explode: ' || LOWER(self.parameter_explode)
-               ,p_pretty_print
-               ,'  '
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'explode: ' || LOWER(self.parameter_explode)
+                  ,p_pretty_print
+                  ,'  '
+               )
             );
             
          END IF;
@@ -744,10 +875,15 @@ AS
       --------------------------------------------------------------------------
          IF self.parameter_allowReserved IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'allowReserved: ' || LOWER(self.parameter_allowReserved)
-               ,p_pretty_print
-               ,'  '
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'allowReserved: ' || LOWER(self.parameter_allowReserved)
+                  ,p_pretty_print
+                  ,'  '
+               )
             );
             
          END IF;
@@ -787,44 +923,28 @@ AS
 
             END;
             
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'schema: '
-               ,p_pretty_print
-               ,'  '
-            ) || clb_tmp;
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'schema: '
+                  ,p_pretty_print
+                  ,'  '
+               )
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => clb_tmp
+               ,p_in_v => NULL
+            );
             
          END IF;
       
       --------------------------------------------------------------------------
       -- Step 100
-      -- Write the optional examples values
-      --------------------------------------------------------------------------
-         IF self.parameter_example_string IS NOT NULL
-         THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'example: ' || dz_swagger3_util.yaml_text(
-                   self.parameter_example_string
-                  ,p_pretty_print
-               )
-               ,p_pretty_print
-               ,'  '
-            );
-            
-         ELSIF self.parameter_example_number IS NOT NULL
-         THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'example: ' || dz_swagger3_util.yaml_text(
-                   self.parameter_example_number
-                  ,p_pretty_print
-               )
-               ,p_pretty_print
-               ,'  '
-            );
-            
-         END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 110
       -- Write the optional examples map
       --------------------------------------------------------------------------
          IF  self.parameter_examples IS NOT NULL 
@@ -832,7 +952,7 @@ AS
          THEN
             SELECT
              a.exampletyp.toYAML(
-                p_pretty_print     => p_pretty_print + 1
+                p_pretty_print     => p_pretty_print + 2
                ,p_force_inline     => p_force_inline
                ,p_short_id         => p_short_id
                ,p_identifier       => a.object_id
@@ -852,42 +972,109 @@ AS
             AND a.object_id      = b.object_id
             ORDER BY b.object_order; 
             
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'examples: '
-               ,p_pretty_print + 1
-               ,'  '
-            );
-            
-            FOR i IN 1 .. ary_keys.COUNT
-            LOOP
-               clb_output := clb_output || dz_json_util.pretty(
-                   '''' || ary_keys(i) || ''': '
-                  ,p_pretty_print + 2
-                  ,'  '
-               ) || ary_clb(i);
-            
-            END LOOP;
-            
+            IF  ary_keys IS NOT NULL
+            AND ary_keys.COUNT > 0
+            THEN
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => dz_json_util.pretty_str(
+                      'examples: '
+                     ,p_pretty_print
+                     ,'  '
+                  )
+               );
+               
+               FOR i IN 1 .. ary_keys.COUNT
+               LOOP
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => NULL
+                     ,p_in_v => dz_json_util.pretty_str(
+                         dz_swagger3_util.yamlq(ary_keys(i)) || ': '
+                        ,p_pretty_print + 1
+                        ,'  '
+                      )
+                  );
+                  
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => ary_clb(i)
+                     ,p_in_v => NULL
+                  );
+               
+               END LOOP;
+                  
+            END IF;
+         
+         ELSE
+      --------------------------------------------------------------------------
+      -- Step 100
+      -- Write the optional examples values
+      --------------------------------------------------------------------------
+            IF self.parameter_example_string IS NOT NULL
+            THEN
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => dz_json_util.pretty_str(
+                      'example: ' || dz_swagger3_util.yaml_text(
+                         self.parameter_example_string
+                        ,p_pretty_print
+                     )
+                     ,p_pretty_print
+                     ,'  '
+                  )
+               );
+               
+            ELSIF self.parameter_example_number IS NOT NULL
+            THEN
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => dz_json_util.pretty_str(
+                      'example: ' || dz_swagger3_util.yaml_text(
+                         self.parameter_example_number
+                        ,p_pretty_print
+                     )
+                     ,p_pretty_print
+                     ,'  '
+                  )
+               );
+               
+            END IF;
+      
          END IF;
       
       END IF;
+      
       --------------------------------------------------------------------------
       -- Step 110
       -- Cough it out without final line feed
       --------------------------------------------------------------------------
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
       IF p_initial_indent = 'FALSE'
       THEN
-         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+         cb := REGEXP_REPLACE(cb,'^\s+','');
        
       END IF;
       
       IF p_final_linefeed = 'FALSE'
       THEN
-         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         cb := REGEXP_REPLACE(cb,CHR(10) || '$','');
          
       END IF;
                
-      RETURN clb_output;
+      RETURN cb;
       
    END toYAML;
    

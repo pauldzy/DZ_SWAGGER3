@@ -232,6 +232,7 @@ AS
             FROM
             TABLE(ary_ids) b
          )
+         AND a.headertyp IS NOT NULL
       )
       LOOP
          r.headertyp.traverse();
@@ -331,6 +332,7 @@ AS
             FROM
             TABLE(ary_ids) b
          )
+         AND a.mediatyp IS NOT NULL
       )
       LOOP
          r.mediatyp.traverse();
@@ -385,6 +387,7 @@ AS
             FROM
             TABLE(ary_ids) b
          )
+         AND a.mediatyp IS NOT NULL
       )
       LOOP
          r.mediatyp.traverse();
@@ -841,7 +844,7 @@ AS
          ,p_securityscheme_fullname => a.object_key
          ,p_versionid               => p_versionid
        )
-      FROM 
+      FROM
       TABLE(ary_ids) a;
 
    END securityschemetyp;

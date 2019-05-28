@@ -111,12 +111,15 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
+       p_pretty_print            IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
+      cb            CLOB;
+      v2            VARCHAR2(32000);
+     
+      str_pad       VARCHAR2(1 Char);
+      str_pad1      VARCHAR2(1 Char);
+      str_pad2      VARCHAR2(1 Char);
       
    BEGIN
       
@@ -131,14 +134,23 @@ AS
       --------------------------------------------------------------------------
       IF p_pretty_print IS NULL
       THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',NULL)
+         );
+
       ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',-1)
+         );
          str_pad     := ' ';
-         
+
       END IF;
-      
       str_pad1 := str_pad;
       
       --------------------------------------------------------------------------
@@ -147,13 +159,18 @@ AS
       --------------------------------------------------------------------------
       IF self.securityscheme_type IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'type'
-               ,self.securityscheme_type
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'type'
+                  ,self.securityscheme_type
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -165,13 +182,18 @@ AS
       --------------------------------------------------------------------------
       IF self.securityscheme_description IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'description'
-               ,self.securityscheme_description
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'description'
+                  ,self.securityscheme_description
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -183,13 +205,18 @@ AS
       --------------------------------------------------------------------------
       IF self.securityscheme_name IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'name'
-               ,self.securityscheme_name
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'name'
+                  ,self.securityscheme_name
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -201,13 +228,18 @@ AS
       --------------------------------------------------------------------------
       IF self.securityscheme_in IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'in'
-               ,self.securityscheme_in
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'in'
+                  ,self.securityscheme_in
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -219,13 +251,18 @@ AS
       --------------------------------------------------------------------------
       IF self.securityscheme_scheme IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'scheme'
-               ,self.securityscheme_scheme
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'scheme'
+                  ,self.securityscheme_scheme
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -237,13 +274,18 @@ AS
       --------------------------------------------------------------------------
       IF self.securityscheme_bearerFormat IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'bearerFormat'
-               ,self.securityscheme_bearerFormat
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'bearerFormat'
+                  ,self.securityscheme_bearerFormat
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -253,17 +295,139 @@ AS
       -- Step 100
       -- Add flows object
       --------------------------------------------------------------------------
-      IF  self.oauth_flow_implicit IS NOT NULL
+      IF self.oauth_flow_implicit IS NOT NULL
+      OR self.oauth_flow_password IS NOT NULL
+      OR self.oauth_flow_clientCredentials IS NOT NULL
+      OR self.oauth_flow_authorizationCode IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                'flows'
-               ,self.oauth_flow_implicit.toJSON(
-                  p_pretty_print   => p_pretty_print + 1 
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || '"flows":' || str_pad || '{'
+               ,p_pretty_print + 1
+             )
+         );
+         
+         str_pad2 := str_pad;
+
+         IF self.oauth_flow_implicit IS NOT NULL
+         THEN
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"implicit":' || str_pad
+                  ,p_pretty_print + 2
+                  ,NULL
+                  ,NULL
+               )
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   self.oauth_flow_implicit.toJSON(p_pretty_print + 2)
+                  ,p_pretty_print + 2
                 )
+               ,p_in_v => NULL
+            );
+            str_pad2 := ',';
+         
+         END IF;
+         
+         IF self.oauth_flow_password IS NOT NULL
+         THEN
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"password":' || str_pad
+                  ,p_pretty_print + 2
+                  ,NULL
+                  ,NULL
+               )
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   self.oauth_flow_password.toJSON(p_pretty_print + 2)
+                  ,p_pretty_print + 2
+                )
+               ,p_in_v => NULL
+            );
+            str_pad2 := ',';
+         
+         END IF;
+         
+         IF self.oauth_flow_clientCredentials IS NOT NULL
+         THEN
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"clientCredentials":' || str_pad
+                  ,p_pretty_print + 2
+                  ,NULL
+                  ,NULL
+               )
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   self.oauth_flow_clientCredentials.toJSON(p_pretty_print + 2)
+                  ,p_pretty_print + 2
+                )
+               ,p_in_v => NULL
+            );
+            str_pad2 := ',';
+         
+         END IF;
+         
+         IF self.oauth_flow_authorizationCode IS NOT NULL
+         THEN
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"authorizationCode":' || str_pad
+                  ,p_pretty_print + 2
+                  ,NULL
+                  ,NULL
+               )
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   self.oauth_flow_authorizationCode.toJSON(p_pretty_print + 2)
+                  ,p_pretty_print + 2
+                )
+               ,p_in_v => NULL
+            );
+            str_pad2 := ',';
+         
+         END IF;
+         
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                '}'
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -275,44 +439,63 @@ AS
       --------------------------------------------------------------------------
       IF self.securityscheme_openIdConUrl IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'openIdConnectUrl'
-               ,self.securityscheme_openIdConUrl
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'openIdConnectUrl'
+                  ,self.securityscheme_openIdConUrl
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
       END IF;
          
       --------------------------------------------------------------------------
-      -- Step 120
+      -- Step 70
       -- Add the left bracket
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
+      dz_swagger3_util.conc(
+          p_c    => cb
+         ,p_v    => v2
+         ,p_in_c => NULL
+         ,p_in_v => dz_json_util.pretty(
+             '}'
+            ,p_pretty_print,NULL,NULL
+         )
       );
-      
+
       --------------------------------------------------------------------------
-      -- Step 130
+      -- Step 80
       -- Cough it out
       --------------------------------------------------------------------------
-      RETURN clb_output;
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
+      RETURN cb;
            
    END toJSON;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON_req(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
+       p_pretty_print            IN  INTEGER   DEFAULT NULL
+      ,p_oauth_scope_flows       IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
+      cb            CLOB;
+      v2            VARCHAR2(32000);
+     
+      str_pad       VARCHAR2(1 Char);
+      str_pad1      VARCHAR2(1 Char);
+      ary_oauth     MDSYS.SDO_STRING2_ARRAY;
       
    BEGIN
       
@@ -327,77 +510,97 @@ AS
       --------------------------------------------------------------------------
       IF p_pretty_print IS NULL
       THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',NULL)
+         );
+
       ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',-1)
+         );
          str_pad     := ' ';
-         
+
       END IF;
+      str_pad1 := str_pad;
       
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Add description 
-      --------------------------------------------------------------------------
-      IF self.securityScheme_type IN ('oauth2','openIdConnect')
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || '"' || self.securityScheme_fullname || '":' || str_pad || '[]'
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-         
-      ELSE
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || '"' || self.securityScheme_fullname || '":' || str_pad || '[]'
-            ,p_pretty_print + 1
-         );
-         str_pad1 := ',';
-         
-      END IF;
-/*
       --------------------------------------------------------------------------
       -- Step 30
-      -- Add name element
+      -- Add security item with oauth scopes 
       --------------------------------------------------------------------------
-      IF  self.scope_names IS NOT NULL
-      AND self.scope_names.COUNT > 0
+      IF  self.securityScheme_type IN ('oauth2','openIdConnect')
+      AND p_oauth_scope_flows IS NOT NULL
       THEN
-         FOR i IN 1 .. self.scope_names.COUNT
-         LOOP
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad || dz_json_main.json_format(self.scope_names(i))
+         ary_oauth := dz_json_util.gz_split(p_oauth_scope_flows,',');
+         
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty_str(
+                str_pad1 || dz_json_main.value2json(
+                   self.securityScheme_fullname
+                  ,ary_oauth
+                  ,p_pretty_print + 1
+                )
                ,p_pretty_print + 1
-            );
-            str_pad := ',';
-
-         END LOOP;
+               ,'  '
+             ) 
+         );
+         
+      ELSE
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty_str(
+                str_pad1 || '"' || self.securityScheme_fullname || '":' || str_pad || '[]'
+               ,p_pretty_print + 1
+               ,'  '
+             ) 
+         );
          
       END IF;
-*/
+      str_pad1 := ',';
+
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 70
       -- Add the left bracket
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
+      dz_swagger3_util.conc(
+          p_c    => cb
+         ,p_v    => v2
+         ,p_in_c => NULL
+         ,p_in_v => dz_json_util.pretty(
+             '}'
+            ,p_pretty_print,NULL,NULL
+         )
       );
-      
+
       --------------------------------------------------------------------------
-      -- Step 50
+      -- Step 80
       -- Cough it out
       --------------------------------------------------------------------------
-      RETURN clb_output;
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
+      RETURN cb;
            
    END toJSON_req;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+       p_pretty_print            IN  INTEGER   DEFAULT 0
+      ,p_initial_indent          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed          IN  VARCHAR2  DEFAULT 'TRUE'
    ) RETURN CLOB
    AS
       cb            CLOB;
@@ -706,12 +909,15 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML_req(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+       p_pretty_print            IN  INTEGER   DEFAULT 0
+      ,p_initial_indent          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed          IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_oauth_scope_flows       IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
+      cb            CLOB;
+      v2            VARCHAR2(32000);
+      ary_oauth     MDSYS.SDO_STRING2_ARRAY;
       
    BEGIN
    
@@ -724,62 +930,73 @@ AS
       -- Step 20
       -- Write the yaml contact name
       --------------------------------------------------------------------------
-      IF self.securityScheme_type IN ('oauth2','openIdConnect')
+      IF  self.securityScheme_type IN ('oauth2','openIdConnect')
+      AND p_oauth_scope_flows IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             dz_swagger3_util.yamlq(self.securityScheme_fullname) || ': []'
-            ,p_pretty_print + 1
-            ,'  '
+         ary_oauth := dz_json_util.gz_split(p_oauth_scope_flows,',');
+         
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty_str(
+                dz_swagger3_util.yamlq(self.securityScheme_fullname) || ':'
+               ,p_pretty_print
+               ,'  '
+             ) 
          );
+         
+         FOR i IN 1 .. ary_oauth.COUNT
+         LOOP
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   '- ' || dz_swagger3_util.yamlq(ary_oauth(i))
+                  ,p_pretty_print
+                  ,'  '
+                ) 
+            );
+         
+         END LOOP; 
             
       ELSE
-         clb_output := clb_output || dz_json_util.pretty_str(
-             dz_swagger3_util.yamlq(self.securityScheme_fullname) || ': []'
-            ,p_pretty_print + 1
-            ,'  '
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty_str(
+                dz_swagger3_util.yamlq(self.securityScheme_fullname) || ': []'
+               ,p_pretty_print
+               ,'  '
+             ) 
          );
          
       END IF;
 
-/*
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Write the yaml contact name
-      --------------------------------------------------------------------------
-      IF  self.scope_names IS NOT NULL
-      AND self.scope_names.COUNT > 0
-      THEN
-         clb_output := clb_output || ': ';
-
-         FOR i IN 1 .. self.scope_names.COUNT
-         LOOP
-            clb_output := clb_output || dz_json_util.pretty(
-                '- ' || dz_swagger3_util.yaml_text(self.scope_names(i),p_pretty_print)
-               ,p_pretty_print
-               ,'  '
-            );
-
-         END LOOP;
-
-      END IF;
-*/
       --------------------------------------------------------------------------
       -- Step 110
       -- Cough it out without final line feed
       --------------------------------------------------------------------------
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
       IF p_initial_indent = 'FALSE'
       THEN
-         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+         cb := REGEXP_REPLACE(cb,'^\s+','');
        
       END IF;
       
       IF p_final_linefeed = 'FALSE'
       THEN
-         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         cb := REGEXP_REPLACE(cb,CHR(10) || '$','');
          
       END IF;
                
-      RETURN clb_output;
+      RETURN cb;
       
    END toYAML_req;
    

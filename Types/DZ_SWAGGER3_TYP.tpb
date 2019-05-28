@@ -196,10 +196,11 @@ AS
       --------------------------------------------------------------------------
       SELECT
       dz_swagger3_object_typ(
-          p_object_id      => a.securityScheme_id
-         ,p_object_type_id => 'securityschemetyp'
-         ,p_object_key     => a.securityScheme_name
-         ,p_object_order   => a.securityScheme_order
+          p_object_id        => a.securityScheme_id
+         ,p_object_type_id   => 'securityschemetyp'
+         ,p_object_key       => a.securityScheme_name
+         ,p_object_attribute => a.oauth_flow_scopes
+         ,p_object_order     => a.securityScheme_order
       )
       BULK COLLECT INTO self.security 
       FROM
@@ -384,7 +385,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(str_pad1 || '"servers":' || str_pad || '[',p_pretty_print + 1)
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad1 || '"servers":' || str_pad || '['
+                  ,p_pretty_print + 1
+               )
             );
                
             FOR i IN 1 .. ary_clb.COUNT
@@ -410,8 +414,7 @@ AS
                    ']'
                   ,p_pretty_print + 1
                )
-            );
-            
+            );            
             str_pad1 := ',';
             
          END IF;
@@ -526,7 +529,10 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(str_pad1 || '"components":' || str_pad || '{',p_pretty_print + 1)
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || '"components":' || str_pad || '{'
+               ,p_pretty_print + 1
+            )
          );
          
          str_pad2 := str_pad;      
@@ -566,7 +572,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(str_pad2 || '"schemas":' || str_pad || '{',p_pretty_print + 2)
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"schemas":' || str_pad || '{'
+                  ,p_pretty_print + 2
+               )
             );
             
             str_pad3 := str_pad;
@@ -634,7 +643,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(str_pad2 || '"responses":' || str_pad || '{',p_pretty_print + 2)
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"responses":' || str_pad || '{'
+                  ,p_pretty_print + 2
+               )
             );
             
             str_pad3 := str_pad;
@@ -703,7 +715,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(str_pad2 || '"parameters":' || str_pad || '{',p_pretty_print + 2)
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"parameters":' || str_pad || '{'
+                  ,p_pretty_print + 2
+               )
             );
             
             str_pad3 := str_pad;
@@ -771,7 +786,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(str_pad2 || '"examples":' || str_pad || '{',p_pretty_print + 2)
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"examples":' || str_pad || '{'
+                  ,p_pretty_print + 2
+               )
             );
             
             str_pad3 := str_pad;
@@ -839,7 +857,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(str_pad2 || '"requestBodies":' || str_pad || '{',p_pretty_print + 2)
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"requestBodies":' || str_pad || '{'
+                  ,p_pretty_print + 2
+               )
             );
             
             str_pad3 := str_pad;
@@ -907,7 +928,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(str_pad2 || '"headers":' || str_pad || '{',p_pretty_print + 2)
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"headers":' || str_pad || '{'
+                  ,p_pretty_print + 2
+               )
             );
             
             str_pad3 := str_pad;
@@ -966,7 +990,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(str_pad2 || '"securitySchemes":' || str_pad || '{',p_pretty_print + 2)
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"securitySchemes":' || str_pad || '{'
+                  ,p_pretty_print + 2
+               )
             );
             
             str_pad3 := str_pad;
@@ -1034,7 +1061,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(str_pad2 || '"links":' || str_pad || '{',p_pretty_print + 2)
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"links":' || str_pad || '{'
+                  ,p_pretty_print + 2
+               )
             );
             
             str_pad3 := str_pad;
@@ -1102,7 +1132,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(str_pad2 || '"callbacks":' || str_pad || '{',p_pretty_print + 2)
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"callbacks":' || str_pad || '{'
+                  ,p_pretty_print + 2
+               )
             );
             
             str_pad3 := str_pad;
@@ -1163,7 +1196,8 @@ AS
       THEN
          SELECT 
          a.securityschemetyp.toJSON_req( 
-            p_pretty_print     => p_pretty_print + 2 
+             p_pretty_print      => p_pretty_print + 2
+            ,p_oauth_scope_flows => b.object_attribute
          ) 
          BULK COLLECT INTO ary_clb
          FROM 
@@ -1182,7 +1216,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(str_pad1 || '"security":' || str_pad || '[',p_pretty_print + 1)
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad1 || '"security":' || str_pad || '['
+                  ,p_pretty_print + 1
+               )
             );
             
             str_pad2 := str_pad;
@@ -1246,7 +1283,10 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(str_pad1 || '"tags":' || str_pad || '[',p_pretty_print + 1)
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || '"tags":' || str_pad || '['
+               ,p_pretty_print + 1
+            )
          );
          
          str_pad2 := str_pad;
@@ -1275,7 +1315,6 @@ AS
                ,p_pretty_print + 1
             )
          );
-         
          str_pad1 := ',';
       
       END IF;
@@ -2180,8 +2219,9 @@ AS
       THEN
          SELECT
          a.securityschemetyp.toYAML_req(
-             p_pretty_print     => p_pretty_print + 2
-            ,p_initial_indent   => 'FALSE'
+             p_pretty_print      => p_pretty_print + 2
+            ,p_initial_indent    => 'FALSE'
+            ,p_oauth_scope_flows => b.object_attribute
          )
          BULK COLLECT INTO ary_clb
          FROM

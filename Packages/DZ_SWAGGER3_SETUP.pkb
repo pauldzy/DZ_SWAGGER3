@@ -1546,10 +1546,10 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 300
-      -- Build RESPONSE HEADER MAP table
+      -- Build PARENT HEADER MAP table
       --------------------------------------------------------------------------
-      str_sql := 'CREATE TABLE dz_swagger3_response_headr_map('
-              || '    response_id              VARCHAR2(255 Char) NOT NULL '
+      str_sql := 'CREATE TABLE dz_swagger3_parent_header_map('
+              || '    parent_id                VARCHAR2(255 Char) NOT NULL '
               || '   ,header_name              VARCHAR2(255 Char) NOT NULL '
               || '   ,header_id                VARCHAR2(255 Char) NOT NULL '
               || '   ,header_order             INTEGER '
@@ -1564,9 +1564,9 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_response_headr_map '
-              || 'ADD CONSTRAINT dz_swagger3_response_headr_mpk '
-              || 'PRIMARY KEY(versionid,response_id,header_name,header_id) ';
+      str_sql := 'ALTER TABLE dz_swagger3_parent_header_map '
+              || 'ADD CONSTRAINT dz_swagger3_parent_header_mapk '
+              || 'PRIMARY KEY(versionid,parent_id,header_id) ';
               
       IF p_index_tablespace IS NOT NULL
       THEN
@@ -1576,18 +1576,18 @@ AS
       
       EXECUTE IMMEDIATE str_sql;
       
-      str_sql := 'ALTER TABLE dz_swagger3_response_headr_map '
+      str_sql := 'ALTER TABLE dz_swagger3_parent_header_map '
               || 'ADD( '
-              || '    CONSTRAINT dz_swagger3_response_headr_c01 '
-              || '    CHECK (response_id = TRIM(response_id)) '
+              || '    CONSTRAINT dz_swagger3_parent_header_mc01 '
+              || '    CHECK (parent_id = TRIM(parent_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_response_headr_c02 '
+              || '   ,CONSTRAINT dz_swagger3_parent_header_mc02 '
               || '    CHECK (header_name = TRIM(header_name)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_response_headr_c03 '
+              || '   ,CONSTRAINT dz_swagger3_parent_header_mc03 '
               || '    CHECK (header_id = TRIM(header_id)) '
               || '    ENABLE VALIDATE '
-              || '   ,CONSTRAINT dz_swagger3_response_headr_c04 '
+              || '   ,CONSTRAINT dz_swagger3_parent_header_mc04 '
               || '    CHECK (versionid = TRIM(versionid)) '
               || '    ENABLE VALIDATE '
               || ') ';
@@ -1695,6 +1695,7 @@ AS
               || '    parent_id                   VARCHAR2(255 Char) NOT NULL '
               || '   ,securityScheme_id           VARCHAR2(255 Char) NOT NULL '
               || '   ,securityScheme_name         VARCHAR2(255 Char) NOT NULL '
+              || '   ,oauth_flow_scopes           VARCHAR2(4000 Char) '
               || '   ,securityScheme_order        INTEGER            NOT NULL '              
               || '   ,versionid                   VARCHAR2(40 Char)  NOT NULL '
               || ') ';

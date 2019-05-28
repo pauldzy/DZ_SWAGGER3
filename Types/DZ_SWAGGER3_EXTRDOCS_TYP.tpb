@@ -20,8 +20,16 @@ AS
    AS 
    BEGIN 
    
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Initialize the object
+      --------------------------------------------------------------------------
       self.versionid := p_versionid;
-      
+
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Pull the object information
+      --------------------------------------------------------------------------
       BEGIN
          SELECT
           a.externaldoc_id
@@ -42,7 +50,6 @@ AS
          THEN
             self.externaldoc_url         := NULL;
             self.externaldoc_description := NULL;
-            RETURN;
             
          WHEN OTHERS
          THEN
@@ -50,6 +57,10 @@ AS
             
       END;
       
+      --------------------------------------------------------------------------
+      -- Step 100
+      -- Return the completed object
+      --------------------------------------------------------------------------
       RETURN; 
       
    END dz_swagger3_extrdocs_typ;
@@ -71,7 +82,9 @@ AS
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
+      cb               CLOB;
+      v2               VARCHAR2(32000);
+      
       str_pad          VARCHAR2(1 Char);
       str_pad1         VARCHAR2(1 Char);
       
@@ -88,27 +101,41 @@ AS
       --------------------------------------------------------------------------
       IF p_pretty_print IS NULL
       THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         
-      ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
-         str_pad     := ' ';
-         
-      END IF;
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',NULL)
+         );
 
+      ELSE
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',-1)
+         );
+         str_pad     := ' ';
+
+      END IF;
       str_pad1 := str_pad;
       
       --------------------------------------------------------------------------
       -- Step 30
       -- Add name element
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.value2json(
-             'description'
-            ,self.externaldoc_description
+      dz_swagger3_util.conc(
+          p_c    => cb
+         ,p_v    => v2
+         ,p_in_c => NULL
+         ,p_in_v => dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'description'
+               ,self.externaldoc_description
+               ,p_pretty_print + 1
+            )
             ,p_pretty_print + 1
          )
-         ,p_pretty_print + 1
       );
       str_pad1 := ',';
          
@@ -118,32 +145,47 @@ AS
       --------------------------------------------------------------------------
       IF self.externaldoc_url IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'url'
-               ,self.externaldoc_url
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   'url'
+                  ,self.externaldoc_url
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
 
       END IF;
  
       --------------------------------------------------------------------------
-      -- Step 100
+      -- Step 50
       -- Add the left bracket
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
+      dz_swagger3_util.conc(
+          p_c    => cb
+         ,p_v    => v2
+         ,p_in_c => NULL
+         ,p_in_v => dz_json_util.pretty(
+             '}'
+            ,p_pretty_print,NULL,NULL
+         )
       );
-      
+
       --------------------------------------------------------------------------
-      -- Step 110
+      -- Step 60
       -- Cough it out
       --------------------------------------------------------------------------
-      RETURN clb_output;
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
+      RETURN cb;
            
    END toJSON;
    
@@ -157,7 +199,8 @@ AS
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
-      clb_output        CLOB;
+      cb               CLOB;
+      v2               VARCHAR2(32000);
       
    BEGIN
    
@@ -170,13 +213,18 @@ AS
       -- Step 20
       -- Write the yaml description
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty_str(
-          'description: ' || dz_swagger3_util.yaml_text(
-             self.externaldoc_description
+      dz_swagger3_util.conc(
+          p_c    => cb
+         ,p_v    => v2
+         ,p_in_c => NULL
+         ,p_in_v => dz_json_util.pretty_str(
+              'description: ' || dz_swagger3_util.yaml_text(
+                self.externaldoc_description
+               ,p_pretty_print
+            )
             ,p_pretty_print
+            ,'  '
          )
-         ,p_pretty_print
-         ,'  '
       );
       
       --------------------------------------------------------------------------
@@ -185,13 +233,18 @@ AS
       --------------------------------------------------------------------------
       IF self.externaldoc_url IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'url: ' || dz_swagger3_util.yaml_text(
-                self.externaldoc_url
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty_str(
+                 'url: ' || dz_swagger3_util.yaml_text(
+                   self.externaldoc_url
+                  ,p_pretty_print
+               )
                ,p_pretty_print
+               ,'  '
             )
-            ,p_pretty_print
-            ,'  '
          );
          
       END IF;
@@ -200,19 +253,24 @@ AS
       -- Step 110
       -- Cough it out without final line feed
       --------------------------------------------------------------------------
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
       IF p_initial_indent = 'FALSE'
       THEN
-         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+         cb := REGEXP_REPLACE(cb,'^\s+','');
        
       END IF;
       
       IF p_final_linefeed = 'FALSE'
       THEN
-         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         cb := REGEXP_REPLACE(cb,CHR(10) || '$','');
          
       END IF;
                
-      RETURN clb_output;
+      RETURN cb;
       
    END toYAML;
    

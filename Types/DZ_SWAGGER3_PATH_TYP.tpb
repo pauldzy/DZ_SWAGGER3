@@ -257,12 +257,13 @@ AS
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
+      cb               CLOB;
+      v2               VARCHAR2(32000);
+      
       str_pad          VARCHAR2(1 Char);
       str_pad1         VARCHAR2(1 Char);
       str_pad2         VARCHAR2(1 Char);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      clb_hash         CLOB;
       clb_tmp          CLOB;
       str_identifier   VARCHAR2(255 Char);
       
@@ -282,18 +283,27 @@ AS
       --------------------------------------------------------------------------
       IF p_pretty_print IS NULL
       THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',NULL)
+         );
+
       ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',-1)
+         );
          str_pad     := ' ';
-         
+
       END IF;
-      
       str_pad1 := str_pad;
       
       --------------------------------------------------------------------------
-      -- Step 20
+      -- Step 30
       -- Add  the ref object for callbacks
       --------------------------------------------------------------------------
       IF  COALESCE(p_force_inline,'FALSE') = 'FALSE'
@@ -308,50 +318,42 @@ AS
             
          END IF;
 
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                '$ref'
-               ,'#/components/callbacks/' || dz_swagger3_util.utl_url_escape(
-                  str_identifier
-                )
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || dz_json_main.value2json(
+                   '$ref'
+                  ,'#/components/callbacks/' || dz_swagger3_util.utl_url_escape(
+                     str_identifier
+                   )
+                  ,p_pretty_print + 1
+               )
                ,p_pretty_print + 1
             )
-            ,p_pretty_print + 1
          );
          str_pad1 := ',';
       
       ELSE
       --------------------------------------------------------------------------
-      -- Step 30
+      -- Step 40
       -- Add path summary
       --------------------------------------------------------------------------
          IF self.path_summary IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'summary'
-                  ,self.path_summary
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.value2json(
+                      'summary'
+                     ,self.path_summary
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
-            );
-            str_pad1 := ',';
-            
-         END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Add path description 
-      --------------------------------------------------------------------------
-         IF self.path_description IS NOT NULL
-         THEN
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'description'
-                  ,self.path_description
-                  ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
             );
             str_pad1 := ',';
             
@@ -359,6 +361,29 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 50
+      -- Add path description 
+      --------------------------------------------------------------------------
+         IF self.path_description IS NOT NULL
+         THEN
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.value2json(
+                      'description'
+                     ,self.path_description
+                     ,p_pretty_print + 1
+                  )
+                  ,p_pretty_print + 1
+               )
+            );
+            str_pad1 := ',';
+            
+         END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 60
       -- Add get operation
       --------------------------------------------------------------------------
          IF  self.path_get_operation IS NOT NULL
@@ -394,20 +419,25 @@ AS
                   
             END;
          
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                   'get'
-                  ,clb_tmp
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.formatted2json(
+                      'get'
+                     ,clb_tmp
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
+               ,p_in_v => NULL
             );
             str_pad1 := ',';
 
          END IF;
 
       --------------------------------------------------------------------------
-      -- Step 60
+      -- Step 70
       -- Add put operation
       --------------------------------------------------------------------------
          IF  self.path_put_operation IS NOT NULL
@@ -440,20 +470,25 @@ AS
                   
             END;
 
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                   'put'
-                  ,clb_tmp
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.formatted2json(
+                      'put'
+                     ,clb_tmp
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
+               ,p_in_v => NULL
             );
             str_pad1 := ',';
 
          END IF;
 
       --------------------------------------------------------------------------
-      -- Step 70
+      -- Step 80
       -- Add post operation
       --------------------------------------------------------------------------
          IF  self.path_post_operation IS NOT NULL
@@ -486,20 +521,25 @@ AS
                   
             END;
 
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                   'post'
-                  ,clb_tmp
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.formatted2json(
+                      'post'
+                     ,clb_tmp
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
+               ,p_in_v => NULL
             );
             str_pad1 := ',';
 
          END IF;
 
       --------------------------------------------------------------------------
-      -- Step 80
+      -- Step 90
       -- Add delete operation
       --------------------------------------------------------------------------
          IF  self.path_delete_operation IS NOT NULL
@@ -532,20 +572,25 @@ AS
                   
             END;
 
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                   'delete'
-                  ,clb_tmp
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.formatted2json(
+                      'delete'
+                     ,clb_tmp
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
+               ,p_in_v => NULL
             );
             str_pad1 := ',';
 
          END IF;
       
       --------------------------------------------------------------------------
-      -- Step 90
+      -- Step 100
       -- Add options operation
       --------------------------------------------------------------------------
          IF  self.path_options_operation IS NOT NULL
@@ -578,20 +623,25 @@ AS
                   
             END;
             
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                   'options'
-                  ,clb_tmp
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.formatted2json(
+                      'options'
+                     ,clb_tmp
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
+               ,p_in_v => NULL
             );
             str_pad1 := ',';
 
          END IF;
       
       --------------------------------------------------------------------------
-      -- Step 100
+      -- Step 110
       -- Add head operation
       --------------------------------------------------------------------------
          IF  self.path_head_operation IS NOT NULL
@@ -624,20 +674,25 @@ AS
                   
             END;
             
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                   'head'
-                  ,clb_tmp
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.formatted2json(
+                      'head'
+                     ,clb_tmp
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
+               ,p_in_v => NULL
             );
             str_pad1 := ',';
 
          END IF;
       
       --------------------------------------------------------------------------
-      -- Step 110
+      -- Step 120
       -- Add patch operation
       --------------------------------------------------------------------------
          IF  self.path_patch_operation IS NOT NULL
@@ -670,20 +725,25 @@ AS
                   
             END;
             
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                   'patch'
-                  ,clb_tmp
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.formatted2json(
+                      'patch'
+                     ,clb_tmp
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
+               ,p_in_v => NULL
             );
             str_pad1 := ',';
 
          END IF;
       
       --------------------------------------------------------------------------
-      -- Step 120
+      -- Step 130
       -- Add trace operation
       --------------------------------------------------------------------------
          IF  self.path_trace_operation IS NOT NULL
@@ -716,20 +776,25 @@ AS
                   
             END;
             
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                   'trace'
-                  ,clb_tmp
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   str_pad1 || dz_json_main.formatted2json(
+                      'trace'
+                     ,clb_tmp
+                     ,p_pretty_print + 1
+                  )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
+               ,p_in_v => NULL
             );
             str_pad1 := ',';
 
          END IF;
 
       --------------------------------------------------------------------------
-      -- Step 130
+      -- Step 140
       -- Add servers
       --------------------------------------------------------------------------
          IF  self.path_servers IS NOT NULL 
@@ -751,46 +816,50 @@ AS
             AND a.object_id      = b.object_id
             ORDER BY b.object_order;
             
-            str_pad2 := str_pad;
+            IF  ary_clb IS NOT NULL
+            AND ary_clb.COUNT > 0
+            THEN 
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => dz_json_util.pretty(str_pad1 || '"servers":' || str_pad || '[',p_pretty_print + 1)
+               );
             
-            IF p_pretty_print IS NULL
-            THEN
-               clb_hash := dz_json_util.pretty('[',NULL);
+               str_pad2 := str_pad;
+            
+               FOR i IN 1 .. ary_clb.COUNT
+               LOOP
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => dz_json_util.pretty(
+                         str_pad2 || ary_clb(i)
+                        ,p_pretty_print + 2
+                     )
+                     ,p_in_v => NULL
+                  );
+                  str_pad2 := ',';
                
-            ELSE
-               clb_hash := dz_json_util.pretty('[',-1);
+               END LOOP;
+               
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => dz_json_util.pretty(
+                      ']'
+                     ,p_pretty_print + 1
+                  )
+               );
+               str_pad1 := ',';
                
             END IF;
-         
-            FOR i IN 1 .. ary_clb.COUNT
-            LOOP
-               clb_hash := clb_hash || dz_json_util.pretty(
-                   str_pad2 || ary_clb(i)
-                  ,p_pretty_print + 1
-               );
-               str_pad2 := ',';
-            
-            END LOOP;
-            
-            clb_hash := clb_hash || dz_json_util.pretty(
-                ']'
-               ,p_pretty_print + 1,NULL,NULL
-            );
-            
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                    'servers'
-                   ,clb_hash
-                   ,p_pretty_print + 1
-                )
-               ,p_pretty_print + 1
-            );
-            str_pad1 := ',';
             
          END IF;
 
       --------------------------------------------------------------------------
-      -- Step 140
+      -- Step 150
       -- Add parameters
       --------------------------------------------------------------------------
          IF  self.path_parameters IS NOT NULL 
@@ -798,7 +867,7 @@ AS
          THEN
             SELECT
              a.parametertyp.toJSON(
-                p_pretty_print     => p_pretty_print + 1
+                p_pretty_print     => p_pretty_print + 2
                ,p_force_inline     => p_force_inline
                ,p_short_id         => p_short_id
                ,p_identifier       => a.object_id
@@ -823,39 +892,38 @@ AS
             IF  ary_keys IS NOT NULL
             AND ary_keys.COUNT > 0
             THEN            
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => dz_json_util.pretty(str_pad1 || '"parameters":' || str_pad || '[',p_pretty_print + 1)
+               );
+            
                str_pad2 := str_pad;
-               
-               IF p_pretty_print IS NULL
-               THEN
-                  clb_hash := dz_json_util.pretty('{',NULL);
-                  
-               ELSE
-                  clb_hash := dz_json_util.pretty('{',-1);
-                  
-               END IF;
             
                FOR i IN 1 .. ary_keys.COUNT
                LOOP
-                  clb_hash := clb_hash || dz_json_util.pretty(
-                      str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
-                     ,p_pretty_print + 1
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => dz_json_util.pretty(
+                         str_pad2 || ary_clb(i)
+                        ,p_pretty_print + 2
+                     )
+                     ,p_in_v => NULL
                   );
                   str_pad2 := ',';
                      
                END LOOP;
                
-               clb_hash := clb_hash || dz_json_util.pretty(
-                   '}'
-                  ,p_pretty_print + 1,NULL,NULL
-               );
-               
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.formatted2json(
-                       'parameters'
-                      ,clb_hash
-                      ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print + 1
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => dz_json_util.pretty(
+                      ']'
+                     ,p_pretty_print + 1
+                  )
                );
                str_pad1 := ',';
                
@@ -866,19 +934,29 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 150
+      -- Step 160
       -- Add the left bracket
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
+      dz_swagger3_util.conc(
+          p_c    => cb
+         ,p_v    => v2
+         ,p_in_c => NULL
+         ,p_in_v => dz_json_util.pretty(
+             '}'
+            ,p_pretty_print,NULL,NULL
+         )
       );
-      
+
       --------------------------------------------------------------------------
-      -- Step 160
+      -- Step 170
       -- Cough it out
       --------------------------------------------------------------------------
-      RETURN clb_output;
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
+      RETURN cb;
            
    END toJSON;
    
@@ -895,7 +973,9 @@ AS
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
+      cb               CLOB;
+      v2               VARCHAR2(32000);
+
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       clb_tmp          CLOB;
       str_identifier   VARCHAR2(255 Char);
@@ -921,13 +1001,18 @@ AS
             
          END IF;
          
-         clb_output := clb_output || dz_json_util.pretty_str(
-             '$ref: ' || dz_swagger3_util.yaml_text(
-                '#/components/callbacks/' || str_identifier
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty_str(
+                '$ref: ' || dz_swagger3_util.yaml_text(
+                   '#/components/callbacks/' || str_identifier
+                  ,p_pretty_print
+               )
                ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
+               ,'  '
+            ) 
          );
   
       ELSE
@@ -937,13 +1022,18 @@ AS
       --------------------------------------------------------------------------
          IF self.path_summary IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'summary: ' || dz_swagger3_util.yaml_text(
-                   self.path_summary
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'summary: ' || dz_swagger3_util.yaml_text(
+                      self.path_summary
+                     ,p_pretty_print
+                  )
                   ,p_pretty_print
+                  ,'  '
                )
-               ,p_pretty_print
-               ,'  '
             );
             
          END IF;
@@ -954,13 +1044,18 @@ AS
       --------------------------------------------------------------------------
          IF self.path_description IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'description: ' || dz_swagger3_util.yaml_text(
-                   self.path_description
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'description: ' || dz_swagger3_util.yaml_text(
+                      self.path_description
+                     ,p_pretty_print
+                  )
                   ,p_pretty_print
+                  ,'  '
                )
-               ,p_pretty_print
-               ,'  '
             );
             
          END IF;
@@ -975,7 +1070,7 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print     => p_pretty_print + 0
+                   p_pretty_print     => p_pretty_print + 1
                   ,p_force_inline     => p_force_inline
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
@@ -999,11 +1094,23 @@ AS
                   
             END;
 
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'get: ' 
-               ,p_pretty_print
-               ,'  '
-            ) || clb_tmp;
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'get: '
+                  ,p_pretty_print
+                  ,'  '
+               )
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => clb_tmp
+               ,p_in_v => NULL
+            );
             
          END IF;
 
@@ -1017,7 +1124,7 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print     => p_pretty_print + 0
+                   p_pretty_print     => p_pretty_print + 1
                   ,p_force_inline     => p_force_inline
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
@@ -1041,11 +1148,23 @@ AS
                   
             END;
             
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'put: ' 
-               ,p_pretty_print
-               ,'  '
-            ) || clb_tmp;
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'put: '
+                  ,p_pretty_print
+                  ,'  '
+               )
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => clb_tmp
+               ,p_in_v => NULL
+            );
             
          END IF;
 
@@ -1059,7 +1178,7 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print     => p_pretty_print + 0
+                   p_pretty_print     => p_pretty_print + 1
                   ,p_force_inline     => p_force_inline
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
@@ -1083,11 +1202,23 @@ AS
                   
             END;
             
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'post: ' 
-               ,p_pretty_print
-               ,'  '
-            ) || clb_tmp;
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'post: '
+                  ,p_pretty_print
+                  ,'  '
+               )
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => clb_tmp
+               ,p_in_v => NULL
+            );
             
          END IF;
       
@@ -1101,7 +1232,7 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print     => p_pretty_print + 0
+                   p_pretty_print     => p_pretty_print + 1
                   ,p_force_inline     => p_force_inline
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
@@ -1125,11 +1256,23 @@ AS
                   
             END;
             
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'delete: ' 
-               ,p_pretty_print
-               ,'  '
-            ) || clb_tmp;
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'delete: '
+                  ,p_pretty_print
+                  ,'  '
+               )
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => clb_tmp
+               ,p_in_v => NULL
+            );
             
          END IF;
       
@@ -1143,7 +1286,7 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print     => p_pretty_print + 0
+                   p_pretty_print     => p_pretty_print + 1
                   ,p_force_inline     => p_force_inline
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
@@ -1167,11 +1310,23 @@ AS
                   
             END;
             
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'options: ' 
-               ,p_pretty_print
-               ,'  '
-            ) || clb_tmp;
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'options: '
+                  ,p_pretty_print
+                  ,'  '
+               )
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => clb_tmp
+               ,p_in_v => NULL
+            );
             
          END IF;
       
@@ -1185,7 +1340,7 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print     => p_pretty_print + 0
+                   p_pretty_print     => p_pretty_print + 1
                   ,p_force_inline     => p_force_inline
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
@@ -1209,11 +1364,23 @@ AS
                   
             END;
             
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'head: ' 
-               ,p_pretty_print
-               ,'  '
-            ) || clb_tmp;
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'head: '
+                  ,p_pretty_print
+                  ,'  '
+               )
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => clb_tmp
+               ,p_in_v => NULL
+            );
             
          END IF;
       
@@ -1227,7 +1394,7 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print     => p_pretty_print + 0
+                   p_pretty_print     => p_pretty_print + 1
                   ,p_force_inline     => p_force_inline
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
@@ -1251,11 +1418,23 @@ AS
                   
             END;
             
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'patch: ' 
-               ,p_pretty_print
-               ,'  '
-            ) || clb_tmp;
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'patch: '
+                  ,p_pretty_print
+                  ,'  '
+               )
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => clb_tmp
+               ,p_in_v => NULL
+            );
             
          END IF;
       
@@ -1269,7 +1448,7 @@ AS
             BEGIN
                SELECT
                a.operationtyp.toYAML(
-                   p_pretty_print     => p_pretty_print + 0
+                   p_pretty_print     => p_pretty_print + 1
                   ,p_force_inline     => p_force_inline
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
@@ -1293,11 +1472,23 @@ AS
                   
             END;
             
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'trace: ' 
-               ,p_pretty_print
-               ,'  '
-            ) || clb_tmp;
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'trace: '
+                  ,p_pretty_print
+                  ,'  '
+               )
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => clb_tmp
+               ,p_in_v => NULL
+            );
             
          END IF;
       
@@ -1324,19 +1515,37 @@ AS
             AND a.object_id      = b.object_id
             ORDER BY b.object_order;
 
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'servers: '
-               ,p_pretty_print + 1
-               ,'  '
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty_str(
+                   'servers: '
+                  ,p_pretty_print
+                  ,'  '
+               )
             );
             
             FOR i IN 1 .. ary_clb.COUNT
             LOOP
-               clb_output := clb_output || dz_json_util.pretty(
-                   '- '
-                  ,p_pretty_print + 1
-                  ,'  '
-               ) || ary_clb(i);
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => dz_json_util.pretty_str(
+                      '- '
+                     ,p_pretty_print + 1
+                     ,'  '
+                     ,NULL
+                   )
+               );
+               
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => ary_clb(i)
+                  ,p_in_v => NULL
+               );
                
             END LOOP;
             
@@ -1352,6 +1561,8 @@ AS
             SELECT
              a.parametertyp.toYAML(
                 p_pretty_print     => p_pretty_print + 1
+               ,p_initial_indent   => 'FALSE'
+               ,p_final_linefeed   => 'TRUE'
                ,p_force_inline     => p_force_inline
                ,p_short_id         => p_short_id
                ,p_identifier       => a.object_id
@@ -1376,19 +1587,37 @@ AS
             IF  ary_keys IS NOT NULL
             AND ary_keys.COUNT > 0
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'parameters: '
-                  ,p_pretty_print + 1
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => dz_json_util.pretty_str(
+                      'parameters: '
+                     ,p_pretty_print
+                     ,'  '
+                  )
                );
                
-               FOR i IN 1 .. ary_keys.COUNT
+               FOR i IN 1 .. ary_clb.COUNT
                LOOP
-                  clb_output := clb_output || dz_json_util.pretty(
-                      '''' || ary_keys(i) || ''': '
-                     ,p_pretty_print + 2
-                     ,'  '
-                  ) || ary_clb(i);
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => NULL
+                     ,p_in_v => dz_json_util.pretty_str(
+                         '- '
+                        ,p_pretty_print + 1
+                        ,'  '
+                        ,NULL
+                      )
+                  );
+                  
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => ary_clb(i)
+                     ,p_in_v => NULL
+                  );
                
                END LOOP;
                
@@ -1400,21 +1629,26 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 140
-      -- Cough it out 
+      -- Cough it out
       --------------------------------------------------------------------------
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
       IF p_initial_indent = 'FALSE'
       THEN
-         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+         cb := REGEXP_REPLACE(cb,'^\s+','');
        
       END IF;
       
       IF p_final_linefeed = 'FALSE'
       THEN
-         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         cb := REGEXP_REPLACE(cb,CHR(10) || '$','');
          
       END IF;
                
-      RETURN clb_output;
+      RETURN cb;
       
    END toYAML;
    
