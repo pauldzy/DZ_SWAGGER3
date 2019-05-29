@@ -1437,7 +1437,7 @@ AS
               || '   ,link_operationRef      VARCHAR2(255 Char) '
               || '   ,link_operationId       VARCHAR2(255 Char) '
               || '   ,link_description       VARCHAR2(4000 Char) '
-              || '   ,link_requestBody       VARCHAR2(4000 Char) '
+              || '   ,link_requestBody_exp   VARCHAR2(4000 Char) '
               || '   ,link_server_id         VARCHAR2(255 Char) '
               || '   ,versionid              VARCHAR2(40 Char)  NOT NULL '
               || ') ';
@@ -1476,6 +1476,53 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 290
+      -- Build LINK OP PARMS table
+      --------------------------------------------------------------------------
+      str_sql := 'CREATE TABLE dz_swagger3_link_op_parms('
+              || '    link_id                VARCHAR2(255 Char)  NOT NULL '
+              || '   ,link_op_parm_name      VARCHAR2(255 Char)  NOT NULL '
+              || '   ,link_op_parm_exp       VARCHAR2(4000 Char) NOT NULL '
+              || '   ,link_op_parm_order     INTEGER             NOT NULL '
+              || '   ,versionid              VARCHAR2(255 Char)  NOT NULL '
+              || ') ';
+              
+      IF p_table_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_link_op_parms '
+              || 'ADD CONSTRAINT dz_swagger3_link_op_parms_pk '
+              || 'PRIMARY KEY(versionid,link_id) ';
+              
+      IF p_index_tablespace IS NOT NULL
+      THEN
+         str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
+      
+      END IF;
+      
+      EXECUTE IMMEDIATE str_sql;
+      
+      str_sql := 'ALTER TABLE dz_swagger3_link_op_parms '
+              || 'ADD( '
+              || '    CONSTRAINT dz_swagger3_link_op_parms_c01 '
+              || '    CHECK (link_id = TRIM(link_id)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_link_op_parms_c02 '
+              || '    CHECK (link_op_parm_name = TRIM(link_op_parm_name)) '
+              || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_link_op_parms_c03 '
+              || '    CHECK (versionid = TRIM(versionid)) '
+              || '    ENABLE VALIDATE '
+              || ') ';
+              
+      EXECUTE IMMEDIATE str_sql;
+      
+      --------------------------------------------------------------------------
+      -- Step 300
       -- Build HEADER table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_header('
@@ -1545,7 +1592,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 300
+      -- Step 310
       -- Build PARENT HEADER MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_parent_header_map('
@@ -1595,7 +1642,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 310
+      -- Step 320
       -- Build RESPONSE LINK MAP table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_response_link_map('
@@ -1645,7 +1692,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 320
+      -- Step 330
       -- Build EXTERNALDOC table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_externaldoc('
@@ -1688,7 +1735,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 330
+      -- Step 340
       -- Build SECURITY SCHEME table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_parent_secSchm_map('
@@ -1736,7 +1783,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
 
       --------------------------------------------------------------------------
-      -- Step 340
+      -- Step 350
       -- Build SECURITY SCHEME table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_securityScheme('
@@ -1788,7 +1835,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 350
+      -- Step 360
       -- Build OAUTH FLOW table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_oauth_flow('
@@ -1832,7 +1879,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 360
+      -- Step 370
       -- Build OAUTH FLOW SCOPE table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_oauth_flow_scope('
@@ -1878,7 +1925,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 370
+      -- Step 380
       -- Build TAG table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_tag('
@@ -1925,7 +1972,7 @@ AS
       EXECUTE IMMEDIATE str_sql;
       
       --------------------------------------------------------------------------
-      -- Step 380
+      -- Step 390
       -- Build CACHE table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_cache('

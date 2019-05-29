@@ -20,8 +20,16 @@ AS
    AS 
    BEGIN 
 
+      --------------------------------------------------------------------------
+      -- Step 10 
+      -- Initialize the object
+      --------------------------------------------------------------------------
       self.versionid := p_versionid;
       
+      --------------------------------------------------------------------------
+      -- Step 20 
+      -- Load the parameter self and schema id
+      --------------------------------------------------------------------------
       SELECT
        a.server_url
       ,a.server_description
@@ -34,6 +42,10 @@ AS
           a.versionid = p_versionid
       AND a.server_id = p_server_id;
 
+      --------------------------------------------------------------------------
+      -- Step 30 
+      -- Load any server variables
+      --------------------------------------------------------------------------
       SELECT
       dz_swagger3_object_typ(
           p_object_id      => b.server_var_id
@@ -53,6 +65,10 @@ AS
           a.versionid = p_versionid
       AND a.server_id = p_server_id;
   
+      --------------------------------------------------------------------------
+      -- Step 40 
+      -- Return the object
+      --------------------------------------------------------------------------
       RETURN;
       
    END dz_swagger3_server_typ;
@@ -88,12 +104,13 @@ AS
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
+      cb               CLOB;
+      v2               VARCHAR2(32000);
+      
       str_pad          VARCHAR2(1 Char);
       str_pad1         VARCHAR2(1 Char);
       str_pad2         VARCHAR2(1 Char);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      clb_hash         CLOB;
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
@@ -111,26 +128,41 @@ AS
       --------------------------------------------------------------------------
       IF p_pretty_print IS NULL
       THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',NULL)
+         );
+
       ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',-1)
+         );
          str_pad     := ' ';
-         
+
       END IF;
+      str_pad1 := str_pad;
       
       --------------------------------------------------------------------------
       -- Step 30
       -- Add name element
       --------------------------------------------------------------------------
-      str_pad1 := str_pad;
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.value2json(
-             'url'
-            ,self.server_url
+      dz_swagger3_util.conc(
+          p_c    => cb
+         ,p_v    => v2
+         ,p_in_c => NULL
+         ,p_in_v => dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'url'
+               ,self.server_url
+               ,p_pretty_print + 1
+            )
             ,p_pretty_print + 1
          )
-         ,p_pretty_print + 1
       );
       str_pad1 := ',';
          
@@ -138,13 +170,18 @@ AS
       -- Step 40
       -- Add optional url 
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad1 || dz_json_main.value2json(
-             'description'
-            ,self.server_description
+      dz_swagger3_util.conc(
+          p_c    => cb
+         ,p_v    => v2
+         ,p_in_c => NULL
+         ,p_in_v => dz_json_util.pretty(
+             str_pad1 || dz_json_main.value2json(
+                'description'
+               ,self.server_description
+               ,p_pretty_print + 1
+            )
             ,p_pretty_print + 1
          )
-         ,p_pretty_print + 1
       );
       str_pad1 := ',';
       
@@ -174,39 +211,41 @@ AS
          AND a.object_id      = b.object_id
          ORDER BY b.object_order;   
       
-         str_pad2 := str_pad;
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                str_pad1 || '"variables":' || str_pad || '{'
+               ,p_pretty_print + 1
+            )
+         );
          
-         IF p_pretty_print IS NULL
-         THEN
-            clb_hash := dz_json_util.pretty('{',NULL);
-            
-         ELSE
-            clb_hash := dz_json_util.pretty('{',-1);
-            
-         END IF;
+         str_pad2 := str_pad;
       
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            clb_hash := clb_hash || dz_json_util.pretty(
-                str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
-               ,p_pretty_print + 2
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_json_util.pretty(
+                   str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
+                  ,p_pretty_print + 2
+               )
             );
             str_pad2 := ',';
          
          END LOOP;
          
-         clb_hash := clb_hash || dz_json_util.pretty(
-             '}'
-            ,p_pretty_print + 1,NULL,NULL
-         );
-         
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad1 || dz_json_main.formatted2json(
-                 'variables'
-                ,clb_hash
-                ,p_pretty_print + 1
-             )
-            ,p_pretty_print + 1
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty(
+                '}'
+               ,p_pretty_print + 1
+            )
          );
          str_pad1 := ',';
          
@@ -216,16 +255,26 @@ AS
       -- Step 60
       -- Add the left bracket
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
+      dz_swagger3_util.conc(
+          p_c    => cb
+         ,p_v    => v2
+         ,p_in_c => NULL
+         ,p_in_v => dz_json_util.pretty(
+             '}'
+            ,p_pretty_print,NULL,NULL
+         )
       );
-      
+
       --------------------------------------------------------------------------
       -- Step 70
       -- Cough it out
       --------------------------------------------------------------------------
-      RETURN clb_output;
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
+      RETURN cb;
            
    END toJSON;
    
@@ -239,8 +288,10 @@ AS
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
-      clb_output        CLOB;
-      ary_keys          MDSYS.SDO_STRING2_ARRAY;
+      cb               CLOB;
+      v2               VARCHAR2(32000);
+      
+      ary_keys         MDSYS.SDO_STRING2_ARRAY;
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
@@ -256,13 +307,18 @@ AS
       -- Step 20
       -- Write the url item, note the dumn handling if object array
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty_str(
-          'url: ' || dz_swagger3_util.yaml_text(
-             self.server_url
+      dz_swagger3_util.conc(
+          p_c    => cb
+         ,p_v    => v2
+         ,p_in_c => NULL
+         ,p_in_v => dz_json_util.pretty_str(
+             'url: ' || dz_swagger3_util.yaml_text(
+                self.server_url
+               ,p_pretty_print
+            )
             ,p_pretty_print
+            ,'  '
          )
-         ,p_pretty_print
-         ,'  '
       );
       
       --------------------------------------------------------------------------
@@ -271,13 +327,18 @@ AS
       --------------------------------------------------------------------------
       IF self.server_description IS NOT NULL
       THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'description: ' || dz_swagger3_util.yaml_text(
-                self.server_description
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty_str(
+                'description: ' || dz_swagger3_util.yaml_text(
+                   self.server_description
+                  ,p_pretty_print
+               )
                ,p_pretty_print
+               ,'  '
             )
-            ,p_pretty_print
-            ,'  '
          );
          
       END IF;
@@ -308,19 +369,29 @@ AS
          AND a.object_id      = b.object_id
          ORDER BY b.object_order; 
          
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'variables: '
-            ,p_pretty_print
-            ,'  '
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty_str(
+                'variables: '
+               ,p_pretty_print
+               ,'  '
+            )
          );
          
          FOR i IN 1 .. ary_keys.COUNT
          LOOP
-            clb_output := clb_output || dz_json_util.pretty(
-                dz_swagger3_util.yamlq(ary_keys(i)) || ': '
-               ,p_pretty_print + 1
-               ,'  '
-            ) || ary_clb(i);
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => dz_json_util.pretty(
+                   dz_swagger3_util.yamlq(ary_keys(i)) || ': '
+                  ,p_pretty_print + 1
+                  ,'  '
+               ) || ary_clb(i)
+               ,p_in_v => NULL
+            );
          
          END LOOP;
          
@@ -330,19 +401,24 @@ AS
       -- Step 50
       -- Cough it out without final line feed
       --------------------------------------------------------------------------
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
       IF p_initial_indent = 'FALSE'
       THEN
-         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+         cb := REGEXP_REPLACE(cb,'^\s+','');
        
       END IF;
       
       IF p_final_linefeed = 'FALSE'
       THEN
-         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         cb := REGEXP_REPLACE(cb,CHR(10) || '$','');
          
       END IF;
                
-      RETURN clb_output;
+      RETURN cb;
       
    END toYAML;
    

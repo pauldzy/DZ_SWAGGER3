@@ -1,14 +1,15 @@
 CREATE OR REPLACE TYPE dz_swagger3_link_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
-    link_id             VARCHAR2(255 Char)
-   ,link_operationRef   VARCHAR2(255 Char)
-   ,link_operationId    VARCHAR2(255 Char)
-   ,link_parameters     dz_swagger3_object_vry --dz_swagger3_string_hash_list
-   ,link_requestBody    VARCHAR2(4000 Char)
-   ,link_description    VARCHAR2(4000 Char)
-   ,link_server         dz_swagger3_object_typ --dz_swagger3_server_typ
-   ,versionid           VARCHAR2(255 Char)
+    link_id              VARCHAR2(255 Char)
+   ,link_operationRef    VARCHAR2(255 Char)
+   ,link_operationId     VARCHAR2(255 Char)
+   ,link_op_parm_names   MDSYS.SDO_STRING2_ARRAY
+   ,link_op_parm_exps    MDSYS.SDO_STRING2_ARRAY
+   ,link_requestBody_exp VARCHAR2(4000 Char)
+   ,link_description     VARCHAR2(4000 Char)
+   ,link_server          dz_swagger3_object_typ --dz_swagger3_server_typ
+   ,versionid            VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

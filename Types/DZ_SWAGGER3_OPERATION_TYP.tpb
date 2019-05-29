@@ -197,11 +197,6 @@ AS
       BULK COLLECT INTO self.operation_callbacks
       FROM
       dz_swagger3_operation_call_map a
-      JOIN
-      dz_swagger3_path b
-      ON
-          a.versionid    = b.versionid
-      AND a.callback_id  = b.path_id
       WHERE
           a.versionid    = p_versionid
       AND a.operation_id = p_operation_id;
@@ -408,6 +403,7 @@ AS
       str_pad1         VARCHAR2(1 Char);
       str_pad2         VARCHAR2(1 Char);
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      ary_keys2        MDSYS.SDO_STRING2_ARRAY;
       clb_tmp          CLOB;
       str_identifier   VARCHAR2(255 Char);
       
@@ -472,12 +468,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || '"tags":' || str_pad || '['
-                  ,p_pretty_print + 1
-                )
+               ,p_in_v => str_pad1 || '"tags":' || str_pad || '['
+               ,p_pretty_print => p_pretty_print + 1
             );
-         
+      
             str_pad2 := str_pad;
          
             FOR i IN 1 .. ary_keys.COUNT
@@ -520,14 +514,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'summary'
-                  ,self.operation_summary
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'summary'
+               ,self.operation_summary
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
          
@@ -543,14 +535,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'description'
-                  ,self.operation_description
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'description'
+               ,self.operation_description
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
          
@@ -587,19 +577,23 @@ AS
                RAISE;
                
          END;
+         
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => str_pad1 || '"externalDocs":' || str_pad
+            ,p_pretty_print   => p_pretty_print + 1
+            ,p_final_linefeed => FALSE
+         );
       
          dz_swagger3_util.conc(
              p_c    => cb
             ,p_v    => v2
-            ,p_in_c => dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                   'externalDocs'
-                  ,clb_tmp
-                  ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
-            )
+            ,p_in_c => clb_tmp
             ,p_in_v => NULL
+            ,p_pretty_print   => p_pretty_print + 1
+            ,p_initial_indent => FALSE
          );
          str_pad1 := ',';
 
@@ -607,7 +601,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 70
-      -- Add optional operationId 
+      -- Add operationId 
       --------------------------------------------------------------------------
       IF p_short_id = 'TRUE'
       THEN
@@ -624,14 +618,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'operationId'
-                  ,str_identifier
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'operationId'
+               ,str_identifier
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
          
@@ -675,7 +667,8 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(str_pad1 || '"parameters":' || str_pad || '[',p_pretty_print + 1)
+               ,p_in_v => str_pad1 || '"parameters":' || str_pad || '['
+               ,p_pretty_print => p_pretty_print + 1
             );
          
             str_pad2 := str_pad;
@@ -685,12 +678,21 @@ AS
                dz_swagger3_util.conc(
                    p_c    => cb
                   ,p_v    => v2
-                  ,p_in_c => dz_json_util.pretty(
-                      str_pad2 || ary_clb(i)
-                     ,p_pretty_print + 2
-                  )
-                  ,p_in_v => NULL
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad2
+                  ,p_pretty_print => p_pretty_print + 2
+                  ,p_final_linefeed => FALSE
                );
+               
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => ary_clb(i)
+                  ,p_in_v => NULL
+                  ,p_pretty_print => p_pretty_print + 2
+                  ,p_initial_indent => FALSE
+               );
+               
                str_pad2 := ',';
                   
             END LOOP;
@@ -699,10 +701,8 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   ']'
-                  ,p_pretty_print + 1
-               )
+               ,p_in_v => ']'
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
             
@@ -840,7 +840,7 @@ AS
       THEN
          SELECT
          a.pathtyp.toJSON(
-             p_pretty_print     => p_pretty_print + 2
+             p_pretty_print     => p_pretty_print + 3
             ,p_force_inline     => p_force_inline
             ,p_short_id         => p_short_id
             ,p_identifier       => a.object_id
@@ -848,9 +848,11 @@ AS
             ,p_reference_count  => a.reference_count
          )
          ,b.object_key
+         ,a.pathtyp.path_endpoint
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
+         ,ary_keys2
          FROM
          dz_swagger3_xobjects a
          JOIN
@@ -864,10 +866,8 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || '"callbacks":' || str_pad || '{'
-               ,p_pretty_print + 1
-             )
+            ,p_in_v => str_pad1 || '"callbacks":' || str_pad || '{'
+            ,p_pretty_print => p_pretty_print + 1
          );
       
          str_pad2 := str_pad;
@@ -877,11 +877,35 @@ AS
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
-               ,p_in_c => dz_json_util.pretty(
-                   str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
-                  ,p_pretty_print + 2
-               )
+               ,p_in_c => NULL
+               ,p_in_v => str_pad2 || '"' || ary_keys(i) || '":' || str_pad || '{'
+               ,p_pretty_print => p_pretty_print + 2
+            );
+
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => str_pad  || '"' || ary_keys2(i) || '":' || str_pad
+               ,p_pretty_print   => p_pretty_print + 3
+               ,p_final_linefeed => FALSE
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => ary_clb(i)
                ,p_in_v => NULL
+               ,p_pretty_print   => p_pretty_print + 4
+               ,p_initial_indent => FALSE
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => '}'
+               ,p_pretty_print => p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -891,10 +915,8 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                '}'
-               ,p_pretty_print + 1
-            )
+            ,p_in_v => '}'
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
          
@@ -1098,6 +1120,7 @@ AS
       v2               VARCHAR2(32000);
 
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      ary_keys2        MDSYS.SDO_STRING2_ARRAY;
       clb_tmp          CLOB;
       str_identifier   VARCHAR2(255 Char);
       
@@ -1134,11 +1157,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'tags: '
-               ,p_pretty_print
-               ,'  '
-            )
+            ,p_in_v => 'tags: '
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
          FOR i IN 1 .. ary_keys.COUNT
@@ -1147,11 +1168,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   '- ' || dz_swagger3_util.yamlq(ary_keys(i))
-                  ,p_pretty_print + 1
-                  ,'  '
-                )
+               ,p_in_v => '- ' || dz_swagger3_util.yamlq(ary_keys(i))
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_amount       => '  '
             );
             
          END LOOP;
@@ -1168,14 +1187,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'summary: ' || dz_swagger3_util.yaml_text(
-                   self.operation_summary
-                  ,p_pretty_print
-               )
+            ,p_in_v => 'summary: ' || dz_swagger3_util.yaml_text(
+                self.operation_summary
                ,p_pretty_print
-               ,'  '
             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -1190,14 +1207,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'description: ' || dz_swagger3_util.yaml_text(
-                   self.operation_description
-                  ,p_pretty_print
-               )
+            ,p_in_v => 'description: ' || dz_swagger3_util.yaml_text(
+                self.operation_description
                ,p_pretty_print
-               ,'  '
             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -1238,11 +1253,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'externalDocs: '
-               ,p_pretty_print
-               ,'  '
-            )
+            ,p_in_v => 'externalDocs: '
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
          dz_swagger3_util.conc(
@@ -1273,14 +1286,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'operationId: ' || dz_swagger3_util.yaml_text(
-                   str_identifier
-                  ,p_pretty_print
-               )
+            ,p_in_v => 'operationId: ' || dz_swagger3_util.yaml_text(
+                str_identifier
                ,p_pretty_print
-               ,'  '
-            )
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -1325,11 +1336,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'parameters: '
-                  ,p_pretty_print
-                  ,'  '
-               )
+               ,p_in_v => 'parameters: '
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
             FOR i IN 1 .. ary_clb.COUNT
@@ -1338,12 +1347,10 @@ AS
                    p_c    => cb
                   ,p_v    => v2
                   ,p_in_c => NULL
-                  ,p_in_v => dz_json_util.pretty_str(
-                      '- '
-                     ,p_pretty_print + 1
-                     ,'  '
-                     ,NULL
-                   )
+                  ,p_in_v => '- '
+                  ,p_pretty_print => p_pretty_print + 1
+                  ,p_amount       => '  '
+                  ,p_final_linefeed => FALSE
                );
                
                dz_swagger3_util.conc(
@@ -1398,11 +1405,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'requestBody: '
-               ,p_pretty_print
-               ,'  '
-            )
+            ,p_in_v => 'requestBody: '
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
          dz_swagger3_util.conc(
@@ -1447,11 +1452,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                'responses:' 
-               ,p_pretty_print
-               ,'  '
-            )
+            ,p_in_v => 'responses:' 
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
       
          FOR i IN 1 .. ary_keys.COUNT
@@ -1460,11 +1463,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   dz_swagger3_util.yamlq(ary_keys(i)) || ': '
-                  ,p_pretty_print + 1
-                  ,'  '
-                )
+               ,p_in_v => dz_swagger3_util.yamlq(ary_keys(i)) || ': '
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_amount       => '  '
             );
             
             dz_swagger3_util.conc(
@@ -1487,7 +1488,7 @@ AS
       THEN
          SELECT
           a.pathtyp.toYAML(
-             p_pretty_print     => p_pretty_print + 2
+             p_pretty_print     => p_pretty_print + 3
             ,p_force_inline     => p_force_inline
             ,p_short_id         => p_short_id
             ,p_identifier       => a.object_id
@@ -1495,9 +1496,11 @@ AS
             ,p_reference_count  => a.reference_count
           )
          ,b.object_key
+         ,a.pathtyp.path_endpoint
          BULK COLLECT INTO
           ary_clb
          ,ary_keys
+         ,ary_keys2
          FROM
          dz_swagger3_xobjects a
          JOIN
@@ -1511,11 +1514,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                'callbacks:'
-               ,p_pretty_print + 1
-               ,'  '
-            )
+            ,p_in_v => 'callbacks:'
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
       
          FOR i IN 1 .. ary_keys.COUNT
@@ -1524,11 +1525,18 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   dz_swagger3_util.yamlq(ary_keys(i)) || ': '
-                  ,p_pretty_print + 2
-                  ,'  '
-                )
+               ,p_in_v => dz_swagger3_util.yamlq(ary_keys(i)) || ': '
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_amount       => '  '
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => dz_swagger3_util.yamlq(ary_keys2(i)) || ': '
+               ,p_pretty_print => p_pretty_print + 2
+               ,p_amount       => '  '
             );
             
             dz_swagger3_util.conc(
@@ -1552,11 +1560,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'deprecated: ' || LOWER(self.operation_deprecated)
-               ,p_pretty_print + 1
-               ,'  '
-            ) 
+            ,p_in_v => 'deprecated: ' || LOWER(self.operation_deprecated)
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -1587,11 +1593,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'security: '
-               ,p_pretty_print
-               ,'  '
-            )
+            ,p_in_v => 'security: '
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
          FOR i IN 1 .. ary_clb.COUNT
@@ -1600,12 +1604,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   '- '
-                  ,p_pretty_print + 1
-                  ,'  '
-                  ,NULL
-                )
+               ,p_in_v => '- '
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_amount       => '  '
+               ,p_final_linefeed => FALSE
             );
             
             dz_swagger3_util.conc(
@@ -1628,7 +1630,7 @@ AS
       THEN
          SELECT
          a.servertyp.toYAML(
-             p_pretty_print   => p_pretty_print + 3
+             p_pretty_print   => p_pretty_print + 2
             ,p_initial_indent => 'FALSE'
             ,p_final_linefeed => 'FALSE'
             ,p_force_inline   => p_force_inline
@@ -1648,11 +1650,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'servers: '
-               ,p_pretty_print
-               ,'  '
-            )
+            ,p_in_v => 'servers: '
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
          FOR i IN 1 .. ary_clb.COUNT
@@ -1661,12 +1661,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   '- '
-                  ,p_pretty_print + 1
-                  ,'  '
-                  ,NULL
-                )
+               ,p_in_v => '- '
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_amount       => '  '
+               ,p_final_linefeed => FALSE
             );
             
             dz_swagger3_util.conc(

@@ -54,8 +54,12 @@ AS
    PROCEDURE conc(
        p_c                IN OUT NOCOPY CLOB
       ,p_v                IN OUT NOCOPY VARCHAR2
-      ,p_in_c             IN  CLOB     DEFAULT NULL
-      ,p_in_v             IN  VARCHAR2 DEFAULT NULL
+      ,p_in_c             IN  CLOB      DEFAULT NULL
+      ,p_in_v             IN  VARCHAR2  DEFAULT NULL
+      ,p_pretty_print     IN  INTEGER   DEFAULT NULL
+      ,p_amount           IN  VARCHAR2  DEFAULT '   '
+      ,p_initial_indent   IN  BOOLEAN   DEFAULT TRUE
+      ,p_final_linefeed   IN  BOOLEAN   DEFAULT TRUE
    );
    
    -----------------------------------------------------------------------------

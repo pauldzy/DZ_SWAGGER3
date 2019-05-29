@@ -892,6 +892,7 @@ AS
             FROM
             TABLE(ary_ids) b
          )
+         AND a.servertyp IS NOT NULL
       )
       LOOP
          r.servertyp.traverse();

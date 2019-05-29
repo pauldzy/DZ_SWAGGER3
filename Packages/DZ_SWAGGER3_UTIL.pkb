@@ -344,12 +344,44 @@ AS
    PROCEDURE conc(
        p_c                IN OUT NOCOPY CLOB
       ,p_v                IN OUT NOCOPY VARCHAR2
-      ,p_in_c             IN  CLOB     DEFAULT NULL
-      ,p_in_v             IN  VARCHAR2 DEFAULT NULL
+      ,p_in_c             IN  CLOB      DEFAULT NULL
+      ,p_in_v             IN  VARCHAR2  DEFAULT NULL
+      ,p_pretty_print     IN  INTEGER   DEFAULT NULL
+      ,p_amount           IN  VARCHAR2  DEFAULT '   '
+      ,p_initial_indent   IN  BOOLEAN   DEFAULT TRUE
+      ,p_final_linefeed   IN  BOOLEAN   DEFAULT TRUE
    )
    AS
-   BEGIN
+      lf   VARCHAR2(1 Char) := CHR(10);
+      vtmp VARCHAR2(32000 Char);
       
+      FUNCTION ind(
+          p_level   IN  INTEGER
+         ,p_amount  IN  VARCHAR2
+      ) RETURN VARCHAR2
+      AS
+         str_output VARCHAR2(32000 Char);
+         
+      BEGIN
+      
+         IF p_amount IS NULL
+         THEN
+            RETURN NULL;
+           
+         END IF;
+         
+         FOR i IN 1 .. p_level
+         LOOP
+            str_output := str_output || p_amount;
+            
+         END LOOP;
+         
+         RETURN str_output;
+          
+      END ind;
+      
+   BEGIN
+   
       IF  p_in_c IS NOT NULL
       AND p_in_v IS NOT NULL
       THEN
@@ -364,20 +396,112 @@ AS
          IF  p_c IS NULL
          AND p_v IS NULL
          THEN
-            p_c := p_in_c;
+            IF p_pretty_print IS NULL
+            THEN
+               p_c := p_in_c;
+            
+            ELSE
+               IF NOT p_initial_indent
+               THEN
+                  p_c := p_in_c;
+
+               ELSE
+                  p_c := TO_CLOB(ind(p_pretty_print,p_amount));
+               
+                  DBMS_LOB.APPEND(p_c,p_in_c);
+               
+               END IF;
+               
+               IF p_final_linefeed
+               THEN
+                  DBMS_LOB.WRITEAPPEND(
+                      lob_loc => p_c
+                     ,amount  => 1
+                     ,buffer  => lf
+                  );
+
+               END IF;
+                              
+            END IF;
             
          ELSIF p_c IS NULL
          AND   p_v IS NOT NULL
          THEN
             p_c := p_v;
-            DBMS_LOB.APPEND(p_c,p_in_c);
+            p_v := NULL;  
+            
+            IF p_pretty_print IS NULL
+            THEN
+               DBMS_LOB.APPEND(p_c,p_in_c);
+               
+            ELSE
+               IF p_initial_indent
+               THEN
+                  vtmp := ind(p_pretty_print,p_amount);
+                  
+                  IF vtmp IS NOT NULL
+                  THEN
+                     DBMS_LOB.WRITEAPPEND(
+                         lob_loc => p_c
+                        ,amount  => LENGTH(vtmp)
+                        ,buffer  => vtmp
+                     );
+                     
+                  END IF;
+                  
+               END IF;
+ 
+               DBMS_LOB.APPEND(p_c,p_in_c);
 
-            p_v := NULL;   
-         
+               IF p_final_linefeed
+               THEN
+                  DBMS_LOB.WRITEAPPEND(
+                      lob_loc => p_c
+                     ,amount  => 1
+                     ,buffer  => lf
+                  );
+
+               END IF;   
+            
+            END IF;
+
          ELSIF p_c IS NOT NULL
          AND   p_v IS NULL
          THEN
-            DBMS_LOB.APPEND(p_c,p_in_c); 
+            IF p_pretty_print IS NULL
+            THEN
+               DBMS_LOB.APPEND(p_c,p_in_c);
+               
+            ELSE
+               IF p_initial_indent
+               THEN
+                  vtmp := ind(p_pretty_print,p_amount);
+                  
+                  IF vtmp IS NOT NULL
+                  THEN
+                     DBMS_LOB.WRITEAPPEND(
+                         lob_loc => p_c
+                        ,amount  => LENGTH(vtmp)
+                        ,buffer  => vtmp
+                     );
+                     
+                  END IF;
+                  
+               END IF;
+               
+               DBMS_LOB.APPEND(p_c,p_in_c);
+               
+               IF p_final_linefeed
+               THEN
+                  DBMS_LOB.WRITEAPPEND(
+                      lob_loc => p_c
+                     ,amount  => 1
+                     ,buffer  => lf
+                  );
+                  
+               END IF;
+            
+            END IF;
          
          ELSIF p_c IS NOT NULL
          AND   p_v IS NOT NULL
@@ -389,8 +513,41 @@ AS
             );
             
             p_v := NULL;
-
-            DBMS_LOB.APPEND(p_c,p_in_c);
+               
+            IF p_pretty_print IS NULL
+            THEN
+               DBMS_LOB.APPEND(p_c,p_in_c);
+               
+            ELSE
+               IF p_initial_indent
+               THEN
+                  vtmp := ind(p_pretty_print,p_amount);
+                  
+                  IF vtmp IS NOT NULL
+                  THEN
+                     DBMS_LOB.WRITEAPPEND(
+                         lob_loc => p_c
+                        ,amount  => LENGTH(vtmp)
+                        ,buffer  => vtmp
+                     );
+                     
+                  END IF;
+                  
+               END IF;
+               
+               DBMS_LOB.APPEND(p_c,p_in_c);
+               
+               IF p_final_linefeed
+               THEN
+                  DBMS_LOB.WRITEAPPEND(
+                      lob_loc => p_c
+                     ,amount  => 1
+                     ,buffer  => lf
+                  );
+                  
+               END IF;
+               
+            END IF;
             
          END IF;
          
@@ -398,8 +555,27 @@ AS
       AND   p_in_v IS NOT NULL
       THEN
          BEGIN
-            p_v := p_v || p_in_v;
-      
+            IF p_pretty_print IS NULL
+            THEN
+               p_v := p_v || p_in_v;
+            
+            ELSE
+               IF p_initial_indent
+               THEN
+                  p_v := p_v || ind(p_pretty_print,p_amount);
+                  
+               END IF;
+               
+               p_v := p_v || p_in_v;
+
+               IF p_final_linefeed
+               THEN
+                  p_v := p_v || lf;
+                  
+               END IF;
+               
+            END IF;
+            
          EXCEPTION
             WHEN VALUE_ERROR
             THEN
@@ -420,7 +596,27 @@ AS
                   
                END IF;
 
-               p_v := p_in_v;
+               IF p_pretty_print IS NULL
+               THEN
+                  p_v := p_in_v;
+                  
+               ELSE
+                  IF p_initial_indent
+                  THEN
+                     p_v := ind(p_pretty_print,p_amount) || p_in_v;
+                     
+                  ELSE
+                     p_v := p_in_v;
+                     
+                  END IF;
+                  
+                  IF p_final_linefeed
+                  THEN
+                     p_v := p_v || lf;
+                     
+                  END IF;
+               
+               END IF;
                
             WHEN OTHERS
             THEN
