@@ -47,7 +47,7 @@ AS
    BEGIN
    
       xrelates(p_children_ids,p_parent_id);
-   
+
       SELECT
       dz_swagger3_object_typ(
           p_object_id           => a.object_id
@@ -70,7 +70,7 @@ AS
       GROUP BY
        a.object_id
       ,a.object_type_id;
-      
+
       RETURN ary_output;
       
    END filter_ids;
@@ -84,25 +84,30 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_encoding_typ;
 
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,encodingtyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_encoding_typ(
-          p_encoding_id   => a.object_id
-         ,p_versionid     => p_versionid
-      )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_encoding_typ(
+             p_encoding_id   => ary_ids(i).object_id
+            ,p_versionid     => p_versionid
+         );
+         
+         INSERT INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,encodingtyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
 
       FOR r IN (
          SELECT 
@@ -133,25 +138,30 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_example_typ;
 
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
       
-      INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,exampletyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_example_typ(
-          p_example_id => a.object_id
-         ,p_versionid  => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_example_typ(
+             p_example_id => ary_ids(i).object_id
+            ,p_versionid  => p_versionid
+         );
+         
+         INSERT INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,exampletyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
       
       -- No subobjects
 
@@ -166,25 +176,30 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_extrdocs_typ;
 
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,extrdocstyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_extrdocs_typ(
-          p_externaldoc_id => a.object_id
-         ,p_versionid      => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_extrdocs_typ(
+             p_externaldoc_id => ary_ids(i).object_id
+            ,p_versionid      => p_versionid
+         );
+         
+         INSERT INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,extrdocstyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
       
       -- No subobjects
 
@@ -199,25 +214,30 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_header_typ;
 
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,headertyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_header_typ(
-          p_header_id    => a.object_id
-         ,p_versionid    => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_header_typ(
+             p_header_id    => ary_ids(i).object_id
+            ,p_versionid    => p_versionid
+         );
+         
+         INSERT INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,headertyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
 
       FOR r IN (
          SELECT 
@@ -249,25 +269,30 @@ AS
    )
    AS
       ary_ids dz_swagger3_object_vry;
+      obj     dz_swagger3_link_typ;
 
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,linktyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_link_typ(
-          p_link_id    => a.object_id
-         ,p_versionid  => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_link_typ(
+             p_link_id    => ary_ids(i).object_id
+            ,p_versionid  => p_versionid
+         );
+         
+         INSERT INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,linktyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
 
       FOR r IN (
          SELECT 
@@ -298,26 +323,31 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
-
+      obj       dz_swagger3_media_typ;
+      
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT 
-      INTO dz_swagger3_xobjects(
-          object_id
-         ,object_type_id
-         ,mediatyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_media_typ(
-          p_media_id    => a.object_id
-         ,p_versionid   => p_versionid
-       )
-      FROM
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_media_typ(
+             p_media_id    => ary_ids(i).object_id
+            ,p_versionid   => p_versionid
+         );
+          
+         INSERT 
+         INTO dz_swagger3_xobjects(
+             object_id
+            ,object_type_id
+            ,mediatyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+
+      END LOOP;
       
       FOR r IN (
          SELECT 
@@ -350,7 +380,8 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
-
+      obj       dz_swagger3_media_typ;
+      
    BEGIN
    
       ary_ids := filter_ids(
@@ -358,21 +389,25 @@ AS
          ,p_parent_id
       );
 
-      INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,mediatyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_media_typ(
-          p_media_id       => a.object_id
-         ,p_parameters     => p_parameter_ids
-         ,p_versionid      => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_media_typ(
+             p_media_id       => ary_ids(i).object_id
+            ,p_parameters     => p_parameter_ids
+            ,p_versionid      => p_versionid
+         );
+
+         INSERT INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,mediatyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
 
       FOR r IN (
          SELECT 
@@ -404,26 +439,31 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_operation_typ;
 
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT 
-      INTO dz_swagger3_xobjects(
-          object_id
-         ,object_type_id
-         ,operationtyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_operation_typ(
-          p_operation_id => a.object_id
-         ,p_versionid    => p_versionid
-       )
-      FROM
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_operation_typ(
+             p_operation_id => ary_ids(i).object_id
+            ,p_versionid    => p_versionid
+         );
+         
+         INSERT 
+         INTO dz_swagger3_xobjects(
+             object_id
+            ,object_type_id
+            ,operationtyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
       
       FOR r IN (
          SELECT 
@@ -454,25 +494,30 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_parameter_typ;
 
    BEGIN
       
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,parametertyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_parameter_typ(
-          p_parameter_id => a.object_id
-         ,p_versionid    => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_parameter_typ(
+             p_parameter_id => ary_ids(i).object_id
+            ,p_versionid    => p_versionid
+         );
+
+         INSERT INTO dz_swagger3_xobjects(
+             object_id
+            ,object_type_id
+            ,parametertyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
 
       FOR r IN (
          SELECT 
@@ -503,25 +548,30 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
-
+      obj       dz_swagger3_path_typ;
+      
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,pathtyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_path_typ(
-          p_path_id    => a.object_id
-         ,p_versionid  => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_path_typ(
+             p_path_id    => ary_ids(i).object_id
+            ,p_versionid  => p_versionid
+         );
+         
+         INSERT INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,pathtyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
       
       FOR r IN (
          SELECT 
@@ -539,6 +589,7 @@ AS
       )
       LOOP
          r.pathtyp.traverse();
+
       END LOOP;
 
    END pathtyp;
@@ -552,6 +603,7 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_requestbody_typ;
 
    BEGIN
    
@@ -560,20 +612,24 @@ AS
          ,p_parent_id
       );
 
-      INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,requestbodytyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_requestbody_typ(
-          p_requestbody_id => a.object_id
-         ,p_versionid      => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_requestbody_typ(
+             p_requestbody_id => ary_ids(i).object_id
+            ,p_versionid      => p_versionid
+         );
+         
+         INSERT INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,requestbodytyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+
+      END LOOP;
       
       FOR r IN (
          SELECT 
@@ -605,6 +661,7 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_requestbody_typ;
 
    BEGIN
    
@@ -613,21 +670,25 @@ AS
          ,p_parent_id
       );
 
-      INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,requestbodytyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_requestbody_typ(
-          p_requestbody_id => a.object_id
-         ,p_parameters     => p_parameter_ids
-         ,p_versionid      => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_requestbody_typ(
+             p_requestbody_id => ary_ids(i).object_id
+            ,p_parameters     => p_parameter_ids
+            ,p_versionid      => p_versionid
+         );
+         
+         INSERT INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,requestbodytyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+
+      END LOOP;
 
       FOR r IN (
          SELECT 
@@ -658,6 +719,7 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_response_typ;
 
    BEGIN
    
@@ -666,21 +728,25 @@ AS
          ,p_parent_id
       );
 
-      INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,responsetyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_response_typ(
-          p_response_id    => a.object_id
-         ,p_response_code  => a.object_key
-         ,p_versionid      => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_response_typ(
+             p_response_id    => ary_ids(i).object_id
+            ,p_response_code  => ary_ids(i).object_key
+            ,p_versionid      => p_versionid
+         );
+         
+         INSERT INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,responsetyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
 
       FOR r IN (
          SELECT 
@@ -711,35 +777,41 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_schema_typ;
 
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,schematyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,CASE 
-       WHEN a.object_subtype = 'emulated_item'
-       THEN
-         dz_swagger3_schema_typ(
-             p_schema_id             => a.object_id
-            ,p_emulated_parameter_id => a.object_attribute
-            ,p_versionid             => p_versionid
-         )
-       ELSE
-         dz_swagger3_schema_typ(
-             p_schema_id             => a.object_id
-            ,p_versionid             => p_versionid
-         )
-       END
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         IF ary_ids(i).object_subtype = 'emulated_item'
+         THEN
+            obj := dz_swagger3_schema_typ(
+                p_schema_id             => ary_ids(i).object_id
+               ,p_emulated_parameter_id => ary_ids(i).object_attribute
+               ,p_versionid             => p_versionid
+            );
+            
+         ELSE
+            obj := dz_swagger3_schema_typ(
+                p_schema_id             => ary_ids(i).object_id
+               ,p_versionid             => p_versionid
+            );
+            
+         END IF;
+
+         INSERT INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,schematyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
       
       FOR r IN (
          SELECT 
@@ -772,6 +844,7 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_schema_typ;
 
    BEGIN
    
@@ -780,21 +853,25 @@ AS
          ,p_parent_id
       );
 
-      INSERT INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,schematyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_schema_typ(
-          p_schema_id     => a.object_id
-         ,p_parameters    => p_parameter_ids
-         ,p_versionid     => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_schema_typ(
+             p_schema_id     => ary_ids(i).object_id
+            ,p_parameters    => p_parameter_ids
+            ,p_versionid     => p_versionid
+         );
+          
+         INSERT INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,schematyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
 
       FOR r IN (
          SELECT 
@@ -825,27 +902,32 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_securityscheme_typ;
       
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT 
-      INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,securityschemetyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_securityscheme_typ(
-          p_securityscheme_id       => a.object_id
-         ,p_securityscheme_fullname => a.object_key
-         ,p_versionid               => p_versionid
-       )
-      FROM
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_securityscheme_typ(
+             p_securityscheme_id       => ary_ids(i).object_id
+            ,p_securityscheme_fullname => ary_ids(i).object_key
+            ,p_versionid               => p_versionid
+         );
+         
+         INSERT 
+         INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,securityschemetyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+
+      END LOOP;
 
    END securityschemetyp;
 
@@ -858,26 +940,31 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_server_typ;
 
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT 
-      INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,servertyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_server_typ(
-          p_server_id   => a.object_id
-         ,p_versionid   => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_server_typ(
+             p_server_id   => ary_ids(i).object_id
+            ,p_versionid   => p_versionid
+         );
+         
+         INSERT 
+         INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,servertyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
       
       FOR r IN (
          SELECT 
@@ -909,26 +996,31 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
+      obj       dz_swagger3_server_var_typ;
 
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT 
-      INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,servervartyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_server_var_typ(
-          p_server_var_id  => a.object_id
-         ,p_versionid      => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_server_var_typ(
+             p_server_var_id  => ary_ids(i).object_id
+            ,p_versionid      => p_versionid
+         );
+         
+         INSERT 
+         INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,servervartyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+
+      END LOOP;
       
       -- No subobjects
       
@@ -943,28 +1035,32 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
-      str_otype VARCHAR2(255 Char) := 'stringhashtyp';
+      obj       dz_swagger3_string_hash_typ;
 
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT 
-      INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,stringhashtyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_string_hash_typ(
-          p_hash_key       => a.object_id
-         ,p_string_value   => a.object_key
-         ,p_versionid      => p_versionid
-       )
-      FROM 
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_string_hash_typ(
+             p_hash_key       => ary_ids(i).object_id
+            ,p_string_value   => ary_ids(i).object_key
+            ,p_versionid      => p_versionid
+         );
+
+         INSERT 
+         INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,stringhashtyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
       
       -- No subobjects
       
@@ -979,27 +1075,31 @@ AS
    )
    AS
       ary_ids   dz_swagger3_object_vry;
-      str_otype VARCHAR2(255 Char) := 'tagtyp';
+      obj       dz_swagger3_tag_typ;
 
    BEGIN
    
       ary_ids := filter_ids(p_children_ids,p_parent_id);
 
-      INSERT 
-      INTO dz_swagger3_xobjects(
-           object_id
-          ,object_type_id
-          ,tagtyp
-      )
-      SELECT
-       a.object_id
-      ,a.object_type_id
-      ,dz_swagger3_tag_typ(
-          p_tag_id        => a.object_id
-         ,p_versionid     => p_versionid
-       )
-      FROM
-      TABLE(ary_ids) a;
+      FOR i IN 1 .. ary_ids.COUNT
+      LOOP
+         obj := dz_swagger3_tag_typ(
+             p_tag_id        => ary_ids(i).object_id
+            ,p_versionid     => p_versionid
+         );
+         
+         INSERT 
+         INTO dz_swagger3_xobjects(
+              object_id
+             ,object_type_id
+             ,tagtyp
+         ) VALUES (
+             ary_ids(i).object_id
+            ,ary_ids(i).object_type_id
+            ,obj
+         );
+         
+      END LOOP;
       
       FOR r IN (
          SELECT 

@@ -1,0 +1,14 @@
+﻿SET DEFINE OFF;
+Insert into DZ_SWAGGER3_GROUP
+   (GROUP_ID, DOC_ID, PATH_ID, PATH_ORDER, VERSIONID)
+ Values
+   ('SAMPLE', 'SAMPLE', 'Sample.Navigation30', 10, 'SAMPLE');
+Insert into DZ_SWAGGER3_GROUP
+   (GROUP_ID, DOC_ID, PATH_ID, PATH_ORDER, VERSIONID)
+ Values
+   ('SAMPLE', 'SAMPLE', 'Sample.Streamcat', 20, 'SAMPLE');
+Insert into DZ_SWAGGER3_GROUP
+   (GROUP_ID, DOC_ID, PATH_ID, PATH_ORDER, VERSIONID)
+ Values
+   ('SAMPLE', 'SAMPLE', 'Sample.randomnav', 30, 'SAMPLE');
+COMMIT;

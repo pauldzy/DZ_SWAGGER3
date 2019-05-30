@@ -114,14 +114,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'authorizationUrl'
-                  ,self.oauth_flow_authorizationUrl
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'authorizationUrl'
+               ,self.oauth_flow_authorizationUrl
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -137,14 +135,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'tokenUrl'
-                  ,self.oauth_flow_tokenUrl
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'tokenUrl'
+               ,self.oauth_flow_tokenUrl
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -160,14 +156,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'refreshUrl'
-                  ,self.oauth_flow_refreshUrl
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'refreshUrl'
+               ,self.oauth_flow_refreshUrl
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -180,25 +174,26 @@ AS
       IF self.oauth_flow_scope_names IS NOT NULL
       AND self.oauth_flow_scope_names.COUNT > 0
       THEN
+         str_pad2 := str_pad;
+         
          dz_swagger3_util.conc(
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(str_pad1 || '"scopes":' || str_pad || '{',p_pretty_print + 1)
+            ,p_in_v => str_pad1 || '"scopes":' || str_pad || '{'
+            ,p_pretty_print => p_pretty_print + 1
          );
       
-         str_pad2 := str_pad;
-         
          FOR i IN 1 .. self.oauth_flow_scope_names.COUNT
          LOOP
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad2 || '"' || self.oauth_flow_scope_names(i) || '":' || str_pad || '"' || self.oauth_flow_scope_desc(i) || '"'
-                  ,p_pretty_print + 2
-               )
+               ,p_in_v => str_pad2 
+                  || '"' || self.oauth_flow_scope_names(i) || '":' || str_pad 
+                  || '"' || self.oauth_flow_scope_desc(i)  || '"'
+               ,p_pretty_print => p_pretty_print + 2
             );
             str_pad2 := ',';
          
@@ -208,10 +203,8 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                '}'
-               ,p_pretty_print + 1
-            )
+            ,p_in_v => '}'
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
          
@@ -225,10 +218,9 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty(
-             '}'
-            ,p_pretty_print,NULL,NULL
-         )
+         ,p_in_v => '}'
+         ,p_pretty_print   => p_pretty_print
+         ,p_final_linefeed => FALSE
       );
 
       --------------------------------------------------------------------------
@@ -276,14 +268,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'authorizationUrl: ' || dz_swagger3_util.yaml_text(
-                   self.oauth_flow_authorizationUrl
-                  ,p_pretty_print
-                )
+            ,p_in_v => 'authorizationUrl: ' || dz_swagger3_util.yaml_text(
+                self.oauth_flow_authorizationUrl
                ,p_pretty_print
-               ,'  '
-             ) 
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -298,14 +288,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'tokenUrl: ' || dz_swagger3_util.yaml_text(
-                   self.oauth_flow_tokenUrl
-                  ,p_pretty_print
-                )
+            ,p_in_v => 'tokenUrl: ' || dz_swagger3_util.yaml_text(
+                self.oauth_flow_tokenUrl
                ,p_pretty_print
-               ,'  '
-             ) 
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -320,14 +308,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'refreshUrl: ' || dz_swagger3_util.yaml_text(
-                   self.oauth_flow_refreshUrl
-                  ,p_pretty_print
-                )
+            ,p_in_v => 'refreshUrl: ' || dz_swagger3_util.yaml_text(
+                self.oauth_flow_refreshUrl
                ,p_pretty_print
-               ,'  '
-             ) 
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -343,11 +329,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'scopes: '
-               ,p_pretty_print
-               ,'  '
-             ) 
+            ,p_in_v => 'scopes: '
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
          FOR i IN 1 .. self.oauth_flow_scope_names.COUNT
@@ -356,11 +340,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   dz_swagger3_util.yamlq(self.oauth_flow_scope_names(i)) || ': ' || dz_swagger3_util.yamlq(self.oauth_flow_scope_desc(i))
-                  ,p_pretty_print + 1
-                  ,'  '
-                ) 
+               ,p_in_v => dz_swagger3_util.yamlq(self.oauth_flow_scope_names(i)) 
+                  || ': ' || dz_swagger3_util.yamlq(self.oauth_flow_scope_desc(i))
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_amount       => '  '
             );
          
          END LOOP;

@@ -19,11 +19,12 @@ AS
    ) RETURN SELF AS RESULT
    AS
    BEGIN
-   
+
       --------------------------------------------------------------------------
       -- Step 10
       -- Initialize the object
       --------------------------------------------------------------------------
+      --dbms_output.put_line('media: ' || p_media_id);
       self.versionid := p_versionid;
 
       --------------------------------------------------------------------------
@@ -275,16 +276,21 @@ AS
          dz_swagger3_util.conc(
              p_c    => cb
             ,p_v    => v2
-            ,p_in_c => dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                   'schema'
-                  ,clb_tmp
-                  ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
-            )
-            ,p_in_v => NULL
+            ,p_in_c => NULL
+            ,p_in_v => str_pad1 || '"schema":' || str_pad
+            ,p_pretty_print => p_pretty_print + 1
+            ,p_final_linefeed => FALSE
          );
+         
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => clb_tmp
+            ,p_in_v => NULL
+            ,p_pretty_print => p_pretty_print + 1
+            ,p_initial_indent => FALSE
+         );
+         
          str_pad1 := ',';
 
       END IF;
@@ -318,29 +324,36 @@ AS
          AND a.object_id      = b.object_id
          ORDER BY b.object_order;
          
+         str_pad2 := str_pad;
+         
          dz_swagger3_util.conc(
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || '"examples":' || str_pad || '{'
-               ,p_pretty_print + 1
-             )
+            ,p_in_v => str_pad1 || '"examples":' || str_pad || '{'
+            ,p_pretty_print => p_pretty_print + 1
          );
       
-         str_pad2 := str_pad;
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_clb.COUNT
          LOOP
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
-               ,p_in_c => dz_json_util.pretty(
-                   str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
-                  ,p_pretty_print + 2
-               )
-               ,p_in_v => NULL
+               ,p_in_c => NULL
+               ,p_in_v => str_pad2 || '"' || ary_keys(i) || '":' || str_pad
+               ,p_pretty_print   => p_pretty_print + 2
+               ,p_final_linefeed => FALSE
             );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => ary_clb(i)
+               ,p_in_v => NULL
+               ,p_pretty_print   => p_pretty_print + 2
+               ,p_initial_indent => FALSE
+            );
+            
             str_pad2 := ',';
          
          END LOOP;
@@ -349,11 +362,10 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                '}'
-               ,p_pretty_print + 1
-            )
+            ,p_in_v => '}'
+            ,p_pretty_print => p_pretty_print + 1
          );
+
          str_pad1 := ',';
          
       ELSE
@@ -367,14 +379,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'example'
-                     ,self.media_example_string
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'example'
+                  ,self.media_example_string
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
             
@@ -384,14 +394,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'example'
-                     ,self.media_example_number
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'example'
+                  ,self.media_example_number
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
             
@@ -425,29 +433,36 @@ AS
          AND a.object_id      = b.object_id
          ORDER BY b.object_order;
          
+         str_pad2 := str_pad;
+         
          dz_swagger3_util.conc(
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || '"encoding":' || str_pad || '{'
-               ,p_pretty_print + 1
-             )
+            ,p_in_v => str_pad1 || '"encoding":' || str_pad || '{'
+            ,p_pretty_print => p_pretty_print + 1
          );
       
-         str_pad2 := str_pad;
-      
-         FOR i IN 1 .. ary_keys.COUNT
+         FOR i IN 1 .. ary_clb.COUNT
          LOOP
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
-               ,p_in_c => dz_json_util.pretty(
-                   str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
-                  ,p_pretty_print + 2
-               )
-               ,p_in_v => NULL
+               ,p_in_c => NULL
+               ,p_in_v => str_pad2 || '"' || ary_keys(i) || '":' || str_pad
+               ,p_pretty_print   => p_pretty_print + 2
+               ,p_final_linefeed => FALSE
             );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => ary_clb(i)
+               ,p_in_v => NULL
+               ,p_pretty_print   => p_pretty_print + 2
+               ,p_initial_indent => FALSE
+            );
+            
             str_pad2 := ',';
          
          END LOOP;
@@ -456,11 +471,10 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                '}'
-               ,p_pretty_print + 1
-            )
+            ,p_in_v => '}'
+            ,p_pretty_print => p_pretty_print + 1
          );
+
          str_pad1 := ',';
          
       END IF;
@@ -473,10 +487,9 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty(
-             '}'
-            ,p_pretty_print,NULL,NULL
-         )
+         ,p_in_v => '}'
+         ,p_pretty_print   => p_pretty_print
+         ,p_final_linefeed => FALSE
       );
 
       --------------------------------------------------------------------------
@@ -557,11 +570,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'schema: '
-               ,p_pretty_print
-               ,'  '
-            )
+            ,p_in_v => 'schema: '
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
          dz_swagger3_util.conc(
@@ -602,38 +613,39 @@ AS
          AND a.object_id      = b.object_id
          ORDER BY b.object_order;
          
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                'examples:' 
-               ,p_pretty_print
-               ,'  '
-            )
-         );
-         
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
+         IF  ary_keys IS NOT NULL
+         AND ary_keys.COUNT > 0
+         THEN
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   dz_swagger3_util.yamlq(ary_keys(i)) || ': '
-                  ,p_pretty_print + 1
-                  ,'  '
-                )
+               ,p_in_v => 'examples: '
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => ary_clb(i)
-               ,p_in_v => NULL
-            );
-         
-         END LOOP;
+            FOR i IN 1 .. ary_keys.COUNT
+            LOOP
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => dz_swagger3_util.yamlq(ary_keys(i)) || ': '
+                  ,p_pretty_print => p_pretty_print + 1
+                  ,p_amount       => '  '
+               );
+               
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => ary_clb(i)
+                  ,p_in_v => NULL
+               );
+            
+            END LOOP;
+               
+         END IF;
          
       ELSE
       --------------------------------------------------------------------------
@@ -646,14 +658,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'example: ' || dz_swagger3_util.yaml_text(
-                      self.media_example_string
-                     ,p_pretty_print
-                  )
+               ,p_in_v => 'example: ' || dz_swagger3_util.yaml_text(
+                   self.media_example_string
                   ,p_pretty_print
-                  ,'  '
-               )
+                )
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          ELSIF self.media_example_number IS NOT NULL
@@ -662,14 +672,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'example: ' || dz_swagger3_util.yaml_text(
-                      self.media_example_number
-                     ,p_pretty_print
-                  )
-                  ,p_pretty_print
-                  ,'  '
-               )
+               ,p_in_v => 'example: ' || TO_CHAR(self.media_example_number)
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          END IF;
@@ -702,38 +707,39 @@ AS
          AND a.object_id      = b.object_id
          ORDER BY b.object_order;
          
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                'encoding:' 
-               ,p_pretty_print
-               ,'  '
-            )
-         );
-         
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
+         IF  ary_keys IS NOT NULL
+         AND ary_keys.COUNT > 0
+         THEN
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   dz_swagger3_util.yamlq(ary_keys(i)) || ': '
-                  ,p_pretty_print + 1
-                  ,'  '
-                )
+               ,p_in_v => 'encoding: '
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => ary_clb(i)
-               ,p_in_v => NULL
-            );
-         
-         END LOOP;
+            FOR i IN 1 .. ary_keys.COUNT
+            LOOP
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => dz_swagger3_util.yamlq(ary_keys(i)) || ': '
+                  ,p_pretty_print => p_pretty_print + 1
+                  ,p_amount       => '  '
+               );
+               
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => ary_clb(i)
+                  ,p_in_v => NULL
+               );
+            
+            END LOOP;
+               
+         END IF;
          
       END IF;
       

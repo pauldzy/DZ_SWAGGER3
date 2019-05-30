@@ -155,14 +155,13 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'url'
-               ,self.server_url
-               ,p_pretty_print + 1
-            )
+         ,p_in_v => str_pad1 || dz_json_main.value2json(
+             'url'
+            ,self.server_url
             ,p_pretty_print + 1
-         )
+          )
+        ,p_pretty_print => p_pretty_print + 1
+ 
       );
       str_pad1 := ',';
          
@@ -174,14 +173,12 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'description'
-               ,self.server_description
-               ,p_pretty_print + 1
-            )
+         ,p_in_v => str_pad1 || dz_json_main.value2json(
+             'description'
+            ,self.server_description
             ,p_pretty_print + 1
-         )
+          )
+         ,p_pretty_print => p_pretty_print + 1
       );
       str_pad1 := ',';
       
@@ -215,10 +212,8 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || '"variables":' || str_pad || '{'
-               ,p_pretty_print + 1
-            )
+            ,p_in_v => str_pad1 || '"variables":' || str_pad || '{'
+            ,p_pretty_print => p_pretty_print + 1
          );
          
          str_pad2 := str_pad;
@@ -229,11 +224,20 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
-                  ,p_pretty_print + 2
-               )
+               ,p_in_v => str_pad2 || '"' || ary_keys(i) || '":' || str_pad
+               ,p_pretty_print    => p_pretty_print + 2
+               ,p_final_linefeed => FALSE
             );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => ary_clb(i)
+               ,p_in_v => NULL
+               ,p_pretty_print    => p_pretty_print + 2
+               ,p_initial_indent => NULL
+            );
+            
             str_pad2 := ',';
          
          END LOOP;
@@ -242,10 +246,8 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                '}'
-               ,p_pretty_print + 1
-            )
+            ,p_in_v => '}'
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
          
@@ -259,10 +261,9 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty(
-             '}'
-            ,p_pretty_print,NULL,NULL
-         )
+         ,p_in_v => '}'
+         ,p_pretty_print => p_pretty_print
+         ,p_final_linefeed => FALSE
       );
 
       --------------------------------------------------------------------------
@@ -311,14 +312,12 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty_str(
-             'url: ' || dz_swagger3_util.yaml_text(
-                self.server_url
-               ,p_pretty_print
-            )
+         ,p_in_v => 'url: ' || dz_swagger3_util.yaml_text(
+             self.server_url
             ,p_pretty_print
-            ,'  '
          )
+         ,p_pretty_print => p_pretty_print
+         ,p_amount       => '  '
       );
       
       --------------------------------------------------------------------------
@@ -331,14 +330,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'description: ' || dz_swagger3_util.yaml_text(
-                   self.server_description
-                  ,p_pretty_print
-               )
+            ,p_in_v => 'description: ' || dz_swagger3_util.yaml_text(
+                self.server_description
                ,p_pretty_print
-               ,'  '
-            )
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -373,11 +370,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'variables: '
-               ,p_pretty_print
-               ,'  '
-            )
+            ,p_in_v => 'variables: '
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
          FOR i IN 1 .. ary_keys.COUNT
@@ -385,11 +380,16 @@ AS
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
-               ,p_in_c => dz_json_util.pretty(
-                   dz_swagger3_util.yamlq(ary_keys(i)) || ': '
-                  ,p_pretty_print + 1
-                  ,'  '
-               ) || ary_clb(i)
+               ,p_in_c => NULL
+               ,p_in_v => dz_swagger3_util.yamlq(ary_keys(i)) || ': '
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_amount       => '  '
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => ary_clb(i)
                ,p_in_v => NULL
             );
          

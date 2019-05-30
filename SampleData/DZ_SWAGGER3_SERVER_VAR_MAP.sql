@@ -1,0 +1,18 @@
+﻿SET DEFINE OFF;
+Insert into DZ_SWAGGER3_SERVER_VAR_MAP
+   (SERVER_ID, SERVER_VAR_ID, SERVER_VAR_ORDER, VERSIONID)
+ Values
+   ('sample1', 'port', 10, 'SAMPLE');
+Insert into DZ_SWAGGER3_SERVER_VAR_MAP
+   (SERVER_ID, SERVER_VAR_ID, SERVER_VAR_ORDER, VERSIONID)
+ Values
+   ('sample1', 'username', 20, 'SAMPLE');
+Insert into DZ_SWAGGER3_SERVER_VAR_MAP
+   (SERVER_ID, SERVER_VAR_ID, SERVER_VAR_ORDER, VERSIONID)
+ Values
+   ('sample2', 'something', 10, 'SAMPLE');
+Insert into DZ_SWAGGER3_SERVER_VAR_MAP
+   (SERVER_ID, SERVER_VAR_ID, SERVER_VAR_ORDER, VERSIONID)
+ Values
+   ('sample2', 'oranother', 20, 'SAMPLE');
+COMMIT;

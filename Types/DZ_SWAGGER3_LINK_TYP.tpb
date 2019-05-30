@@ -1,4 +1,4 @@
-   CREATE OR REPLACE TYPE BODY dz_swagger3_link_typ
+CREATE OR REPLACE TYPE BODY dz_swagger3_link_typ
 AS 
 
    -----------------------------------------------------------------------------
@@ -179,16 +179,14 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   '$ref'
-                  ,'#/components/links/' || dz_swagger3_util.utl_url_escape(
-                     str_identifier
-                   )
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                '$ref'
+               ,'#/components/links/' || dz_swagger3_util.utl_url_escape(
+                  str_identifier
+                )
                ,p_pretty_print + 1
             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -203,14 +201,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'operationRef'
-                     ,self.link_operationRef
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'operationRef'
+                  ,self.link_operationRef
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
          
@@ -239,14 +235,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'operationId'
-                     ,str_operation_id
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'operationId'
+                  ,str_operation_id
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -259,17 +253,15 @@ AS
          IF  self.link_op_parm_names IS NOT NULL
          AND self.link_op_parm_names.COUNT > 0
          THEN
+            str_pad2 := str_pad;
+            
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || '"parameters":' || str_pad || '{'
-                  ,p_pretty_print + 1
-               )
+               ,p_in_v => str_pad1 || '"parameters":' || str_pad || '{'
+               ,p_pretty_print => p_pretty_print + 1
             );
-            
-            str_pad2 := str_pad;
             
             FOR i IN 1 .. self.link_op_parm_names.COUNT
             LOOP
@@ -277,11 +269,10 @@ AS
                    p_c    => cb
                   ,p_v    => v2
                   ,p_in_c => NULL
-                  ,p_in_v => dz_json_util.pretty(
+                  ,p_in_v =>
                       str_pad2 || '"' || self.link_op_parm_names(i) || '":' || 
                       str_pad  || '"' || self.link_op_parm_exps(i)  || '"' 
-                     ,p_pretty_print + 2
-                  )
+                  ,p_pretty_print => p_pretty_print + 2
                );
                str_pad2 := ',';
                
@@ -291,10 +282,8 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   '}'
-                  ,p_pretty_print + 1
-               )
+               ,p_in_v => '}'
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
          
@@ -310,14 +299,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'requestBody'
-                     ,self.link_requestBody_exp
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'requestBody'
+                  ,self.link_requestBody_exp
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -333,14 +320,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'description'
-                     ,self.link_description
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'description'
+                  ,self.link_description
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -379,16 +364,21 @@ AS
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
-               ,p_in_c => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.formatted2json(
-                      'server'
-                     ,clb_tmp
-                     ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
-               )
-               ,p_in_v => NULL
+               ,p_in_c => NULL
+               ,p_in_v => str_pad1 || '"server":' || str_pad
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_final_linefeed => FALSE
             );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => clb_tmp
+               ,p_in_v => NULL
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_initial_indent => FALSE
+            );
+            
             str_pad1 := ',';
 
          END IF;
@@ -403,10 +393,9 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty(
-             '}'
-            ,p_pretty_print,NULL,NULL
-         )
+         ,p_in_v => '}'
+         ,p_pretty_print   => p_pretty_print
+         ,p_final_linefeed => FALSE
       );
 
       --------------------------------------------------------------------------
@@ -464,14 +453,11 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                '$ref: ' || dz_swagger3_util.yaml_text(
-                   '#/components/links/' || str_identifier
-                  ,p_pretty_print
-               )
-               ,p_pretty_print
-               ,'  '
-            ) 
+            ,p_in_v => '$ref: ' || dz_swagger3_util.yaml_text(
+               '#/components/links/' || str_identifier
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       ELSE
@@ -485,14 +471,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'operationRef: ' || dz_swagger3_util.yaml_text(
-                      self.link_operationRef
-                     ,p_pretty_print
-                  )
+               ,p_in_v => 'operationRef: ' || dz_swagger3_util.yaml_text(
+                   self.link_operationRef
                   ,p_pretty_print
-                  ,'  '
-               )
+                )
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
       
       --------------------------------------------------------------------------
@@ -520,14 +504,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'operationId: ' || dz_swagger3_util.yaml_text(
-                      str_operation_id
-                     ,p_pretty_print
-                  )
+               ,p_in_v => 'operationId: ' || dz_swagger3_util.yaml_text(
+                   str_operation_id
                   ,p_pretty_print
-                  ,'  '
-               )
+                )
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          END IF;
@@ -543,11 +525,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'parameters: '
-                  ,p_pretty_print
-                  ,'  '
-               )
+               ,p_in_v => 'parameters: '
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
 
             FOR i IN 1 .. self.link_op_parm_names.COUNT
@@ -556,12 +536,11 @@ AS
                    p_c    => cb
                   ,p_v    => v2
                   ,p_in_c => NULL
-                  ,p_in_v => dz_json_util.pretty(
-                      dz_swagger3_util.yamlq(link_op_parm_names(i)) || ': ' ||
-                      dz_swagger3_util.yamlq(link_op_parm_exps(i)) 
-                     ,p_pretty_print + 1
-                     ,'  '
-                  )
+                  ,p_in_v => dz_swagger3_util.yamlq(link_op_parm_names(i)) 
+                     || ': ' 
+                     || dz_swagger3_util.yamlq(link_op_parm_exps(i)) 
+                  ,p_pretty_print => p_pretty_print + 1
+                  ,p_amount       => '  '
                );
             
             END LOOP;
@@ -578,14 +557,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'requestBody: ' || dz_swagger3_util.yaml_text(
-                      self.link_requestBody_exp
-                     ,p_pretty_print
-                  )
+               ,p_in_v => 'requestBody: ' || dz_swagger3_util.yaml_text(
+                   self.link_requestBody_exp
                   ,p_pretty_print
-                  ,'  '
-               )
+                )
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          END IF;
@@ -600,14 +577,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'description: ' || dz_swagger3_util.yaml_text(
-                      self.link_description
-                     ,p_pretty_print
-                  )
+               ,p_in_v => 'description: ' || dz_swagger3_util.yaml_text(
+                   self.link_description
                   ,p_pretty_print
-                  ,'  '
-               )
+                )
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          END IF;
@@ -644,22 +619,20 @@ AS
             END;
          
             dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'server: '
-               ,p_pretty_print
-               ,'  '
-            )
-         );
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => clb_tmp
-            ,p_in_v => NULL
-         );
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => 'server: '
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => clb_tmp
+               ,p_in_v => NULL
+            );
             
          END IF;
       

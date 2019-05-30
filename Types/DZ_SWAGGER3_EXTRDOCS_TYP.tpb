@@ -128,14 +128,12 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty(
-             str_pad1 || dz_json_main.value2json(
-                'description'
-               ,self.externaldoc_description
-               ,p_pretty_print + 1
-            )
+         ,p_in_v => str_pad1 || dz_json_main.value2json(
+             'description'
+            ,self.externaldoc_description
             ,p_pretty_print + 1
-         )
+          )
+         ,p_pretty_print => p_pretty_print + 1
       );
       str_pad1 := ',';
          
@@ -149,14 +147,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'url'
-                  ,self.externaldoc_url
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'url'
+               ,self.externaldoc_url
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -170,10 +166,9 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty(
-             '}'
-            ,p_pretty_print,NULL,NULL
-         )
+         ,p_in_v => '}'
+         ,p_pretty_print   => p_pretty_print
+         ,p_final_linefeed => FALSE
       );
 
       --------------------------------------------------------------------------
@@ -217,14 +212,12 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty_str(
-              'description: ' || dz_swagger3_util.yaml_text(
-                self.externaldoc_description
-               ,p_pretty_print
-            )
+         ,p_in_v => 'description: ' || dz_swagger3_util.yaml_text(
+             self.externaldoc_description
             ,p_pretty_print
-            ,'  '
-         )
+          )
+         ,p_pretty_print => p_pretty_print
+         ,p_amount       => '  '
       );
       
       --------------------------------------------------------------------------
@@ -237,14 +230,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                 'url: ' || dz_swagger3_util.yaml_text(
-                   self.externaldoc_url
-                  ,p_pretty_print
-               )
+            ,p_in_v => 'url: ' || dz_swagger3_util.yaml_text(
+                self.externaldoc_url
                ,p_pretty_print
-               ,'  '
-            )
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;

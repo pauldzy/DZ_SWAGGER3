@@ -163,14 +163,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'type'
-                  ,self.securityscheme_type
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'type'
+               ,self.securityscheme_type
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -186,14 +184,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'description'
-                  ,self.securityscheme_description
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'description'
+               ,self.securityscheme_description
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -209,14 +205,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'name'
-                  ,self.securityscheme_name
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'name'
+               ,self.securityscheme_name
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -232,14 +226,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'in'
-                  ,self.securityscheme_in
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'in'
+               ,self.securityscheme_in
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -255,14 +247,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'scheme'
-                  ,self.securityscheme_scheme
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'scheme'
+               ,self.securityscheme_scheme
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -278,14 +268,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'bearerFormat'
-                  ,self.securityscheme_bearerFormat
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'bearerFormat'
+               ,self.securityscheme_bearerFormat
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -304,10 +292,8 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || '"flows":' || str_pad || '{'
-               ,p_pretty_print + 1
-             )
+            ,p_in_v => str_pad1 || '"flows":' || str_pad || '{'
+            ,p_pretty_print => p_pretty_print + 1
          );
          
          str_pad2 := str_pad;
@@ -318,23 +304,18 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad2 || '"implicit":' || str_pad
-                  ,p_pretty_print + 2
-                  ,NULL
-                  ,NULL
-               )
+               ,p_in_v => str_pad2 || '"implicit":' || str_pad
+               ,p_pretty_print => p_pretty_print + 2
             );
             
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
-               ,p_in_c => dz_json_util.pretty(
-                   self.oauth_flow_implicit.toJSON(p_pretty_print + 2)
-                  ,p_pretty_print + 2
-                )
+               ,p_in_c => self.oauth_flow_implicit.toJSON(p_pretty_print + 2)
                ,p_in_v => NULL
+               ,p_pretty_print => p_pretty_print + 2
             );
+            
             str_pad2 := ',';
          
          END IF;
@@ -345,23 +326,18 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad2 || '"password":' || str_pad
-                  ,p_pretty_print + 2
-                  ,NULL
-                  ,NULL
-               )
+               ,p_in_v => str_pad2 || '"password":' || str_pad
+               ,p_pretty_print => p_pretty_print + 2
             );
             
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
-               ,p_in_c => dz_json_util.pretty(
-                   self.oauth_flow_password.toJSON(p_pretty_print + 2)
-                  ,p_pretty_print + 2
-                )
+               ,p_in_c => self.oauth_flow_password.toJSON(p_pretty_print + 2)
                ,p_in_v => NULL
+               ,p_pretty_print => p_pretty_print + 2
             );
+            
             str_pad2 := ',';
          
          END IF;
@@ -372,23 +348,18 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad2 || '"clientCredentials":' || str_pad
-                  ,p_pretty_print + 2
-                  ,NULL
-                  ,NULL
-               )
+               ,p_in_v => str_pad2 || '"clientCredentials":' || str_pad
+               ,p_pretty_print => p_pretty_print + 2
             );
             
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
-               ,p_in_c => dz_json_util.pretty(
-                   self.oauth_flow_clientCredentials.toJSON(p_pretty_print + 2)
-                  ,p_pretty_print + 2
-                )
+               ,p_in_c => self.oauth_flow_clientCredentials.toJSON(p_pretty_print + 2)
                ,p_in_v => NULL
+               ,p_pretty_print => p_pretty_print + 2
             );
+            
             str_pad2 := ',';
          
          END IF;
@@ -399,23 +370,18 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad2 || '"authorizationCode":' || str_pad
-                  ,p_pretty_print + 2
-                  ,NULL
-                  ,NULL
-               )
+               ,p_in_v => str_pad2 || '"authorizationCode":' || str_pad
+               ,p_pretty_print => p_pretty_print + 2
             );
             
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
-               ,p_in_c => dz_json_util.pretty(
-                   self.oauth_flow_authorizationCode.toJSON(p_pretty_print + 2)
-                  ,p_pretty_print + 2
-                )
+               ,p_in_c => self.oauth_flow_authorizationCode.toJSON(p_pretty_print + 2)
                ,p_in_v => NULL
+               ,p_pretty_print => p_pretty_print + 2
             );
+            
             str_pad2 := ',';
          
          END IF;
@@ -424,11 +390,10 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                '}'
-               ,p_pretty_print + 1
-            )
+            ,p_in_v => '}'
+            ,p_pretty_print => p_pretty_print + 1
          );
+         
          str_pad1 := ',';
 
       END IF;
@@ -443,14 +408,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'openIdConnectUrl'
-                  ,self.securityscheme_openIdConUrl
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                'openIdConnectUrl'
+               ,self.securityscheme_openIdConUrl
                ,p_pretty_print + 1
-            )
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
 
@@ -464,10 +427,9 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty(
-             '}'
-            ,p_pretty_print,NULL,NULL
-         )
+         ,p_in_v => '}'
+         ,p_pretty_print => p_pretty_print
+         ,p_final_linefeed => FALSE
       );
 
       --------------------------------------------------------------------------
@@ -542,31 +504,26 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                str_pad1 || dz_json_main.value2json(
-                   self.securityScheme_fullname
-                  ,ary_oauth
-                  ,p_pretty_print + 1
-                )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                self.securityScheme_fullname
+               ,ary_oauth
                ,p_pretty_print + 1
-               ,'  '
-             ) 
+             )
+            ,p_pretty_print => p_pretty_print + 1
          );
+         str_pad1 := ',';
          
       ELSE
          dz_swagger3_util.conc(
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                str_pad1 || '"' || self.securityScheme_fullname || '":' || str_pad || '[]'
-               ,p_pretty_print + 1
-               ,'  '
-             ) 
+            ,p_in_v => str_pad1 || '"' || self.securityScheme_fullname || '":' || str_pad || '[]'
+            ,p_pretty_print => p_pretty_print + 1
          );
+         str_pad1 := ',';
          
       END IF;
-      str_pad1 := ',';
 
       --------------------------------------------------------------------------
       -- Step 70
@@ -576,10 +533,9 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty(
-             '}'
-            ,p_pretty_print,NULL,NULL
-         )
+         ,p_in_v => '}'
+         ,p_pretty_print   => p_pretty_print
+         ,p_final_linefeed => FALSE
       );
 
       --------------------------------------------------------------------------
@@ -621,14 +577,12 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty_str(
-             'type: ' || dz_swagger3_util.yaml_text(
-                self.securityscheme_type
-               ,p_pretty_print
-             )
+         ,p_in_v => 'type: ' || dz_swagger3_util.yaml_text(
+             self.securityscheme_type
             ,p_pretty_print
-            ,'  '
-          ) 
+          )
+         ,p_pretty_print => p_pretty_print
+         ,p_amount       => '  '
       );
       
       --------------------------------------------------------------------------
@@ -641,14 +595,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'description: ' || dz_swagger3_util.yaml_text(
-                   self.securityscheme_description
-                  ,p_pretty_print
-                )
+            ,p_in_v => 'description: ' || dz_swagger3_util.yaml_text(
+                self.securityscheme_description
                ,p_pretty_print
-               ,'  '
-             ) 
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -663,14 +615,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'name: ' || dz_swagger3_util.yaml_text(
-                   self.securityscheme_name
-                  ,p_pretty_print
-                )
+            ,p_in_v => 'name: ' || dz_swagger3_util.yaml_text(
+                self.securityscheme_name
                ,p_pretty_print
-               ,'  '
-             ) 
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -685,14 +635,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'in: ' || dz_swagger3_util.yaml_text(
-                   self.securityscheme_in
-                  ,p_pretty_print
-                )
+            ,p_in_v => 'in: ' || dz_swagger3_util.yaml_text(
+                self.securityscheme_in
                ,p_pretty_print
-               ,'  '
-             ) 
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -707,14 +655,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'scheme: ' || dz_swagger3_util.yaml_text(
-                   self.securityscheme_scheme
-                  ,p_pretty_print
-                )
+            ,p_in_v => 'scheme: ' || dz_swagger3_util.yaml_text(
+                self.securityscheme_scheme
                ,p_pretty_print
-               ,'  '
-             ) 
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -729,14 +675,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'bearerFormat: ' || dz_swagger3_util.yaml_text(
-                   self.securityscheme_bearerFormat
-                  ,p_pretty_print
-                )
+            ,p_in_v => 'bearerFormat: ' || dz_swagger3_util.yaml_text(
+                self.securityscheme_bearerFormat
                ,p_pretty_print
-               ,'  '
-             ) 
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -754,11 +698,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'flows: '
-               ,p_pretty_print
-               ,'  '
-            )
+            ,p_in_v => 'flows: '
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
 
          IF self.oauth_flow_implicit IS NOT NULL
@@ -767,11 +709,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'implicit: '
-                  ,p_pretty_print + 1
-                  ,'  '
-               )
+               ,p_in_v => 'implicit: '
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_amount       => '  '
             );
             
             dz_swagger3_util.conc(
@@ -791,11 +731,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'password: '
-                  ,p_pretty_print + 1
-                  ,'  '
-               )
+               ,p_in_v => 'password: '
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_amount       => '  '
             );
             
             dz_swagger3_util.conc(
@@ -815,11 +753,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'clientCredentials: '
-                  ,p_pretty_print + 1
-                  ,'  '
-               )
+               ,p_in_v => 'clientCredentials: '
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_amount       => '  '
             );
             
             dz_swagger3_util.conc(
@@ -839,11 +775,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'authorizationCode: '
-                  ,p_pretty_print + 1
-                  ,'  '
-               )
+               ,p_in_v => 'authorizationCode: '
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_amount       => '  '
             );
             
             dz_swagger3_util.conc(
@@ -869,14 +803,12 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                'openIdConnectUrl: ' || dz_swagger3_util.yaml_text(
-                   self.securityscheme_openIdConUrl
-                  ,p_pretty_print
-                )
+            ,p_in_v => 'openIdConnectUrl: ' || dz_swagger3_util.yaml_text(
+                self.securityscheme_openIdConUrl
                ,p_pretty_print
-               ,'  '
-             ) 
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;
@@ -939,11 +871,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                dz_swagger3_util.yamlq(self.securityScheme_fullname) || ':'
-               ,p_pretty_print
-               ,'  '
-             ) 
+            ,p_in_v => dz_swagger3_util.yamlq(self.securityScheme_fullname) || ': '
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
          FOR i IN 1 .. ary_oauth.COUNT
@@ -952,11 +882,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   '- ' || dz_swagger3_util.yamlq(ary_oauth(i))
-                  ,p_pretty_print
-                  ,'  '
-                ) 
+               ,p_in_v => '- ' || dz_swagger3_util.yamlq(ary_oauth(i))
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_amount       => '  '
             );
          
          END LOOP; 
@@ -966,11 +894,9 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                dz_swagger3_util.yamlq(self.securityScheme_fullname) || ': []'
-               ,p_pretty_print
-               ,'  '
-             ) 
+            ,p_in_v => dz_swagger3_util.yamlq(self.securityScheme_fullname) || ': []'
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       END IF;

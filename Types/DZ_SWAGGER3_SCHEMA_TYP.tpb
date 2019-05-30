@@ -19,11 +19,12 @@ AS
    ) RETURN SELF AS RESULT
    AS
    BEGIN
-   
+
       --------------------------------------------------------------------------
       -- Step 10
       -- Initialize the object
       --------------------------------------------------------------------------
+      --dbms_output.put_line('schema: ' || p_schema_id);
       self.versionid := p_versionid;
 
       --------------------------------------------------------------------------
@@ -480,14 +481,15 @@ AS
    ) RETURN CLOB
    AS
       str_jsonschema   VARCHAR2(4000 Char) := UPPER(p_jsonschema);
-      clb_output       CLOB;
+      cb               CLOB;
+      v2               VARCHAR2(32000);
+      
       str_pad          VARCHAR2(1 Char);
       str_pad1         VARCHAR2(1 Char);
       str_pad2         VARCHAR2(1 Char);
       ary_items        MDSYS.SDO_STRING2_ARRAY;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       ary_required     MDSYS.SDO_STRING2_ARRAY;
-      clb_hash         CLOB;
       clb_tmp          CLOB;
       int_counter      PLS_INTEGER;
       boo_temp         BOOLEAN;
@@ -516,14 +518,23 @@ AS
       --------------------------------------------------------------------------
       IF p_pretty_print IS NULL
       THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',NULL)
+         );
+
       ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
-         str_pad  := ' ';
-         
+         dz_swagger3_util.conc(
+             p_c    => cb
+            ,p_v    => v2
+            ,p_in_c => NULL
+            ,p_in_v => dz_json_util.pretty('{',-1)
+         );
+         str_pad     := ' ';
+
       END IF;
-      
       str_pad1 := str_pad;
       
       --------------------------------------------------------------------------
@@ -568,13 +579,16 @@ AS
       --------------------------------------------------------------------------
          IF self.schema_type IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
                    'type'
                   ,self.schema_type
                   ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
          
@@ -582,56 +596,70 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 50
-      -- Add the left bracket
+      -- branch for the NOT scenario
       --------------------------------------------------------------------------
          IF boo_is_not
          THEN
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad || dz_json_main.formatted2json(
-                   'not'
-                  ,ary_clb(1)
-                  ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => str_pad1 || '"not":' || str_pad
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_final_linefeed => FALSE
             );
-            str_pad := ',';
+            
+           dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => ary_clb(1)
+               ,p_in_v => NULL
+            );
+            
+            str_pad1 := ',';
          
          ELSE
             str_pad2 := str_pad;
                
-            IF p_pretty_print IS NULL
-            THEN
-               clb_hash := dz_json_util.pretty('[',NULL);
-               
-            ELSE
-               clb_hash := dz_json_util.pretty('[',-1);
-               
-            END IF;
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => '"' || ary_keys(1) || '":' || str_pad || '['
+               ,p_pretty_print => p_pretty_print + 1
+            );
          
             FOR i IN 1 .. combine_schemas.COUNT
             LOOP
-               clb_hash := clb_hash || dz_json_util.pretty(
-                   str_pad2 || ary_clb(i)
-                  ,p_pretty_print + 2
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad2
+                  ,p_pretty_print => p_pretty_print + 2
+                  ,p_final_linefeed => FALSE
                );
+               
+              dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => ary_clb(i)
+                  ,p_in_v => NULL
+                  ,p_pretty_print => p_pretty_print + 2
+                  ,p_initial_indent => FALSE
+               );
+               
                str_pad2 := ',';
             
             END LOOP;
             
-            clb_hash := clb_hash || dz_json_util.pretty(
-                ']'
-               ,p_pretty_print + 1,NULL,NULL
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => ']'
+               ,p_pretty_print => p_pretty_print + 1
             );
-            
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                    ary_keys(1)
-                   ,clb_hash
-                   ,p_pretty_print + 1
-                )
-               ,p_pretty_print + 1
-            );
-            str_pad1 := ',';
             
          END IF;
       
@@ -652,15 +680,18 @@ AS
                
             END IF;
             
-            clb_output := clb_output || dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
                    '$ref'
                   ,'#/components/schemas/' || dz_swagger3_util.utl_url_escape(
                      str_identifier
                    )
                   ,p_pretty_print + 1
                )
-               ,p_pretty_print + 1
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
             
@@ -671,13 +702,16 @@ AS
       --------------------------------------------------------------------------
             IF self.inject_jsonschema = 'TRUE'
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       '$schema'
                      ,'http://json-schema.org/draft-04/schema#'
                      ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
+                   )
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -690,24 +724,30 @@ AS
             IF str_jsonschema = 'TRUE'
             AND self.schema_nullable = 'TRUE'
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'type'
                      ,MDSYS.SDO_STRING2_ARRAY(self.schema_type,'null')
                      ,p_pretty_print + 1
                   )
-                  ,p_pretty_print + 1
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
             ELSE
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'type'
                      ,self.schema_type
                      ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
+                   )
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -719,13 +759,16 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_title IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'title'
                      ,self.schema_title
                      ,p_pretty_print + 1
                   )
-                  ,p_pretty_print + 1
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -737,13 +780,16 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_description IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'description'
                      ,self.schema_description
                      ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
+                   )
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -755,13 +801,16 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_format IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'format'
                      ,self.schema_format
                      ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
+                   )
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -774,26 +823,32 @@ AS
             IF  self.schema_enum_string IS NOT NULL
             AND self.schema_enum_string.COUNT > 0
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'enum'
                      ,self.schema_enum_string
                      ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
+                   )
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
             ELSIF  self.schema_enum_number IS NOT NULL
             AND self.schema_enum_number.COUNT > 0
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'enum'
                      ,self.schema_enum_number
                      ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
+                   )
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -815,13 +870,16 @@ AS
                
                END IF;
             
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'nullable'
                      ,boo_temp
                      ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
+                   )
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -834,13 +892,16 @@ AS
             IF self.schema_discriminator IS NOT NULL
             AND str_jsonschema <> 'TRUE'
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'discriminator'
                      ,self.schema_discriminator
                      ,p_pretty_print + 1
                   )
-                  ,p_pretty_print + 1
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -862,13 +923,16 @@ AS
                
                END IF;
             
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'readOnly'
                      ,boo_temp
                      ,p_pretty_print + 1
                   )
-                  ,p_pretty_print + 1
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -886,13 +950,16 @@ AS
                
                END IF;
             
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'writeOnly'
                      ,boo_temp
                      ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
+                   )
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -904,13 +971,16 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_maxItems IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'maxItems'
                      ,self.schema_maxItems
                      ,p_pretty_print + 1
                   )
-                  ,p_pretty_print + 1
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -918,13 +988,16 @@ AS
             
             IF self.schema_minItems IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'minItems'
                      ,self.schema_minItems
                      ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
+                   )
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -936,13 +1009,16 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_maxProperties IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'maxProperties'
                      ,self.schema_maxProperties
                      ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
+                   )
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -950,13 +1026,16 @@ AS
             
             IF self.schema_minProperties IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'minProperties'
                      ,self.schema_minProperties
                      ,p_pretty_print + 1
                   )
-                  ,p_pretty_print + 1
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -994,15 +1073,25 @@ AS
                      
                END; 
             
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad || dz_json_main.formatted2json(
-                      'externalDocs'
-                     ,clb_tmp
-                     ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || '"externalDocs":' || str_pad
+                  ,p_pretty_print => p_pretty_print + 1
+                  ,p_final_linefeed => FALSE
                );
-               str_pad := ',';
+               
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => clb_tmp
+                  ,p_in_v => NULL
+                  ,p_pretty_print => p_pretty_print + 1
+                  ,p_initial_indent => FALSE
+               );
+               
+               str_pad1 := ',';
 
             END IF;
       
@@ -1013,26 +1102,32 @@ AS
             IF self.schema_example_string IS NOT NULL
             AND str_jsonschema <> 'TRUE'
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'example'
                      ,self.schema_example_string
                      ,p_pretty_print + 1
                   )
-                  ,p_pretty_print + 1
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
             ELSIF self.schema_example_number IS NOT NULL
             AND str_jsonschema <> 'TRUE'
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'example'
                      ,self.schema_example_number
                      ,p_pretty_print + 1
                   )
-                  ,p_pretty_print + 1
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -1045,13 +1140,16 @@ AS
             IF  LOWER(self.schema_deprecated) = 'true'
             AND str_jsonschema <> 'TRUE'
             THEN
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || dz_json_main.value2json(
                       'deprecated'
                      ,TRUE
                      ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
+                   )
+                  ,p_pretty_print => p_pretty_print + 1
                );
                str_pad1 := ',';
             
@@ -1091,14 +1189,24 @@ AS
                      
                END;
 
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.formatted2json(
-                      'items'
-                     ,clb_tmp
-                     ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || '"items":' || str_pad
+                  ,p_pretty_print => p_pretty_print + 1
+                  ,p_final_linefeed => FALSE
                );
+               
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => clb_tmp
+                  ,p_in_v => NULL
+                  ,p_pretty_print => p_pretty_print + 1
+                  ,p_initial_indent => FALSE
+               );
+               
                str_pad1 := ',';
 
             END IF;
@@ -1115,23 +1223,33 @@ AS
                OR self.xml_attribute IS NOT NULL
                OR self.xml_wrapped   IS NOT NULL
                THEN
-                  clb_output := clb_output || dz_json_util.pretty(
-                      str_pad1 || dz_json_main.formatted2json(
-                         'xml'
-                        ,dz_swagger3_xml_typ(
-                            p_xml_name       => self.xml_name
-                           ,p_xml_namespace  => self.xml_namespace
-                           ,p_xml_prefix     => self.xml_prefix
-                           ,p_xml_attribute  => self.xml_attribute
-                           ,p_xml_wrapped    => self.xml_wrapped
-                         ).toJSON(
-                            p_pretty_print   => p_pretty_print + 1
-                           ,p_force_inline   => p_force_inline
-                         )
-                        ,p_pretty_print + 1
-                      )
-                     ,p_pretty_print + 1
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => NULL
+                     ,p_in_v => str_pad1 || '"xml":' || str_pad
+                     ,p_pretty_print => p_pretty_print + 1
+                     ,p_final_linefeed => FALSE
                   );
+                  
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => dz_swagger3_xml_typ(
+                         p_xml_name       => self.xml_name
+                        ,p_xml_namespace  => self.xml_namespace
+                        ,p_xml_prefix     => self.xml_prefix
+                        ,p_xml_attribute  => self.xml_attribute
+                        ,p_xml_wrapped    => self.xml_wrapped
+                      ).toJSON(
+                         p_pretty_print   => p_pretty_print + 1
+                        ,p_force_inline   => p_force_inline
+                      )
+                     ,p_in_v => NULL
+                     ,p_pretty_print => p_pretty_print + 1
+                     ,p_initial_indent => FALSE
+                  );
+                  
                   str_pad1 := ',';
                   
                END IF;
@@ -1171,25 +1289,39 @@ AS
                COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE'
                ORDER BY b.object_order; 
 
-               str_pad2 := str_pad;
                ary_items := MDSYS.SDO_STRING2_ARRAY();
                
-               IF p_pretty_print IS NULL
-               THEN
-                  clb_hash := dz_json_util.pretty('{',NULL);
-                  
-               ELSE
-                  clb_hash := dz_json_util.pretty('{',-1);
-                  
-               END IF;
+               str_pad2 := str_pad;
+         
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad1 || '"properties":' || str_pad || '{'
+                  ,p_pretty_print => p_pretty_print + 1
+               );
 
                int_counter := 1;
                FOR i IN 1 .. ary_keys.COUNT
                LOOP
-                  clb_hash := clb_hash || dz_json_util.pretty(
-                      str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
-                     ,p_pretty_print + 2
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => NULL
+                     ,p_in_v => str_pad2 || '"' || ary_keys(i) || '":' || str_pad
+                     ,p_pretty_print   => p_pretty_print + 2
+                     ,p_final_linefeed => FALSE
                   );
+                  
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => ary_clb(i)
+                     ,p_in_v => NULL
+                     ,p_pretty_print   => p_pretty_print + 2
+                     ,p_initial_indent => FALSE
+                  );
+                  
                   str_pad2 := ',';
                   
                   IF ary_required(i) = 'TRUE'
@@ -1202,19 +1334,14 @@ AS
                
                END LOOP;
                
-               clb_hash := clb_hash || dz_json_util.pretty(
-                   '}'
-                  ,p_pretty_print + 1,NULL,NULL
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => '}'
+                  ,p_pretty_print => p_pretty_print + 1
                );
-               
-               clb_output := clb_output || dz_json_util.pretty(
-                   str_pad1 || dz_json_main.formatted2json(
-                       'properties'
-                      ,clb_hash
-                      ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print + 1
-               );
+
                str_pad1 := ',';
          
       -------------------------------------------------------------------------
@@ -1224,13 +1351,16 @@ AS
                IF ary_items IS NOT NULL
                AND ary_items.COUNT > 0
                THEN
-                  clb_output := clb_output || dz_json_util.pretty(
-                      str_pad1 || dz_json_main.value2json(
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => NULL
+                     ,p_in_v => str_pad1 || dz_json_main.value2json(
                          'required'
                         ,ary_items
                         ,p_pretty_print + 1
-                     )
-                     ,p_pretty_print + 1
+                      )
+                     ,p_pretty_print => p_pretty_print + 1
                   );
                   str_pad1 := ',';
                
@@ -1246,16 +1376,25 @@ AS
       -- Step 250
       -- Add the left bracket
       --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
+      dz_swagger3_util.conc(
+          p_c    => cb
+         ,p_v    => v2
+         ,p_in_c => NULL
+         ,p_in_v => '}'
+         ,p_pretty_print   => p_pretty_print
+         ,p_final_linefeed => FALSE
       );
-      
+
       --------------------------------------------------------------------------
-      -- Step 260
+      -- Step 140
       -- Cough it out
       --------------------------------------------------------------------------
-      RETURN clb_output;
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
+      RETURN cb;
            
    END toJSON;
    
@@ -1272,7 +1411,9 @@ AS
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
+      cb               CLOB;
+      v2               VARCHAR2(32000);
+      
       ary_items        MDSYS.SDO_STRING2_ARRAY;
       ary_keys         MDSYS.SDO_STRING2_ARRAY;
       ary_required     MDSYS.SDO_STRING2_ARRAY;
@@ -1304,7 +1445,6 @@ AS
           a.schematyp.toYAML(
              p_pretty_print     => p_pretty_print + 2
             ,p_initial_indent   => 'FALSE'
-            ,p_final_linefeed   => 'FALSE'
             ,p_force_inline     => p_force_inline
             ,p_short_id         => p_short_id
             ,p_identifier       => a.object_id
@@ -1336,10 +1476,13 @@ AS
       --------------------------------------------------------------------------
          IF self.schema_type IS NOT NULL
          THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'type: ' || self.schema_type
-               ,p_pretty_print
-               ,'  '
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => 'type: ' || self.schema_type
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          END IF;
@@ -1350,25 +1493,49 @@ AS
       --------------------------------------------------------------------------
          IF boo_is_not 
          THEN
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'not: ' 
-               ,p_pretty_print
-               ,'  '
-            ) || ary_clb(1);
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => 'not: '
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
+            );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => ary_clb(1)
+               ,p_in_v => NULL
+            );
          
          ELSE 
-            clb_output := clb_output || dz_json_util.pretty_str(
-                ary_keys(1) || ': '
-               ,p_pretty_print
-               ,'  '
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => ary_keys(1) || ': '
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
          
             FOR i IN 1 .. ary_keys.COUNT
             LOOP
-               clb_output := clb_output || dz_json_util.pretty(
-                   '- ' || ary_clb(i)
-                  ,p_pretty_print + 1
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v =>  '- '
+                  ,p_pretty_print => p_pretty_print + 1
+                  ,p_amount       => '  '
+                  ,p_final_linefeed => FALSE
+               );
+               
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => ary_clb(i)
+                  ,p_in_v => NULL
                );
                
             END LOOP;
@@ -1392,13 +1559,15 @@ AS
                
             END IF;
             
-            clb_output := clb_output || dz_json_util.pretty_str(
-                '$ref: ' || dz_swagger3_util.yaml_text(
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => '$ref: ' || dz_swagger3_util.yaml_text(
                    '#/components/schemas/' || str_identifier
-                  ,p_pretty_print
-               )
-               ,p_pretty_print
-               ,'  '
+                )
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          ELSE
@@ -1406,10 +1575,13 @@ AS
       -- Step 60
       -- Do the type element
       --------------------------------------------------------------------------
-            clb_output := clb_output || dz_json_util.pretty_str(
-                'type: ' || self.schema_type
-               ,p_pretty_print
-               ,'  '
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => NULL
+               ,p_in_v => 'type: ' || self.schema_type
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
       
       --------------------------------------------------------------------------
@@ -1418,10 +1590,13 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_title IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'title: ' || dz_swagger3_util.yamlq(self.schema_title)
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'title: ' || dz_swagger3_util.yamlq(self.schema_title)
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             END IF;
@@ -1432,13 +1607,16 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_description IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'description: ' || dz_swagger3_util.yaml_text(
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'description: ' || dz_swagger3_util.yaml_text(
                       REGEXP_REPLACE(self.schema_description,CHR(10) || '$','')
                      ,p_pretty_print
-                  )
-                  ,p_pretty_print
-                  ,'  '
+                   )
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             END IF;
@@ -1449,10 +1627,13 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_format IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'format: ' || self.schema_format
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'format: ' || self.schema_format
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             END IF;
@@ -1463,10 +1644,13 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_nullable IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'nullable: ' || LOWER(self.schema_nullable)
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'nullable: ' || LOWER(self.schema_nullable)
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             END IF;
@@ -1478,18 +1662,24 @@ AS
             IF  self.schema_enum_string IS NOT NULL
             AND self.schema_enum_string.COUNT > 0
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'enum: '
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'enum: '
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
                
                FOR i IN 1 .. self.schema_enum_string.COUNT
                LOOP
-                  clb_output := clb_output || dz_json_util.pretty_str(
-                      '- ' || dz_swagger3_util.yamlq(self.schema_enum_string(i))
-                     ,p_pretty_print + 1
-                     ,'  '
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => NULL
+                     ,p_in_v =>  '- ' || dz_swagger3_util.yamlq(self.schema_enum_string(i))
+                     ,p_pretty_print => p_pretty_print + 1
+                     ,p_amount       => '  '
                   );
                   
                END LOOP;
@@ -1497,18 +1687,24 @@ AS
             ELSIF  self.schema_enum_number IS NOT NULL
             AND self.schema_enum_number.COUNT > 0
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'enum: '
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'enum: '
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
                
                FOR i IN 1 .. self.schema_enum_number.COUNT
                LOOP
-                  clb_output := clb_output || dz_json_util.pretty_str(
-                      '- ' || self.schema_enum_number(i)
-                     ,p_pretty_print + 1
-                     ,'  '
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => NULL
+                     ,p_in_v =>  '- ' || dz_swagger3_util.yamlq(self.schema_enum_number(i))
+                     ,p_pretty_print => p_pretty_print + 1
+                     ,p_amount       => '  '
                   );
                   
                END LOOP;
@@ -1521,10 +1717,13 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_discriminator IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'discriminator: ' || self.schema_discriminator
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'discriminator: ' || self.schema_discriminator
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             END IF;
@@ -1535,20 +1734,26 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_readOnly IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'readOnly: ' || LOWER(self.schema_readOnly)
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'readOnly: ' || LOWER(self.schema_readOnly)
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             END IF;
             
             IF self.schema_writeOnly IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'writeOnly: ' || LOWER(self.schema_writeOnly)
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'writeOnly: ' || LOWER(self.schema_writeOnly)
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             END IF;
@@ -1559,20 +1764,26 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_minItems IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'minItems: ' || self.schema_minItems
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'minItems: ' || self.schema_minItems
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             END IF;
             
             IF self.schema_maxItems IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'maxItems: ' || self.schema_maxItems
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'maxItems: ' || self.schema_maxItems
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             END IF;
@@ -1583,20 +1794,26 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_minProperties IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'minProperties: ' || self.schema_minProperties
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'minProperties: ' || self.schema_minProperties
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             END IF;
             
             IF self.schema_maxProperties IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'maxProperties: ' || self.schema_maxProperties
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'maxProperties: ' || self.schema_maxProperties
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             END IF;
@@ -1633,11 +1850,21 @@ AS
                      
                END;
             
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'externalDocs: ' 
-                  ,p_pretty_print
-                  ,'  '
-               ) || clb_tmp;
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'externalDocs: '
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
+               );
+               
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => clb_tmp
+                  ,p_in_v => NULL
+               );
                
             END IF;
       
@@ -1647,18 +1874,24 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_example_string IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'example: ' || dz_swagger3_util.yamlq(self.schema_example_string)
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'example: ' || dz_swagger3_util.yamlq(self.schema_example_string)
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             ELSIF self.schema_example_number IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'example: ' || self.schema_example_number
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'example: ' || self.schema_example_number
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             END IF;
@@ -1669,10 +1902,13 @@ AS
       --------------------------------------------------------------------------
             IF self.schema_deprecated IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'deprecated: ' || LOWER(self.schema_deprecated)
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'deprecated: ' || LOWER(self.schema_deprecated)
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
             
             END IF;
@@ -1712,11 +1948,21 @@ AS
                      
                END;
             
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'items: ' 
-                  ,p_pretty_print
-                  ,'  '
-               ) || clb_tmp;
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'items: '
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
+               );
+               
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => clb_tmp
+                  ,p_in_v => NULL
+               );
                
             END IF;
 
@@ -1730,19 +1976,29 @@ AS
             OR self.xml_attribute IS NOT NULL
             OR self.xml_wrapped   IS NOT NULL
             THEN
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'xml: '
-                  ,p_pretty_print
-                  ,'  '
-               ) || dz_swagger3_xml_typ(
-                   p_xml_name      => self.xml_name
-                  ,p_xml_namespace => self.xml_namespace
-                  ,p_xml_prefix    => self.xml_prefix
-                  ,p_xml_attribute => self.xml_attribute
-                  ,p_xml_wrapped   => self.xml_wrapped
-               ).toYAML(
-                   p_pretty_print   => p_pretty_print + 1
-                  ,p_force_inline   => p_force_inline
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'xml: '
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
+               );
+               
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => dz_swagger3_xml_typ(
+                      p_xml_name      => self.xml_name
+                     ,p_xml_namespace => self.xml_namespace
+                     ,p_xml_prefix    => self.xml_prefix
+                     ,p_xml_attribute => self.xml_attribute
+                     ,p_xml_wrapped   => self.xml_wrapped
+                  ).toYAML(
+                      p_pretty_print   => p_pretty_print + 1
+                     ,p_force_inline   => p_force_inline
+                  )
+                  ,p_in_v => NULL
                );
             
             END IF;
@@ -1784,19 +2040,32 @@ AS
                int_counter  := 1;
                ary_items    := MDSYS.SDO_STRING2_ARRAY();
                
-               clb_output := clb_output || dz_json_util.pretty_str(
-                   'properties: '
-                  ,p_pretty_print
-                  ,'  '
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => NULL
+                  ,p_in_v => 'properties: '
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
 
                FOR i IN 1 .. ary_keys.COUNT
                LOOP
-                  clb_output := clb_output || dz_json_util.pretty(
-                      dz_swagger3_util.yamlq(ary_keys(i)) || ': '
-                     ,p_pretty_print + 1
-                     ,'  '
-                  ) || ary_clb(i);
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => NULL
+                     ,p_in_v => dz_swagger3_util.yamlq(ary_keys(i)) || ': '
+                     ,p_pretty_print => p_pretty_print + 1
+                     ,p_amount       => '  '
+                  );
+                  
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => ary_clb(i)
+                     ,p_in_v => NULL
+                  );
                   
                   IF ary_required(i) = 'TRUE'
                   THEN
@@ -1815,18 +2084,24 @@ AS
       --------------------------------------------------------------------------
                IF boo_check
                THEN
-                  clb_output := clb_output || dz_json_util.pretty_str(
-                      'required: '
-                     ,p_pretty_print
-                     ,'  '
+                  dz_swagger3_util.conc(
+                      p_c    => cb
+                     ,p_v    => v2
+                     ,p_in_c => NULL
+                     ,p_in_v => 'required: '
+                     ,p_pretty_print => p_pretty_print
+                     ,p_amount       => '  '
                   );
                   
                   FOR i IN 1 .. ary_items.COUNT
                   LOOP
-                     clb_output := clb_output || dz_json_util.pretty_str(
-                         '- ' || dz_swagger3_util.yamlq(ary_items(i))
-                        ,p_pretty_print + 1
-                        ,'  '
+                     dz_swagger3_util.conc(
+                         p_c    => cb
+                        ,p_v    => v2
+                        ,p_in_c => NULL
+                        ,p_in_v =>  '- ' || dz_swagger3_util.yamlq(ary_items(i))
+                        ,p_pretty_print => p_pretty_print + 1
+                        ,p_amount       => '  '
                      );
                      
                   END LOOP;
@@ -1843,19 +2118,24 @@ AS
       -- Step 230
       -- Cough it out with adjustments as needed
       --------------------------------------------------------------------------
+      dz_swagger3_util.fconc(
+          p_c    => cb
+         ,p_v    => v2
+      );
+      
       IF p_initial_indent = 'FALSE'
       THEN
-         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
+         cb := REGEXP_REPLACE(cb,'^\s+','');
        
       END IF;
       
       IF p_final_linefeed = 'FALSE'
       THEN
-         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
+         cb := REGEXP_REPLACE(cb,CHR(10) || '$','');
          
       END IF;
                
-      RETURN clb_output;
+      RETURN cb;
       
    END toYAML;
    

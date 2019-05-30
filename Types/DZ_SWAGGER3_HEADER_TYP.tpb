@@ -204,16 +204,14 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   '$ref'
-                  ,'#/components/headers/' || dz_swagger3_util.utl_url_escape(
-                     str_identifier
-                   )
-                  ,p_pretty_print + 1
-               )
+            ,p_in_v => str_pad1 || dz_json_main.value2json(
+                '$ref'
+               ,'#/components/headers/' || dz_swagger3_util.utl_url_escape(
+                  str_identifier
+                )
                ,p_pretty_print + 1
             )
+            ,p_pretty_print => p_pretty_print + 1
          );
          str_pad1 := ',';
       
@@ -228,14 +226,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'description'
-                     ,self.header_description
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'description'
+                  ,self.header_description
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
             
@@ -260,14 +256,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'required'
-                     ,boo_temp
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'required'
+                  ,boo_temp
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -292,14 +286,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'deprecated'
-                     ,boo_temp
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'deprecated'
+                  ,boo_temp
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -324,14 +316,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'allowEmptyValue'
-                     ,boo_temp
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'allowEmptyValue'
+                  ,boo_temp
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -347,14 +337,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'style'
-                     ,self.header_style
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'style'
+                  ,self.header_style
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -379,14 +367,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'explode'
-                     ,boo_temp
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'explode'
+                  ,boo_temp
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -411,14 +397,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'allowReserved'
-                     ,boo_temp
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'allowReserved'
+                  ,boo_temp
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -461,16 +445,21 @@ AS
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
-               ,p_in_c => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.formatted2json(
-                      'schema'
-                     ,clb_tmp
-                     ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print + 1
-               )
-               ,p_in_v => NULL
+               ,p_in_c => NULL
+               ,p_in_v => str_pad1 || '"schema":' || str_pad
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_final_linefeed => FALSE
             );
+            
+            dz_swagger3_util.conc(
+                p_c    => cb
+               ,p_v    => v2
+               ,p_in_c => clb_tmp
+               ,p_in_v => NULL
+               ,p_pretty_print => p_pretty_print + 1
+               ,p_initial_indent => FALSE
+            );
+            
             str_pad1 := ',';
 
          END IF;
@@ -485,14 +474,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'example'
-                     ,self.header_example_string
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'example'
+                  ,self.header_example_string
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
 
@@ -502,16 +489,15 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || dz_json_main.value2json(
-                      'example'
-                     ,self.header_example_number
-                     ,p_pretty_print + 1
-                  )
+               ,p_in_v => str_pad1 || dz_json_main.value2json(
+                   'example'
+                  ,self.header_example_number
                   ,p_pretty_print + 1
-               )
+                )
+               ,p_pretty_print => p_pretty_print + 1
             );
             str_pad1 := ',';
+            
          END IF;
       
       --------------------------------------------------------------------------
@@ -543,29 +529,36 @@ AS
             AND a.object_id      = b.object_id
             ORDER BY b.object_order; 
             
+            str_pad2 := str_pad;
+         
             dz_swagger3_util.conc(
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   str_pad1 || '"examples":' || str_pad || '{'
-                  ,p_pretty_print + 1
-                )
+               ,p_in_v => str_pad1 || '"examples":' || str_pad || '{'
+               ,p_pretty_print => p_pretty_print + 1
             );
          
-            str_pad2 := str_pad;
-         
-            FOR i IN 1 .. ary_keys.COUNT
+            FOR i IN 1 .. ary_clb.COUNT
             LOOP
                dz_swagger3_util.conc(
                    p_c    => cb
                   ,p_v    => v2
-                  ,p_in_c => dz_json_util.pretty(
-                      str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
-                     ,p_pretty_print + 2
-                  )
-                  ,p_in_v => NULL
+                  ,p_in_c => NULL
+                  ,p_in_v => str_pad2 || '"' || ary_keys(i) || '":' || str_pad
+                  ,p_pretty_print   => p_pretty_print + 2
+                  ,p_final_linefeed => FALSE
                );
+               
+               dz_swagger3_util.conc(
+                   p_c    => cb
+                  ,p_v    => v2
+                  ,p_in_c => ary_clb(i)
+                  ,p_in_v => NULL
+                  ,p_pretty_print   => p_pretty_print + 2
+                  ,p_initial_indent => FALSE
+               );
+               
                str_pad2 := ',';
             
             END LOOP;
@@ -574,11 +567,10 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   '}'
-                  ,p_pretty_print + 1
-               )
+               ,p_in_v => '}'
+               ,p_pretty_print => p_pretty_print + 1
             );
+
             str_pad1 := ',';
          
          END IF;
@@ -593,10 +585,9 @@ AS
           p_c    => cb
          ,p_v    => v2
          ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty(
-             '}'
-            ,p_pretty_print,NULL,NULL
-         )
+         ,p_in_v => '}'
+         ,p_pretty_print   => p_pretty_print
+         ,p_final_linefeed => FALSE
       );
 
       --------------------------------------------------------------------------
@@ -657,14 +648,11 @@ AS
              p_c    => cb
             ,p_v    => v2
             ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty_str(
-                '$ref: ' || dz_swagger3_util.yaml_text(
-                   '#/components/headers/' || str_identifier
-                  ,p_pretty_print
-               )
-               ,p_pretty_print
-               ,'  '
-            ) 
+            ,p_in_v => '$ref: ' || dz_swagger3_util.yaml_text(
+               '#/components/headers/' || str_identifier
+             )
+            ,p_pretty_print => p_pretty_print
+            ,p_amount       => '  '
          );
          
       ELSE
@@ -678,14 +666,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'description: ' || dz_swagger3_util.yaml_text(
-                      self.header_description
-                     ,p_pretty_print
-                  )
+               ,p_in_v => 'description: ' || dz_swagger3_util.yaml_text(
+                   self.header_description
                   ,p_pretty_print
-                  ,'  '
-               )
+                )
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          END IF;
@@ -700,11 +686,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'required: ' || LOWER(self.header_required)
-                  ,p_pretty_print
-                  ,'  '
-               )
+               ,p_in_v => 'required: ' || LOWER(self.header_required)
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          END IF;
@@ -719,11 +703,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'deprecated: ' || LOWER(self.header_deprecated)
-                  ,p_pretty_print
-                  ,'  '
-               )
+               ,p_in_v => 'deprecated: ' || LOWER(self.header_deprecated)
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          END IF;
@@ -738,11 +720,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'allowEmptyValue: ' || LOWER(self.header_allowEmptyValue)
-                  ,p_pretty_print
-                  ,'  '
-               )
+               ,p_in_v => 'allowEmptyValue: ' || LOWER(self.header_allowEmptyValue)
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          END IF;
@@ -757,14 +737,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'style: ' || dz_swagger3_util.yaml_text(
-                      self.header_style
-                     ,p_pretty_print
-                  )
+               ,p_in_v => 'style: ' || dz_swagger3_util.yaml_text(
+                   self.header_style
                   ,p_pretty_print
-                  ,'  '
-               )
+                )
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          END IF;
@@ -779,11 +757,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'explode: ' || LOWER(self.header_explode)
-                  ,p_pretty_print
-                  ,'  '
-               )
+               ,p_in_v => 'explode: ' || LOWER(self.header_explode)
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          END IF;
@@ -798,11 +774,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'allowReserved: ' || LOWER(self.header_allowReserved)
-                  ,p_pretty_print
-                  ,'  '
-               )
+               ,p_in_v => 'allowReserved: ' || LOWER(self.header_allowReserved)
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          END IF;
@@ -845,11 +819,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'schema: '
-                  ,p_pretty_print
-                  ,'  '
-               )
+               ,p_in_v => 'schema: '
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
             dz_swagger3_util.conc(
@@ -871,14 +843,12 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'example: ' || dz_swagger3_util.yaml_text(
-                      self.header_example_string
-                     ,p_pretty_print
-                  )
+               ,p_in_v => 'example: ' || dz_swagger3_util.yaml_text(
+                   self.header_example_string
                   ,p_pretty_print
-                  ,'  '
-               )
+                )
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          ELSIF self.header_example_number IS NOT NULL
@@ -887,14 +857,9 @@ AS
                 p_c    => cb
                ,p_v    => v2
                ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty_str(
-                   'example: ' || dz_swagger3_util.yaml_text(
-                      self.header_example_number
-                     ,p_pretty_print
-                  )
-                  ,p_pretty_print
-                  ,'  '
-               )
+               ,p_in_v => 'example: ' || TO_CHAR(self.header_example_number)
+               ,p_pretty_print => p_pretty_print
+               ,p_amount       => '  '
             );
             
          END IF;
@@ -935,11 +900,9 @@ AS
                    p_c    => cb
                   ,p_v    => v2
                   ,p_in_c => NULL
-                  ,p_in_v => dz_json_util.pretty_str(
-                      'examples: '
-                     ,p_pretty_print + 1
-                     ,'  '
-                  )
+                  ,p_in_v => 'examples: '
+                  ,p_pretty_print => p_pretty_print
+                  ,p_amount       => '  '
                );
                
                FOR i IN 1 .. ary_keys.COUNT
@@ -948,11 +911,9 @@ AS
                       p_c    => cb
                      ,p_v    => v2
                      ,p_in_c => NULL
-                     ,p_in_v => dz_json_util.pretty_str(
-                         dz_swagger3_util.yamlq(ary_keys(i)) || ': '
-                        ,p_pretty_print + 2
-                        ,'  '
-                      )
+                     ,p_in_v => dz_swagger3_util.yamlq(ary_keys(i)) || ': '
+                     ,p_pretty_print => p_pretty_print + 1
+                     ,p_amount       => '  '
                   );
                   
                   dz_swagger3_util.conc(
