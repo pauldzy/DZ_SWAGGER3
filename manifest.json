@@ -1,105 +1,165 @@
 {
-    "prerequisites": [
-      "DZ_JSON"
-    ]
-   ,"constants": [
+    "constants": [
        {
-          "JOBNAME": "DZ_SWAGGER3"
+          "key":   "JOBNAME"
+         ,"value": "DZ_SWAGGER3"
        }
     ]
-   ,"phase": 10
-   ,"target": "./dz_swagger3_deploy.sql"
-   ,"includes": [
-       "%%SQLHEADER%%"
-      ,"./Packages/DZ_SWAGGER3_CONSTANTS.pks"
-      ,"./Packages/DZ_SWAGGER3_UTIL.pks"
-      ,"./Packages/DZ_SWAGGER3_UTIL.pkb"
-      ,"./Packages/DZ_SWAGGER3_SETUP.pks"
-      ,"./Packages/DZ_SWAGGER3_SETUP.pkb"
-      ,"./Actions/DZ_SWAGGER3_STORAGE_SETUP.sql"
-      ,"./Actions/DZ_SWAGGER3_TEMP_SETUP1.sql"
-      ,"./Types/DZ_SWAGGER3_OBJECT_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_OBJECT_TYP.tpb"
-      ,"./Collections/DZ_SWAGGER3_OBJECT_VRY.tps"
-      ,"./Types/DZ_SWAGGER3_INFO_LICENSE_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_INFO_LICENSE_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_INFO_CONTACT_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_INFO_CONTACT_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_INFO_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_INFO_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_XML_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_XML_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_ENCODING_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_EXAMPLE_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_EXTRDOCS_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_HEADER_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_LINK_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_MEDIA_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_OAUTH_FLOW_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_OPERATION_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_PARAMETER_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_PATH_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_REQUESTBODY_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_RESPONSE_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_SCHEMA_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_SECURITYSCHEME_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_SERVER_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_SERVER_VAR_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_STRING_HASH_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_TAG_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_TYP.tps"
-      ,"./Actions/DZ_SWAGGER3_TEMP_SETUP2.sql"
-      ,"./Packages/DZ_SWAGGER3_LOADER.pks"
-      ,"./Packages/DZ_SWAGGER3_LOADER.pkb"
-      ,"./Packages/DZ_SWAGGER3_MAIN.pks"
-      ,"./Packages/DZ_SWAGGER3_MAIN.pkb"
-      ,"./Packages/DZ_SWAGGER3_CACHE_MGR.pks"
-      ,"./Packages/DZ_SWAGGER3_CACHE_MGR.pkb"  
-      ,"./Types/DZ_SWAGGER3_ENCODING_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_EXAMPLE_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_EXTRDOCS_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_HEADER_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_LINK_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_MEDIA_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_OAUTH_FLOW_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_OPERATION_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_PARAMETER_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_PATH_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_REQUESTBODY_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_RESPONSE_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_SCHEMA_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_SECURITYSCHEME_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_SERVER_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_SERVER_VAR_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_STRING_HASH_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_TAG_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_TYP.tpb"
-      ,"./Types/DZ_SWAGGER3_JSONSCH_TYP.tps"
-      ,"./Types/DZ_SWAGGER3_JSONSCH_TYP.tpb"
-      ,"./Packages/DZ_SWAGGER3_TEST.pks"
-      ,"./Packages/DZ_SWAGGER3_TEST.pkb"
-      ,"%%SQLFOOTER%%"
-    ]
-   ,"separator": "--\n--********************--\nPROMPT %%FILENAME%% \n\n"
-   ,"configurations": [
-      {
-          "id": 1
-         ,"file": "./Packages/DZ_SWAGGER3_MAIN.pks"
-         ,"replacements": [
+   ,"tasks": [
+       {
+          "id": "concatenate"
+         ,"output": "dz_swagger3_deploy.sql"
+         ,"includes": [
+             "%%SQLHEADER%%"
+            ,"Packages/DZ_SWAGGER3_CONSTANTS.pks"
+            ,"Packages/DZ_SWAGGER3_UTIL.pks"
+            ,"Packages/DZ_SWAGGER3_UTIL.pkb"
+            ,"Packages/DZ_SWAGGER3_SETUP.pks"
+            ,"Packages/DZ_SWAGGER3_SETUP.pkb"
+            ,"Actions/DZ_SWAGGER3_STORAGE_SETUP.sql"
+            ,"Actions/DZ_SWAGGER3_TEMP_SETUP1.sql"
+            ,"Types/DZ_SWAGGER3_OBJECT_TYP.tps"
+            ,"Types/DZ_SWAGGER3_OBJECT_TYP.tpb"
+            ,"Collections/DZ_SWAGGER3_OBJECT_VRY.tps"
+            ,"Types/DZ_SWAGGER3_INFO_LICENSE_TYP.tps"
+            ,"Types/DZ_SWAGGER3_INFO_LICENSE_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_INFO_CONTACT_TYP.tps"
+            ,"Types/DZ_SWAGGER3_INFO_CONTACT_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_INFO_TYP.tps"
+            ,"Types/DZ_SWAGGER3_INFO_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_XML_TYP.tps"
+            ,"Types/DZ_SWAGGER3_XML_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_ENCODING_TYP.tps"
+            ,"Types/DZ_SWAGGER3_EXAMPLE_TYP.tps"
+            ,"Types/DZ_SWAGGER3_EXTRDOCS_TYP.tps"
+            ,"Types/DZ_SWAGGER3_HEADER_TYP.tps"
+            ,"Types/DZ_SWAGGER3_LINK_TYP.tps"
+            ,"Types/DZ_SWAGGER3_MEDIA_TYP.tps"
+            ,"Types/DZ_SWAGGER3_OAUTH_FLOW_TYP.tps"
+            ,"Types/DZ_SWAGGER3_OPERATION_TYP.tps"
+            ,"Types/DZ_SWAGGER3_PARAMETER_TYP.tps"
+            ,"Types/DZ_SWAGGER3_PATH_TYP.tps"
+            ,"Types/DZ_SWAGGER3_REQUESTBODY_TYP.tps"
+            ,"Types/DZ_SWAGGER3_RESPONSE_TYP.tps"
+            ,"Types/DZ_SWAGGER3_SCHEMA_TYP.tps"
+            ,"Types/DZ_SWAGGER3_SECURITYSCHEME_TYP.tps"
+            ,"Types/DZ_SWAGGER3_SERVER_TYP.tps"
+            ,"Types/DZ_SWAGGER3_SERVER_VAR_TYP.tps"
+            ,"Types/DZ_SWAGGER3_STRING_HASH_TYP.tps"
+            ,"Types/DZ_SWAGGER3_TAG_TYP.tps"
+            ,"Types/DZ_SWAGGER3_TYP.tps"
+            ,"Actions/DZ_SWAGGER3_TEMP_SETUP2.sql"
+            ,"Packages/DZ_SWAGGER3_LOADER.pks"
+            ,"Packages/DZ_SWAGGER3_LOADER.pkb"
+            ,"Packages/DZ_SWAGGER3_MAIN.pks"
+            ,"Packages/DZ_SWAGGER3_MAIN.pkb"
+            ,"Packages/DZ_SWAGGER3_CACHE_MGR.pks"
+            ,"Packages/DZ_SWAGGER3_CACHE_MGR.pkb"  
+            ,"Types/DZ_SWAGGER3_ENCODING_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_EXAMPLE_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_EXTRDOCS_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_HEADER_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_LINK_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_MEDIA_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_OAUTH_FLOW_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_OPERATION_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_PARAMETER_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_PATH_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_REQUESTBODY_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_RESPONSE_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_SCHEMA_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_SECURITYSCHEME_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_SERVER_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_SERVER_VAR_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_STRING_HASH_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_TAG_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_TYP.tpb"
+            ,"Types/DZ_SWAGGER3_JSONSCH_TYP.tps"
+            ,"Types/DZ_SWAGGER3_JSONSCH_TYP.tpb"
+            ,"Packages/DZ_SWAGGER3_TEST.pks"
+            ,"Packages/DZ_SWAGGER3_TEST.pkb"
+            ,"%%SQLFOOTER%%"
+          ]
+         ,"separator": "--\n--********************--\nPROMPT %%FILENAME%% \n\n"
+         ,"components": [
              {
-                "token": "DZCHANGESETDZ"
-               ,"value": "%GIT_COMMIT%"
+                "identifier": "SQLHEADER"
+               ,"content": [
+                   "WHENEVER SQLERROR EXIT -99;"
+                  ,"WHENEVER OSERROR  EXIT -98;"
+                  ,"SET DEFINE OFF;"
+                ]
+             }
+            ,{
+                "identifier": "SQLFOOTER"
+               ,"content": [
+                   "SHOW ERROR;"
+                  ,""
+                  ,"DECLARE"
+                  ,"   l_num_errors PLS_INTEGER;"
+                  ,""
+                  ,"BEGIN"
+                  ,""
+                  ,"   SELECT"
+                  ,"   COUNT(*)"
+                  ,"   INTO l_num_errors"
+                  ,"   FROM"
+                  ,"   user_errors a"
+                  ,"   WHERE"
+                  ,"   a.name LIKE 'DZ_DZNAMEDZ%';"
+                  ,""
+                  ,"   IF l_num_errors <> 0"
+                  ,"   THEN"
+                  ,"      RAISE_APPLICATION_ERROR(-20001,'COMPILE ERROR');"
+                  ,""
+                  ,"   END IF;"
+                  ,""
+                  ,"   l_num_errors := DZ_DZNAMEDZ_TEST.inmemory_test();"
+                  ,""
+                  ,"   IF l_num_errors <> 0"
+                  ,"   THEN"
+                  ,"      RAISE_APPLICATION_ERROR(-20001,'INMEMORY TEST ERROR');"
+                  ,""
+                  ,"   END IF;"
+                  ,""
+                  ,"END;"
+                  ,"/"
+                  ,""
+                  ,"EXIT;"
+                  ,"SET DEFINE OFF;"
+                ]
              }
           ]
-      }
-    ]
-   ,"plugins": [
-       {
-          "type": "ndocs"
-         ,"phase": 100
-         ,"source": "./dz_json_deploy.sql"
-         ,"target": "./html"
+         ,"configurations": [
+            {
+                "id": 1
+               ,"file": "Packages/DZ_SWAGGER3_MAIN.pks"
+               ,"replacements": [
+                   {
+                      "token": "DZCHANGESETDZ"
+                     ,"value": "%GIT_COMMIT%"
+                   }
+                ]
+            }
+          ]
        }
-    ]
+      ,{
+          "id": "naturaldocs"
+         ,"input":  "dz_swagger3_deploy.sql"
+         ,"output_dir": "stage1"
+       }
+      ,{
+          "id": "wkhtmltopdf"
+         ,"input_dir": "stage1"
+         ,"output": "dz_swagger3_deploy.pdf"
+       }
+      ,{
+          "id": "artifacts"
+         ,"targets": [
+             "dz_swagger3_deploy.sql"
+            ,"dz_swagger3_deploy.pdf"
+         ]
+       }
+   ]
 }
 
