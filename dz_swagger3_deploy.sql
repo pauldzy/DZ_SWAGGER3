@@ -1,3 +1,10 @@
+WHENEVER SQLERROR EXIT -99;
+WHENEVER OSERROR  EXIT -98;
+SET DEFINE OFF;
+
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_CONSTANTS.pks 
+
 CREATE OR REPLACE PACKAGE dz_swagger3_constants
 AUTHID DEFINER
 AS
@@ -6,8 +13,8 @@ AS
    /*
    Header: DZ_SWAGGER3
      
-   - Build ID: DZBUILDIDDZ
-   - Change Set: DZCHANGESETDZ
+   - Release: 1.0.0
+   - Last Commit: Thu May 30 21:07:38 2019 -0400
    
    PLSQL module for the creation, storage and production of Open API 3.0 service 
    definitions.   Support for the unloading of Swagger JSON specifications into
@@ -46,6 +53,9 @@ END dz_swagger3_constants;
 /
 
 GRANT EXECUTE ON dz_swagger3_constants TO PUBLIC;
+
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_UTIL.pks 
 
 CREATE OR REPLACE PACKAGE dz_swagger3_util
 AUTHID DEFINER
@@ -122,6 +132,9 @@ AS
 /
 
 GRANT EXECUTE ON dz_swagger3_util TO public;
+
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_UTIL.pkb 
 
 CREATE OR REPLACE PACKAGE BODY dz_swagger3_util
 AS
@@ -788,6 +801,9 @@ AS
 END dz_swagger3_util;
 /
 
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_SETUP.pks 
+
 CREATE OR REPLACE PACKAGE dz_swagger3_setup
 AUTHID CURRENT_USER
 AS
@@ -823,6 +839,9 @@ AS
  
  END dz_swagger3_setup;
 /
+
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_SETUP.pkb 
 
 CREATE OR REPLACE PACKAGE BODY dz_swagger3_setup
 AS
@@ -3065,6 +3084,18 @@ AS
 END dz_swagger3_setup;
 /
 
+/*
+BEGIN
+   dz_swagger3_setup.create_storage_tables();
+   
+END;
+/
+
+*/
+
+--******************************--
+PROMPT Actions/DZ_SWAGGER3_STORAGE_SETUP.sql 
+
 DECLARE
    int_count NUMBER;
    
@@ -3092,6 +3123,9 @@ BEGIN
 END;
 /
 
+--******************************--
+PROMPT Actions/DZ_SWAGGER3_TEMP_SETUP1.sql 
+
 BEGIN
 
    EXECUTE IMMEDIATE 'DROP TABLE dz_swagger3_xrelates';
@@ -3104,6 +3138,9 @@ EXCEPTION
 
 END;
 /
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_OBJECT_TYP.tps 
 
 CREATE OR REPLACE TYPE dz_swagger3_object_typ FORCE
 AUTHID DEFINER 
@@ -3141,6 +3178,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_object_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_OBJECT_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_object_typ
 AS 
@@ -3187,12 +3227,18 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Collections/DZ_SWAGGER3_OBJECT_VRY.tps 
+
 CREATE OR REPLACE TYPE dz_swagger3_object_vry FORCE                                       
 AS 
 VARRAY(2147483647) OF dz_swagger3_object_typ;
 /
 
 GRANT EXECUTE ON dz_swagger3_object_vry TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_INFO_LICENSE_TYP.tps 
 
 CREATE OR REPLACE TYPE dz_swagger3_info_license_typ FORCE
 AUTHID DEFINER 
@@ -3237,6 +3283,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_info_license_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_INFO_LICENSE_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_info_license_typ
 AS 
@@ -3436,6 +3485,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_INFO_CONTACT_TYP.tps 
+
 CREATE OR REPLACE TYPE dz_swagger3_info_contact_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
@@ -3481,6 +3533,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_info_contact_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_INFO_CONTACT_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_info_contact_typ
 AS 
@@ -3734,6 +3789,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_INFO_TYP.tps 
+
 CREATE OR REPLACE TYPE dz_swagger3_info_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
@@ -3792,6 +3850,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_info_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_INFO_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_info_typ
 AS 
@@ -4181,6 +4242,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_XML_TYP.tps 
+
 CREATE OR REPLACE TYPE dz_swagger3_xml_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
@@ -4225,6 +4289,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_xml_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_XML_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_xml_typ
 AS 
@@ -4526,47 +4593,8 @@ AS
 END;
 /
 
-CREATE OR REPLACE TYPE dz_swagger3_oauth_flow_typ FORCE
-AUTHID DEFINER 
-AS OBJECT (
-    oauth_flow_id                VARCHAR2(255 Char)
-   ,oauth_flow_authorizationUrl  VARCHAR2(255 Char)
-   ,oauth_flow_tokenUrl          VARCHAR2(255 Char)
-   ,oauth_flow_refreshUrl        VARCHAR2(255 Char)
-   ,oauth_flow_scope_names       MDSYS.SDO_STRING2_ARRAY
-   ,oauth_flow_scope_desc        MDSYS.SDO_STRING2_ARRAY
-   ,versionid                    VARCHAR2(255 Char)
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_oauth_flow_typ
-    RETURN SELF AS RESULT
-    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,CONSTRUCTOR FUNCTION dz_swagger3_oauth_flow_typ(
-       p_oauth_flow_id           IN  VARCHAR2
-      ,p_versionid               IN  VARCHAR2
-   ) RETURN SELF AS RESULT
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-    ) RETURN CLOB
-    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toYAML(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-   ) RETURN CLOB
-
-);
-/
-
-GRANT EXECUTE ON dz_swagger3_oauth_flow_typ TO public;
+--******************************--
+PROMPT Types/DZ_SWAGGER3_ENCODING_TYP.tps 
 
 CREATE OR REPLACE TYPE dz_swagger3_encoding_typ FORCE
 AUTHID DEFINER 
@@ -4617,6 +4645,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_encoding_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_EXAMPLE_TYP.tps 
 
 CREATE OR REPLACE TYPE dz_swagger3_example_typ FORCE
 AUTHID DEFINER 
@@ -4674,6 +4705,9 @@ AS OBJECT (
 
 GRANT EXECUTE ON dz_swagger3_example_typ TO public;
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_EXTRDOCS_TYP.tps 
+
 CREATE OR REPLACE TYPE dz_swagger3_extrdocs_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
@@ -4720,6 +4754,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_extrdocs_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_HEADER_TYP.tps 
 
 CREATE OR REPLACE TYPE dz_swagger3_header_typ FORCE
 AUTHID DEFINER 
@@ -4783,6 +4820,9 @@ AS OBJECT (
 
 GRANT EXECUTE ON dz_swagger3_header_typ TO public;
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_LINK_TYP.tps 
+
 CREATE OR REPLACE TYPE dz_swagger3_link_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
@@ -4840,6 +4880,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_link_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_MEDIA_TYP.tps 
 
 CREATE OR REPLACE TYPE dz_swagger3_media_typ FORCE
 AUTHID DEFINER 
@@ -4899,6 +4942,54 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_media_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_OAUTH_FLOW_TYP.tps 
+
+CREATE OR REPLACE TYPE dz_swagger3_oauth_flow_typ FORCE
+AUTHID DEFINER 
+AS OBJECT (
+    oauth_flow_id                VARCHAR2(255 Char)
+   ,oauth_flow_authorizationUrl  VARCHAR2(255 Char)
+   ,oauth_flow_tokenUrl          VARCHAR2(255 Char)
+   ,oauth_flow_refreshUrl        VARCHAR2(255 Char)
+   ,oauth_flow_scope_names       MDSYS.SDO_STRING2_ARRAY
+   ,oauth_flow_scope_desc        MDSYS.SDO_STRING2_ARRAY
+   ,versionid                    VARCHAR2(255 Char)
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_oauth_flow_typ
+    RETURN SELF AS RESULT
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_oauth_flow_typ(
+       p_oauth_flow_id           IN  VARCHAR2
+      ,p_versionid               IN  VARCHAR2
+   ) RETURN SELF AS RESULT
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toJSON(
+       p_pretty_print        IN  INTEGER   DEFAULT NULL
+    ) RETURN CLOB
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toYAML(
+       p_pretty_print        IN  INTEGER   DEFAULT 0
+      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
+   ) RETURN CLOB
+
+);
+/
+
+GRANT EXECUTE ON dz_swagger3_oauth_flow_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_OPERATION_TYP.tps 
 
 CREATE OR REPLACE TYPE dz_swagger3_operation_typ FORCE
 AUTHID DEFINER
@@ -4962,6 +5053,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_operation_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_PARAMETER_TYP.tps 
 
 CREATE OR REPLACE TYPE dz_swagger3_parameter_typ FORCE
 AUTHID DEFINER 
@@ -5030,6 +5124,9 @@ AS OBJECT (
 
 GRANT EXECUTE ON dz_swagger3_parameter_typ TO public;
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_PATH_TYP.tps 
+
 CREATE OR REPLACE TYPE dz_swagger3_path_typ FORCE
 AUTHID DEFINER
 AS OBJECT (
@@ -5093,6 +5190,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_path_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_REQUESTBODY_TYP.tps 
 
 CREATE OR REPLACE TYPE dz_swagger3_requestbody_typ FORCE
 AUTHID DEFINER 
@@ -5159,6 +5259,9 @@ AS OBJECT (
 
 GRANT EXECUTE ON dz_swagger3_requestbody_typ TO public;
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_RESPONSE_TYP.tps 
+
 CREATE OR REPLACE TYPE dz_swagger3_response_typ FORCE
 AUTHID DEFINER
 AS OBJECT (
@@ -5214,6 +5317,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_response_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_SCHEMA_TYP.tps 
 
 CREATE OR REPLACE TYPE dz_swagger3_schema_typ FORCE 
 AUTHID DEFINER 
@@ -5334,6 +5440,9 @@ AS OBJECT (
 
 GRANT EXECUTE ON dz_swagger3_schema_typ TO public;
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_SECURITYSCHEME_TYP.tps 
+
 CREATE OR REPLACE TYPE dz_swagger3_securityScheme_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
@@ -5400,6 +5509,9 @@ AS OBJECT (
 
 GRANT EXECUTE ON dz_swagger3_securityScheme_typ TO public;
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_SERVER_TYP.tps 
+
 CREATE OR REPLACE TYPE dz_swagger3_server_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
@@ -5446,6 +5558,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_server_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_SERVER_VAR_TYP.tps 
 
 CREATE OR REPLACE TYPE dz_swagger3_server_var_typ FORCE
 AUTHID DEFINER
@@ -5496,6 +5611,9 @@ AS OBJECT (
 
 GRANT EXECUTE ON dz_swagger3_server_var_typ TO public;
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_STRING_HASH_TYP.tps 
+
 CREATE OR REPLACE TYPE dz_swagger3_string_hash_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
@@ -5542,6 +5660,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_string_hash_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_TAG_TYP.tps 
 
 CREATE OR REPLACE TYPE dz_swagger3_tag_typ FORCE
 AUTHID DEFINER 
@@ -5591,6 +5712,9 @@ AS OBJECT (
 
 GRANT EXECUTE ON dz_swagger3_tag_typ TO public;
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_TYP.tps 
+
 CREATE OR REPLACE TYPE dz_swagger3_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
@@ -5639,6 +5763,8 @@ AS OBJECT (
 
 GRANT EXECUTE ON dz_swagger3_typ TO public;
 
+--******************************--
+PROMPT Actions/DZ_SWAGGER3_TEMP_SETUP2.sql 
 
 BEGIN
 
@@ -5646,6 +5772,9 @@ BEGIN
 
 END;
 /
+
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_LOADER.pks 
 
 CREATE OR REPLACE PACKAGE dz_swagger3_loader
 AUTHID DEFINER
@@ -5818,6 +5947,9 @@ AS
 /
 
 GRANT EXECUTE ON dz_swagger3_loader TO public;
+
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_LOADER.pkb 
 
 CREATE OR REPLACE PACKAGE BODY dz_swagger3_loader
 AS
@@ -6945,6 +7077,9 @@ AS
 END dz_swagger3_loader;
 /
 
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_MAIN.pks 
+
 CREATE OR REPLACE PACKAGE dz_swagger3_main
 AUTHID DEFINER
 AS
@@ -6968,6 +7103,9 @@ AS
 /
 
 GRANT EXECUTE ON dz_swagger3_main TO public;
+
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_MAIN.pkb 
 
 CREATE OR REPLACE PACKAGE BODY dz_swagger3_main
 AS
@@ -7059,6 +7197,9 @@ AS
 END dz_swagger3_main;
 /
 
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_CACHE_MGR.pks 
+
 CREATE OR REPLACE PACKAGE dz_swagger3_cache_mgr
 AUTHID DEFINER
 AS
@@ -7122,6 +7263,9 @@ AS
 /
 
 GRANT EXECUTE ON dz_swagger3_cache_mgr TO public;
+
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_CACHE_MGR.pkb 
 
 CREATE OR REPLACE PACKAGE BODY dz_swagger3_cache_mgr
 AS
@@ -7633,6 +7777,9 @@ AS
 
 END dz_swagger3_cache_mgr;
 /
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_ENCODING_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_encoding_typ
 AS 
@@ -8179,6 +8326,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_EXAMPLE_TYP.tpb 
+
 CREATE OR REPLACE TYPE BODY dz_swagger3_example_typ
 AS 
 
@@ -8634,6 +8784,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_EXTRDOCS_TYP.tpb 
+
 CREATE OR REPLACE TYPE BODY dz_swagger3_extrdocs_typ
 AS 
 
@@ -8903,6 +9056,9 @@ AS
    
 END;
 /
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_HEADER_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_header_typ
 AS 
@@ -9865,6 +10021,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_LINK_TYP.tpb 
+
 CREATE OR REPLACE TYPE BODY dz_swagger3_link_typ
 AS 
 
@@ -10532,6 +10691,9 @@ AS
    
 END;
 /
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_MEDIA_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_media_typ
 AS 
@@ -11306,6 +11468,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_OAUTH_FLOW_TYP.tpb 
+
 CREATE OR REPLACE TYPE BODY dz_swagger3_oauth_flow_typ
 AS 
 
@@ -11685,6 +11850,9 @@ AS
    
 END;
 /
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_OPERATION_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_operation_typ
 AS 
@@ -13394,6 +13562,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_PARAMETER_TYP.tpb 
+
 CREATE OR REPLACE TYPE BODY dz_swagger3_parameter_typ
 AS 
 
@@ -14434,6 +14605,9 @@ AS
    
 END;
 /
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_PATH_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_path_typ
 AS 
@@ -16115,6 +16289,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_REQUESTBODY_TYP.tpb 
+
 CREATE OR REPLACE TYPE BODY dz_swagger3_requestbody_typ
 AS 
 
@@ -16677,6 +16854,9 @@ AS
    
 END;
 /
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_RESPONSE_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_response_typ
 AS 
@@ -17499,6 +17679,9 @@ AS
 
 END;
 /
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_SCHEMA_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_schema_typ
 AS 
@@ -19644,6 +19827,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_SECURITYSCHEME_TYP.tpb 
+
 CREATE OR REPLACE TYPE BODY dz_swagger3_securityScheme_typ
 AS 
 
@@ -20575,6 +20761,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_SERVER_TYP.tpb 
+
 CREATE OR REPLACE TYPE BODY dz_swagger3_server_typ
 AS 
 
@@ -21002,6 +21191,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_SERVER_VAR_TYP.tpb 
+
 CREATE OR REPLACE TYPE BODY dz_swagger3_server_var_typ
 AS
 
@@ -21324,6 +21516,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_STRING_HASH_TYP.tpb 
+
 CREATE OR REPLACE TYPE BODY dz_swagger3_string_hash_typ
 AS 
 
@@ -21412,6 +21607,9 @@ AS
 
 END;
 /
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_TAG_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_tag_typ
 AS 
@@ -21799,6 +21997,9 @@ AS
    
 END;
 /
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_typ
 AS
@@ -24220,6 +24421,9 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Types/DZ_SWAGGER3_JSONSCH_TYP.tps 
+
 CREATE OR REPLACE TYPE dz_swagger3_jsonsch_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
@@ -24252,6 +24456,9 @@ AS OBJECT (
 /
 
 GRANT EXECUTE ON dz_swagger3_jsonsch_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_JSONSCH_TYP.tpb 
 
 CREATE OR REPLACE TYPE BODY dz_swagger3_jsonsch_typ
 AS 
@@ -24499,14 +24706,17 @@ AS
 END;
 /
 
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_TEST.pks 
+
 CREATE OR REPLACE PACKAGE dz_swagger3_test
 AUTHID DEFINER
 AS
 
-   C_CHANGESET CONSTANT VARCHAR2(255 Char) := 'NULL';
-   C_JENKINS_JOBNM CONSTANT VARCHAR2(255 Char) := 'NULL';
-   C_JENKINS_BUILD CONSTANT NUMBER := 0.0;
-   C_JENKINS_BLDID CONSTANT VARCHAR2(255 Char) := 'NULL';
+   C_GITRELEASE    CONSTANT VARCHAR2(255 Char) := '1.0.0';
+   C_GITCOMMIT     CONSTANT VARCHAR2(255 Char) := '0de06324918f1353b6a164334120c93c8ecac7db';
+   C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := 'Thu May 30 21:07:38 2019 -0400';
+   C_GITCOMMITAUTH CONSTANT VARCHAR2(255 Char) := 'Paul Dziemiela';
    
    C_PREREQUISITES CONSTANT MDSYS.SDO_STRING2_ARRAY := MDSYS.SDO_STRING2_ARRAY(
       'DZ_JSON'
@@ -24536,6 +24746,9 @@ END dz_swagger3_test;
 /
 
 GRANT EXECUTE ON dz_swagger3_test TO public;
+
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_TEST.pkb 
 
 CREATE OR REPLACE PACKAGE BODY dz_swagger3_test
 AS
@@ -24578,10 +24791,12 @@ AS
    RETURN VARCHAR2
    AS
    BEGIN
-      RETURN '{"CHANGESET":' || C_CHANGESET || ','
-      || '"JOBN":"' || C_JENKINS_JOBNM || '",'   
-      || '"BUILD":' || C_JENKINS_BUILD || ','
-      || '"BUILDID":"' || C_JENKINS_BLDID || '"}';
+      RETURN '{'
+      || ' "GITRELEASE":"'    || C_GITRELEASE    || '"'
+      || ',"GITCOMMIT":"'     || C_GITCOMMIT     || '"'
+      || ',"GITCOMMITDATE":"' || C_GITCOMMITDATE || '"'
+      || ',"GITCOMMITAUTH":"' || C_GITCOMMITAUTH || '"'
+      || '}';
       
    END version;
    
@@ -24607,4 +24822,39 @@ AS
 
 END dz_swagger3_test;
 /
+
+SHOW ERROR;
+
+DECLARE
+   l_num_errors PLS_INTEGER;
+
+BEGIN
+
+   SELECT
+   COUNT(*)
+   INTO l_num_errors
+   FROM
+   user_errors a
+   WHERE
+   a.name LIKE 'DZ_SWAGGER3%';
+
+   IF l_num_errors <> 0
+   THEN
+      RAISE_APPLICATION_ERROR(-20001,'COMPILE ERROR');
+
+   END IF;
+
+   l_num_errors := DZ_SWAGGER3_TEST.inmemory_test();
+
+   IF l_num_errors <> 0
+   THEN
+      RAISE_APPLICATION_ERROR(-20001,'INMEMORY TEST ERROR');
+
+   END IF;
+
+END;
+/
+
+EXIT;
+SET DEFINE OFF;
 

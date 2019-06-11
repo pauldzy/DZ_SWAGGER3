@@ -6,8 +6,8 @@ AS
    /*
    Header: DZ_SWAGGER3
      
-   - Build ID: DZBUILDIDDZ
-   - Change Set: DZCHANGESETDZ
+   - Release: %GITRELEASE%
+   - Commit Date: %GITCOMMITDATE%
    
    PLSQL module for the creation, storage and production of Open API 3.0 service 
    definitions.   Support for the unloading of Swagger JSON specifications into

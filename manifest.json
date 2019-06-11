@@ -4,6 +4,22 @@
           "key":   "JOBNAME"
          ,"value": "DZ_SWAGGER3"
        }
+      ,{
+          "key": "GITRELEASE"
+         ,"cmd": "git describe --abbrev=0 --tags"
+       }
+      ,{
+          "key": "GITCOMMIT"
+         ,"cmd": "git rev-parse master"
+       }
+      ,{
+          "key": "GITCOMMITDATE"
+         ,"cmd": "git show -s --format=%cd"
+       }
+      ,{
+          "key": "GITCOMMITAUTH"
+         ,"cmd": "git show -s --format=%an"
+       }
     ]
    ,"tasks": [
        {
@@ -80,7 +96,7 @@
             ,"Packages/DZ_SWAGGER3_TEST.pkb"
             ,"%%SQLFOOTER%%"
           ]
-         ,"separator": "--\n--********************--\nPROMPT %%FILENAME%% \n\n"
+         ,"separator": "--******************************--\nPROMPT %%FILENAME%% \n\n"
          ,"components": [
              {
                 "identifier": "SQLHEADER"
@@ -88,6 +104,7 @@
                    "WHENEVER SQLERROR EXIT -99;"
                   ,"WHENEVER OSERROR  EXIT -98;"
                   ,"SET DEFINE OFF;"
+                  ,""
                 ]
              }
             ,{
@@ -106,7 +123,7 @@
                   ,"   FROM"
                   ,"   user_errors a"
                   ,"   WHERE"
-                  ,"   a.name LIKE 'DZ_DZNAMEDZ%';"
+                  ,"   a.name LIKE '%JOBNAME%%';"
                   ,""
                   ,"   IF l_num_errors <> 0"
                   ,"   THEN"
@@ -114,7 +131,7 @@
                   ,""
                   ,"   END IF;"
                   ,""
-                  ,"   l_num_errors := DZ_DZNAMEDZ_TEST.inmemory_test();"
+                  ,"   l_num_errors := %JOBNAME%_TEST.inmemory_test();"
                   ,""
                   ,"   IF l_num_errors <> 0"
                   ,"   THEN"
@@ -127,17 +144,30 @@
                   ,""
                   ,"EXIT;"
                   ,"SET DEFINE OFF;"
+                  ,""
                 ]
              }
           ]
          ,"configurations": [
             {
                 "id": 1
-               ,"file": "Packages/DZ_SWAGGER3_MAIN.pks"
+               ,"file": "Packages/DZ_SWAGGER3_TEST.pks"
                ,"replacements": [
                    {
-                      "token": "DZCHANGESETDZ"
-                     ,"value": "%GIT_COMMIT%"
+                      "string": "C_GITRELEASE    CONSTANT VARCHAR2(255 Char) := 'NULL';"
+                     ,"value":  "C_GITRELEASE    CONSTANT VARCHAR2(255 Char) := '%GITRELEASE%';"
+                   }
+                  ,{
+                      "string": "C_GITCOMMIT     CONSTANT VARCHAR2(255 Char) := 'NULL';"
+                     ,"value":  "C_GITCOMMIT     CONSTANT VARCHAR2(255 Char) := '%GITCOMMIT%';"
+                   }
+                  ,{
+                      "string": "C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := 'NULL';"
+                     ,"value":  "C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := '%GITCOMMITDATE%';"
+                   }
+                  ,{
+                      "string": "C_GITCOMMITAUTH CONSTANT VARCHAR2(255 Char) := 'NULL';"
+                     ,"value":  "C_GITCOMMITAUTH CONSTANT VARCHAR2(255 Char) := '%GITCOMMITAUTH%';"
                    }
                 ]
             }
