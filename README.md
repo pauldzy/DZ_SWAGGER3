@@ -5,20 +5,21 @@ Oracle mod_plsql and APEX allow for the exposure as services of as many paramete
 
 Generally the approach is something along the lines of [SwaggerHub](https://app.swaggerhub.com) which provides a solid and powerful platform for managing, versioning and publishing specifications.  However, it still can be challenging when a universe of swagger elements needs to be sliced and diced on the fly into different specifications with some elements in common and other separate.
 
-DZ_SWAGGER3 is thus a set of tabular resources to store Open API elements and a set of logic to generate Swagger specifications from the table.  The one item missing is the logic to take an existing 3.0 specification and unload it into the tables.  
+DZ_SWAGGER3 is thus a set of tabular resources to store Open API elements and a set of logic to generate Swagger specifications from the table.  One item missing is the logic to take an existing 3.0 specification document and unload it into the tables.  
 
 ## Sample Data
-Sample data is under construction
+A rough sample dataset is provided for testing and evaluation.  The sample was developed to test the rarer OpenAPI scenarios and could be improved with more functional examples.
 
 ## Usage
-DZ_SWAGGER3 uses Oracle types to encapsulate the serialization logic.  As these are database types they may be invoked directly from SQL.  The top level type is DZ_SWAGGER3_TYP and almost certainly where you'd want to tie into your specification handling.  To simply fetch all elements of my sample dataset as a single unified definition:
+DZ_SWAGGER3 uses Oracle types to encapsulate the serialization logic.  The top level type is DZ_SWAGGER3_TYP and almost certainly where you'd want to tie into your specification handling.  To fetch all elements of the sample dataset as a single OpenAPI document:
 
 ```
 DECLARE
    clb_output CLOB;
 BEGIN
    clb_output := dz_swagger3_typ(
-       p_header_id => 'WATERS'
+       p_doc_id    => 'SAMPLE'
+      ,p_group_id  => 'SAMPLE'
       ,p_versionid => 'SAMPLE'
    ).toJSON();
    -- Do something with the clob --
@@ -31,7 +32,8 @@ DECLARE
    clb_output CLOB;
 BEGIN
    clb_output := dz_swagger3_typ(
-       p_header_id => 'WATERS'
+       p_doc_id    => 'SAMPLE'
+      ,p_group_id  => 'SAMPLE'
       ,p_versionid => 'SAMPLE'
    ).toJSON(
       p_pretty_print => 0
@@ -45,7 +47,8 @@ DECLARE
    clb_output CLOB;
 BEGIN
    clb_output := dz_swagger3_typ(
-       p_header_id => 'WATERS'
+       p_doc_id    => 'SAMPLE'
+      ,p_group_id  => 'SAMPLE'
       ,p_versionid => 'SAMPLE'
    ).toYAML();
 END;
@@ -53,16 +56,10 @@ END;
 ```
 
 ## Data Model
-![Entity Relationship1](Doc/ERD1.png)
-___
-
-![Entity Relationship2](Doc/ERD2.png)
-___
-
-![Entity Relationship3](Doc/ERD3.png)
+![Entity Relationship](Doc/DZ_SWAGGER3_ERD.png)
 
 ## JSON Schema extension
-As Swagger properties are a superset of JSON Schema, one would think flipping between and Swagger and JSON Schema **should** be pretty simple.  However there is really nothing out there for doing the swap nor guidance for the conversion.  As its mostly a matter of removing Swagger elements from the definition output, the project includes logic to output JSON Schema by endpoint and method:
+As OpenAPI properties are a superset of JSON Schema, one would think flipping between OpenAPI and JSON Schema **should** be pretty simple.  However there is really nothing out there for doing the swap nor guidance for the conversion.  As its mostly a matter of removing OpenAPI specific elements from the definition output, the project includes logic to output JSON Schema by endpoint and method:
 
 ```
 DECLARE
@@ -80,7 +77,7 @@ END;
 ```
 
 ## Post Parameter RequestBody extension
-OpenAPI 3.0 bravely moves into the world of complex JSON input for post operations via the new Request Body component.  However some of us remain stuck on our old middleware where posts are little but form reflections of get parameters.  When get and post are mirrors of each other it is rather onerous to maintain parallel structures and descriptions in parameters and request bodies.
+OpenAPI 3.0 bravely moves into the world of complex JSON input for post operations via the new RequestBody component.  However some of us remain stuck on our old middleware systems whereby posts are little but form reflections of get parameters.  When get and post are mirrors of each other it is rather onerous to maintain parallel structures and descriptions via parameters and request bodies.
 
 DZ_SWAGGER3 includes the option to tag parameters under a post as comprising a flat schema of schemas which is generated on-the-fly from parameter components and output in the document as a request body.
 
