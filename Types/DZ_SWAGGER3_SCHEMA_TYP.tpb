@@ -552,7 +552,7 @@ AS
             ,p_identifier       => a.object_id
             ,p_short_identifier => a.short_id
             ,p_reference_count  => a.reference_count
-            ,p_jsonschema       => p_jsonschema
+            ,p_jsonschema       => str_jsonschema
           )
          ,b.object_key
          BULK COLLECT INTO 
@@ -1170,6 +1170,7 @@ AS
                      ,p_identifier       => a.object_id
                      ,p_short_identifier => a.short_id
                      ,p_reference_count  => a.reference_count
+                     ,p_jsonschema       => str_jsonschema
                   )
                   INTO clb_tmp
                   FROM
@@ -1271,6 +1272,7 @@ AS
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                   ,p_reference_count  => a.reference_count
+                  ,p_jsonschema       => str_jsonschema
                 )
                ,b.object_key
                ,b.object_required
