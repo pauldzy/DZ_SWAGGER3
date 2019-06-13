@@ -1839,11 +1839,11 @@ AS
       -- Build OAUTH FLOW table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_oauth_flow('
-              || '    oauth_flow_id          VARCHAR2(255 Char) NOT NULL '
-              || '   ,oauth_authorizationurl VARCHAR2(255 Char) '
-              || '   ,oauth_tokenurl         VARCHAR2(255 Char) '
-              || '   ,oauth_refreshurl       VARCHAR2(255 Char) '
-              || '   ,versionid              VARCHAR2(255 Char) NOT NULL '
+              || '    oauth_flow_id               VARCHAR2(255 Char) NOT NULL '
+              || '   ,oauth_flow_authorizationurl VARCHAR2(255 Char) '
+              || '   ,oauth_flow_tokenurl         VARCHAR2(255 Char) '
+              || '   ,oauth_flow_refreshurl       VARCHAR2(255 Char) '
+              || '   ,versionid                   VARCHAR2(255 Char) NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL

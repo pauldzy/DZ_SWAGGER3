@@ -14,7 +14,7 @@ AS
    Header: DZ_SWAGGER3
      
    - Release: 1.0.0
-   - Commit Date: Thu Jun 13 17:05:12 2019 -0400
+   - Commit Date: Thu Jun 13 17:06:34 2019 -0400
    
    PLSQL module for the creation, storage and production of Open API 3.0 service 
    definitions.   Support for the unloading of Swagger JSON specifications into
@@ -2684,11 +2684,11 @@ AS
       -- Build OAUTH FLOW table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_oauth_flow('
-              || '    oauth_flow_id          VARCHAR2(255 Char) NOT NULL '
-              || '   ,oauth_authorizationurl VARCHAR2(255 Char) '
-              || '   ,oauth_tokenurl         VARCHAR2(255 Char) '
-              || '   ,oauth_refreshurl       VARCHAR2(255 Char) '
-              || '   ,versionid              VARCHAR2(255 Char) NOT NULL '
+              || '    oauth_flow_id               VARCHAR2(255 Char) NOT NULL '
+              || '   ,oauth_flow_authorizationurl VARCHAR2(255 Char) '
+              || '   ,oauth_flow_tokenurl         VARCHAR2(255 Char) '
+              || '   ,oauth_flow_refreshurl       VARCHAR2(255 Char) '
+              || '   ,versionid                   VARCHAR2(255 Char) NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -7088,7 +7088,7 @@ AS
    header: DZ_SWAGGER3
      
    - Release: 1.0.0
-   - Commit Date: Thu Jun 13 17:05:12 2019 -0400
+   - Commit Date: Thu Jun 13 17:06:34 2019 -0400
    
    Conversion of DZ_SWAGGER from specification 2.0 to OpenAPI 3.0.
    
@@ -24728,8 +24728,8 @@ AUTHID DEFINER
 AS
 
    C_GITRELEASE    CONSTANT VARCHAR2(255 Char) := '1.0.0';
-   C_GITCOMMIT     CONSTANT VARCHAR2(255 Char) := 'e21e8cae596f9517eb55fd0c16bcacdbd2e8d58b';
-   C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := 'Thu Jun 13 17:05:12 2019 -0400';
+   C_GITCOMMIT     CONSTANT VARCHAR2(255 Char) := '8e248ca50c044bb4838e01b42368db80405c9e89';
+   C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := 'Thu Jun 13 17:06:34 2019 -0400';
    C_GITCOMMITAUTH CONSTANT VARCHAR2(255 Char) := 'Paul Dziemiela';
    
    C_PREREQUISITES CONSTANT MDSYS.SDO_STRING2_ARRAY := MDSYS.SDO_STRING2_ARRAY(
