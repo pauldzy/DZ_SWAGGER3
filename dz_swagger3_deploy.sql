@@ -14,7 +14,7 @@ AS
    Header: DZ_SWAGGER3
      
    - Release: 1.0.0
-   - Last Commit: Thu May 30 21:07:38 2019 -0400
+   - Commit Date: Thu Jun 13 17:05:12 2019 -0400
    
    PLSQL module for the creation, storage and production of Open API 3.0 service 
    definitions.   Support for the unloading of Swagger JSON specifications into
@@ -2892,24 +2892,23 @@ AS
               || '   ,object_type_id       VARCHAR2(255 Char) NOT NULL '
               || '   ,short_id             VARCHAR2(255 Char) '
               || '   ,reference_count      INTEGER '
-              || '   ,servertyp            dz_swagger3_server_typ '
-              || '   ,servervartyp         dz_swagger3_server_var_typ '
-              || '   ,pathtyp              dz_swagger3_path_typ '
-              || '   ,operationtyp         dz_swagger3_operation_typ '
-              || '   ,parametertyp         dz_swagger3_parameter_typ '
-              || '   ,headertyp            dz_swagger3_header_typ '
-              || '   ,linktyp              dz_swagger3_link_typ '
-              || '   ,requestbodytyp       dz_swagger3_requestBody_typ '
-              || '   ,responsetyp          dz_swagger3_response_typ '
-              || '   ,mediatyp             dz_swagger3_media_typ '
-              || '   ,schematyp            dz_swagger3_schema_typ '
+              || '   ,encodingtyp          dz_swagger3_encoding_typ '
               || '   ,exampletyp           dz_swagger3_example_typ '
               || '   ,extrdocstyp          dz_swagger3_extrdocs_typ '
-              || '   ,securityreqtyp       dz_swagger3_security_req_typ '
+              || '   ,headertyp            dz_swagger3_header_typ '
+              || '   ,linktyp              dz_swagger3_link_typ '
+              || '   ,mediatyp             dz_swagger3_media_typ '
+              || '   ,operationtyp         dz_swagger3_operation_typ '
+              || '   ,parametertyp         dz_swagger3_parameter_typ '
+              || '   ,pathtyp              dz_swagger3_path_typ '
+              || '   ,requestbodytyp       dz_swagger3_requestBody_typ '
+              || '   ,responsetyp          dz_swagger3_response_typ '
+              || '   ,schematyp            dz_swagger3_schema_typ '
               || '   ,securityschemetyp    dz_swagger3_securityscheme_typ '
-              || '   ,encodingtyp          dz_swagger3_encoding_typ '
-              || '   ,tagtyp               dz_swagger3_tag_typ '
+              || '   ,servertyp            dz_swagger3_server_typ '
+              || '   ,servervartyp         dz_swagger3_server_var_typ '
               || '   ,stringhashtyp        dz_swagger3_string_hash_typ '
+              || '   ,tagtyp               dz_swagger3_tag_typ '
               || ') '
               || 'ON COMMIT PRESERVE ROWS ';
       
@@ -7083,6 +7082,19 @@ PROMPT Packages/DZ_SWAGGER3_MAIN.pks
 CREATE OR REPLACE PACKAGE dz_swagger3_main
 AUTHID DEFINER
 AS
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   /*
+   header: DZ_SWAGGER3
+     
+   - Release: 1.0.0
+   - Commit Date: Thu Jun 13 17:05:12 2019 -0400
+   
+   Conversion of DZ_SWAGGER from specification 2.0 to OpenAPI 3.0.
+   
+   */
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -18237,7 +18249,7 @@ AS
             ,p_identifier       => a.object_id
             ,p_short_identifier => a.short_id
             ,p_reference_count  => a.reference_count
-            ,p_jsonschema       => p_jsonschema
+            ,p_jsonschema       => str_jsonschema
           )
          ,b.object_key
          BULK COLLECT INTO 
@@ -18855,6 +18867,7 @@ AS
                      ,p_identifier       => a.object_id
                      ,p_short_identifier => a.short_id
                      ,p_reference_count  => a.reference_count
+                     ,p_jsonschema       => str_jsonschema
                   )
                   INTO clb_tmp
                   FROM
@@ -18956,6 +18969,7 @@ AS
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                   ,p_reference_count  => a.reference_count
+                  ,p_jsonschema       => str_jsonschema
                 )
                ,b.object_key
                ,b.object_required
@@ -24714,8 +24728,8 @@ AUTHID DEFINER
 AS
 
    C_GITRELEASE    CONSTANT VARCHAR2(255 Char) := '1.0.0';
-   C_GITCOMMIT     CONSTANT VARCHAR2(255 Char) := '0de06324918f1353b6a164334120c93c8ecac7db';
-   C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := 'Thu May 30 21:07:38 2019 -0400';
+   C_GITCOMMIT     CONSTANT VARCHAR2(255 Char) := 'e21e8cae596f9517eb55fd0c16bcacdbd2e8d58b';
+   C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := 'Thu Jun 13 17:05:12 2019 -0400';
    C_GITCOMMITAUTH CONSTANT VARCHAR2(255 Char) := 'Paul Dziemiela';
    
    C_PREREQUISITES CONSTANT MDSYS.SDO_STRING2_ARRAY := MDSYS.SDO_STRING2_ARRAY(
