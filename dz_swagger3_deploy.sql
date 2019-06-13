@@ -14,7 +14,7 @@ AS
    Header: DZ_SWAGGER3
      
    - Release: 1.0.0
-   - Commit Date: Thu Jun 13 17:06:34 2019 -0400
+   - Commit Date: Thu Jun 13 17:21:44 2019 -0400
    
    PLSQL module for the creation, storage and production of Open API 3.0 service 
    definitions.   Support for the unloading of Swagger JSON specifications into
@@ -2632,19 +2632,19 @@ AS
       -- Build SECURITY SCHEME table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_securityScheme('
-              || '    securityScheme_id             VARCHAR2(255 Char) NOT NULL '
-              || '   ,securityScheme_type           VARCHAR2(255 Char) NOT NULL '
-              || '   ,securityScheme_description    VARCHAR2(4000 Char) '
-              || '   ,securityScheme_name           VARCHAR2(255 Char) '
-              || '   ,securityScheme_in             VARCHAR2(255 Char) '
-              || '   ,securityScheme_scheme         VARCHAR2(255 Char) '
-              || '   ,securityScheme_bearerFormat   VARCHAR2(255 Char) '
-              || '   ,oauth_flow_implicit           VARCHAR2(255 Char) '
-              || '   ,oauth_flow_password           VARCHAR2(255 Char) '
-              || '   ,oauth_flow_clientcredentials  VARCHAR2(255 Char) '
-              || '   ,oauth_flow_authorizationcode  VARCHAR2(255 Char) '
-              || '   ,securityscheme_openidcrednts  VARCHAR2(255 Char) '              
-              || '   ,versionid                     VARCHAR2(40 Char)  NOT NULL '
+              || '    securityScheme_id              VARCHAR2(255 Char) NOT NULL '
+              || '   ,securityScheme_type            VARCHAR2(255 Char) NOT NULL '
+              || '   ,securityScheme_description     VARCHAR2(4000 Char) '
+              || '   ,securityScheme_name            VARCHAR2(255 Char) '
+              || '   ,securityScheme_in              VARCHAR2(255 Char) '
+              || '   ,securityScheme_scheme          VARCHAR2(255 Char) '
+              || '   ,securityScheme_bearerFormat    VARCHAR2(255 Char) '
+              || '   ,oauth_flow_implicit            VARCHAR2(255 Char) '
+              || '   ,oauth_flow_password            VARCHAR2(255 Char) '
+              || '   ,oauth_flow_clientcredentials   VARCHAR2(255 Char) '
+              || '   ,oauth_flow_authorizationcode   VARCHAR2(255 Char) '
+              || '   ,securityscheme_openidcredents  VARCHAR2(255 Char) '              
+              || '   ,versionid                      VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
@@ -7088,7 +7088,7 @@ AS
    header: DZ_SWAGGER3
      
    - Release: 1.0.0
-   - Commit Date: Thu Jun 13 17:06:34 2019 -0400
+   - Commit Date: Thu Jun 13 17:21:44 2019 -0400
    
    Conversion of DZ_SWAGGER from specification 2.0 to OpenAPI 3.0.
    
@@ -24728,8 +24728,8 @@ AUTHID DEFINER
 AS
 
    C_GITRELEASE    CONSTANT VARCHAR2(255 Char) := '1.0.0';
-   C_GITCOMMIT     CONSTANT VARCHAR2(255 Char) := '8e248ca50c044bb4838e01b42368db80405c9e89';
-   C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := 'Thu Jun 13 17:06:34 2019 -0400';
+   C_GITCOMMIT     CONSTANT VARCHAR2(255 Char) := '4248dcc46526b2c72c450e08922bf2f8bd562868';
+   C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := 'Thu Jun 13 17:21:44 2019 -0400';
    C_GITCOMMITAUTH CONSTANT VARCHAR2(255 Char) := 'Paul Dziemiela';
    
    C_PREREQUISITES CONSTANT MDSYS.SDO_STRING2_ARRAY := MDSYS.SDO_STRING2_ARRAY(

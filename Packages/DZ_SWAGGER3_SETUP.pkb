@@ -1787,19 +1787,19 @@ AS
       -- Build SECURITY SCHEME table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_securityScheme('
-              || '    securityScheme_id             VARCHAR2(255 Char) NOT NULL '
-              || '   ,securityScheme_type           VARCHAR2(255 Char) NOT NULL '
-              || '   ,securityScheme_description    VARCHAR2(4000 Char) '
-              || '   ,securityScheme_name           VARCHAR2(255 Char) '
-              || '   ,securityScheme_in             VARCHAR2(255 Char) '
-              || '   ,securityScheme_scheme         VARCHAR2(255 Char) '
-              || '   ,securityScheme_bearerFormat   VARCHAR2(255 Char) '
-              || '   ,oauth_flow_implicit           VARCHAR2(255 Char) '
-              || '   ,oauth_flow_password           VARCHAR2(255 Char) '
-              || '   ,oauth_flow_clientcredentials  VARCHAR2(255 Char) '
-              || '   ,oauth_flow_authorizationcode  VARCHAR2(255 Char) '
-              || '   ,securityscheme_openidcrednts  VARCHAR2(255 Char) '              
-              || '   ,versionid                     VARCHAR2(40 Char)  NOT NULL '
+              || '    securityScheme_id              VARCHAR2(255 Char) NOT NULL '
+              || '   ,securityScheme_type            VARCHAR2(255 Char) NOT NULL '
+              || '   ,securityScheme_description     VARCHAR2(4000 Char) '
+              || '   ,securityScheme_name            VARCHAR2(255 Char) '
+              || '   ,securityScheme_in              VARCHAR2(255 Char) '
+              || '   ,securityScheme_scheme          VARCHAR2(255 Char) '
+              || '   ,securityScheme_bearerFormat    VARCHAR2(255 Char) '
+              || '   ,oauth_flow_implicit            VARCHAR2(255 Char) '
+              || '   ,oauth_flow_password            VARCHAR2(255 Char) '
+              || '   ,oauth_flow_clientcredentials   VARCHAR2(255 Char) '
+              || '   ,oauth_flow_authorizationcode   VARCHAR2(255 Char) '
+              || '   ,securityscheme_openidcredents  VARCHAR2(255 Char) '              
+              || '   ,versionid                      VARCHAR2(40 Char)  NOT NULL '
               || ') ';
               
       IF p_table_tablespace IS NOT NULL
