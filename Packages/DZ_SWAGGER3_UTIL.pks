@@ -9,6 +9,16 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   FUNCTION gz_split(
+       p_str              IN  VARCHAR2
+      ,p_regex            IN  VARCHAR2
+      ,p_match            IN  VARCHAR2 DEFAULT NULL
+      ,p_end              IN  NUMBER   DEFAULT 0
+      ,p_trim             IN  VARCHAR2 DEFAULT 'FALSE'
+   ) RETURN dz_swagger3_string_vry DETERMINISTIC;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    FUNCTION yamlq(
        p_input            IN  VARCHAR2
    ) RETURN VARCHAR2 DETERMINISTIC;
@@ -46,7 +56,7 @@ AS
    -----------------------------------------------------------------------------
    FUNCTION a_in_b(
        p_input_a          IN  VARCHAR2
-      ,p_input_b          IN  MDSYS.SDO_STRING2_ARRAY
+      ,p_input_b          IN  dz_swagger3_string_vry
    ) RETURN VARCHAR2 DETERMINISTIC;
    
    -----------------------------------------------------------------------------

@@ -56,20 +56,11 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-   ) RETURN CLOB
+   MEMBER FUNCTION toJSON
+   RETURN CLOB
    AS
-      cb            CLOB;
-      v2            VARCHAR2(32000);
-      
-      str_pad       VARCHAR2(1 Char);
-      str_pad1      VARCHAR2(1 Char);
-      str_pad2      VARCHAR2(1 Char);
-      ary_keys      MDSYS.SDO_STRING2_ARRAY;
-      
-      TYPE clob_table IS TABLE OF CLOB;
-      ary_clb       clob_table;
+      clb_output       CLOB;
+      clob_scopes      CLOB;
       
    BEGIN
       
@@ -80,159 +71,56 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Build the wrapper
+      -- Generate optional scope map
       --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
+      IF  self.oauth_flow_scope_names IS NOT NULL
+      AND self.oauth_flow_scope_names.COUNT > 0
       THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',NULL)
-         );
-
-      ELSE
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',-1)
-         );
-         str_pad     := ' ';
-
+         SELECT
+         JSON_ARRAYAGG(
+            JSON_OBJECT(
+               a.scopename VALUE b.scopedesc
+            )
+         )
+         INTO clob_scopes
+         FROM (
+            SELECT
+             rownum      AS namerowid
+            ,column_name AS scopename
+            FROM
+            TABLE(self.oauth_flow_scope_names)
+         ) a
+         JOIN (
+            SELECT
+             rownum      AS descrowid
+            ,column_name AS scopedesc
+            FROM
+            TABLE(self.oauth_flow_scope_desc)
+         ) b
+         ON
+         a.namerowid = b.descrowid;
+         
       END IF;
-      
-      str_pad1 := str_pad;
       
       --------------------------------------------------------------------------
       -- Step 30
-      -- Add authorizationUrl
+      -- Build the object
       --------------------------------------------------------------------------
-      IF self.oauth_flow_authorizationUrl IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'authorizationUrl'
-               ,self.oauth_flow_authorizationUrl
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-
-      END IF;
+      SELECT
+      JSON_OBJECT(
+          'authorizationUrl' VALUE self.oauth_flow_authorizationUrl ABSENT ON NULL
+         ,'tokenUrl'         VALUE self.oauth_flow_tokenUrl         ABSENT ON NULL
+         ,'refreshUrl'       VALUE self.oauth_flow_refreshUrl       ABSENT ON NULL
+         ,'scopes'           VALUE clob_scopes                      FORMAT JSON ABSENT ON NULL
+      )
+      INTO clb_output
+      FROM dual;
       
       --------------------------------------------------------------------------
       -- Step 40
-      -- Add tokenUrl
-      --------------------------------------------------------------------------
-      IF self.oauth_flow_tokenUrl IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'tokenUrl'
-               ,self.oauth_flow_tokenUrl
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Add refreshUrl
-      --------------------------------------------------------------------------
-      IF self.oauth_flow_refreshUrl IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'refreshUrl'
-               ,self.oauth_flow_refreshUrl
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 60
-      -- Add optional parameter map
-      --------------------------------------------------------------------------
-      IF self.oauth_flow_scope_names IS NOT NULL
-      AND self.oauth_flow_scope_names.COUNT > 0
-      THEN
-         str_pad2 := str_pad;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || '"scopes":' || str_pad || '{'
-            ,p_pretty_print => p_pretty_print + 1
-         );
-      
-         FOR i IN 1 .. self.oauth_flow_scope_names.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad2 
-                  || '"' || self.oauth_flow_scope_names(i) || '":' || str_pad 
-                  || '"' || self.oauth_flow_scope_desc(i)  || '"'
-               ,p_pretty_print => p_pretty_print + 2
-            );
-            str_pad2 := ',';
-         
-         END LOOP;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => '}'
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-         
-      END IF;
-         
-      --------------------------------------------------------------------------
-      -- Step 70
-      -- Add the left bracket
-      --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => '}'
-         ,p_pretty_print   => p_pretty_print
-         ,p_final_linefeed => FALSE
-      );
-
-      --------------------------------------------------------------------------
-      -- Step 80
       -- Cough it out
       --------------------------------------------------------------------------
-      dz_swagger3_util.fconc(
-          p_c    => cb
-         ,p_v    => v2
-      );
-      
-      RETURN cb;
+      RETURN clb_output;
            
    END toJSON;
    
@@ -246,7 +134,7 @@ AS
    AS
       cb            CLOB;
       v2            VARCHAR2(32000);
-      ary_keys      MDSYS.SDO_STRING2_ARRAY;
+      ary_keys      dz_swagger3_string_vry;
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb       clob_table;

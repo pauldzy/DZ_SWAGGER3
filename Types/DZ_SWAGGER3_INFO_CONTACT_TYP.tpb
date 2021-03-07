@@ -57,13 +57,10 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
+   MEMBER FUNCTION toJSON
+   RETURN CLOB
    AS
       clb_output       CLOB;
-      str_pad          VARCHAR2(1 Char);
       
    BEGIN
       
@@ -74,81 +71,16 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Build the wrapper
+      -- Build the object
       --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         
-      ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
-         str_pad     := ' ';
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Add name element
-      --------------------------------------------------------------------------
-      IF self.contact_name IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.value2json(
-                'name'
-               ,self.contact_name
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad := ',';
-         
-      END IF;
-         
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Add optional url 
-      --------------------------------------------------------------------------
-      IF self.contact_url IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.value2json(
-                'url'
-               ,self.contact_url
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad := ',';
-
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Add optional email 
-      --------------------------------------------------------------------------
-      IF self.contact_email IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.value2json(
-                'email'
-               ,self.contact_email
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         
-         str_pad := ',';
-
-      END IF;
- 
-      --------------------------------------------------------------------------
-      -- Step 100
-      -- Add the left bracket
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
-      );
+      SELECT
+      JSON_OBJECT(
+          'name'         VALUE self.contact_name    ABSENT ON NULL
+         ,'url'          VALUE self.contact_url     ABSENT ON NULL
+         ,'email'        VALUE self.contact_email   ABSENT ON NULL
+      )
+      INTO clb_output
+      FROM dual;
       
       --------------------------------------------------------------------------
       -- Step 110

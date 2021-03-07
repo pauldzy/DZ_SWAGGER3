@@ -471,8 +471,7 @@ AS
    ----------------------------------------------------------------------------
    ----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+       p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
@@ -480,24 +479,16 @@ AS
       ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
-      str_jsonschema   VARCHAR2(4000 Char) := UPPER(p_jsonschema);
-      cb               CLOB;
-      v2               VARCHAR2(32000);
-      
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      str_pad2         VARCHAR2(1 Char);
-      ary_items        MDSYS.SDO_STRING2_ARRAY;
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      ary_required     MDSYS.SDO_STRING2_ARRAY;
-      clb_tmp          CLOB;
-      int_counter      PLS_INTEGER;
-      boo_temp         BOOLEAN;
-      str_identifier   VARCHAR2(255 Char);
-      boo_is_not       BOOLEAN := FALSE;
-      
-      TYPE clob_table IS TABLE OF CLOB;
-      ary_clb          clob_table;
+      str_jsonschema                 VARCHAR2(4000 Char) := UPPER(p_jsonschema);
+      clb_output                     CLOB;
+      clb_combine_schemas            CLOB;
+      int_combine_schemas            PLS_INTEGER;
+      clb_schema_externalDocs        CLOB;
+      clb_schema_items_schema        CLOB;
+      clb_schema_properties          CLOB;
+      clb_schema_prop_required       CLOB;
+      str_object_key                 VARCHAR2(255 Char);
+      str_identifier                 VARCHAR2(255 Char);
       
    BEGIN
       
@@ -514,50 +505,17 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Build the wrapper
-      --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',NULL)
-         );
-
-      ELSE
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',-1)
-         );
-         str_pad     := ' ';
-
-      END IF;
-      str_pad1 := str_pad;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
       -- Branch if needed for combines
       --------------------------------------------------------------------------
       IF  self.combine_schemas IS NOT NULL
       AND self.combine_schemas.COUNT > 0
       THEN
          SELECT
-          a.schematyp.toJSON(
-             p_pretty_print     => p_pretty_print + 2
-            ,p_force_inline     => p_force_inline
-            ,p_short_id         => p_short_id
-            ,p_identifier       => a.object_id
-            ,p_short_identifier => a.short_id
-            ,p_reference_count  => a.reference_count
-            ,p_jsonschema       => str_jsonschema
-          )
-         ,b.object_key
-         BULK COLLECT INTO 
-          ary_clb
-         ,ary_keys
+          COUNT(*)
+         ,FIRST(b.object_key)
+         INTO
+          int_combine_schemas
+         ,str_object_key 
          FROM
          dz_swagger3_xobjects a
          JOIN
@@ -567,30 +525,9 @@ AS
          AND a.object_id      = b.object_id
          ORDER BY b.object_order; 
           
-         IF ary_keys.COUNT = 1 AND ary_keys(1) = 'not'
+         IF int_combine_schemas = 1 AND str_object_key = 'not'
          THEN
             boo_is_not := TRUE;
-         
-         END IF;
-         
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Add base attributes
-      --------------------------------------------------------------------------
-         IF self.schema_type IS NOT NULL
-         THEN
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || dz_json_main.value2json(
-                   'type'
-                  ,self.schema_type
-                  ,p_pretty_print + 1
-                )
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
          
          END IF;
       
@@ -600,67 +537,67 @@ AS
       --------------------------------------------------------------------------
          IF boo_is_not
          THEN
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || '"not":' || str_pad
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_final_linefeed => FALSE
-            );
-            
-           dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => ary_clb(1)
-               ,p_in_v => NULL
-            );
-            
-            str_pad1 := ',';
+            SELECT
+            JSON_OBJECT(
+               b.object_key VALUE a.schematyp.toJSON(
+                   p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
+                  ,p_jsonschema       => str_jsonschema
+               ) FORMAT JSON
+            )
+            INTO clb_combine_schemas
+            FROM
+            dz_swagger3_xobjects a
+            JOIN
+            TABLE(self.combine_schemas) b
+            ON
+                a.object_type_id = b.object_type_id
+            AND a.object_id      = b.object_id
+            ORDER BY b.object_order; 
+         
+            SELECT
+            JSON_OBJECT(
+                'type'         VALUE self.schema_type                ABSENT ON NULL
+               ,'not'          VALUE clb_combine_schemas FORMAT JSON ABSENT ON NULL
+            )
+            INTO clb_output
+            FROM dual;
          
          ELSE
-            str_pad2 := str_pad;
-               
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => '"' || ary_keys(1) || '":' || str_pad || '['
-               ,p_pretty_print => p_pretty_print + 1
-            );
-         
-            FOR i IN 1 .. combine_schemas.COUNT
-            LOOP
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad2
-                  ,p_pretty_print => p_pretty_print + 2
-                  ,p_final_linefeed => FALSE
-               );
-               
-              dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => ary_clb(i)
-                  ,p_in_v => NULL
-                  ,p_pretty_print => p_pretty_print + 2
-                  ,p_initial_indent => FALSE
-               );
-               
-               str_pad2 := ',';
+            SELECT
+            JSON_ARRAYAGG(
+               JSON_OBJECT(
+                  b.object_key VALUE a.schematyp.toJSON(
+                      p_force_inline     => p_force_inline
+                     ,p_short_id         => p_short_id
+                     ,p_identifier       => a.object_id
+                     ,p_short_identifier => a.short_id
+                     ,p_reference_count  => a.reference_count
+                     ,p_jsonschema       => str_jsonschema
+                  ) FORMAT JSON
+               )
+            )
+            INTO clb_combine_schemas
+            FROM
+            dz_swagger3_xobjects a
+            JOIN
+            TABLE(self.combine_schemas) b
+            ON
+                a.object_type_id = b.object_type_id
+            AND a.object_id      = b.object_id
+            ORDER BY b.object_order; 
             
-            END LOOP;
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => ']'
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            
+            SELECT
+            JSON_OBJECT(
+                'type'         VALUE self.schema_type                ABSENT ON NULL
+               ,str_object_key VALUE clb_combine_schemas FORMAT JSON ABSENT ON NULL
+            )
+            INTO clb_output
+            FROM dual;
+   
          END IF;
       
       ELSE
@@ -680,369 +617,18 @@ AS
                
             END IF;
             
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || dz_json_main.value2json(
-                   '$ref'
-                  ,'#/components/schemas/' || dz_swagger3_util.utl_url_escape(
-                     str_identifier
-                   )
-                  ,p_pretty_print + 1
+            SELECT
+            JSON_OBJECT(
+               '$ref' VALUE '#/components/schemas/' || dz_swagger3_util.utl_url_escape(
+                  str_identifier
                )
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
+            )
+            INTO clb_output
+            FROM dual;
             
          ELSE
       --------------------------------------------------------------------------
       -- Step 70
-      -- Add optional title object
-      --------------------------------------------------------------------------
-            IF self.inject_jsonschema = 'TRUE'
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      '$schema'
-                     ,'http://json-schema.org/draft-04/schema#'
-                     ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 80
-      -- Add base attributes
-      --------------------------------------------------------------------------
-            IF str_jsonschema = 'TRUE'
-            AND self.schema_nullable = 'TRUE'
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'type'
-                     ,MDSYS.SDO_STRING2_ARRAY(self.schema_type,'null')
-                     ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            ELSE
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'type'
-                     ,self.schema_type
-                     ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 90
-      -- Add optional title object
-      --------------------------------------------------------------------------
-            IF self.schema_title IS NOT NULL
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'title'
-                     ,self.schema_title
-                     ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 100
-      -- Add optional description object
-      --------------------------------------------------------------------------
-            IF self.schema_description IS NOT NULL
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'description'
-                     ,self.schema_description
-                     ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 110
-      -- Add optional description object
-      --------------------------------------------------------------------------
-            IF self.schema_format IS NOT NULL
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'format'
-                     ,self.schema_format
-                     ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 120
-      -- Add optional enum array
-      --------------------------------------------------------------------------
-            IF  self.schema_enum_string IS NOT NULL
-            AND self.schema_enum_string.COUNT > 0
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'enum'
-                     ,self.schema_enum_string
-                     ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            ELSIF  self.schema_enum_number IS NOT NULL
-            AND self.schema_enum_number.COUNT > 0
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'enum'
-                     ,self.schema_enum_number
-                     ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 130
-      -- Add optional description object
-      --------------------------------------------------------------------------
-            IF  self.schema_nullable IS NOT NULL
-            AND str_jsonschema <> 'TRUE'
-            THEN
-               IF LOWER(self.schema_nullable) = 'true'
-               THEN
-                  boo_temp := TRUE;
-                  
-               ELSE
-                  boo_temp := FALSE;
-               
-               END IF;
-            
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'nullable'
-                     ,boo_temp
-                     ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 140
-      -- Add optional description object
-      --------------------------------------------------------------------------
-            IF self.schema_discriminator IS NOT NULL
-            AND str_jsonschema <> 'TRUE'
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'discriminator'
-                     ,self.schema_discriminator
-                     ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 150
-      -- Add optional readOnly and writeOnly attributes
-      --------------------------------------------------------------------------
-            IF self.schema_readOnly IS NOT NULL
-            AND str_jsonschema <> 'TRUE'
-            THEN
-               IF LOWER(self.schema_readOnly) = 'true'
-               THEN
-                  boo_temp := TRUE;
-                  
-               ELSE
-                  boo_temp := FALSE;
-               
-               END IF;
-            
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'readOnly'
-                     ,boo_temp
-                     ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-            
-            IF self.schema_writeOnly IS NOT NULL
-            AND str_jsonschema <> 'TRUE'
-            THEN
-               IF LOWER(self.schema_writeOnly) = 'true'
-               THEN
-                  boo_temp := TRUE;
-                  
-               ELSE
-                  boo_temp := FALSE;
-               
-               END IF;
-            
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'writeOnly'
-                     ,boo_temp
-                     ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 160
-      -- Add optional minItems and MaxItems attribute
-      --------------------------------------------------------------------------
-            IF self.schema_maxItems IS NOT NULL
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'maxItems'
-                     ,self.schema_maxItems
-                     ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-            
-            IF self.schema_minItems IS NOT NULL
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'minItems'
-                     ,self.schema_minItems
-                     ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 170
-      -- Add optional minProperties and MaxProperties attribute
-      --------------------------------------------------------------------------
-            IF self.schema_maxProperties IS NOT NULL
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'maxProperties'
-                     ,self.schema_maxProperties
-                     ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-            
-            IF self.schema_minProperties IS NOT NULL
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'minProperties'
-                     ,self.schema_minProperties
-                     ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 180
       -- Add optional externalDocs
       --------------------------------------------------------------------------
             IF  self.schema_externalDocs IS NOT NULL
@@ -1051,11 +637,10 @@ AS
                BEGIN
                   SELECT
                   a.extrdocstyp.toJSON(
-                      p_pretty_print   => p_pretty_print + 1
-                     ,p_force_inline   => p_force_inline
+                      p_force_inline   => p_force_inline
                      ,p_short_id       => p_short_id
                   )
-                  INTO clb_tmp
+                  INTO clb_schema_externalDocs
                   FROM
                   dz_swagger3_xobjects a
                   WHERE
@@ -1065,98 +650,18 @@ AS
                EXCEPTION
                   WHEN NO_DATA_FOUND
                   THEN
-                     clb_tmp := NULL;
+                     clb_schema_externalDocs := NULL;
                      
                   WHEN OTHERS
                   THEN
                      RAISE;
                      
-               END; 
-            
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || '"externalDocs":' || str_pad
-                  ,p_pretty_print => p_pretty_print + 1
-                  ,p_final_linefeed => FALSE
-               );
-               
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => clb_tmp
-                  ,p_in_v => NULL
-                  ,p_pretty_print => p_pretty_print + 1
-                  ,p_initial_indent => FALSE
-               );
-               
-               str_pad1 := ',';
+               END;
 
             END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 190
-      -- Add optional example scalars
-      --------------------------------------------------------------------------
-            IF self.schema_example_string IS NOT NULL
-            AND str_jsonschema <> 'TRUE'
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'example'
-                     ,self.schema_example_string
-                     ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
             
-            ELSIF self.schema_example_number IS NOT NULL
-            AND str_jsonschema <> 'TRUE'
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'example'
-                     ,self.schema_example_number
-                     ,p_pretty_print + 1
-                  )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-      
       --------------------------------------------------------------------------
-      -- Step 200
-      -- Add optional deprecated object
-      --------------------------------------------------------------------------
-            IF  LOWER(self.schema_deprecated) = 'true'
-            AND str_jsonschema <> 'TRUE'
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'deprecated'
-                     ,TRUE
-                     ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-            
-            END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 210
+      -- Step 80
       -- Add schema items
       --------------------------------------------------------------------------
             IF self.schema_items_schema IS NOT NULL
@@ -1164,15 +669,14 @@ AS
                BEGIN
                   SELECT
                   a.schematyp.toJSON(
-                      p_pretty_print     => p_pretty_print + 1
-                     ,p_force_inline     => p_force_inline
+                      p_force_inline     => p_force_inline
                      ,p_short_id         => p_short_id
                      ,p_identifier       => a.object_id
                      ,p_short_identifier => a.short_id
                      ,p_reference_count  => a.reference_count
                      ,p_jsonschema       => str_jsonschema
                   )
-                  INTO clb_tmp
+                  INTO clb_schema_items_schema
                   FROM
                   dz_swagger3_xobjects a
                   WHERE
@@ -1182,7 +686,7 @@ AS
                EXCEPTION
                   WHEN NO_DATA_FOUND
                   THEN
-                     clb_tmp := NULL;
+                     clb_schema_items_schema := NULL;
                      
                   WHEN OTHERS
                   THEN
@@ -1190,30 +694,10 @@ AS
                      
                END;
 
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || '"items":' || str_pad
-                  ,p_pretty_print => p_pretty_print + 1
-                  ,p_final_linefeed => FALSE
-               );
-               
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => clb_tmp
-                  ,p_in_v => NULL
-                  ,p_pretty_print => p_pretty_print + 1
-                  ,p_initial_indent => FALSE
-               );
-               
-               str_pad1 := ',';
-
             END IF;
-      
+            
       --------------------------------------------------------------------------
-      -- Step 220
+      -- Step 90
       -- Add optional xml object
       --------------------------------------------------------------------------
             IF str_jsonschema = 'FALSE'
@@ -1224,62 +708,41 @@ AS
                OR self.xml_attribute IS NOT NULL
                OR self.xml_wrapped   IS NOT NULL
                THEN
-                  dz_swagger3_util.conc(
-                      p_c    => cb
-                     ,p_v    => v2
-                     ,p_in_c => NULL
-                     ,p_in_v => str_pad1 || '"xml":' || str_pad
-                     ,p_pretty_print => p_pretty_print + 1
-                     ,p_final_linefeed => FALSE
-                  );
-                  
-                  dz_swagger3_util.conc(
-                      p_c    => cb
-                     ,p_v    => v2
-                     ,p_in_c => dz_swagger3_xml_typ(
-                         p_xml_name       => self.xml_name
-                        ,p_xml_namespace  => self.xml_namespace
-                        ,p_xml_prefix     => self.xml_prefix
-                        ,p_xml_attribute  => self.xml_attribute
-                        ,p_xml_wrapped    => self.xml_wrapped
-                      ).toJSON(
-                         p_pretty_print   => p_pretty_print + 1
-                        ,p_force_inline   => p_force_inline
-                      )
-                     ,p_in_v => NULL
-                     ,p_pretty_print => p_pretty_print + 1
-                     ,p_initial_indent => FALSE
-                  );
-                  
-                  str_pad1 := ',';
+                  clb_xml := dz_swagger3_xml_typ(
+                      p_xml_name       => self.xml_name
+                     ,p_xml_namespace  => self.xml_namespace
+                     ,p_xml_prefix     => self.xml_prefix
+                     ,p_xml_attribute  => self.xml_attribute
+                     ,p_xml_wrapped    => self.xml_wrapped
+                   ).toJSON(
+                     p_force_inline    => p_force_inline
+                   );
                   
                END IF;
                
             END IF;
-      
+            
       -------------------------------------------------------------------------
-      -- Step 230
+      -- Step 100
       -- Add parameters
       -------------------------------------------------------------------------
             IF  self.schema_properties IS NOT NULL 
             AND self.schema_properties.COUNT > 0
             THEN
                SELECT
-                a.schematyp.toJSON(
-                   p_pretty_print     => p_pretty_print + 2
-                  ,p_force_inline     => p_force_inline
-                  ,p_short_id         => p_short_id
-                  ,p_identifier       => a.object_id
-                  ,p_short_identifier => a.short_id
-                  ,p_reference_count  => a.reference_count
-                  ,p_jsonschema       => str_jsonschema
-                )
-               ,b.object_key
-               ,b.object_required
-               BULK COLLECT INTO 
-                ary_clb
-               ,ary_keys
-               ,ary_required
+               JSON_ARRAYAGG(
+                  JSON_OBJECT(
+                     b.object_key VALUE a.schematyp.toJSON(
+                         p_force_inline     => p_force_inline
+                        ,p_short_id         => p_short_id
+                        ,p_identifier       => a.object_id
+                        ,p_short_identifier => a.short_id
+                        ,p_reference_count  => a.reference_count
+                        ,p_jsonschema       => str_jsonschema
+                     )
+                  )
+               )
+               INTO clb_schema_properties
                FROM
                dz_swagger3_xobjects a
                JOIN
@@ -1290,113 +753,166 @@ AS
                WHERE
                COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE'
                ORDER BY b.object_order; 
+               
+               SELECT
+               JSON_ARRAYAGG(
+                  b.object_key
+               )
+               INTO clb_schema_prop_required
+               FROM
+               dz_swagger3_xobjects a
+               JOIN
+               TABLE(self.schema_properties) b
+               ON
+                   a.object_type_id = b.object_type_id
+               AND a.object_id      = b.object_id
+               WHERE
+               COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE'
+               AND b.object_required = 'TRUE'
+               ORDER BY b.object_order; 
 
-               ary_items := MDSYS.SDO_STRING2_ARRAY();
-               
-               str_pad2 := str_pad;
-         
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || '"properties":' || str_pad || '{'
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-
-               int_counter := 1;
-               FOR i IN 1 .. ary_keys.COUNT
-               LOOP
-                  dz_swagger3_util.conc(
-                      p_c    => cb
-                     ,p_v    => v2
-                     ,p_in_c => NULL
-                     ,p_in_v => str_pad2 || '"' || ary_keys(i) || '":' || str_pad
-                     ,p_pretty_print   => p_pretty_print + 2
-                     ,p_final_linefeed => FALSE
-                  );
-                  
-                  dz_swagger3_util.conc(
-                      p_c    => cb
-                     ,p_v    => v2
-                     ,p_in_c => ary_clb(i)
-                     ,p_in_v => NULL
-                     ,p_pretty_print   => p_pretty_print + 2
-                     ,p_initial_indent => FALSE
-                  );
-                  
-                  str_pad2 := ',';
-                  
-                  IF ary_required(i) = 'TRUE'
-                  THEN
-                     ary_items.EXTEND();
-                     ary_items(int_counter) := ary_keys(i);
-                     int_counter := int_counter + 1;
-
-                  END IF;
-               
-               END LOOP;
-               
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => '}'
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-
-               str_pad1 := ',';
-         
-      -------------------------------------------------------------------------
-      -- Step 240
-      -- Add required array
-      -------------------------------------------------------------------------
-               IF ary_items IS NOT NULL
-               AND ary_items.COUNT > 0
-               THEN
-                  dz_swagger3_util.conc(
-                      p_c    => cb
-                     ,p_v    => v2
-                     ,p_in_c => NULL
-                     ,p_in_v => str_pad1 || dz_json_main.value2json(
-                         'required'
-                        ,ary_items
-                        ,p_pretty_print + 1
-                      )
-                     ,p_pretty_print => p_pretty_print + 1
-                  );
-                  str_pad1 := ',';
-               
-               END IF;
-               
             END IF;
+       
+      --------------------------------------------------------------------------
+      -- Step 100
+      -- Create the object
+      --------------------------------------------------------------------------
+            SELECT
+            JSON_OBJECT(
+                '$schema'       VALUE CASE
+                  WHEN LOWER(self.inject_jsonschema) = 'true'
+                  THEN
+                     'http://json-schema.org/draft-04/schema#'
+                  ELSE
+                     NULL
+                  END                                       ABSENT ON NULL
+               ,'type'          VALUE CASE
+                  WHEN str_jsonschema = 'TRUE'
+                  AND  self.schema_nullable = 'TRUE'
+                  THEN
+                     JSON_ARRAY(self.schema_type,'null')
+                  ELSE
+                     self.schema_type
+                  END
+               ,'title'         VALUE self.schema_title         ABSENT ON NULL
+               ,'description'   VALUE self.schema_description   ABSENT ON NULL
+               ,'format'        VALUE self.schema_format        ABSENT ON NULL
+               ,'enum'          VALUE CASE
+                  WHEN self.schema_enum_string IS NOT NULL
+                  AND  self.schema_enum_string.COUNT > 0
+                  THEN
+                     (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_string))
+                  WHEN self.schema_enum_number IS NOT NULL
+                  AND  self.schema_enum_number.COUNT > 0
+                  THEN
+                     (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_number))
+                  ELSE
+                     NULL
+                  END                                           ABSENT ON NULL
+               ,'nullable'      VALUE CASE
+                  WHEN self.schema_nullable IS NOT NULL
+                  AND str_jsonschema <> 'TRUE'
+                     CASE
+                     WHEN LOWER(self.schema_nullable) = 'true'
+                     THEN
+                        TRUE
+                     WHEN LOWER(self.schema_nullable) = 'false'
+                     THEN
+                        FALSE
+                     ELSE
+                        NULL
+                     END
+                  ELSE
+                     NULL
+                  END                                           ABSENT ON NULL
+               ,'discriminator' VALUE CASE
+                  WHEN self.schema_discriminator IS NOT NULL
+                  AND  str_jsonschema <> 'TRUE'
+                  THEN
+                     self.schema_discriminator
+                  ELSE
+                     NULL
+                  END                                           ABSENT ON NULL
+               ,'readOnly'      VALUE CASE
+                  WHEN self.schema_readOnly IS NOT NULL
+                  AND  str_jsonschema <> 'TRUE'
+                  THEN
+                     CASE
+                     WHEN LOWER(self.schema_readOnly) = 'true'
+                     THEN
+                        TRUE
+                     WHEN LOWER(self.schema_readOnly) = 'false'
+                     THEN
+                        FALSE
+                     ELSE
+                        NULL
+                     END
+                  ELSE
+                     NULL
+                  END                                           ABSENT ON NULL
+               ,'writeOnly'     VALUE CASE
+                  WHEN self.schema_writeOnly IS NOT NULL
+                  AND  str_jsonschema <> 'TRUE'
+                  THEN
+                     CASE
+                     WHEN LOWER(self.schema_writeOnly) = 'true'
+                     THEN
+                        TRUE
+                     WHEN LOWER(self.schema_writeOnly) = 'false'
+                     THEN
+                        FALSE
+                     ELSE
+                        NULL
+                     END
+                  ELSE
+                     NULL
+                  END                                           ABSENT ON NULL
+               ,'maxItems'      VALUE self.schema_maxItems      ABSENT ON NULL
+               ,'minItems'      VALUE self.schema_minItems      ABSENT ON NULL
+               ,'maxProperties' VALUE self.schema_maxProperties ABSENT ON NULL
+               ,'minProperties' VALUE self.schema_minProperties ABSENT ON NULL
+               ,'externalDocs'  VALUE clb_schema_externalDocs   FORMAT JSON ABSENT ON NULL
+               ,'example'       VALUE CASE
+                  WHEN self.schema_example_string IS NOT NULL
+                  AND  str_jsonschema <> 'TRUE'
+                  THEN
+                     self.schema_example_string
+                  WHEN self.schema_example_number IS NOT NULL
+                  AND  str_jsonschema <> 'TRUE'
+                  THEN
+                     self.schema_example_number
+                  ELSE
+                     NULL
+                  END                                           ABSENT ON NULL
+               ,'deprecated'    VALUE CASE
+                  WHEN LOWER(self.schema_deprecated) = 'true'
+                  AND  str_jsonschema <> 'TRUE'
+                  THEN
+                     TRUE
+                  WHEN LOWER(self.schema_deprecated) = 'false'
+                  AND  str_jsonschema <> 'TRUE'
+                  THEN
+                     FALSE
+                  ELSE
+                     NULL
+                  END                                           ABSENT ON NULL
+               ,'schema'        VALUE clb_schema_items_schema   FORMAT JSON ABSENT ON NULL
+               ,'xml'           VALUE clb_xml                   FORMAT JSON ABSENT ON NULL
+               ,'properties'    VALUE clb_schema_properties     FORMAT JSON ABSENT ON NULL
+               ,'required'      VALUE clb_schema_prop_required  FORMAT JSON ABSENT ON NULL
+            )
+            INTO clb_output
+            FROM dual;
             
          END IF;
             
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 250
-      -- Add the left bracket
-      --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => '}'
-         ,p_pretty_print   => p_pretty_print
-         ,p_final_linefeed => FALSE
-      );
-
-      --------------------------------------------------------------------------
       -- Step 140
       -- Cough it out
       --------------------------------------------------------------------------
-      dz_swagger3_util.fconc(
-          p_c    => cb
-         ,p_v    => v2
-      );
-      
-      RETURN cb;
+      RETURN clb_output;
            
    END toJSON;
    
@@ -1416,9 +932,9 @@ AS
       cb               CLOB;
       v2               VARCHAR2(32000);
       
-      ary_items        MDSYS.SDO_STRING2_ARRAY;
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      ary_required     MDSYS.SDO_STRING2_ARRAY;
+      ary_items        dz_swagger3_string_vry;
+      ary_keys         dz_swagger3_string_vry;
+      ary_required     dz_swagger3_string_vry;
       clb_hash         CLOB;
       clb_tmp          CLOB;
       int_counter      PLS_INTEGER;
@@ -2040,7 +1556,7 @@ AS
                
                boo_check    := FALSE;
                int_counter  := 1;
-               ary_items    := MDSYS.SDO_STRING2_ARRAY();
+               ary_items    := dz_swagger3_string_vry();
                
                dz_swagger3_util.conc(
                    p_c    => cb

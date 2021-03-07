@@ -19,17 +19,17 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION dz_swagger3_storage_table_list
-   RETURN MDSYS.SDO_STRING2_ARRAY;
+   RETURN dz_swagger3_string_vry;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION dz_swagger3_temp_table_list
-   RETURN MDSYS.SDO_STRING2_ARRAY;
+   RETURN dz_swagger3_string_vry;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION is_valid
-   RETURN MDSYS.SDO_STRING2_ARRAY PIPELINED;
+   RETURN dz_swagger3_string_vry PIPELINED;
  
  END dz_swagger3_setup;
 /

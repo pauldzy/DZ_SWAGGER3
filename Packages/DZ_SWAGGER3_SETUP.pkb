@@ -2080,12 +2080,12 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION dz_swagger3_storage_table_list
-   RETURN MDSYS.SDO_STRING2_ARRAY
+   RETURN dz_swagger3_string_vry
    AS
    
    BEGIN
    
-      RETURN MDSYS.SDO_STRING2_ARRAY(
+      RETURN dz_swagger3_string_vry(
           'DZ_SWAGGER3_CACHE'
          ,'DZ_SWAGGER3_DOC'
          ,'DZ_SWAGGER3_ENCODING'
@@ -2130,12 +2130,12 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION dz_swagger3_temp_table_list
-   RETURN MDSYS.SDO_STRING2_ARRAY
+   RETURN dz_swagger3_string_vry
    AS
    
    BEGIN
    
-      RETURN MDSYS.SDO_STRING2_ARRAY(
+      RETURN dz_swagger3_string_vry(
           'DZ_SWAGGER3_XRELATES'
          ,'DZ_SWAGGER3_XOBJECTS'
       );
@@ -2145,11 +2145,11 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION is_valid
-   RETURN MDSYS.SDO_STRING2_ARRAY PIPELINED
+   RETURN dz_swagger3_string_vry PIPELINED
    AS
       str_sql     VARCHAR2(32000 Char);
       str_check   VARCHAR2(255 Char);
-      ary_results MDSYS.SDO_STRING2_ARRAY;
+      ary_results dz_swagger3_string_vry;
       
    BEGIN
    

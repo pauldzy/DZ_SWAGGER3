@@ -32,14 +32,12 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
-       p_pretty_print            IN  INTEGER   DEFAULT NULL
-    ) RETURN CLOB
+    RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON_req(
-       p_pretty_print            IN  INTEGER   DEFAULT NULL
-      ,p_oauth_scope_flows       IN  VARCHAR2  DEFAULT NULL
+      p_oauth_scope_flows       IN  VARCHAR2  DEFAULT NULL
     ) RETURN CLOB
     
    -----------------------------------------------------------------------------

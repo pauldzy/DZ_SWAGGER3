@@ -100,22 +100,12 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+       p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
-      cb               CLOB;
-      v2               VARCHAR2(32000);
-      
-      boo_temp         BOOLEAN;
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      str_pad2         VARCHAR2(1 Char);
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      
-      TYPE clob_table IS TABLE OF CLOB;
-      ary_clb          clob_table;
+      clb_output           CLOB;
+      clb_encoding_headers CLOB;
       
    BEGIN
       
@@ -126,70 +116,24 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Build the wrapper
-      --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',NULL)
-         );
-
-      ELSE
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',-1)
-         );
-         str_pad     := ' ';
-
-      END IF;
-      str_pad1 := str_pad;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Add optional contentType
-      --------------------------------------------------------------------------
-      IF self.encoding_contentType IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'contentType'
-               ,self.encoding_contentType
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-         
-      END IF;
-         
-      --------------------------------------------------------------------------
-      -- Step 40
       -- Add optional encoding headers
       --------------------------------------------------------------------------
       IF  self.encoding_headers IS NOT NULL 
       AND self.encoding_headers.COUNT > 0
       THEN
          SELECT
-          a.headertyp.toJSON(
-             p_pretty_print     => p_pretty_print + 2
-            ,p_force_inline     => p_force_inline
-            ,p_short_id         => p_short_id
-            ,p_identifier       => a.object_id
-            ,p_short_identifier => a.short_id
-            ,p_reference_count  => a.reference_count
-          )
-         ,b.object_key
-         BULK COLLECT INTO 
-          ary_clb
-         ,ary_keys
+         JSON_ARRAYAGG(
+            JSON_OBJECT(
+                b.object_key VALUE a.headertyp.toJSON(
+                   p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
+                ) FORMAT JSON
+            )
+         )
+         INTO clb_encoding_headers
          FROM
          dz_swagger3_xobjects a
          JOIN
@@ -198,157 +142,54 @@ AS
              a.object_type_id = b.object_type_id
          AND a.object_id      = b.object_id
          ORDER BY b.object_order;
-         
-         str_pad2 := str_pad;
-      
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || '"headers":' || str_pad || '{'
-            ,p_pretty_print => p_pretty_print + 1
-         );
-      
-         FOR i IN 1 .. ary_clb.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad2 || '"' || ary_keys(i) || '":' || str_pad
-               ,p_pretty_print   => p_pretty_print + 2
-               ,p_final_linefeed => FALSE
-            );
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => ary_clb(i)
-               ,p_in_v => NULL
-               ,p_pretty_print   => p_pretty_print + 2
-               ,p_initial_indent => FALSE
-            );
-            
-            str_pad2 := ',';
-         
-         END LOOP;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => '}'
-            ,p_pretty_print => p_pretty_print + 1
-         );
-
-         str_pad1 := ',';
 
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 50
-      -- Add optional encoding style
+      -- Step 20
+      -- Build the object
       --------------------------------------------------------------------------
-      IF self.encoding_style IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'style'
-               ,self.encoding_style
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 60
-      -- Add optional explode boolean
-      --------------------------------------------------------------------------
-      IF self.encoding_explode IS NOT NULL
-      THEN
-         IF LOWER(self.encoding_explode) = 'true'
-         THEN
-            boo_temp := TRUE;
-            
-         ELSE
-            boo_temp := FALSE;
-            
-         END IF;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'explode'
-               ,boo_temp
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 70
-      -- Add optional encoding allowReserved
-      --------------------------------------------------------------------------
-      IF self.encoding_allowReserved IS NOT NULL
-      THEN
-         IF LOWER(self.encoding_allowReserved) = 'true'
-         THEN
-            boo_temp := TRUE;
-            
-         ELSE
-            boo_temp := FALSE;
-            
-         END IF;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'allowReserved'
-               ,boo_temp
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-
-      END IF;
- 
-      --------------------------------------------------------------------------
-      -- Step 80
-      -- Add the left bracket
-      --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => '}'
-         ,p_pretty_print   => p_pretty_print
-         ,p_final_linefeed => FALSE
-      );
+      SELECT
+      JSON_OBJECT(
+          'contentType'         VALUE self.encoding_contentType ABSENT ON NULL
+         ,'headers'             VALUE CASE
+            WHEN self.encoding_headers IS NOT NULL 
+            AND  self.encoding_headers.COUNT > 0
+            THEN
+               clb_encoding_headers FORMAT JSON
+            ELSE
+               NULL
+            END                                                 ABSENT ON NULL
+         ,'style'               VALUE self.encoding_style       ABSENT ON NULL
+         ,'explode'             VALUE CASE
+            WHEN LOWER(self.encoding_explode) = 'true'
+            THEN
+               TRUE
+            WHEN LOWER(self.encoding_explode) = 'false'
+            THEN
+               FALSE
+            ELSE
+               NULL
+            END                                                 ABSENT ON NULL
+         ,'allowReserved'       VALUE CASE
+            WHEN LOWER(self.encoding_allowReserved) = 'true'
+            THEN
+               TRUE
+            WHEN LOWER(self.encoding_allowReserved) = 'false'
+            THEN
+               FALSE
+            ELSE
+               NULL
+            END                                                 ABSENT ON NULL
+      )
+      INTO clb_output
+      FROM dual;
 
       --------------------------------------------------------------------------
       -- Step 90
       -- Cough it out
       --------------------------------------------------------------------------
-      dz_swagger3_util.fconc(
-          p_c    => cb
-         ,p_v    => v2
-      );
-      
-      RETURN cb;
+      RETURN clb_output;
            
    END toJSON;
    
@@ -364,7 +205,7 @@ AS
    AS
       cb               CLOB;
       v2               VARCHAR2(32000);
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      ary_keys         dz_swagger3_string_vry;
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;

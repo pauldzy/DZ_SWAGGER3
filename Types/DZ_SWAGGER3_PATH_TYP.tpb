@@ -250,26 +250,24 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+       p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      cb               CLOB;
-      v2               VARCHAR2(32000);
-      
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      str_pad2         VARCHAR2(1 Char);
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      clb_tmp          CLOB;
-      str_identifier   VARCHAR2(255 Char);
-      
-      TYPE clob_table IS TABLE OF CLOB;
-      ary_clb          clob_table;
+      clb_output                 CLOB;
+      clb_path_get_operation     CLOB;
+      clb_path_put_operation     CLOB;      
+      clb_path_post_operation    CLOB;
+      clb_path_delete_operation  CLOB;
+      clb_path_options_operation CLOB;
+      clb_path_head_operation    CLOB;
+      clb_path_patch_operation   CLOB;
+      clb_path_trace_operation   CLOB;
+      clb_path_servers           CLOB;
+      clb_path_parameters
       
    BEGIN
       
@@ -280,32 +278,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Build the wrapper
-      --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',NULL)
-         );
-
-      ELSE
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',-1)
-         );
-         str_pad     := ' ';
-
-      END IF;
-      str_pad1 := str_pad;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Add  the ref object for callbacks
+      -- Add the ref object for callbacks
       --------------------------------------------------------------------------
       IF  COALESCE(p_force_inline,'FALSE') = 'FALSE'
       AND p_reference_count > 1
@@ -318,67 +291,19 @@ AS
             str_identifier := p_identifier;
             
          END IF;
-
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                '$ref'
-               ,'#/components/callbacks/' || dz_swagger3_util.utl_url_escape(
-                  str_identifier
-                )
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
+         
+         SELECT
+         JSON_OBJECT(
+             '$ref' VALUE '#/components/callbacks/' || dz_swagger3_util.utl_url_escape(
+               str_identifier
+             )
+         )
+         INTO clb_output
+         FROM dual;
       
       ELSE
       --------------------------------------------------------------------------
-      -- Step 40
-      -- Add path summary
-      --------------------------------------------------------------------------
-         IF self.path_summary IS NOT NULL
-         THEN
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || dz_json_main.value2json(
-                   'summary'
-                  ,self.path_summary
-                  ,p_pretty_print + 1
-                )
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
-            
-         END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Add path description 
-      --------------------------------------------------------------------------
-         IF self.path_description IS NOT NULL
-         THEN
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || dz_json_main.value2json(
-                   'description'
-                  ,self.path_description
-                  ,p_pretty_print + 1
-                )
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
-            
-         END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 60
+      -- Step 30
       -- Add get operation
       --------------------------------------------------------------------------
          IF  self.path_get_operation IS NOT NULL
@@ -387,13 +312,12 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print     => p_pretty_print + 1 
-                  ,p_force_inline     => p_force_inline 
+                   p_force_inline     => p_force_inline 
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                )
-               INTO clb_tmp
+               INTO clb_path_get_operation
                FROM 
                dz_swagger3_xobjects a 
                WHERE 
@@ -403,7 +327,7 @@ AS
             EXCEPTION
                WHEN NO_DATA_FOUND
                THEN
-                  clb_tmp := NULL;
+                  clb_path_get_operation := NULL;
                   
                WHEN OTHERS
                THEN
@@ -413,26 +337,6 @@ AS
                   );
                   
             END;
-         
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || '"get":' || str_pad
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_final_linefeed => FALSE
-            );
-
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => clb_tmp
-               ,p_in_v => NULL
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_initial_indent => FALSE
-            );
-
-            str_pad1 := ',';
 
          END IF;
 
@@ -446,13 +350,12 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print     => p_pretty_print + 1 
-                  ,p_force_inline     => p_force_inline 
+                   p_force_inline     => p_force_inline 
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                )
-               INTO clb_tmp
+               INTO clb_path_put_operation
                FROM 
                dz_swagger3_xobjects a 
                WHERE
@@ -462,33 +365,13 @@ AS
             EXCEPTION
                WHEN NO_DATA_FOUND
                THEN
-                  clb_tmp := NULL;
+                  clb_path_put_operation := NULL;
                   
                WHEN OTHERS
                THEN
                   RAISE;
                   
             END;
-
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || '"put":' || str_pad
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_final_linefeed => FALSE
-            );
-
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => clb_tmp
-               ,p_in_v => NULL
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_initial_indent => FALSE
-            );
-            
-            str_pad1 := ',';
 
          END IF;
 
@@ -502,13 +385,12 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print     => p_pretty_print + 1 
-                  ,p_force_inline     => p_force_inline 
+                   p_force_inline     => p_force_inline 
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                )
-               INTO clb_tmp
+               INTO clb_path_post_operation
                FROM 
                dz_swagger3_xobjects a 
                WHERE
@@ -518,33 +400,13 @@ AS
             EXCEPTION
                WHEN NO_DATA_FOUND
                THEN
-                  clb_tmp := NULL;
+                  clb_path_post_operation := NULL;
                   
                WHEN OTHERS
                THEN
                   RAISE;
                   
             END;
-
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || '"post":' || str_pad
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_final_linefeed => FALSE
-            );
-
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => clb_tmp
-               ,p_in_v => NULL
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_initial_indent => FALSE
-            );
-            
-            str_pad1 := ',';
 
          END IF;
 
@@ -558,13 +420,12 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print     => p_pretty_print + 1 
-                  ,p_force_inline     => p_force_inline 
+                   p_force_inline     => p_force_inline 
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                )
-               INTO clb_tmp
+               INTO clb_path_delete_operation
                FROM 
                dz_swagger3_xobjects a 
                WHERE
@@ -574,33 +435,13 @@ AS
             EXCEPTION
                WHEN NO_DATA_FOUND
                THEN
-                  clb_tmp := NULL;
+                  clb_path_delete_operation := NULL;
                   
                WHEN OTHERS
                THEN
                   RAISE;
                   
             END;
-
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || '"delete":' || str_pad
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_final_linefeed => FALSE
-            );
-
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => clb_tmp
-               ,p_in_v => NULL
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_initial_indent => FALSE
-            );
-            
-            str_pad1 := ',';
 
          END IF;
       
@@ -614,13 +455,12 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print     => p_pretty_print + 1 
-                  ,p_force_inline     => p_force_inline 
+                   p_force_inline     => p_force_inline 
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                )
-               INTO clb_tmp
+               INTO clb_path_options_operation
                FROM 
                dz_swagger3_xobjects a 
                WHERE
@@ -630,33 +470,13 @@ AS
             EXCEPTION
                WHEN NO_DATA_FOUND
                THEN
-                  clb_tmp := NULL;
+                  clb_path_options_operation := NULL;
                   
                WHEN OTHERS
                THEN
                   RAISE;
                   
             END;
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || '"options":' || str_pad
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_final_linefeed => FALSE
-            );
-
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => clb_tmp
-               ,p_in_v => NULL
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_initial_indent => FALSE
-            );
-            
-            str_pad1 := ',';
 
          END IF;
       
@@ -670,13 +490,12 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print     => p_pretty_print + 1 
-                  ,p_force_inline     => p_force_inline 
+                   p_force_inline     => p_force_inline 
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                )
-               INTO clb_tmp
+               INTO clb_path_head_operation
                FROM 
                dz_swagger3_xobjects a 
                WHERE
@@ -686,33 +505,13 @@ AS
             EXCEPTION
                WHEN NO_DATA_FOUND
                THEN
-                  clb_tmp := NULL;
+                  clb_path_head_operation := NULL;
                   
                WHEN OTHERS
                THEN
                   RAISE;
                   
             END;
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || '"head":' || str_pad
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_final_linefeed => FALSE
-            );
-
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => clb_tmp
-               ,p_in_v => NULL
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_initial_indent => FALSE
-            );
-            
-            str_pad1 := ',';
 
          END IF;
       
@@ -726,13 +525,12 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print     => p_pretty_print + 1 
-                  ,p_force_inline     => p_force_inline 
+                   p_force_inline     => p_force_inline 
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                )
-               INTO clb_tmp
+               INTO clb_path_patch_operation
                FROM 
                dz_swagger3_xobjects a 
                WHERE
@@ -742,33 +540,13 @@ AS
             EXCEPTION
                WHEN NO_DATA_FOUND
                THEN
-                  clb_tmp := NULL;
+                  clb_path_patch_operation := NULL;
                   
                WHEN OTHERS
                THEN
                   RAISE;
                   
             END;
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || '"patch":' || str_pad
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_final_linefeed => FALSE
-            );
-
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => clb_tmp
-               ,p_in_v => NULL
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_initial_indent => FALSE
-            );
-            
-            str_pad1 := ',';
 
          END IF;
       
@@ -782,13 +560,12 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_pretty_print     => p_pretty_print + 1 
-                  ,p_force_inline     => p_force_inline 
+                   p_force_inline     => p_force_inline 
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                )
-               INTO clb_tmp
+               INTO clb_path_trace_operation
                FROM 
                dz_swagger3_xobjects a 
                WHERE
@@ -798,33 +575,13 @@ AS
             EXCEPTION
                WHEN NO_DATA_FOUND
                THEN
-                  clb_tmp := NULL;
+                  clb_path_trace_operation := NULL;
                   
                WHEN OTHERS
                THEN
                   RAISE;
                   
             END;
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || '"trace":' || str_pad
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_final_linefeed => FALSE
-            );
-
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => clb_tmp
-               ,p_in_v => NULL
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_initial_indent => FALSE
-            );
-            
-            str_pad1 := ',';
 
          END IF;
 
@@ -836,12 +593,13 @@ AS
          AND self.path_servers.COUNT > 0
          THEN
             SELECT
-            a.servertyp.toJSON(
-                p_pretty_print   => p_pretty_print + 1
-               ,p_force_inline   => p_force_inline
-               ,p_short_id       => p_short_id
+            json_arrayagg(
+               a.servertyp.toJSON(
+                   p_force_inline   => p_force_inline
+                  ,p_short_id       => p_short_id
+               ) FORMAT JSON
             )
-            BULK COLLECT INTO ary_clb
+            INTO clb_path_servers
             FROM
             dz_swagger3_xobjects a
             JOIN
@@ -850,55 +608,6 @@ AS
                 a.object_type_id = b.object_type_id
             AND a.object_id      = b.object_id
             ORDER BY b.object_order;
-            
-            IF  ary_clb IS NOT NULL
-            AND ary_clb.COUNT > 0
-            THEN 
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || '"servers":' || str_pad || '['
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-            
-               str_pad2 := str_pad;
-            
-               FOR i IN 1 .. ary_clb.COUNT
-               LOOP
-                  dz_swagger3_util.conc(
-                      p_c    => cb
-                     ,p_v    => v2
-                     ,p_in_c => NULL
-                     ,p_in_v => str_pad2
-                     ,p_pretty_print => p_pretty_print + 2
-                     ,p_final_linefeed => FALSE
-                  );
-                  
-                  dz_swagger3_util.conc(
-                      p_c    => cb
-                     ,p_v    => v2
-                     ,p_in_c => ary_clb(i)
-                     ,p_in_v => NULL
-                     ,p_pretty_print => p_pretty_print + 2
-                     ,p_initial_indent => FALSE
-                  );
-                  
-                  str_pad2 := ',';
-               
-               END LOOP;
-               
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => ']'
-                  ,p_pretty_print => p_pretty_print + 1
-               );   
-
-               str_pad1 := ',';
-               
-            END IF;
             
          END IF;
 
@@ -910,18 +619,18 @@ AS
          AND self.path_parameters.COUNT > 0
          THEN
             SELECT
-             a.parametertyp.toJSON(
-                p_pretty_print     => p_pretty_print + 2
-               ,p_force_inline     => p_force_inline
-               ,p_short_id         => p_short_id
-               ,p_identifier       => a.object_id
-               ,p_short_identifier => a.short_id
-               ,p_reference_count  => a.reference_count
-             )
-            ,b.object_key
-            BULK COLLECT INTO 
-             ary_clb
-            ,ary_keys
+            json_arrayagg(
+               json_object(
+                   b.object_key VALUE a.parametertyp.toJSON(
+                      p_force_inline     => p_force_inline
+                     ,p_short_id         => p_short_id
+                     ,p_identifier       => a.object_id
+                     ,p_short_identifier => a.short_id
+                     ,p_reference_count  => a.reference_count
+                   ) FORMAT JSON
+               )
+            )
+            INTO clb_path_parameters
             FROM
             dz_swagger3_xobjects a
             JOIN
@@ -933,82 +642,37 @@ AS
             COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE'
             ORDER BY b.object_order;
             
-            IF  ary_keys IS NOT NULL
-            AND ary_keys.COUNT > 0
-            THEN
-               str_pad2 := str_pad;
-                          
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || '"parameters":' || str_pad || '['
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-            
-               FOR i IN 1 .. ary_clb.COUNT
-               LOOP
-                  dz_swagger3_util.conc(
-                      p_c    => cb
-                     ,p_v    => v2
-                     ,p_in_c => NULL
-                     ,p_in_v => str_pad2
-                     ,p_pretty_print => p_pretty_print + 2
-                     ,p_final_linefeed => FALSE
-                  );
-                  
-                  dz_swagger3_util.conc(
-                      p_c    => cb
-                     ,p_v    => v2
-                     ,p_in_c => ary_clb(i)
-                     ,p_in_v => NULL
-                     ,p_pretty_print => p_pretty_print + 2
-                     ,p_initial_indent => FALSE
-                  );
-                  
-                  str_pad2 := ',';
-               
-               END LOOP;
-               
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => ']'
-                  ,p_pretty_print => p_pretty_print + 1
-               );   
-
-               str_pad1 := ',';
-               
-            END IF;
-            
          END IF;
-
-      END IF;
-      
+         
       --------------------------------------------------------------------------
       -- Step 160
       -- Add the left bracket
       --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => '}'
-         ,p_pretty_print   => p_pretty_print
-         ,p_final_linefeed => FALSE
-      );
+         SELECT
+         JSON_OBJECT(
+             'summary'      VALUE self.path_summary          ABSENT ON NULL
+            ,'description'  VALUE self.path_description      ABSENT ON NULL
+            ,'get'          VALUE clb_path_get_operation     FORMAT JSON ABSENT ON NULL
+            ,'put'          VALUE clb_path_put_operation     FORMAT JSON ABSENT ON NULL       
+            ,'post'         VALUE clb_path_post_operation    FORMAT JSON ABSENT ON NULL
+            ,'delete'       VALUE clb_path_delete_operation  FORMAT JSON ABSENT ON NULL
+            ,'options'      VALUE clb_path_options_operation FORMAT JSON ABSENT ON NULL
+            ,'head'         VALUE clb_path_head_operation    FORMAT JSON ABSENT ON NULL
+            ,'patch'        VALUE clb_path_patch_operation   FORMAT JSON ABSENT ON NULL
+            ,'trace'        VALUE clb_path_trace_operation   FORMAT JSON ABSENT ON NULL
+            ,'servers'      VALUE clb_path_servers           FORMAT JSON ABSENT ON NULL
+            ,'parameters'   VALUE clb_path_parameters        FORMAT JSON ABSENT ON NULL
+         )
+         INTO clb_output
+         FROM dual;
+
+      END IF;
 
       --------------------------------------------------------------------------
       -- Step 170
       -- Cough it out
       --------------------------------------------------------------------------
-      dz_swagger3_util.fconc(
-          p_c    => cb
-         ,p_v    => v2
-      );
-      
-      RETURN cb;
+      RETURN clb_output;
            
    END toJSON;
    
@@ -1028,7 +692,7 @@ AS
       cb               CLOB;
       v2               VARCHAR2(32000);
 
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      ary_keys         dz_swagger3_string_vry;
       clb_tmp          CLOB;
       str_identifier   VARCHAR2(255 Char);
       

@@ -189,22 +189,13 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+       p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
-      cb               CLOB;
-      v2               VARCHAR2(32000);
-
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      str_pad2         VARCHAR2(1 Char);
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      clb_tmp          CLOB;
-      
-      TYPE clob_table IS TABLE OF CLOB;
-      ary_clb          clob_table;
+      clb_output         CLOB;
+      clb_media_schema   CLOB;
+      clb_media_examples CLOB;
       
    BEGIN
 
@@ -215,31 +206,6 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Build the wrapper
-      --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',NULL)
-         );
-
-      ELSE
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',-1)
-         );
-         str_pad     := ' ';
-
-      END IF;
-      str_pad1 := str_pad;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
       -- Add schema object
       --------------------------------------------------------------------------
       IF  self.media_schema IS NOT NULL
@@ -248,14 +214,13 @@ AS
          BEGIN
             SELECT 
             a.schematyp.toJSON( 
-                p_pretty_print     => p_pretty_print + 1 
-               ,p_force_inline     => p_force_inline
+                p_force_inline     => p_force_inline
                ,p_short_id         => p_short_id
                ,p_identifier       => a.object_id 
                ,p_short_identifier => a.short_id 
                ,p_reference_count  => a.reference_count 
             )
-            INTO clb_tmp
+            INTO clb_media_schema
             FROM 
             dz_swagger3_xobjects a 
             WHERE 
@@ -265,56 +230,36 @@ AS
          EXCEPTION
             WHEN NO_DATA_FOUND
             THEN
-               clb_tmp := NULL;
+               clb_media_schema := NULL;
                
             WHEN OTHERS
             THEN
                RAISE;
                
          END;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || '"schema":' || str_pad
-            ,p_pretty_print => p_pretty_print + 1
-            ,p_final_linefeed => FALSE
-         );
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => clb_tmp
-            ,p_in_v => NULL
-            ,p_pretty_print => p_pretty_print + 1
-            ,p_initial_indent => FALSE
-         );
-         
-         str_pad1 := ',';
 
       END IF;
         
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 30
       -- Add optional examples map
       --------------------------------------------------------------------------
       IF  self.media_examples IS NOT NULL 
       AND self.media_examples.COUNT > 0
       THEN
          SELECT
-          a.exampletyp.toJSON(
-             p_pretty_print     => p_pretty_print + 2
-            ,p_force_inline     => p_force_inline
-            ,p_short_id         => p_short_id
-            ,p_identifier       => a.object_id
-            ,p_short_identifier => a.short_id
-            ,p_reference_count  => a.reference_count
-          )
-         ,b.object_key
-         BULK COLLECT INTO 
-          ary_clb
-         ,ary_keys
+         JSON_ARRAYAGG(
+            JSON_OBJECT(
+               b.object_key VALUE a.exampletyp.toJSON(
+                   p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
+               ) FORMAT JSON
+            )
+         )
+         INTO clb_media_examples
          FROM
          dz_swagger3_xobjects a
          JOIN
@@ -324,106 +269,25 @@ AS
          AND a.object_id      = b.object_id
          ORDER BY b.object_order;
          
-         str_pad2 := str_pad;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || '"examples":' || str_pad || '{'
-            ,p_pretty_print => p_pretty_print + 1
-         );
-      
-         FOR i IN 1 .. ary_clb.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad2 || '"' || ary_keys(i) || '":' || str_pad
-               ,p_pretty_print   => p_pretty_print + 2
-               ,p_final_linefeed => FALSE
-            );
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => ary_clb(i)
-               ,p_in_v => NULL
-               ,p_pretty_print   => p_pretty_print + 2
-               ,p_initial_indent => FALSE
-            );
-            
-            str_pad2 := ',';
-         
-         END LOOP;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => '}'
-            ,p_pretty_print => p_pretty_print + 1
-         );
-
-         str_pad1 := ',';
-         
-      ELSE
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Add optional example
-      --------------------------------------------------------------------------
-         IF self.media_example_string IS NOT NULL
-         THEN
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || dz_json_main.value2json(
-                   'example'
-                  ,self.media_example_string
-                  ,p_pretty_print + 1
-                )
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
-            
-         ELSIF self.media_example_number IS NOT NULL
-         THEN
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || dz_json_main.value2json(
-                   'example'
-                  ,self.media_example_number
-                  ,p_pretty_print + 1
-                )
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
-            
-         END IF;
-      
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 60
+      -- Step 40
       -- Add optional encoding map
       --------------------------------------------------------------------------
       IF  self.media_encoding IS NOT NULL 
       AND self.media_encoding.COUNT > 0
       THEN
          SELECT
-          a.encodingtyp.toJSON(
-             p_pretty_print   => p_pretty_print + 2
-            ,p_force_inline   => p_force_inline
-            ,p_short_id       => p_short_id
-          )
-         ,b.object_key
-         BULK COLLECT INTO 
-          ary_clb
-         ,ary_keys
+         JSON_ARRAYAGG(
+            JSON_OBJECT(
+               b.object_key VALUE a.encodingtyp.toJSON(
+                   p_force_inline   => p_force_inline
+                  ,p_short_id       => p_short_id
+               ) FORMAT JSON
+            )
+         )
+         INTO clb_media_encoding
          FROM
          dz_swagger3_xobjects a
          JOIN
@@ -432,76 +296,38 @@ AS
              a.object_type_id = b.object_type_id
          AND a.object_id      = b.object_id
          ORDER BY b.object_order;
-         
-         str_pad2 := str_pad;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || '"encoding":' || str_pad || '{'
-            ,p_pretty_print => p_pretty_print + 1
-         );
-      
-         FOR i IN 1 .. ary_clb.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad2 || '"' || ary_keys(i) || '":' || str_pad
-               ,p_pretty_print   => p_pretty_print + 2
-               ,p_final_linefeed => FALSE
-            );
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => ary_clb(i)
-               ,p_in_v => NULL
-               ,p_pretty_print   => p_pretty_print + 2
-               ,p_initial_indent => FALSE
-            );
-            
-            str_pad2 := ',';
-         
-         END LOOP;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => '}'
-            ,p_pretty_print => p_pretty_print + 1
-         );
 
-         str_pad1 := ',';
-         
       END IF;
-
+      
       --------------------------------------------------------------------------
-      -- Step 70
-      -- Add the left bracket
+      -- Step 50
+      -- Build the object
       --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => '}'
-         ,p_pretty_print   => p_pretty_print
-         ,p_final_linefeed => FALSE
-      );
-
+      SELECT
+      JSON_OBJECT(
+          'schema'       VALUE clb_media_schema     ABSENT ON NULL
+         ,'examples'     VALUE clb_media_examples   ABSENT ON NULL
+         ,'prefix'       VALUE self.xml_prefix      ABSENT ON NULL
+         ,'example'      VALUE CASE
+            WHEN self.media_example_string IS NOT NULL
+            THEN
+               self.media_example_string
+            WHEN self.media_example_number IS NOT NULL
+            THEN
+               self.media_example_number
+            ELSE
+               NULL
+            END                                     ABSENT ON NULL
+         ,'encoding'      VALUE clb_media_encoding  ABSENT ON NULL
+      )
+      INTO clb_output
+      FROM dual;
+      
       --------------------------------------------------------------------------
-      -- Step 80
+      -- Step 60
       -- Cough it out
       --------------------------------------------------------------------------
-      dz_swagger3_util.fconc(
-          p_c    => cb
-         ,p_v    => v2
-      );
-      
-      RETURN cb;
+      RETURN clb_output;
            
    END toJSON;
    
@@ -518,7 +344,7 @@ AS
       cb               CLOB;
       v2               VARCHAR2(32000);
 
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      ary_keys         dz_swagger3_string_vry;
       clb_tmp          CLOB;
       
       TYPE clob_table IS TABLE OF CLOB;

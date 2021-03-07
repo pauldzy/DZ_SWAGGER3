@@ -23,6 +23,183 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   FUNCTION gz_split(
+       p_str              IN  VARCHAR2
+      ,p_regex            IN  VARCHAR2
+      ,p_match            IN  VARCHAR2 DEFAULT NULL
+      ,p_end              IN  NUMBER   DEFAULT 0
+      ,p_trim             IN  VARCHAR2 DEFAULT 'FALSE'
+   ) RETURN dz_swagger3_string_vry DETERMINISTIC 
+   AS
+      int_delim      PLS_INTEGER;
+      int_position   PLS_INTEGER := 1;
+      int_counter    PLS_INTEGER := 1;
+      ary_output     dz_swagger3_string_vry;
+      num_end        NUMBER      := p_end;
+      str_trim       VARCHAR2(5 Char) := UPPER(p_trim);
+      
+      FUNCTION trim_varray(
+         p_input            IN dz_swagger3_string_vry
+      ) RETURN dz_swagger3_string_vry
+      AS
+         ary_output dz_swagger3_string_vry := dz_swagger3_string_vry();
+         int_index  PLS_INTEGER := 1;
+         str_check  VARCHAR2(4000 Char);
+         
+      BEGIN
+
+         --------------------------------------------------------------------------
+         -- Step 10
+         -- Exit if input is empty
+         --------------------------------------------------------------------------
+         IF p_input IS NULL
+         OR p_input.COUNT = 0
+         THEN
+            RETURN ary_output;
+            
+         END IF;
+
+         --------------------------------------------------------------------------
+         -- Step 20
+         -- Trim the strings removing anything utterly trimmed away
+         --------------------------------------------------------------------------
+         FOR i IN 1 .. p_input.COUNT
+         LOOP
+            str_check := TRIM(p_input(i));
+            
+            IF str_check IS NULL
+            OR str_check = ''
+            THEN
+               NULL;
+               
+            ELSE
+               ary_output.EXTEND(1);
+               ary_output(int_index) := str_check;
+               int_index := int_index + 1;
+               
+            END IF;
+
+         END LOOP;
+
+         --------------------------------------------------------------------------
+         -- Step 10
+         -- Return the results
+         --------------------------------------------------------------------------
+         RETURN ary_output;
+
+      END trim_varray;
+
+   BEGIN
+
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Create the output array and check parameters
+      --------------------------------------------------------------------------
+      ary_output := dz_swagger3_string_vry();
+
+      IF str_trim IS NULL
+      THEN
+         str_trim := 'FALSE';
+         
+      ELSIF str_trim NOT IN ('TRUE','FALSE')
+      THEN
+         RAISE_APPLICATION_ERROR(-20001,'boolean error');
+         
+      END IF;
+
+      IF num_end IS NULL
+      THEN
+         num_end := 0;
+         
+      END IF;
+
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Exit early if input is empty
+      --------------------------------------------------------------------------
+      IF p_str IS NULL
+      OR p_str = ''
+      THEN
+         RETURN ary_output;
+         
+      END IF;
+
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Account for weird instance of pure character breaking
+      --------------------------------------------------------------------------
+      IF p_regex IS NULL
+      OR p_regex = ''
+      THEN
+         FOR i IN 1 .. LENGTH(p_str)
+         LOOP
+            ary_output.EXTEND(1);
+            ary_output(i) := SUBSTR(p_str,i,1);
+            
+         END LOOP;
+         
+         RETURN ary_output;
+         
+      END IF;
+
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Break string using the usual REGEXP functions
+      --------------------------------------------------------------------------
+      LOOP
+         EXIT WHEN int_position = 0;
+         int_delim  := REGEXP_INSTR(p_str,p_regex,int_position,1,0,p_match);
+         
+         IF  int_delim = 0
+         THEN
+            -- no more matches found
+            ary_output.EXTEND(1);
+            ary_output(int_counter) := SUBSTR(p_str,int_position);
+            int_position  := 0;
+            
+         ELSE
+            IF int_counter = num_end
+            THEN
+               -- take the rest as is
+               ary_output.EXTEND(1);
+               ary_output(int_counter) := SUBSTR(p_str,int_position);
+               int_position  := 0;
+               
+            ELSE
+               --dbms_output.put_line(ary_output.COUNT);
+               ary_output.EXTEND(1);
+               ary_output(int_counter) := SUBSTR(p_str,int_position,int_delim-int_position);
+               int_counter := int_counter + 1;
+               int_position := REGEXP_INSTR(p_str,p_regex,int_position,1,1,p_match);
+               
+            END IF;
+            
+         END IF;
+         
+      END LOOP;
+
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Trim results if so desired
+      --------------------------------------------------------------------------
+      IF str_trim = 'TRUE'
+      THEN
+         RETURN trim_varray(
+            p_input => ary_output
+         );
+         
+      END IF;
+
+      --------------------------------------------------------------------------
+      -- Step 60
+      -- Cough out the results
+      --------------------------------------------------------------------------
+      RETURN ary_output;
+      
+   END gz_split;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    FUNCTION yaml_quote(
        p_input        IN  VARCHAR2
    ) RETURN VARCHAR2 DETERMINISTIC
@@ -101,7 +278,7 @@ AS
    AS
       str_output  VARCHAR2(32000 Char) := p_input;
       str_format  VARCHAR2(4000 Char);
-      ary_strings MDSYS.SDO_STRING2_ARRAY;
+      ary_strings dz_swagger3_string_vry;
       
    BEGIN
    
@@ -297,7 +474,7 @@ AS
    -----------------------------------------------------------------------------
    FUNCTION a_in_b(
        p_input_a          IN VARCHAR2
-      ,p_input_b          IN MDSYS.SDO_STRING2_ARRAY
+      ,p_input_b          IN dz_swagger3_string_vry
    ) RETURN VARCHAR2 DETERMINISTIC
    AS
       boo_check BOOLEAN := FALSE;

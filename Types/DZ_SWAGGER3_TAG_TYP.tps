@@ -25,11 +25,8 @@ AS OBJECT (
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-    ) RETURN CLOB
+   ,MEMBER FUNCTION toJSON
+    RETURN CLOB
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

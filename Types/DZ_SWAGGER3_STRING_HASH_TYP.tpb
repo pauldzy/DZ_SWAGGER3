@@ -40,15 +40,14 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
+   MEMBER FUNCTION toJSON
+   RETURN CLOB
    AS
+      clb_output CLOB;
+      
    BEGIN
    
-      RETURN dz_json_main.json_format(self.string_value);
+      RAISE_APPLICATION_ERROR(-20001,'err');
            
    END toJSON;
    

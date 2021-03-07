@@ -211,8 +211,7 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print         IN  INTEGER  DEFAULT NULL
-      ,p_short_id             IN  VARCHAR2 DEFAULT 'FALSE'
+      p_short_id              IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN CLOB
    AS 
    BEGIN
@@ -233,8 +232,7 @@ AS
       -- Return the schema for the endpoint media
       --------------------------------------------------------------------------
       RETURN self.schema_obj.toJSON(
-          p_pretty_print   => p_pretty_print
-         ,p_force_inline   => 'TRUE'
+          p_force_inline   => 'TRUE'
          ,p_short_id       => p_short_id
          ,p_jsonschema     => 'TRUE'
       );

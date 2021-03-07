@@ -155,26 +155,16 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
-      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
-      ,p_reference_count     IN  INTEGER   DEFAULT NULL
+       p_force_inline              IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id                  IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier                IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_reference_count           IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      cb               CLOB;
-      v2               VARCHAR2(32000);
-      boo_temp         BOOLEAN;
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      str_pad2         VARCHAR2(1 Char);
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      clb_tmp          CLOB;
-      str_identifier   VARCHAR2(255 Char);
-      
-      TYPE clob_table IS TABLE OF CLOB;
-      ary_clb          clob_table;
+      clb_output             CLOB;
+      clb_parameter_schema   CLOB;
+      clb_parameter_examples CLOB;
       
    BEGIN
       
@@ -182,35 +172,10 @@ AS
       -- Step 10
       -- Check incoming parameters
       --------------------------------------------------------------------------
-
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Build the wrapper
-      --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',NULL)
-         );
-
-      ELSE
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',-1)
-         );
-         str_pad     := ' ';
-
-      END IF;
-      str_pad1 := str_pad;
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Add  the ref object
+      -- Add the ref object
       --------------------------------------------------------------------------
       IF  COALESCE(p_force_inline,'FALSE') = 'FALSE'
       AND p_reference_count > 1
@@ -223,235 +188,19 @@ AS
             str_identifier := p_identifier;
             
          END IF;
-
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                '$ref'
-               ,'#/components/parameters/' || dz_swagger3_util.utl_url_escape(
-                  str_identifier
-                )
-               ,p_pretty_print + 1
+         
+         SELECT
+         JSON_OBJECT(
+            '$ref' VALUE '#/components/parameters/' || dz_swagger3_util.utl_url_escape(
+               str_identifier
             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
+         )
+         INTO clb_output
+         FROM dual;
       
       ELSE
       --------------------------------------------------------------------------
       -- Step 30
-      -- Add parameter name attribute
-      --------------------------------------------------------------------------
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'name'
-               ,self.parameter_name
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Add parameter in attribute
-      --------------------------------------------------------------------------
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'in'
-               ,self.parameter_in
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Add optional description attribute
-      --------------------------------------------------------------------------
-         IF self.parameter_description IS NOT NULL
-         THEN
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || dz_json_main.value2json(
-                   'description'
-                  ,self.parameter_description
-                  ,p_pretty_print + 1
-                )
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
-
-         END IF;
-
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Add mandatory required flag
-      --------------------------------------------------------------------------
-         IF self.parameter_required IS NOT NULL
-         THEN
-            IF LOWER(self.parameter_required) = 'true'
-            THEN
-               boo_temp := TRUE;
-               
-            ELSE
-               boo_temp := FALSE;
-               
-            END IF;
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || dz_json_main.value2json(
-                   'required'
-                  ,boo_temp
-                  ,p_pretty_print + 1
-                )
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
-
-         END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Add optional deprecated flag
-      --------------------------------------------------------------------------
-         IF  self.parameter_deprecated IS NOT NULL
-         AND LOWER(self.parameter_deprecated) = 'true'
-         THEN
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || dz_json_main.value2json(
-                   'deprecated'
-                  ,TRUE
-                  ,p_pretty_print + 1
-                )
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
-
-         END IF;
-
-      --------------------------------------------------------------------------
-      -- Step 60
-      -- Add optional description 
-      --------------------------------------------------------------------------
-         IF self.parameter_allowEmptyValue IS NOT NULL
-         AND LOWER(self.parameter_allowEmptyValue) = 'true'
-         THEN
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || dz_json_main.value2json(
-                   'allowEmptyValue'
-                  ,TRUE
-                  ,p_pretty_print + 1
-                )
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
-
-         END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 70
-      -- Add optional value
-      --------------------------------------------------------------------------
-         IF self.parameter_style IS NOT NULL
-         THEN
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || dz_json_main.value2json(
-                   'style'
-                  ,self.parameter_style
-                  ,p_pretty_print + 1
-                )
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
-
-         END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 80
-      -- Add optional explode attribute 
-      --------------------------------------------------------------------------
-         IF self.parameter_explode IS NOT NULL
-         THEN
-            IF LOWER(self.parameter_explode) = 'true'
-            THEN
-               boo_temp := TRUE;
-               
-            ELSE
-               boo_temp := FALSE;
-               
-            END IF;
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || dz_json_main.value2json(
-                   'explode'
-                  ,boo_temp
-                  ,p_pretty_print + 1
-                )
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
-
-         END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 90
-      -- Add optional allowReserved attribute 
-      --------------------------------------------------------------------------
-         IF self.parameter_allowReserved IS NOT NULL
-         THEN
-            IF LOWER(self.parameter_allowReserved) = 'true'
-            THEN
-               boo_temp := TRUE;
-               
-            ELSE
-               boo_temp := FALSE;
-               
-            END IF;
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || dz_json_main.value2json(
-                   'allowReserved'
-                  ,boo_temp
-                  ,p_pretty_print + 1
-                )
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
-
-         END IF;
-
-      --------------------------------------------------------------------------
-      -- Step 100
       -- Add optional schema attribute
       --------------------------------------------------------------------------
          IF self.parameter_schema IS NOT NULL
@@ -459,14 +208,13 @@ AS
             BEGIN
                SELECT
                a.schematyp.toJSON(
-                   p_pretty_print     => p_pretty_print + 1
-                  ,p_force_inline     => p_force_inline
+                   p_force_inline     => p_force_inline
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                   ,p_reference_count  => a.reference_count
                )
-               INTO clb_tmp
+               INTO clb_parameter_schema
                FROM
                dz_swagger3_xobjects a
                WHERE
@@ -476,56 +224,36 @@ AS
             EXCEPTION
                WHEN NO_DATA_FOUND
                THEN
-                  clb_tmp := NULL;
+                  clb_parameter_schema := NULL;
                   
                WHEN OTHERS
                THEN
                   RAISE;
                   
             END;
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || '"schema":' || str_pad
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_final_linefeed => FALSE
-            );
-
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => clb_tmp
-               ,p_in_v => NULL
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_initial_indent => FALSE
-            );
-            
-            str_pad1 := ',';
 
          END IF;
-
+         
       --------------------------------------------------------------------------
-      -- Step 110
+      -- Step 40
       -- Add optional variables map
       --------------------------------------------------------------------------
          IF  self.parameter_examples IS NOT NULL 
          AND self.parameter_examples.COUNT > 0
          THEN
             SELECT
-             a.exampletyp.toJSON(
-                p_pretty_print     => p_pretty_print + 2
-               ,p_force_inline     => p_force_inline
-               ,p_short_id         => p_short_id
-               ,p_identifier       => a.object_id
-               ,p_short_identifier => a.short_id
-               ,p_reference_count  => a.reference_count
-             )
-            ,b.object_key
-            BULK COLLECT INTO 
-             ary_clb
-            ,ary_keys
+            JSON_ARRAYAGG(
+               JSON_OBJECT(
+                  b.object_key VALUE a.exampletyp.toJSON(
+                      p_force_inline     => p_force_inline
+                     ,p_short_id         => p_short_id
+                     ,p_identifier       => a.object_id
+                     ,p_short_identifier => a.short_id
+                     ,p_reference_count  => a.reference_count
+                  )
+               )
+            )
+            INTO clb_parameter_examples
             FROM
             dz_swagger3_xobjects a
             JOIN
@@ -534,115 +262,92 @@ AS
                 a.object_type_id = b.object_type_id
             AND a.object_id      = b.object_id
             ORDER BY b.object_order;
-            
-            str_pad2 := str_pad;
-         
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || '"examples":' || str_pad || '{'
-               ,p_pretty_print => p_pretty_print + 1
-            );
-         
-            FOR i IN 1 .. ary_clb.COUNT
-            LOOP
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad2 || '"' || ary_keys(i) || '":' || str_pad
-                  ,p_pretty_print   => p_pretty_print + 2
-                  ,p_final_linefeed => FALSE
-               );
-               
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => ary_clb(i)
-                  ,p_in_v => NULL
-                  ,p_pretty_print   => p_pretty_print + 2
-                  ,p_initial_indent => FALSE
-               );
-               
-               str_pad2 := ',';
-            
-            END LOOP;
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => '}'
-               ,p_pretty_print => p_pretty_print + 1
-            );
-
-            str_pad1 := ',';
-            
-         ELSE
-      --------------------------------------------------------------------------
-      -- Step 110
-      -- Add optional example
-      --------------------------------------------------------------------------
-            IF self.parameter_example_string IS NOT NULL
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'example'
-                     ,self.parameter_example_string
-                     ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print => p_pretty_print + 1
-               );
-               str_pad1 := ',';
-
-            ELSIF self.parameter_example_number IS NOT NULL
-            THEN
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad1 || dz_json_main.value2json(
-                      'example'
-                     ,self.parameter_example_number
-                     ,p_pretty_print + 1
-                   )
-                  ,p_pretty_print => p_pretty_print+ 1
-               );
-               str_pad1 := ',';
-
-            END IF;
-         
+ 
          END IF;
+         
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Build the object
+      --------------------------------------------------------------------------
+         SELECT
+         JSON_OBJECT(
+             'name'            VALUE self.parameter_name
+            ,'in'              VALUE self.parameter_in
+            ,'description'     VALUE self.parameter_description ABSENT ON NULL
+            ,'required'        VALUE CASE
+               WHEN LOWER(self.parameter_required) = 'true'
+               THEN
+                  TRUE
+               WHEN LOWER(self.parameter_required) = 'false'
+               THEN
+                  FALSE
+               ELSE
+                  NULL
+               END                                              ABSENT ON NULL
+            ,'deprecated'      VALUE CASE
+               WHEN LOWER(self.parameter_deprecated) = 'true'
+               THEN
+                  TRUE
+               WHEN LOWER(self.parameter_deprecated) = 'false'
+               THEN
+                  FALSE
+               ELSE
+                  NULL
+               END                                              ABSENT ON NULL
+            ,'allowEmptyValue' VALUE CASE
+               WHEN LOWER(self.parameter_allowEmptyValue) = 'true'
+               THEN
+                  TRUE
+               WHEN LOWER(self.parameter_allowEmptyValue) = 'false'
+               THEN
+                  FALSE
+               ELSE
+                  NULL
+               END                                              ABSENT ON NULL
+            ,'style'           VALUE self.parameter_style       ABSENT ON NULL
+            ,'explode'         VALUE CASE
+               WHEN LOWER(self.parameter_explode) = 'true'
+               THEN
+                  TRUE
+               WHEN LOWER(self.parameter_explode) = 'false'
+               THEN
+                  FALSE
+               ELSE
+                  NULL
+               END                                              ABSENT ON NULL
+            ,'allowReserved'   VALUE CASE
+               WHEN LOWER(self.parameter_allowReserved) = 'true'
+               THEN
+                  TRUE
+               WHEN LOWER(self.parameter_allowReserved) = 'false'
+               THEN
+                  FALSE
+               ELSE
+                  NULL
+               END                                              ABSENT ON NULL
+            ,'schema'          VALUE clb_parameter_schema       FORMAT JSON ABSENT ON NULL
+            ,'examples'        VALUE clb_parameter_examples     FORMAT JSON ABSENT ON NULL
+            ,'example'         VALUE CASE
+               WHEN self.parameter_example_string IS NOT NULL
+               THEN
+                  self.parameter_example_string
+               WHEN self.parameter_example_number IS NOT NULL
+               THEN
+                  self.parameter_example_number
+               ELSE
+                  NULL
+               END                                              ABSENT ON NULL
+         )
+         INTO clb_output
+         FROM dual;
          
       END IF;
   
       --------------------------------------------------------------------------
-      -- Step 130
-      -- Add the left bracket
-      --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => '}'
-         ,p_pretty_print   => p_pretty_print
-         ,p_final_linefeed => FALSE
-      );
-
-      --------------------------------------------------------------------------
       -- Step 140
       -- Cough it out
       --------------------------------------------------------------------------
-      dz_swagger3_util.fconc(
-          p_c    => cb
-         ,p_v    => v2
-      );
-      
-      RETURN cb;
+      RETURN clb_output;
            
    END toJSON;
    
@@ -662,7 +367,7 @@ AS
       cb               CLOB;
       v2               VARCHAR2(32000);
       
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      ary_keys         dz_swagger3_string_vry;
       clb_tmp          CLOB;
       str_identifier   VARCHAR2(255 Char);
       

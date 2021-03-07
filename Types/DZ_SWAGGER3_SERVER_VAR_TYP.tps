@@ -3,7 +3,7 @@ AUTHID DEFINER
 AS OBJECT (
     server_var_id       VARCHAR2(255 Char)
    ,server_var_name     VARCHAR2(255 Char)
-   ,enum                MDSYS.SDO_STRING2_ARRAY
+   ,enum                dz_swagger3_string_vry
    ,default_value       VARCHAR2(255 Char)
    ,description         VARCHAR2(4000 Char)
    ,versionid           VARCHAR2(255 Char)
@@ -26,11 +26,8 @@ AS OBJECT (
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-    ) RETURN CLOB
+   ,MEMBER FUNCTION toJSON
+    RETURN CLOB
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

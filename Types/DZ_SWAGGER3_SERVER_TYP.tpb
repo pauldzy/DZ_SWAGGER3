@@ -98,22 +98,11 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
+   MEMBER FUNCTION toJSON
+   RETURN CLOB
    AS
-      cb               CLOB;
-      v2               VARCHAR2(32000);
-      
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      str_pad2         VARCHAR2(1 Char);
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      
-      TYPE clob_table IS TABLE OF CLOB;
-      ary_clb          clob_table;
+      clb_output       CLOB;
+      clb_variables    CLOB;
       
    BEGIN
       
@@ -124,81 +113,18 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Build the wrapper
-      --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',NULL)
-         );
-
-      ELSE
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',-1)
-         );
-         str_pad     := ' ';
-
-      END IF;
-      str_pad1 := str_pad;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Add name element
-      --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => str_pad1 || dz_json_main.value2json(
-             'url'
-            ,self.server_url
-            ,p_pretty_print + 1
-          )
-        ,p_pretty_print => p_pretty_print + 1
- 
-      );
-      str_pad1 := ',';
-         
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Add optional url 
-      --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => str_pad1 || dz_json_main.value2json(
-             'description'
-            ,self.server_description
-            ,p_pretty_print + 1
-          )
-         ,p_pretty_print => p_pretty_print + 1
-      );
-      str_pad1 := ',';
-      
-      --------------------------------------------------------------------------
-      -- Step 50
       -- Add optional variables map
       --------------------------------------------------------------------------
       IF  self.server_variables IS NOT NULL 
       AND self.server_variables.COUNT > 0
       THEN
          SELECT
-          a.servervartyp.toJSON(
-             p_pretty_print  => p_pretty_print + 2
-            ,p_force_inline  => p_force_inline
-            ,p_short_id      => p_short_id
-          )
-         ,b.object_key
-         BULK COLLECT INTO
-          ary_clb
-         ,ary_keys
+         JSON_ARRAYAGG(
+            JSON_OBJECT(
+                  b.object_key VALUE a.servervartyp.toJSON() FORMAT JSON
+            )
+         )
+         INTO clb_variables
          FROM
          dz_swagger3_xobjects a
          JOIN
@@ -207,75 +133,27 @@ AS
              a.object_type_id = b.object_type_id
          AND a.object_id      = b.object_id
          ORDER BY b.object_order;   
-      
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || '"variables":' || str_pad || '{'
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         
-         str_pad2 := str_pad;
-      
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad2 || '"' || ary_keys(i) || '":' || str_pad
-               ,p_pretty_print    => p_pretty_print + 2
-               ,p_final_linefeed => FALSE
-            );
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => ary_clb(i)
-               ,p_in_v => NULL
-               ,p_pretty_print    => p_pretty_print + 2
-               ,p_initial_indent => NULL
-            );
-            
-            str_pad2 := ',';
-         
-         END LOOP;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => '}'
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
          
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 60
-      -- Add the left bracket
+      -- Step 30
+      -- Build the object
       --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => '}'
-         ,p_pretty_print => p_pretty_print
-         ,p_final_linefeed => FALSE
-      );
-
+      SELECT
+      JSON_OBJECT(
+          'url'          VALUE self.server_url                     ABSENT ON NULL
+         ,'description'  VALUE self.server_description             ABSENT ON NULL
+         ,'variables'    VALUE clb_variables           FORMAT JSON ABSENT ON NULL
+      )
+      INTO clb_output
+      FROM dual;
+      
       --------------------------------------------------------------------------
-      -- Step 70
+      -- Step 40
       -- Cough it out
       --------------------------------------------------------------------------
-      dz_swagger3_util.fconc(
-          p_c    => cb
-         ,p_v    => v2
-      );
-      
-      RETURN cb;
+      RETURN clb_output;
            
    END toJSON;
    
@@ -292,7 +170,7 @@ AS
       cb               CLOB;
       v2               VARCHAR2(32000);
       
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
+      ary_keys         dz_swagger3_string_vry;
       
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
