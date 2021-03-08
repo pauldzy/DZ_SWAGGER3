@@ -551,16 +551,13 @@ AS
          IF boo_is_not
          THEN
             SELECT
-            JSON_OBJECT(
-               b.object_key VALUE a.schematyp.toJSON(
-                   p_force_inline     => p_force_inline
-                  ,p_short_id         => p_short_id
-                  ,p_identifier       => a.object_id
-                  ,p_short_identifier => a.short_id
-                  ,p_reference_count  => a.reference_count
-                  ,p_jsonschema       => str_jsonschema
-               ) FORMAT JSON
-               RETURNING CLOB
+            a.schematyp.toJSON(
+                p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count
+               ,p_jsonschema       => str_jsonschema
             )
             INTO clb_combine_schemas
             FROM
@@ -584,8 +581,8 @@ AS
          
          ELSE
             SELECT
-            JSON_OBJECTAGG(
-               b.object_key VALUE a.schematyp.toJSON(
+            JSON_ARRAYAGG(
+               a.schematyp.toJSON(
                    p_force_inline     => p_force_inline
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
