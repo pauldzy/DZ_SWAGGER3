@@ -566,8 +566,7 @@ AS
             TABLE(self.combine_schemas) b
             ON
                 a.object_type_id = b.object_type_id
-            AND a.object_id      = b.object_id
-            ORDER BY b.object_order; 
+            AND a.object_id      = b.object_id; 
          
             SELECT
             JSON_OBJECT(
@@ -590,6 +589,7 @@ AS
                   ,p_reference_count  => a.reference_count
                   ,p_jsonschema       => str_jsonschema
                ) FORMAT JSON
+               ORDER BY b.object_order
                RETURNING CLOB
             )
             INTO clb_combine_schemas
@@ -599,8 +599,7 @@ AS
             TABLE(self.combine_schemas) b
             ON
                 a.object_type_id = b.object_type_id
-            AND a.object_id      = b.object_id
-            ORDER BY b.object_order; 
+            AND a.object_id      = b.object_id; 
             
             SELECT
             JSON_OBJECT(
@@ -759,12 +758,13 @@ AS
                    a.object_type_id = b.object_type_id
                AND a.object_id      = b.object_id
                WHERE
-               COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE'
-               ORDER BY b.object_order; 
+               COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE'; 
                
                SELECT
                JSON_ARRAYAGG(
                   b.object_key
+                  ORDER BY b.object_order
+                  RETURNING CLOB
                )
                INTO clb_schema_prop_required
                FROM
@@ -776,8 +776,7 @@ AS
                AND a.object_id      = b.object_id
                WHERE
                COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE'
-               AND b.object_required = 'TRUE'
-               ORDER BY b.object_order; 
+               AND b.object_required = 'TRUE'; 
 
             END IF;
        
@@ -913,7 +912,7 @@ AS
                      ELSE
                         NULL
                      END FORMAT JSON
-                  ,'schema'        VALUE clb_schema_items_schema   FORMAT JSON
+                  ,'items'         VALUE clb_schema_items_schema   FORMAT JSON
                   ,'xml'           VALUE clb_xml                   FORMAT JSON
                   ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                   ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
@@ -1033,7 +1032,7 @@ AS
                      ELSE
                         NULL
                      END FORMAT JSON
-                  ,'schema'        VALUE clb_schema_items_schema   FORMAT JSON
+                  ,'items'         VALUE clb_schema_items_schema   FORMAT JSON
                   ,'xml'           VALUE clb_xml                   FORMAT JSON
                   ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                   ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
@@ -1150,7 +1149,7 @@ AS
                      ELSE
                         NULL
                      END FORMAT JSON
-                  ,'schema'        VALUE clb_schema_items_schema   FORMAT JSON
+                  ,'items'         VALUE clb_schema_items_schema   FORMAT JSON
                   ,'xml'           VALUE clb_xml                   FORMAT JSON
                   ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                   ,'required'      VALUE clb_schema_prop_required  FORMAT JSON

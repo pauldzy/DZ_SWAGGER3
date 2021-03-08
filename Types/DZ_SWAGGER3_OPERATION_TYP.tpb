@@ -422,6 +422,8 @@ AS
          SELECT
          JSON_ARRAYAGG(
             a.tagtyp.tag_name
+            ORDER BY b.object_order
+            RETURNING CLOB
          )
          INTO clb_operation_tags
          FROM
@@ -430,8 +432,7 @@ AS
          TABLE(self.operation_tags) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
+         AND a.object_id      = b.object_id;
  
       END IF;
       
@@ -467,20 +468,21 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 40
-      -- Add operation_parameters array
+      -- Generate parameters array
       --------------------------------------------------------------------------
       IF  self.operation_parameters IS NOT NULL 
       AND self.operation_parameters.COUNT > 0
       THEN
          SELECT
-         JSON_OBJECTAGG(
-            b.object_key VALUE a.parametertyp.toJSON(
+         JSON_ARRAYAGG(
+            a.parametertyp.toJSON(
                 p_force_inline     => p_force_inline
                ,p_short_id         => p_short_id
                ,p_identifier       => a.object_id
                ,p_short_identifier => a.short_id
                ,p_reference_count  => a.reference_count
             ) FORMAT JSON
+            ORDER BY b.object_order
             RETURNING CLOB
          )
          INTO clb_operation_parameters
@@ -492,14 +494,13 @@ AS
              a.object_type_id = b.object_type_id
          AND a.object_id      = b.object_id
          WHERE
-         COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE'
-         ORDER BY b.object_order;
+         COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE'         ;
 
       END IF;
       
       --------------------------------------------------------------------------
       -- Step 50
-      -- Add operation requestBody object
+      -- Generate operation requestBody value
       --------------------------------------------------------------------------
       IF  self.operation_requestBody IS NOT NULL
       AND self.operation_requestBody.object_id IS NOT NULL
@@ -535,7 +536,7 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 60
-      -- Add operation responses map
+      -- Generate operation responses map
       --------------------------------------------------------------------------
       IF  self.operation_responses IS NOT NULL 
       AND self.operation_responses.COUNT > 0
@@ -558,14 +559,13 @@ AS
          TABLE(self.operation_responses) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
+         AND a.object_id      = b.object_id;
  
       END IF;
       
       --------------------------------------------------------------------------
       -- Step 70
-      -- Add operation callbacks map
+      -- Generate operation callbacks map
       --------------------------------------------------------------------------
       IF  self.operation_callbacks IS NOT NULL 
       AND self.operation_callbacks.COUNT > 0
@@ -591,14 +591,13 @@ AS
          TABLE(self.operation_callbacks) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
+         AND a.object_id      = b.object_id;
 
       END IF;
       
       --------------------------------------------------------------------------
       -- Step 80
-      -- Add security req array
+      -- Generate operation security req array
       --------------------------------------------------------------------------
       IF  self.operation_security IS NOT NULL 
       AND self.operation_security.COUNT > 0
@@ -608,6 +607,7 @@ AS
             a.securityschemetyp.toJSON_req(
                p_oauth_scope_flows => b.object_attribute
             ) FORMAT JSON
+            ORDER BY b.object_order
             RETURNING CLOB
          )
          INTO clb_operation_security
@@ -617,14 +617,13 @@ AS
          TABLE(self.operation_security) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
+         AND a.object_id      = b.object_id;
 
       END IF;
       
       --------------------------------------------------------------------------
       -- Step 90
-      -- Add server array
+      -- Gnerate operation server array
       --------------------------------------------------------------------------
       IF  self.operation_servers IS NOT NULL 
       AND self.operation_servers.COUNT > 0
@@ -632,6 +631,7 @@ AS
          SELECT
          JSON_ARRAYAGG(
             a.securityschemetyp.toJSON_req() FORMAT JSON
+            ORDER BY b.object_order
             RETURNING CLOB
          )
          INTO clb_operation_servers
@@ -641,8 +641,7 @@ AS
          TABLE(self.operation_servers) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
+         AND a.object_id      = b.object_id;
   
       END IF;
       
