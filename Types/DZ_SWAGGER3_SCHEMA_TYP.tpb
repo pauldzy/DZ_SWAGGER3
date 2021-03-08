@@ -517,19 +517,26 @@ AS
          boo_is_not := FALSE;
          
          SELECT
-          COUNT(*)
-         ,FIRST_VALUE(b.object_key) OVER (ORDER BY b.object_order)
+          a.cnt
+         ,a.object_key
          INTO
           int_combine_schemas
          ,str_object_key 
-         FROM
-         dz_swagger3_xobjects a
-         JOIN
-         TABLE(self.combine_schemas) b
-         ON
-             a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order; 
+         FROM (
+            SELECT
+             ROW_NUMBER() OVER(ORDER BY bb.object_order) AS rown
+            ,COUNT(*)     OVER(ORDER BY bb.object_order) AS cnt
+            ,bb.object_key
+            FROM
+            dz_swagger3_xobjects aa
+            JOIN
+            TABLE(self.combine_schemas) bb
+            ON
+                aa.object_type_id = bb.object_type_id
+            AND aa.object_id      = bb.object_id
+         ) a
+         WHERE
+         a.rown = 1; 
           
          IF int_combine_schemas = 1 AND str_object_key = 'not'
          THEN
@@ -743,7 +750,7 @@ AS
                      ,p_short_identifier => a.short_id
                      ,p_reference_count  => a.reference_count
                      ,p_jsonschema       => str_jsonschema
-                  )
+                  ) FORMAT JSON
                   RETURNING CLOB
                )
                INTO clb_schema_properties
@@ -781,9 +788,24 @@ AS
       -- Step 90
       -- Create the object
       --------------------------------------------------------------------------
-            int_schema_enum_string := self.schema_enum_string.COUNT;
-            int_schema_enum_number := self.schema_enum_number.COUNT;
+            IF self.schema_enum_string IS NOT NULL
+            THEN
+               int_schema_enum_string := self.schema_enum_string.COUNT;
             
+            ELSE
+               int_schema_enum_string := 0;
+               
+            END IF;
+            
+            IF self.schema_enum_number IS NOT NULL
+            THEN
+               int_schema_enum_number := self.schema_enum_number.COUNT;
+               
+            ELSE
+               int_schema_enum_number := 0;
+
+            END IF;
+
             IF  self.schema_example_string IS NOT NULL
             AND str_jsonschema <> 'TRUE'
             THEN
@@ -808,12 +830,10 @@ AS
                   ,'description'   VALUE self.schema_description
                   ,'format'        VALUE self.schema_format
                   ,'enum'          VALUE CASE
-                     WHEN self.schema_enum_string IS NOT NULL
-                     AND  int_schema_enum_string > 0
+                     WHEN int_schema_enum_string > 0
                      THEN
                         (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_string))
-                     WHEN self.schema_enum_number IS NOT NULL
-                     AND  int_schema_enum_number > 0
+                     WHEN int_schema_enum_number > 0
                      THEN
                         (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_number))
                      ELSE
@@ -930,12 +950,10 @@ AS
                   ,'description'   VALUE self.schema_description
                   ,'format'        VALUE self.schema_format
                   ,'enum'          VALUE CASE
-                     WHEN self.schema_enum_string IS NOT NULL
-                     AND  int_schema_enum_string > 0
+                     WHEN int_schema_enum_string > 0
                      THEN
                         (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_string))
-                     WHEN self.schema_enum_number IS NOT NULL
-                     AND  int_schema_enum_number > 0
+                     WHEN int_schema_enum_number > 0
                      THEN
                         (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_number))
                      ELSE
@@ -1050,12 +1068,10 @@ AS
                   ,'description'   VALUE self.schema_description
                   ,'format'        VALUE self.schema_format
                   ,'enum'          VALUE CASE
-                     WHEN self.schema_enum_string IS NOT NULL
-                     AND  int_schema_enum_string > 0
+                     WHEN int_schema_enum_string > 0
                      THEN
                         (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_string))
-                     WHEN self.schema_enum_number IS NOT NULL
-                     AND  int_schema_enum_number > 0
+                     WHEN int_schema_enum_number > 0
                      THEN
                         (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_number))
                      ELSE

@@ -75,20 +75,21 @@ AS
       --------------------------------------------------------------------------
       SELECT
       JSON_OBJECT(
-          KEY 'name'         VALUE self.contact_name
-         ,KEY 'url'          VALUE self.contact_url
-         ,KEY 'email'        VALUE self.contact_email   
+          'name'         VALUE self.contact_name
+         ,'url'          VALUE self.contact_url
+         ,'email'        VALUE self.contact_email   
          ABSENT ON NULL
+         RETURNING CLOB
       )
       INTO clb_output
       FROM dual;
       
       --------------------------------------------------------------------------
-      -- Step 110
+      -- Step 30
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
-           
+
    END toJSON;
    
    -----------------------------------------------------------------------------

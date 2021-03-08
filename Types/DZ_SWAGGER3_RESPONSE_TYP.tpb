@@ -232,7 +232,7 @@ AS
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                   ,p_reference_count  => a.reference_count
-               )
+               ) FORMAT JSON
                RETURNING CLOB
             )
             INTO clb_response_headers
@@ -259,7 +259,7 @@ AS
                b.object_key VALUE a.mediatyp.toJSON(
                    p_force_inline   => p_force_inline
                   ,p_short_id       => p_short_id
-               )
+               ) FORMAT JSON
                RETURNING CLOB
             )
             INTO clb_response_content
@@ -289,7 +289,7 @@ AS
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                   ,p_reference_count  => a.reference_count
-               )
+               ) FORMAT JSON
                RETURNING CLOB
             )
             INTO clb_response_links
@@ -327,7 +327,7 @@ AS
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
-           
+
    END toJSON;
    
    ----------------------------------------------------------------------------

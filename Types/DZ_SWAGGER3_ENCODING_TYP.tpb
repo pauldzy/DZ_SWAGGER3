@@ -149,14 +149,20 @@ AS
       -- Step 30
       -- Build the object
       --------------------------------------------------------------------------
-      int_encoding_headers := self.encoding_headers.COUNT;
+      IF self.encoding_headers IS NOT NULL
+      THEN
+         int_encoding_headers := self.encoding_headers.COUNT;
+         
+      ELSE
+         int_encoding_headers := 0;
+         
+      END IF;
 
       SELECT
       JSON_OBJECT(
           'contentType'         VALUE self.encoding_contentType
          ,'headers'             VALUE CASE
-            WHEN self.encoding_headers IS NOT NULL 
-            AND  int_encoding_headers > 0
+            WHEN int_encoding_headers > 0
             THEN
                clb_encoding_headers
             ELSE
@@ -194,7 +200,7 @@ AS
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
-           
+
    END toJSON;
    
    -----------------------------------------------------------------------------

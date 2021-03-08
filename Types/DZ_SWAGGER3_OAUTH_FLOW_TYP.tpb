@@ -79,6 +79,7 @@ AS
          SELECT
          JSON_OBJECTAGG(
             a.scopename VALUE b.scopedesc
+            RETURNING CLOB
          )
          INTO clob_scopes
          FROM (
@@ -121,7 +122,7 @@ AS
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
-           
+
    END toJSON;
    
    -----------------------------------------------------------------------------

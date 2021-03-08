@@ -183,7 +183,7 @@ AS
       FROM dual;
 
       --------------------------------------------------------------------------
-      -- Step 80
+      -- Step 30
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
@@ -224,6 +224,7 @@ AS
             ELSE
                '[]'
             END FORMAT JSON
+         RETURNING CLOB
       )
       INTO clb_output
       FROM dual;

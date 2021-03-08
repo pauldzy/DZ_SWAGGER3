@@ -306,10 +306,10 @@ AS
       THEN
          SELECT
          JSON_OBJECT(
-             'schema'       VALUE clb_media_schema
-            ,'examples'     VALUE clb_media_examples
+             'schema'       VALUE clb_media_schema          FORMAT JSON
+            ,'examples'     VALUE clb_media_examples        FORMAT JSON
             ,'example'      VALUE self.media_example_string
-            ,'encoding'     VALUE clb_media_encoding  
+            ,'encoding'     VALUE clb_media_encoding        FORMAT JSON
             ABSENT ON NULL
             RETURNING CLOB
          )
@@ -320,10 +320,10 @@ AS
       THEN
          SELECT
          JSON_OBJECT(
-             'schema'       VALUE clb_media_schema
-            ,'examples'     VALUE clb_media_examples
+             'schema'       VALUE clb_media_schema          FORMAT JSON
+            ,'examples'     VALUE clb_media_examples        FORMAT JSON
             ,'example'      VALUE self.media_example_number
-            ,'encoding'     VALUE clb_media_encoding  
+            ,'encoding'     VALUE clb_media_encoding        FORMAT JSON
             ABSENT ON NULL
             RETURNING CLOB
          )
@@ -333,9 +333,9 @@ AS
       ELSE
          SELECT
          JSON_OBJECT(
-             'schema'       VALUE clb_media_schema
-            ,'examples'     VALUE clb_media_examples
-            ,'encoding'     VALUE clb_media_encoding  
+             'schema'       VALUE clb_media_schema          FORMAT JSON
+            ,'examples'     VALUE clb_media_examples        FORMAT JSON
+            ,'encoding'     VALUE clb_media_encoding        FORMAT JSON
             ABSENT ON NULL
             RETURNING CLOB
          )
@@ -343,7 +343,7 @@ AS
          FROM dual;
       
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 60
       -- Cough it out

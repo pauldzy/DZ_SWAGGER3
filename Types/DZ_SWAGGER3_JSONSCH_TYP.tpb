@@ -224,7 +224,7 @@ AS
       OR self.schema_obj.schema_id IS NULL
       THEN
          RETURN NULL;
-         
+
       END IF;
       
       --------------------------------------------------------------------------

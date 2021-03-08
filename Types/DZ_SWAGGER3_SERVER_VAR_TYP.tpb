@@ -109,7 +109,7 @@ AS
          FROM dual;
 
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 30
       -- Cough it out
@@ -223,7 +223,7 @@ AS
          cb := REGEXP_REPLACE(cb,'^\s+','');
        
       END IF;
-      
+
       IF p_final_linefeed = 'FALSE'
       THEN
          cb := REGEXP_REPLACE(cb,CHR(10) || '$','');

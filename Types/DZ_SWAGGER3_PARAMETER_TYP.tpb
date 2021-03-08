@@ -234,7 +234,7 @@ AS
             END;
 
          END IF;
-         
+
       --------------------------------------------------------------------------
       -- Step 40
       -- Add optional variables map
@@ -250,7 +250,7 @@ AS
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                   ,p_reference_count  => a.reference_count
-               )
+               ) FORMAT JSON
                RETURNING CLOB
             )
             INTO clb_parameter_examples

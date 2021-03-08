@@ -163,7 +163,8 @@ AS
          THEN
             SELECT
             JSON_OBJECTAGG(
-               a.parmname VALUE b.parmexps             
+               a.parmname VALUE b.parmexps
+               RETURNING CLOB          
             )
             INTO clb_parameters
             FROM (
@@ -258,7 +259,7 @@ AS
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 100
+      -- Step 70
       -- Cough it out
       --------------------------------------------------------------------------      
       RETURN clb_output;

@@ -190,7 +190,7 @@ AS
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                   ,p_reference_count  => a.reference_count
-               )
+               ) FORMAT JSON
                ABSENT ON NULL
                RETURNING CLOB
             )
@@ -207,7 +207,7 @@ AS
          END IF;
          
       --------------------------------------------------------------------------
-      -- Step 100
+      -- Step 40
       -- Add optional header schema
       --------------------------------------------------------------------------
          IF self.header_schema IS NOT NULL
@@ -242,7 +242,7 @@ AS
          END IF;
          
       --------------------------------------------------------------------------
-      -- Step 40
+      -- Step 50
       -- Build the output object
       --------------------------------------------------------------------------
          IF self.header_example_string IS NOT NULL
@@ -442,11 +442,11 @@ AS
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 140
+      -- Step 60
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
-           
+
    END toJSON;
    
    -----------------------------------------------------------------------------

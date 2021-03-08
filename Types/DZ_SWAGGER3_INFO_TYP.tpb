@@ -129,6 +129,7 @@ AS
             END FORMAT JSON
          ,'version'        VALUE self.info_version        
          ABSENT ON NULL
+         RETURNING CLOB
       )
       INTO clb_output
       FROM dual; 
@@ -138,7 +139,7 @@ AS
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
-           
+
    END toJSON;
    
    -----------------------------------------------------------------------------

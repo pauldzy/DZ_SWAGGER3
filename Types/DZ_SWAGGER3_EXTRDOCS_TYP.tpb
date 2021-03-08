@@ -97,6 +97,7 @@ AS
           'description'  VALUE self.externaldoc_description
          ,'url'          VALUE self.externaldoc_url         
          ABSENT ON NULL
+         RETURNING CLOB
       )
       INTO clb_output
       FROM dual;
@@ -106,7 +107,7 @@ AS
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
-           
+
    END toJSON;
    
    -----------------------------------------------------------------------------

@@ -285,7 +285,7 @@ AS
       THEN
          SELECT 
          JSON_ARRAYAGG(
-            a.servertyp.toJSON()
+            a.servertyp.toJSON() FORMAT JSON
             RETURNING CLOB
          )
          INTO clb_servers
@@ -299,7 +299,7 @@ AS
          ORDER BY b.object_order;
          
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 30
       -- Add paths
@@ -312,7 +312,7 @@ AS
             b.object_key VALUE a.pathtyp.toJSON(
                 p_force_inline   => p_force_inline
                ,p_short_id       => p_short_id
-            )
+            ) FORMAT JSON
             RETURNING CLOB
          )
          INTO clb_paths 
@@ -661,10 +661,10 @@ AS
    AS
       cb            CLOB;
       v2            VARCHAR2(32000);
-      
+
       ary_keys      dz_swagger3_string_vry;
       clb_tmp       CLOB;
-      
+
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
       

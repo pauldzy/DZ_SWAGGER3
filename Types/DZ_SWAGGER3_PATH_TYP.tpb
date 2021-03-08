@@ -276,7 +276,7 @@ AS
       -- Step 10
       -- Check incoming parameters
       --------------------------------------------------------------------------
-      
+
       --------------------------------------------------------------------------
       -- Step 20
       -- Add the ref object for callbacks
@@ -695,7 +695,7 @@ AS
       ary_keys         dz_swagger3_string_vry;
       clb_tmp          CLOB;
       str_identifier   VARCHAR2(255 Char);
-      
+
       TYPE clob_table IS TABLE OF CLOB;
       ary_clb          clob_table;
       

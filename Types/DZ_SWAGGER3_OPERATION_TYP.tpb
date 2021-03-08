@@ -480,7 +480,7 @@ AS
                ,p_identifier       => a.object_id
                ,p_short_identifier => a.short_id
                ,p_reference_count  => a.reference_count
-            )
+            ) FORMAT JSON
             RETURNING CLOB
          )
          INTO clb_operation_parameters
@@ -548,7 +548,7 @@ AS
                ,p_identifier       => a.object_id
                ,p_short_identifier => a.short_id
                ,p_reference_count  => a.reference_count
-            )
+            ) FORMAT JSON
             RETURNING CLOB
          )
          INTO clb_operation_responses
@@ -579,9 +579,10 @@ AS
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                   ,p_reference_count  => a.reference_count
-               )
+               ) FORMAT JSON
                RETURNING CLOB
             )
+            RETURNING CLOB
          )
          INTO clb_operation_callbacks
          FROM
@@ -630,7 +631,7 @@ AS
       THEN
          SELECT
          JSON_ARRAYAGG(
-            a.securityschemetyp.toJSON_req()
+            a.securityschemetyp.toJSON_req() FORMAT JSON
             RETURNING CLOB
          )
          INTO clb_operation_servers
@@ -692,7 +693,7 @@ AS
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
-           
+
    END toJSON;
    
    -----------------------------------------------------------------------------
