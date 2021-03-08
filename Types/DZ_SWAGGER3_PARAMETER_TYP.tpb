@@ -292,7 +292,7 @@ AS
                      'true'
                   WHEN LOWER(self.parameter_deprecated) = 'false'
                   THEN
-                     'false'
+                     NULL -- hide false values
                   ELSE
                      NULL
                   END FORMAT JSON
@@ -302,7 +302,7 @@ AS
                      'true'
                   WHEN LOWER(self.parameter_allowEmptyValue) = 'false'
                   THEN
-                     'false'
+                     NULL -- hide false values
                   ELSE
                      NULL
                   END FORMAT JSON
@@ -328,7 +328,6 @@ AS
                      NULL
                   END FORMAT JSON
                ,'schema'          VALUE clb_parameter_schema       FORMAT JSON
-               ,'examples'        VALUE clb_parameter_examples     FORMAT JSON
                ,'example'         VALUE self.parameter_example_string
                ABSENT ON NULL
                RETURNING CLOB
@@ -359,7 +358,7 @@ AS
                      'true'
                   WHEN LOWER(self.parameter_deprecated) = 'false'
                   THEN
-                     'false'
+                     NULL -- hide false values
                   ELSE
                      NULL
                   END FORMAT JSON
@@ -369,7 +368,7 @@ AS
                      'true'
                   WHEN LOWER(self.parameter_allowEmptyValue) = 'false'
                   THEN
-                     'false'
+                     NULL -- hide false values
                   ELSE
                      NULL
                   END FORMAT JSON
@@ -395,7 +394,6 @@ AS
                      NULL
                   END FORMAT JSON
                ,'schema'          VALUE clb_parameter_schema       FORMAT JSON
-               ,'examples'        VALUE clb_parameter_examples     FORMAT JSON
                ,'example'         VALUE self.parameter_example_number
                ABSENT ON NULL
                RETURNING CLOB
@@ -425,7 +423,7 @@ AS
                      'true'
                   WHEN LOWER(self.parameter_deprecated) = 'false'
                   THEN
-                     'false'
+                     NULL -- hide false values
                   ELSE
                      NULL
                   END FORMAT JSON
@@ -435,7 +433,7 @@ AS
                      'true'
                   WHEN LOWER(self.parameter_allowEmptyValue) = 'false'
                   THEN
-                     'false'
+                     NULL -- hide false values
                   ELSE
                      NULL
                   END FORMAT JSON

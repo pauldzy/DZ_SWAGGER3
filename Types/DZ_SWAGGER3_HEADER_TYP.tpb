@@ -201,8 +201,7 @@ AS
             TABLE(self.header_examples) b
             ON
                 a.object_type_id = b.object_type_id
-            AND a.object_id      = b.object_id
-            ORDER BY b.object_order; 
+            AND a.object_id      = b.object_id; 
 
          END IF;
          
@@ -302,7 +301,6 @@ AS
                      NULL
                   END FORMAT JSON
                ,'schema'           VALUE clb_header_schema      FORMAT JSON
-               ,'examples'         VALUE clb_header_examples    FORMAT JSON
                ,'example'          VALUE self.header_example_string
                ABSENT ON NULL
                RETURNING CLOB
@@ -367,13 +365,13 @@ AS
                      NULL
                   END FORMAT JSON
                ,'schema'           VALUE clb_header_schema      FORMAT JSON
-               ,'examples'         VALUE clb_header_examples    FORMAT JSON
                ,'example'          VALUE self.header_example_number
                ABSENT ON NULL
                RETURNING CLOB
             )
             INTO clb_output
             FROM dual;
+            
          ELSE
             SELECT
             JSON_OBJECT(

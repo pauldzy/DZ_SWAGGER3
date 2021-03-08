@@ -596,6 +596,7 @@ AS
             SELECT
             JSON_ARRAYAGG(
                a.servertyp.toJSON() FORMAT JSON
+               ORDER BY b.object_order
                RETURNING CLOB
             )
             INTO clb_path_servers
@@ -605,8 +606,7 @@ AS
             TABLE(self.path_servers) b
             ON
                 a.object_type_id = b.object_type_id
-            AND a.object_id      = b.object_id
-            ORDER BY b.object_order;
+            AND a.object_id      = b.object_id;
             
          END IF;
 
@@ -618,14 +618,15 @@ AS
          AND self.path_parameters.COUNT > 0
          THEN
             SELECT
-            JSON_OBJECTAGG(
-               b.object_key VALUE a.parametertyp.toJSON(
+            JSON_ARRAYAGG(
+               a.parametertyp.toJSON(
                    p_force_inline     => p_force_inline
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
                   ,p_reference_count  => a.reference_count
                ) FORMAT JSON
+               ORDER BY b.object_order
                RETURNING CLOB
             )
             INTO clb_path_parameters
@@ -637,8 +638,7 @@ AS
                 a.object_type_id = b.object_type_id
             AND a.object_id      = b.object_id
             WHERE
-            COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE'
-            ORDER BY b.object_order;
+            COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE';
             
          END IF;
          

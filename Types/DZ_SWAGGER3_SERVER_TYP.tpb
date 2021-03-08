@@ -130,8 +130,7 @@ AS
          TABLE(self.server_variables) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;   
+         AND a.object_id      = b.object_id;   
          
       END IF;
       

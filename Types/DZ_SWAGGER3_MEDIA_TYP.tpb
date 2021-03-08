@@ -266,8 +266,7 @@ AS
          TABLE(self.media_examples) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
+         AND a.object_id      = b.object_id;
          
       END IF;
       
@@ -293,8 +292,7 @@ AS
          TABLE(self.media_encoding) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
+         AND a.object_id      = b.object_id;
 
       END IF;
       
@@ -307,7 +305,6 @@ AS
          SELECT
          JSON_OBJECT(
              'schema'       VALUE clb_media_schema          FORMAT JSON
-            ,'examples'     VALUE clb_media_examples        FORMAT JSON
             ,'example'      VALUE self.media_example_string
             ,'encoding'     VALUE clb_media_encoding        FORMAT JSON
             ABSENT ON NULL
@@ -321,7 +318,6 @@ AS
          SELECT
          JSON_OBJECT(
              'schema'       VALUE clb_media_schema          FORMAT JSON
-            ,'examples'     VALUE clb_media_examples        FORMAT JSON
             ,'example'      VALUE self.media_example_number
             ,'encoding'     VALUE clb_media_encoding        FORMAT JSON
             ABSENT ON NULL

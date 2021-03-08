@@ -242,8 +242,7 @@ AS
             TABLE(self.response_headers) b
             ON
                 a.object_type_id = b.object_type_id
-            AND a.object_id      = b.object_id
-            ORDER BY b.object_order;
+            AND a.object_id      = b.object_id;
             
          END IF;
 
@@ -269,8 +268,7 @@ AS
             TABLE(self.response_content) b
             ON
                 a.object_type_id = b.object_type_id
-            AND a.object_id      = b.object_id
-            ORDER BY b.object_order;
+            AND a.object_id      = b.object_id;
             
          END IF;
 
@@ -299,28 +297,27 @@ AS
             TABLE(self.response_links) b
             ON
                 a.object_type_id = b.object_type_id
-            AND a.object_id      = b.object_id
-            ORDER BY b.object_order;
+            AND a.object_id      = b.object_id;
             
          END IF;
 
-      END IF;
-      
       --------------------------------------------------------------------------
       -- Step 60
       -- Build the object
       --------------------------------------------------------------------------
-      SELECT
-      JSON_OBJECT(
-          'description'  VALUE self.response_description
-         ,'headers'      VALUE clb_response_headers      FORMAT JSON
-         ,'content'      VALUE clb_response_content      FORMAT JSON
-         ,'links'        VALUE clb_response_links        FORMAT JSON
-         ABSENT ON NULL
-         RETURNING CLOB
-      )
-      INTO clb_output
-      FROM dual;
+         SELECT
+         JSON_OBJECT(
+             'description'  VALUE self.response_description
+            ,'headers'      VALUE clb_response_headers      FORMAT JSON
+            ,'content'      VALUE clb_response_content      FORMAT JSON
+            ,'links'        VALUE clb_response_links        FORMAT JSON
+            ABSENT ON NULL
+            RETURNING CLOB
+         )
+         INTO clb_output
+         FROM dual;
+      
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 70

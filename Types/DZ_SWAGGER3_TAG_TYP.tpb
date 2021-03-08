@@ -137,7 +137,7 @@ AS
       SELECT
       JSON_OBJECT(
           'name'         VALUE self.tag_name
-         ,'namespace'    VALUE self.tag_description
+         ,'description'  VALUE self.tag_description
          ,'externalDocs' VALUE clb_extrdocstyp        FORMAT JSON 
          ABSENT ON NULL
          RETURNING CLOB

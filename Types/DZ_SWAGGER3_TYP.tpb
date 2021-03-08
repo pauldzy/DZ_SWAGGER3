@@ -24,7 +24,6 @@ AS
       str_doc_id          VARCHAR2(255 Char) := p_doc_id;
       str_group_id        VARCHAR2(255 Char) := p_group_id;
       str_versionid       VARCHAR2(40 Char)  := p_versionid;
-      str_externaldocs_id VARCHAR2(255 Char);
 
    BEGIN
 
@@ -286,6 +285,7 @@ AS
          SELECT 
          JSON_ARRAYAGG(
             a.servertyp.toJSON() FORMAT JSON
+            ORDER BY b.object_order
             RETURNING CLOB
          )
          INTO clb_servers
@@ -294,9 +294,8 @@ AS
          JOIN 
          TABLE(self.servers) b 
          ON 
-             a.object_type_id = b.object_type_id 
-         AND a.object_id      = b.object_id 
-         ORDER BY b.object_order;
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id;
          
       END IF;
 
@@ -322,8 +321,7 @@ AS
          TABLE(self.paths) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
+         AND a.object_id      = b.object_id;
          
       END IF;
       
@@ -358,8 +356,7 @@ AS
          WHERE 
              a.object_type_id = 'schematyp'
          AND a.reference_count > 1 
-         AND COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE'
-         ORDER BY a.object_id; 
+         AND COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE'; 
          
          SELECT
          JSON_OBJECTAGG(
@@ -380,8 +377,7 @@ AS
          dz_swagger3_xobjects a
          WHERE 
              a.object_type_id = 'responsetyp'
-         AND a.reference_count > 1 
-         ORDER BY a.object_id;
+         AND a.reference_count > 1;
          
          SELECT
          JSON_OBJECTAGG(
@@ -403,8 +399,7 @@ AS
          WHERE
              a.object_type_id = 'parametertyp'
          AND a.reference_count > 1
-         AND COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE'
-         ORDER BY a.object_id;
+         AND COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE';
             
          SELECT
          JSON_OBJECTAGG(
@@ -425,8 +420,7 @@ AS
          dz_swagger3_xobjects a
          WHERE
              a.object_type_id = 'exampletyp'
-         AND a.reference_count > 1
-         ORDER BY a.object_id;
+         AND a.reference_count > 1;
          
          SELECT
          JSON_OBJECTAGG(
@@ -447,8 +441,7 @@ AS
          dz_swagger3_xobjects a
          WHERE
              a.object_type_id = 'requestbodytyp'
-         AND a.reference_count > 1
-         ORDER BY a.object_id;
+         AND a.reference_count > 1;
 
          SELECT
          JSON_OBJECTAGG(
@@ -469,8 +462,7 @@ AS
          dz_swagger3_xobjects a
          WHERE
              a.object_type_id = 'headertyp'
-         AND a.reference_count > 1
-         ORDER BY a.object_id;
+         AND a.reference_count > 1;
             
          SELECT
          JSON_OBJECTAGG(
@@ -481,8 +473,7 @@ AS
          FROM
          dz_swagger3_xobjects a
          WHERE
-             a.object_type_id = 'securityschemetyp'
-         ORDER BY a.object_id;
+             a.object_type_id = 'securityschemetyp';
             
          SELECT
          JSON_OBJECTAGG(
@@ -503,8 +494,7 @@ AS
          dz_swagger3_xobjects a
          WHERE
              a.object_type_id = 'linktyp'
-         AND a.reference_count > 1
-         ORDER BY a.object_id;
+         AND a.reference_count > 1;
             
          SELECT
          JSON_OBJECTAGG(
@@ -525,8 +515,7 @@ AS
          dz_swagger3_xobjects a
          WHERE
              a.object_type_id = 'callbacktyp'
-         AND a.reference_count > 1
-         ORDER BY a.object_id;
+         AND a.reference_count > 1;
             
             
       END IF;
@@ -543,17 +532,17 @@ AS
             a.securityschemetyp.toJSON_req( 
                p_oauth_scope_flows => b.object_attribute
             ) FORMAT JSON
+            ORDER BY b.object_order
             RETURNING CLOB
          )
          INTO clb_security
          FROM 
          dz_swagger3_xobjects a 
          JOIN 
-         TABLE(self.security) b 
+         TABLE(self.security) b
          ON 
-             a.object_type_id = b.object_type_id 
-         AND a.object_id      = b.object_id 
-         ORDER BY b.object_order;
+             a.object_type_id = b.object_type_id
+         AND a.object_id      = b.object_id;
 
       END IF;
       
@@ -564,6 +553,7 @@ AS
       SELECT
       JSON_ARRAYAGG(
          a.tagtyp.toJSON() FORMAT JSON
+         ORDER BY a.object_id
          RETURNING CLOB
       )
       INTO clb_tags
@@ -574,8 +564,7 @@ AS
       AND (
             a.tagtyp.tag_description IS NOT NULL
          OR a.tagtyp.tag_externaldocs IS NOT NULL 
-      ) 
-      ORDER BY a.object_id;
+      );
       
       --------------------------------------------------------------------------
       -- Step 70
