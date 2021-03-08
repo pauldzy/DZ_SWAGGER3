@@ -83,21 +83,32 @@ AS
       -- Step 20
       -- Build the object
       --------------------------------------------------------------------------
-      SELECT
-      JSON_OBJECT(
-          'enum'         VALUE CASE
-            WHEN self.enum IS NOT NULL 
-            AND  self.enum.COUNT > 0
-            THEN
-               (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.enum))
-            ELSE
-               NULL
-            END                                     ABSENT ON NULL
-         ,'default'      VALUE self.default_value   ABSENT ON NULL
-         ,'description'  VALUE self.description     ABSENT ON NULL
-      )
-      INTO clb_output
-      FROM dual;
+      IF self.enum IS NOT NULL 
+      AND  self.enum.COUNT > 0
+      THEN
+         SELECT
+         JSON_OBJECT(
+             'enum'         VALUE (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.enum))
+            ,'default'      VALUE self.default_value
+            ,'description'  VALUE self.description
+            ABSENT ON NULL
+            RETURNING CLOB
+         )
+         INTO clb_output
+         FROM dual;
+         
+      ELSE
+         SELECT
+         JSON_OBJECT(
+             'default'      VALUE self.default_value
+            ,'description'  VALUE self.description
+            ABSENT ON NULL
+            RETURNING CLOB
+         )
+         INTO clb_output
+         FROM dual;
+
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 30

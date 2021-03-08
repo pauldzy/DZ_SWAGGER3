@@ -1,5 +1,5 @@
 CREATE OR REPLACE TYPE BODY dz_swagger3_response_typ
-AS 
+AS
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -209,7 +209,7 @@ AS
          
          SELECT
          JSON_OBJECT(
-            '#/components/responses/' || dz_swagger3_util.utl_url_escape(
+            '$ref' VALUE '#/components/responses/' || dz_swagger3_util.utl_url_escape(
                str_identifier
             )
          )
@@ -225,16 +225,15 @@ AS
          AND self.response_headers.COUNT > 0
          THEN
             SELECT
-            JSON_ARRAYAGG(
-               JSON_OBJECT(
-                  b.object_key VALUE a.headertyp.toJSON(
-                      p_force_inline     => p_force_inline
-                     ,p_short_id         => p_short_id
-                     ,p_identifier       => a.object_id
-                     ,p_short_identifier => a.short_id
-                     ,p_reference_count  => a.reference_count
-                  )
+            JSON_OBJECTAGG(
+               b.object_key VALUE a.headertyp.toJSON(
+                   p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
                )
+               RETURNING CLOB
             )
             INTO clb_response_headers
             FROM
@@ -256,13 +255,12 @@ AS
          AND self.response_content.COUNT > 0
          THEN
             SELECT
-            JSON_ARRAYAGG(
-               JSON_OBJECT(
-                  b.object_key VALUE a.mediatyp.toJSON(
-                      p_force_inline   => p_force_inline
-                     ,p_short_id       => p_short_id
-                  )
+            JSON_OBJECTAGG(
+               b.object_key VALUE a.mediatyp.toJSON(
+                   p_force_inline   => p_force_inline
+                  ,p_short_id       => p_short_id
                )
+               RETURNING CLOB
             )
             INTO clb_response_content
             FROM
@@ -284,16 +282,15 @@ AS
          AND self.response_links.COUNT > 0
          THEN
             SELECT
-            JSON_ARRAYAGG(
-               JSON_OBJECT(
-                  b.object_key VALUE a.linktyp.toJSON(
-                      p_force_inline     => p_force_inline
-                     ,p_short_id         => p_short_id
-                     ,p_identifier       => a.object_id
-                     ,p_short_identifier => a.short_id
-                     ,p_reference_count  => a.reference_count
-                  )
+            JSON_OBJECTAGG(
+               b.object_key VALUE a.linktyp.toJSON(
+                   p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
                )
+               RETURNING CLOB
             )
             INTO clb_response_links
             FROM
@@ -315,16 +312,18 @@ AS
       --------------------------------------------------------------------------
       SELECT
       JSON_OBJECT(
-          'description'  VALUE self.response_description             ABSENT ON NULL
-         ,'headers'      VALUE clb_response_headers      FORMAT JSON ABSENT ON NULL
-         ,'content'      VALUE clb_response_content      FORMAT JSON ABSENT ON NULL
-         ,'links'        VALUE clb_response_links        FORMAT JSON ABSENT ON NULL
+          'description'  VALUE self.response_description
+         ,'headers'      VALUE clb_response_headers      FORMAT JSON
+         ,'content'      VALUE clb_response_content      FORMAT JSON
+         ,'links'        VALUE clb_response_links        FORMAT JSON
+         ABSENT ON NULL
+         RETURNING CLOB
       )
       INTO clb_output
       FROM dual;
       
       --------------------------------------------------------------------------
-      -- Step 80
+      -- Step 70
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;

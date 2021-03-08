@@ -111,27 +111,24 @@ AS
       SELECT
       JSON_OBJECT(
           'title'          VALUE self.info_title
-         ,'description'    VALUE self.info_description    ABSENT ON NULL
-         ,'termsOfService' VALUE self.info_termsOfService ABSENT ON NULL
+         ,'description'    VALUE self.info_description
+         ,'termsOfService' VALUE self.info_termsOfService
          ,'contact'        VALUE CASE
             WHEN self.info_contact.isNULL() = 'FALSE'
             THEN
-               self.info_contact.toJSON(
-                  p_force_inline => p_force_inline
-               ) FORMAT JSON
+               self.info_contact.toJSON()
             ELSE
                NULL
-            END                                           ABSENT ON NULL
+            END FORMAT JSON
          ,'license'        VALUE CASE
             WHEN self.info_license.isNULL() = 'FALSE'
             THEN
-               self.info_license.toJSON(
-                  p_force_inline => p_force_inline
-               ) FORMAT JSON
+               self.info_license.toJSON()
             ELSE
                NULL
-            END                                           ABSENT ON NULL
-         ,'version'        VALUE self.info_version        ABSENT ON NULL
+            END FORMAT JSON
+         ,'version'        VALUE self.info_version        
+         ABSENT ON NULL
       )
       INTO clb_output
       FROM dual; 

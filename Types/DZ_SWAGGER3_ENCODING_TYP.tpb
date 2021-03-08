@@ -106,6 +106,7 @@ AS
    AS
       clb_output           CLOB;
       clb_encoding_headers CLOB;
+      int_encoding_headers PLS_INTEGER;
       
    BEGIN
       
@@ -122,16 +123,15 @@ AS
       AND self.encoding_headers.COUNT > 0
       THEN
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-                b.object_key VALUE a.headertyp.toJSON(
-                   p_force_inline     => p_force_inline
-                  ,p_short_id         => p_short_id
-                  ,p_identifier       => a.object_id
-                  ,p_short_identifier => a.short_id
-                  ,p_reference_count  => a.reference_count
-                ) FORMAT JSON
-            )
+         JSON_OBJECTAGG(
+             b.object_key VALUE a.headertyp.toJSON(
+                p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count
+            ) FORMAT JSON
+            RETURNING CLOB
          )
          INTO clb_encoding_headers
          FROM
@@ -146,47 +146,51 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 20
+      -- Step 30
       -- Build the object
       --------------------------------------------------------------------------
+      int_encoding_headers := self.encoding_headers.COUNT;
+
       SELECT
       JSON_OBJECT(
-          'contentType'         VALUE self.encoding_contentType ABSENT ON NULL
+          'contentType'         VALUE self.encoding_contentType
          ,'headers'             VALUE CASE
             WHEN self.encoding_headers IS NOT NULL 
-            AND  self.encoding_headers.COUNT > 0
+            AND  int_encoding_headers > 0
             THEN
-               clb_encoding_headers FORMAT JSON
+               clb_encoding_headers
             ELSE
                NULL
-            END                                                 ABSENT ON NULL
-         ,'style'               VALUE self.encoding_style       ABSENT ON NULL
+            END FORMAT JSON
+         ,'style'               VALUE self.encoding_style
          ,'explode'             VALUE CASE
             WHEN LOWER(self.encoding_explode) = 'true'
             THEN
-               TRUE
+               'true'
             WHEN LOWER(self.encoding_explode) = 'false'
             THEN
-               FALSE
+               'false'
             ELSE
                NULL
-            END                                                 ABSENT ON NULL
+            END FORMAT JSON
          ,'allowReserved'       VALUE CASE
             WHEN LOWER(self.encoding_allowReserved) = 'true'
             THEN
-               TRUE
+               'true'
             WHEN LOWER(self.encoding_allowReserved) = 'false'
             THEN
-               FALSE
+               'false'
             ELSE
                NULL
-            END                                                 ABSENT ON NULL
+            END FORMAT JSON
+         ABSENT ON NULL
+         RETURNING CLOB
       )
       INTO clb_output
       FROM dual;
 
       --------------------------------------------------------------------------
-      -- Step 90
+      -- Step 40
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;

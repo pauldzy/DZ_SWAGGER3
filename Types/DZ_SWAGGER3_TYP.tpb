@@ -253,20 +253,21 @@ AS
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
-      clb_output                     CLOB;
-      clb_servers                    CLOB;
-      clb_paths                      CLOB;
-      clb_schemas_components         CLOB;
-      clb_responses_components       CLOB;
-      clb_parameters_components      CLOB;
-      clb_examples_components        CLOB;
-      clb_requestbodies_components   CLOB;
-      clb_headers_components         CLOB;
-      clb_securitySchemes_components CLOB;
-      clb_links_components           CLOB;
-      clb_callbacks_components       CLOB;
-      clb_security                   CLOB;
-      clb_tags                       CLOB;
+      clb_output              CLOB;
+      clb_servers             CLOB;
+      clb_paths               CLOB;
+      clb_schemas             CLOB;
+      clb_responses           CLOB;
+      clb_parameters          CLOB;
+      clb_examples            CLOB;
+      clb_requestbodies       CLOB;
+      clb_headers             CLOB;
+      clb_securitySchemes     CLOB;
+      clb_links               CLOB;
+      clb_callbacks           CLOB;
+      clb_security            CLOB;
+      clb_tags                CLOB;
+      clb_externalDocs        CLOB;
       
    BEGIN
 
@@ -284,10 +285,8 @@ AS
       THEN
          SELECT 
          JSON_ARRAYAGG(
-            a.servertyp.toJSON(
-                p_force_inline   => p_force_inline
-               ,p_short_id       => p_short_id
-            )
+            a.servertyp.toJSON()
+            RETURNING CLOB
          )
          INTO clb_servers
          FROM
@@ -309,13 +308,12 @@ AS
       OR self.paths.COUNT > 0
       THEN
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               b.object_key VALUE a.pathtyp.toJSON(
-                  p_force_inline   => p_force_inline
-                 ,p_short_id       => p_short_id
-               )
+         JSON_OBJECTAGG(
+            b.object_key VALUE a.pathtyp.toJSON(
+                p_force_inline   => p_force_inline
+               ,p_short_id       => p_short_id
             )
+            RETURNING CLOB
          )
          INTO clb_paths 
          FROM
@@ -341,21 +339,20 @@ AS
 
       ELSE
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               CASE 
-               WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
-               THEN 
-                  a.short_id 
-               ELSE 
-                  a.object_id 
-               END VALUE a.schematyp.toJSON( 
-                   p_force_inline   => 'FALSE'
-                  ,p_short_id       => p_short_id
-               ) FORMAT JSON 
-            )
+         JSON_OBJECTAGG(
+            CASE 
+            WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
+            THEN 
+               a.short_id 
+            ELSE 
+               a.object_id 
+            END VALUE a.schematyp.toJSON( 
+                p_force_inline   => 'FALSE'
+               ,p_short_id       => p_short_id
+            ) FORMAT JSON 
+            RETURNING CLOB
          )
-         INTO clb_schemas_components
+         INTO clb_schemas
          FROM 
          dz_swagger3_xobjects a 
          WHERE 
@@ -365,21 +362,20 @@ AS
          ORDER BY a.object_id; 
          
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               CASE 
-               WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
-               THEN
-                  a.short_id
-               ELSE
-                  a.object_id
-               END VALUE a.responsetyp.toJSON(
-                   p_force_inline   => 'FALSE'
-                  ,p_short_id       => p_short_id
-               ) FORMAT JSON
-            )
+         JSON_OBJECTAGG(
+            CASE 
+            WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
+            THEN
+               a.short_id
+            ELSE
+               a.object_id
+            END VALUE a.responsetyp.toJSON(
+                p_force_inline   => 'FALSE'
+               ,p_short_id       => p_short_id
+            ) FORMAT JSON
+            RETURNING CLOB
          )
-         INTO clb_responses_components
+         INTO clb_responses
          FROM
          dz_swagger3_xobjects a
          WHERE 
@@ -388,21 +384,20 @@ AS
          ORDER BY a.object_id;
          
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               CASE
-               WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
-               THEN
-                  a.short_id
-               ELSE
-                  a.object_id
-               END VALUE a.parametertyp.toJSON(
-                   p_force_inline   => 'FALSE'
-                  ,p_short_id       => p_short_id
-               ) FORMAT JSON
-            )
+         JSON_OBJECTAGG(
+            CASE
+            WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
+            THEN
+               a.short_id
+            ELSE
+               a.object_id
+            END VALUE a.parametertyp.toJSON(
+                p_force_inline   => 'FALSE'
+               ,p_short_id       => p_short_id
+            ) FORMAT JSON
+            RETURNING CLOB
          )
-         INTO clb_parameter_components 
+         INTO clb_parameters 
          FROM
          dz_swagger3_xobjects a
          WHERE
@@ -412,21 +407,20 @@ AS
          ORDER BY a.object_id;
             
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               CASE
-               WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
-               THEN
-                  a.short_id
-               ELSE
-                  a.object_id
-               END VALUE a.exampletyp.toJSON( 
-                   p_force_inline   => 'FALSE'
-                  ,p_short_id       => p_short_id
-               ) FORMAT JSON
-            )
+         JSON_OBJECTAGG(
+            CASE
+            WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
+            THEN
+               a.short_id
+            ELSE
+               a.object_id
+            END VALUE a.exampletyp.toJSON( 
+                p_force_inline   => 'FALSE'
+               ,p_short_id       => p_short_id
+            ) FORMAT JSON
+            RETURNING CLOB
          )
-         INTO clb_example_components
+         INTO clb_examples
          FROM
          dz_swagger3_xobjects a
          WHERE
@@ -435,21 +429,20 @@ AS
          ORDER BY a.object_id;
          
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               CASE
-               WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
-               THEN
-                  a.short_id
-               ELSE
-                  a.object_id
-               END VALUE a.requestbodytyp.toJSON(
-                   p_force_inline   => 'FALSE'
-                  ,p_short_id       => p_short_id
-               ) FORMAT JSON
-            )
+         JSON_OBJECTAGG(
+            CASE
+            WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
+            THEN
+               a.short_id
+            ELSE
+               a.object_id
+            END VALUE a.requestbodytyp.toJSON(
+                p_force_inline   => 'FALSE'
+               ,p_short_id       => p_short_id
+            ) FORMAT JSON
+            RETURNING CLOB
          )
-         INTO clb_requestbody_components
+         INTO clb_requestbodies
          FROM
          dz_swagger3_xobjects a
          WHERE
@@ -458,21 +451,20 @@ AS
          ORDER BY a.object_id;
 
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               CASE
-               WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
-               THEN
-                  a.short_id
-               ELSE
-                  a.object_id
-               END VALUE a.headertyp.toJSON(
-                   p_force_inline   => 'FALSE'
-                  ,p_short_id       => p_short_id
-               ) FORMAT JSON
-            )
+         JSON_OBJECTAGG(
+            CASE
+            WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
+            THEN
+               a.short_id
+            ELSE
+               a.object_id
+            END VALUE a.headertyp.toJSON(
+                p_force_inline   => 'FALSE'
+               ,p_short_id       => p_short_id
+            ) FORMAT JSON
+            RETURNING CLOB
          )
-         INTO clb_header_components
+         INTO clb_headers
          FROM
          dz_swagger3_xobjects a
          WHERE
@@ -481,12 +473,11 @@ AS
          ORDER BY a.object_id;
             
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               a.securityschemetyp.securityscheme_fullname VALUE a.securityschemetyp.toJSON() FORMAT JSON
-            )
+         JSON_OBJECTAGG(
+            a.securityschemetyp.securityscheme_fullname VALUE a.securityschemetyp.toJSON() FORMAT JSON
+            RETURNING CLOB
          )
-         INTO clb_securitySchemes_components
+         INTO clb_securitySchemes
          FROM
          dz_swagger3_xobjects a
          WHERE
@@ -494,21 +485,20 @@ AS
          ORDER BY a.object_id;
             
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               CASE
-               WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
-               THEN
-                  a.short_id
-               ELSE
-                  a.object_id
-               END VALUE a.linktyp.toJSON(
-                   p_force_inline   => 'FALSE'
-                  ,p_short_id       => p_short_id
-               ) FORMAT JSON
-            )
+         JSON_OBJECTAGG(
+            CASE
+            WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
+            THEN
+               a.short_id
+            ELSE
+               a.object_id
+            END VALUE a.linktyp.toJSON(
+                p_force_inline   => 'FALSE'
+               ,p_short_id       => p_short_id
+            ) FORMAT JSON
+            RETURNING CLOB
          )
-         INTO clb_links_components
+         INTO clb_links
          FROM
          dz_swagger3_xobjects a
          WHERE
@@ -517,21 +507,20 @@ AS
          ORDER BY a.object_id;
             
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               CASE
-               WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
-               THEN
-                  a.short_id
-               ELSE
-                  a.object_id
-               END VALUE a.pathtyp.toJSON(
-                   p_force_inline   => 'FALSE'
-                  ,p_short_id       => p_short_id
-               ) FORMAT JSON
-            )
+         JSON_OBJECTAGG(
+            CASE
+            WHEN COALESCE(p_short_id,'FALSE') = 'TRUE'
+            THEN
+               a.short_id
+            ELSE
+               a.object_id
+            END VALUE a.pathtyp.toJSON(
+                p_force_inline   => 'FALSE'
+               ,p_short_id       => p_short_id
+            ) FORMAT JSON
+            RETURNING CLOB
          )
-         INTO clb_callbacks_components
+         INTO clb_callbacks
          FROM
          dz_swagger3_xobjects a
          WHERE
@@ -554,6 +543,7 @@ AS
             a.securityschemetyp.toJSON_req( 
                p_oauth_scope_flows => b.object_attribute
             ) FORMAT JSON
+            RETURNING CLOB
          )
          INTO clb_security
          FROM 
@@ -573,10 +563,8 @@ AS
       --------------------------------------------------------------------------
       SELECT
       JSON_ARRAYAGG(
-         a.tagtyp.toJSON(
-            p_force_inline   => p_force_inline
-           ,p_short_id       => p_short_id
-         ) FORMAT JSON
+         a.tagtyp.toJSON() FORMAT JSON
+         RETURNING CLOB
       )
       INTO clb_tags
       FROM
@@ -597,11 +585,7 @@ AS
       THEN
          BEGIN
             SELECT
-            a.extrdocstyp.toJSON(
-               p_pretty_print   => p_pretty_print + 1
-              ,p_force_inline   => p_force_inline
-              ,p_short_id       => p_short_id
-            ) 
+            a.extrdocstyp.toJSON() 
             INTO clb_externalDocs
             FROM
             dz_swagger3_xobjects a
@@ -624,7 +608,7 @@ AS
 
 
       --------------------------------------------------------------------------
-      -- Step 20
+      -- Step 80
       -- Build the object
       --------------------------------------------------------------------------
       SELECT
@@ -636,25 +620,29 @@ AS
          ,'servers'       VALUE clb_servers               FORMAT JSON
          ,'paths'         VALUE clb_paths                 FORMAT JSON
          ,'components'    VALUE JSON_OBJECT(
-             'schemas'         VALUE clb_schemas_components         FORMAT JSON ABSENT ON NULL
-            ,'responses'       VALUE clb_responses_components       FORMAT JSON ABSENT ON NULL
-            ,'parameters'      VALUE clb_parameters_components      FORMAT JSON ABSENT ON NULL
-            ,'examples'        VALUE clb_examples_components        FORMAT JSON ABSENT ON NULL
-            ,'requestBodies'   VALUE clb_requestBodies_components   FORMAT JSON ABSENT ON NULL
-            ,'headers'         VALUE clb_headers_components         FORMAT JSON ABSENT ON NULL
-            ,'securitySchemes' VALUE clb_securitySchemes_components FORMAT JSON ABSENT ON NULL
-            ,'links'           VALUE clb_links_components           FORMAT JSON ABSENT ON NULL
-            ,'callbacks'       VALUE clb_callbacks_components       FORMAT JSON ABSENT ON NULL
+             'schemas'         VALUE clb_schemas         FORMAT JSON
+            ,'responses'       VALUE clb_responses       FORMAT JSON
+            ,'parameters'      VALUE clb_parameters      FORMAT JSON
+            ,'examples'        VALUE clb_examples        FORMAT JSON
+            ,'requestBodies'   VALUE clb_requestBodies   FORMAT JSON
+            ,'headers'         VALUE clb_headers         FORMAT JSON
+            ,'securitySchemes' VALUE clb_securitySchemes FORMAT JSON
+            ,'links'           VALUE clb_links           FORMAT JSON
+            ,'callbacks'       VALUE clb_callbacks       FORMAT JSON
+            ABSENT ON NULL
+            RETURNING CLOB
           )
-         ,'security'      VALUE clb_security              FORMAT JSON ABSENT ON NULL
-         ,'tags'          VALUE clb_tags                  FORMAT JSON ABSENT ON NULL
-         ,'externalDocs'  VALUE clb_externalDocs          FORMAT JSON ABSENT ON NULL         
+         ,'security'      VALUE clb_security              FORMAT JSON
+         ,'tags'          VALUE clb_tags                  FORMAT JSON
+         ,'externalDocs'  VALUE clb_externalDocs          FORMAT JSON
+         ABSENT ON NULL
+         RETURNING CLOB        
       )
       INTO clb_output
       FROM dual;
 
       --------------------------------------------------------------------------
-      -- Step 220
+      -- Step 90
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;

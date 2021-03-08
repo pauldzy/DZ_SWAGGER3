@@ -157,8 +157,9 @@ AS
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      clb_output       CLOB;
-      str_identifier   VARCHAR2(255 Char);
+      clb_output              CLOB;
+      str_identifier          VARCHAR2(255 Char);
+      clb_requestbody_content CLOB;
       
    BEGIN
       
@@ -202,11 +203,11 @@ AS
          THEN 
             SELECT
             JSON_OBJECTAGG(
-               KEY   b.object_key 
-               VALUE a.mediatyp.toJSON(
+               b.object_key VALUE a.mediatyp.toJSON(
                    p_force_inline   => p_force_inline
                   ,p_short_id       => p_short_id
                ) FORMAT JSON
+               RETURNING CLOB
             )
             INTO clb_requestbody_content
             FROM
@@ -226,18 +227,20 @@ AS
       --------------------------------------------------------------------------
          SELECT
          JSON_OBJECT(
-             'description'  VALUE self.requestbody_description             ABSENT ON NULL
-            ,'content'      VALUE clb_requestbody_content      FORMAT JSON ABSENT ON NULL
+             'description'  VALUE self.requestbody_description
+            ,'content'      VALUE clb_requestbody_content      FORMAT JSON
             ,'required'     VALUE CASE
                WHEN LOWER(self.requestbody_required) = 'true'
                THEN
-                  TRUE
+                  'true'
                WHEN LOWER(self.requestbody_required) = 'false'
                THEN
-                  FALSE
+                  'false'
                ELSE
                   NULL
-               END                                                         ABSENT ON NULL
+               END FORMAT JSON
+            ABSENT ON NULL
+            RETURNING CLOB
          )
          INTO clb_output
          FROM dual;
@@ -245,7 +248,7 @@ AS
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 70
+      -- Step 50
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;

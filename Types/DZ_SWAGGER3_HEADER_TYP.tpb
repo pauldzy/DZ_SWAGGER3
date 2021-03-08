@@ -5,7 +5,7 @@ AS
    -----------------------------------------------------------------------------
    CONSTRUCTOR FUNCTION dz_swagger3_header_typ
    RETURN SELF AS RESULT 
-   AS 
+   AS
    BEGIN 
       RETURN; 
       
@@ -138,6 +138,7 @@ AS
    ) RETURN CLOB
    AS
       clb_output          CLOB;
+      str_identifier      VARCHAR2(4000 Char);
       clb_header_examples CLOB;
       clb_header_schema   CLOB;
       
@@ -171,7 +172,7 @@ AS
             )
          )
          INTO clb_output
-         FROM dual
+         FROM dual;
       
       ELSE
       --------------------------------------------------------------------------
@@ -182,16 +183,16 @@ AS
          AND self.header_examples.COUNT > 0
          THEN
             SELECT
-            JSON_ARRAYAGG(
-               JSON_OBJECT(
-                  b.object_key VALUE a.exampletyp.toJSON(
-                      p_force_inline     => p_force_inline
-                     ,p_short_id         => p_short_id
-                     ,p_identifier       => a.object_id
-                     ,p_short_identifier => a.short_id
-                     ,p_reference_count  => a.reference_count
-                   )
+            JSON_OBJECTAGG(
+               b.object_key VALUE a.exampletyp.toJSON(
+                   p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
                )
+               ABSENT ON NULL
+               RETURNING CLOB
             )
             INTO clb_header_examples
             FROM
@@ -244,75 +245,199 @@ AS
       -- Step 40
       -- Build the output object
       --------------------------------------------------------------------------
-         SELECT
-         JSON_OBJECT(
-             'description'     VALUE self.header_description ABSENT ON NULL
-            ,'required'        VALUE CASE
-               WHEN LOWER(self.header_required) = 'true'
-               THEN
-                  TRUE
-               WHEN LOWER(self.header_required) = 'false'
-               THEN
-                  FALSE
-               ELSE
-                  NULL
-               END                                           ABSENT ON NULL
-            ,'deprecated'      VALUE CASE
-               WHEN LOWER(self.header_deprecated) = 'true'
-               THEN
-                  TRUE
-               WHEN LOWER(self.header_deprecated) = 'false'
-               THEN
-                  FALSE
-               ELSE
-                  NULL
-               END                                           ABSENT ON NULL
-            ,'allowEmptyValue' VALUE CASE
-               WHEN LOWER(self.header_allowEmptyValue) = 'true'
-               THEN
-                  TRUE
-               WHEN LOWER(self.header_allowEmptyValue) = 'false'
-               THEN
-                  FALSE
-               ELSE
-                  NULL
-               END                                           ABSENT ON NULL
-            ,'style'            VALUE self.header_style      ABSENT ON NULL
-            ,'explode'          VALUE CASE
-               WHEN LOWER(self.header_explode) = 'true'
-               THEN
-                  TRUE
-               WHEN LOWER(self.header_explode) = 'false'
-               THEN
-                  FALSE
-               ELSE
-                  NULL
-               END                                           ABSENT ON NULL
-            ,'allowReserved'    VALUE CASE
-               WHEN LOWER(self.header_allowReserved) = 'true'
-               THEN
-                  TRUE
-               WHEN LOWER(self.header_allowReserved) = 'false'
-               THEN
-                  FALSE
-               ELSE
-                  NULL
-               END                                           ABSENT ON NULL
-            ,'schema'           VALUE clb_header_schema      FORMAT JSON ABSENT ON NULL
-            ,'examples'         VALUE clb_header_examples    FORMAT JSON ABSENT ON NULL
-            ,'example'          VALUE CASE
-               WHEN self.header_example_string IS NOT NULL
-               THEN
-                  self.header_example_string
-               WHEN self.header_example_number IS NOT NULL
-               THEN
-                  self.header_example_number
-               ELSE
-                  NULL
-               END                                           ABSENT ON NULL
-         )
-         INTO clb_output
-         FROM dual;
+         IF self.header_example_string IS NOT NULL
+         THEN
+            SELECT
+            JSON_OBJECT(
+                'description'     VALUE self.header_description
+               ,'required'        VALUE CASE
+                  WHEN LOWER(self.header_required) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_required) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'deprecated'      VALUE CASE
+                  WHEN LOWER(self.header_deprecated) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_deprecated) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'allowEmptyValue' VALUE CASE
+                  WHEN LOWER(self.header_allowEmptyValue) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_allowEmptyValue) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'style'            VALUE self.header_style
+               ,'explode'          VALUE CASE
+                  WHEN LOWER(self.header_explode) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_explode) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'allowReserved'    VALUE CASE
+                  WHEN LOWER(self.header_allowReserved) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_allowReserved) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'schema'           VALUE clb_header_schema      FORMAT JSON
+               ,'examples'         VALUE clb_header_examples    FORMAT JSON
+               ,'example'          VALUE self.header_example_string
+               ABSENT ON NULL
+               RETURNING CLOB
+            )
+            INTO clb_output
+            FROM dual;
+            
+         ELSIF self.header_example_number IS NOT NULL
+         THEN
+            SELECT
+            JSON_OBJECT(
+                'description'     VALUE self.header_description
+               ,'required'        VALUE CASE
+                  WHEN LOWER(self.header_required) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_required) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'deprecated'      VALUE CASE
+                  WHEN LOWER(self.header_deprecated) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_deprecated) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'allowEmptyValue' VALUE CASE
+                  WHEN LOWER(self.header_allowEmptyValue) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_allowEmptyValue) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'style'            VALUE self.header_style
+               ,'explode'          VALUE CASE
+                  WHEN LOWER(self.header_explode) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_explode) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'allowReserved'    VALUE CASE
+                  WHEN LOWER(self.header_allowReserved) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_allowReserved) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'schema'           VALUE clb_header_schema      FORMAT JSON
+               ,'examples'         VALUE clb_header_examples    FORMAT JSON
+               ,'example'          VALUE self.header_example_number
+               ABSENT ON NULL
+               RETURNING CLOB
+            )
+            INTO clb_output
+            FROM dual;
+         ELSE
+            SELECT
+            JSON_OBJECT(
+                'description'     VALUE self.header_description
+               ,'required'        VALUE CASE
+                  WHEN LOWER(self.header_required) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_required) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'deprecated'      VALUE CASE
+                  WHEN LOWER(self.header_deprecated) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_deprecated) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'allowEmptyValue' VALUE CASE
+                  WHEN LOWER(self.header_allowEmptyValue) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_allowEmptyValue) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'style'            VALUE self.header_style
+               ,'explode'          VALUE CASE
+                  WHEN LOWER(self.header_explode) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_explode) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'allowReserved'    VALUE CASE
+                  WHEN LOWER(self.header_allowReserved) = 'true'
+                  THEN
+                     'true'
+                  WHEN LOWER(self.header_allowReserved) = 'false'
+                  THEN
+                     'false'
+                  ELSE
+                     NULL
+                  END FORMAT JSON
+               ,'schema'           VALUE clb_header_schema      FORMAT JSON
+               ,'examples'         VALUE clb_header_examples    FORMAT JSON
+               ABSENT ON NULL
+               RETURNING CLOB
+            )
+            INTO clb_output
+            FROM dual;
+            
+         END IF;
 
       END IF;
 

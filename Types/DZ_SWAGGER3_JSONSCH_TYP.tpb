@@ -236,7 +236,7 @@ AS
          ,p_short_id       => p_short_id
          ,p_jsonschema     => 'TRUE'
       );
-           
+ 
    END toJSON;
    
 END;

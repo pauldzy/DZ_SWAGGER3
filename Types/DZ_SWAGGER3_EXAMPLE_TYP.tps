@@ -34,7 +34,7 @@ AS OBJECT (
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
     ) RETURN CLOB
-    
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(

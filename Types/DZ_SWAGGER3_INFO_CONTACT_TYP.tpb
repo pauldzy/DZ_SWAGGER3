@@ -75,9 +75,10 @@ AS
       --------------------------------------------------------------------------
       SELECT
       JSON_OBJECT(
-          'name'         VALUE self.contact_name    ABSENT ON NULL
-         ,'url'          VALUE self.contact_url     ABSENT ON NULL
-         ,'email'        VALUE self.contact_email   ABSENT ON NULL
+          KEY 'name'         VALUE self.contact_name
+         ,KEY 'url'          VALUE self.contact_url
+         ,KEY 'email'        VALUE self.contact_email   
+         ABSENT ON NULL
       )
       INTO clb_output
       FROM dual;

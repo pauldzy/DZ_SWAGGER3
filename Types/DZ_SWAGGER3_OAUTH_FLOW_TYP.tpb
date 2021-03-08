@@ -77,23 +77,21 @@ AS
       AND self.oauth_flow_scope_names.COUNT > 0
       THEN
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               a.scopename VALUE b.scopedesc
-            )
+         JSON_OBJECTAGG(
+            a.scopename VALUE b.scopedesc
          )
          INTO clob_scopes
          FROM (
             SELECT
-             rownum      AS namerowid
-            ,column_name AS scopename
+             rownum       AS namerowid
+            ,column_value AS scopename
             FROM
             TABLE(self.oauth_flow_scope_names)
          ) a
          JOIN (
             SELECT
-             rownum      AS descrowid
-            ,column_name AS scopedesc
+             rownum       AS descrowid
+            ,column_value AS scopedesc
             FROM
             TABLE(self.oauth_flow_scope_desc)
          ) b
@@ -108,10 +106,12 @@ AS
       --------------------------------------------------------------------------
       SELECT
       JSON_OBJECT(
-          'authorizationUrl' VALUE self.oauth_flow_authorizationUrl ABSENT ON NULL
-         ,'tokenUrl'         VALUE self.oauth_flow_tokenUrl         ABSENT ON NULL
-         ,'refreshUrl'       VALUE self.oauth_flow_refreshUrl       ABSENT ON NULL
-         ,'scopes'           VALUE clob_scopes                      FORMAT JSON ABSENT ON NULL
+          'authorizationUrl' VALUE self.oauth_flow_authorizationUrl
+         ,'tokenUrl'         VALUE self.oauth_flow_tokenUrl
+         ,'refreshUrl'       VALUE self.oauth_flow_refreshUrl
+         ,'scopes'           VALUE clob_scopes                      FORMAT JSON 
+         ABSENT ON NULL
+         RETURNING CLOB
       )
       INTO clb_output
       FROM dual;

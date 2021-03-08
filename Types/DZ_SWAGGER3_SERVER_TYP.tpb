@@ -119,10 +119,9 @@ AS
       AND self.server_variables.COUNT > 0
       THEN
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-                  b.object_key VALUE a.servervartyp.toJSON() FORMAT JSON
-            )
+         JSON_OBJECTAGG(
+            b.object_key VALUE a.servervartyp.toJSON() FORMAT JSON
+            RETURNING CLOB
          )
          INTO clb_variables
          FROM
@@ -142,9 +141,11 @@ AS
       --------------------------------------------------------------------------
       SELECT
       JSON_OBJECT(
-          'url'          VALUE self.server_url                     ABSENT ON NULL
-         ,'description'  VALUE self.server_description             ABSENT ON NULL
-         ,'variables'    VALUE clb_variables           FORMAT JSON ABSENT ON NULL
+          'url'          VALUE self.server_url
+         ,'description'  VALUE self.server_description
+         ,'variables'    VALUE clb_variables           FORMAT JSON
+         ABSENT ON NULL
+         RETURNING CLOB
       )
       INTO clb_output
       FROM dual;

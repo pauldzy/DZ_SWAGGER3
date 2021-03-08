@@ -137,12 +137,18 @@ AS
       SELECT
       JSON_OBJECT(
           'name'         VALUE self.tag_name
-         ,'namespace'    VALUE self.tag_description               ABSENT ON NULL
-         ,'externalDocs' VALUE clb_extrdocstyp        FORMAT JSON ABSENT ON NULL
+         ,'namespace'    VALUE self.tag_description
+         ,'externalDocs' VALUE clb_extrdocstyp        FORMAT JSON 
+         ABSENT ON NULL
+         RETURNING CLOB
       )
       INTO clb_output
       FROM dual;
       
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Cough out the results
+      --------------------------------------------------------------------------
       RETURN clb_output;
            
    END toJSON;

@@ -95,7 +95,9 @@ AS
       SELECT
       JSON_OBJECT(
           'description'  VALUE self.externaldoc_description
-         ,'url'          VALUE self.externaldoc_url         ABSENT ON NULL
+         ,'url'          VALUE self.externaldoc_url         
+         ABSENT ON NULL
+      )
       INTO clb_output
       FROM dual;
       

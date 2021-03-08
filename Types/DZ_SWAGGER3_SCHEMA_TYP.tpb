@@ -487,8 +487,12 @@ AS
       clb_schema_items_schema        CLOB;
       clb_schema_properties          CLOB;
       clb_schema_prop_required       CLOB;
+      clb_xml                        CLOB;
       str_object_key                 VARCHAR2(255 Char);
       str_identifier                 VARCHAR2(255 Char);
+      int_schema_enum_string         PLS_INTEGER;
+      int_schema_enum_number         PLS_INTEGER;
+      boo_is_not                     BOOLEAN;
       
    BEGIN
       
@@ -510,9 +514,11 @@ AS
       IF  self.combine_schemas IS NOT NULL
       AND self.combine_schemas.COUNT > 0
       THEN
+         boo_is_not := FALSE;
+         
          SELECT
           COUNT(*)
-         ,FIRST(b.object_key)
+         ,FIRST_VALUE(b.object_key) OVER (ORDER BY b.object_order)
          INTO
           int_combine_schemas
          ,str_object_key 
@@ -532,7 +538,7 @@ AS
          END IF;
       
       --------------------------------------------------------------------------
-      -- Step 50
+      -- Step 30
       -- branch for the NOT scenario
       --------------------------------------------------------------------------
          IF boo_is_not
@@ -547,6 +553,7 @@ AS
                   ,p_reference_count  => a.reference_count
                   ,p_jsonschema       => str_jsonschema
                ) FORMAT JSON
+               RETURNING CLOB
             )
             INTO clb_combine_schemas
             FROM
@@ -560,25 +567,26 @@ AS
          
             SELECT
             JSON_OBJECT(
-                'type'         VALUE self.schema_type                ABSENT ON NULL
-               ,'not'          VALUE clb_combine_schemas FORMAT JSON ABSENT ON NULL
+                'type'         VALUE self.schema_type
+               ,'not'          VALUE clb_combine_schemas FORMAT JSON 
+               ABSENT ON NULL
+               RETURNING CLOB
             )
             INTO clb_output
             FROM dual;
          
          ELSE
             SELECT
-            JSON_ARRAYAGG(
-               JSON_OBJECT(
-                  b.object_key VALUE a.schematyp.toJSON(
-                      p_force_inline     => p_force_inline
-                     ,p_short_id         => p_short_id
-                     ,p_identifier       => a.object_id
-                     ,p_short_identifier => a.short_id
-                     ,p_reference_count  => a.reference_count
-                     ,p_jsonschema       => str_jsonschema
-                  ) FORMAT JSON
-               )
+            JSON_OBJECTAGG(
+               b.object_key VALUE a.schematyp.toJSON(
+                   p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
+                  ,p_jsonschema       => str_jsonschema
+               ) FORMAT JSON
+               RETURNING CLOB
             )
             INTO clb_combine_schemas
             FROM
@@ -592,8 +600,10 @@ AS
             
             SELECT
             JSON_OBJECT(
-                'type'         VALUE self.schema_type                ABSENT ON NULL
-               ,str_object_key VALUE clb_combine_schemas FORMAT JSON ABSENT ON NULL
+                'type'         VALUE self.schema_type
+               ,str_object_key VALUE clb_combine_schemas FORMAT JSON 
+               ABSENT ON NULL
+               RETURNING CLOB
             )
             INTO clb_output
             FROM dual;
@@ -602,7 +612,7 @@ AS
       
       ELSE
       --------------------------------------------------------------------------
-      -- Step 60
+      -- Step 40
       -- Branch if needed for ref
       --------------------------------------------------------------------------
          IF  COALESCE(p_force_inline,'FALSE') = 'FALSE'
@@ -628,7 +638,7 @@ AS
             
          ELSE
       --------------------------------------------------------------------------
-      -- Step 70
+      -- Step 50
       -- Add optional externalDocs
       --------------------------------------------------------------------------
             IF  self.schema_externalDocs IS NOT NULL
@@ -636,10 +646,7 @@ AS
             THEN
                BEGIN
                   SELECT
-                  a.extrdocstyp.toJSON(
-                      p_force_inline   => p_force_inline
-                     ,p_short_id       => p_short_id
-                  )
+                  a.extrdocstyp.toJSON()
                   INTO clb_schema_externalDocs
                   FROM
                   dz_swagger3_xobjects a
@@ -661,7 +668,7 @@ AS
             END IF;
             
       --------------------------------------------------------------------------
-      -- Step 80
+      -- Step 60
       -- Add schema items
       --------------------------------------------------------------------------
             IF self.schema_items_schema IS NOT NULL
@@ -697,7 +704,7 @@ AS
             END IF;
             
       --------------------------------------------------------------------------
-      -- Step 90
+      -- Step 70
       -- Add optional xml object
       --------------------------------------------------------------------------
             IF str_jsonschema = 'FALSE'
@@ -714,33 +721,30 @@ AS
                      ,p_xml_prefix     => self.xml_prefix
                      ,p_xml_attribute  => self.xml_attribute
                      ,p_xml_wrapped    => self.xml_wrapped
-                   ).toJSON(
-                     p_force_inline    => p_force_inline
-                   );
+                  ).toJSON();
                   
                END IF;
                
             END IF;
             
       -------------------------------------------------------------------------
-      -- Step 100
+      -- Step 80
       -- Add parameters
       -------------------------------------------------------------------------
             IF  self.schema_properties IS NOT NULL 
             AND self.schema_properties.COUNT > 0
             THEN
                SELECT
-               JSON_ARRAYAGG(
-                  JSON_OBJECT(
-                     b.object_key VALUE a.schematyp.toJSON(
-                         p_force_inline     => p_force_inline
-                        ,p_short_id         => p_short_id
-                        ,p_identifier       => a.object_id
-                        ,p_short_identifier => a.short_id
-                        ,p_reference_count  => a.reference_count
-                        ,p_jsonschema       => str_jsonschema
-                     )
+               JSON_OBJECTAGG(
+                  b.object_key VALUE a.schematyp.toJSON(
+                      p_force_inline     => p_force_inline
+                     ,p_short_id         => p_short_id
+                     ,p_identifier       => a.object_id
+                     ,p_short_identifier => a.short_id
+                     ,p_reference_count  => a.reference_count
+                     ,p_jsonschema       => str_jsonschema
                   )
+                  RETURNING CLOB
                )
                INTO clb_schema_properties
                FROM
@@ -774,142 +778,383 @@ AS
             END IF;
        
       --------------------------------------------------------------------------
-      -- Step 100
+      -- Step 90
       -- Create the object
       --------------------------------------------------------------------------
-            SELECT
-            JSON_OBJECT(
-                '$schema'       VALUE CASE
-                  WHEN LOWER(self.inject_jsonschema) = 'true'
-                  THEN
-                     'http://json-schema.org/draft-04/schema#'
-                  ELSE
-                     NULL
-                  END                                       ABSENT ON NULL
-               ,'type'          VALUE CASE
-                  WHEN str_jsonschema = 'TRUE'
-                  AND  self.schema_nullable = 'TRUE'
-                  THEN
-                     JSON_ARRAY(self.schema_type,'null')
-                  ELSE
-                     self.schema_type
-                  END
-               ,'title'         VALUE self.schema_title         ABSENT ON NULL
-               ,'description'   VALUE self.schema_description   ABSENT ON NULL
-               ,'format'        VALUE self.schema_format        ABSENT ON NULL
-               ,'enum'          VALUE CASE
-                  WHEN self.schema_enum_string IS NOT NULL
-                  AND  self.schema_enum_string.COUNT > 0
-                  THEN
-                     (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_string))
-                  WHEN self.schema_enum_number IS NOT NULL
-                  AND  self.schema_enum_number.COUNT > 0
-                  THEN
-                     (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_number))
-                  ELSE
-                     NULL
-                  END                                           ABSENT ON NULL
-               ,'nullable'      VALUE CASE
-                  WHEN self.schema_nullable IS NOT NULL
-                  AND str_jsonschema <> 'TRUE'
-                     CASE
-                     WHEN LOWER(self.schema_nullable) = 'true'
+            int_schema_enum_string := self.schema_enum_string.COUNT;
+            int_schema_enum_number := self.schema_enum_number.COUNT;
+            
+            IF  self.schema_example_string IS NOT NULL
+            AND str_jsonschema <> 'TRUE'
+            THEN
+               SELECT
+               JSON_OBJECT(
+                   '$schema'       VALUE CASE
+                     WHEN LOWER(self.inject_jsonschema) = 'true'
                      THEN
-                        TRUE
-                     WHEN LOWER(self.schema_nullable) = 'false'
-                     THEN
-                        FALSE
+                        'http://json-schema.org/draft-04/schema#'
                      ELSE
                         NULL
                      END
-                  ELSE
-                     NULL
-                  END                                           ABSENT ON NULL
-               ,'discriminator' VALUE CASE
-                  WHEN self.schema_discriminator IS NOT NULL
-                  AND  str_jsonschema <> 'TRUE'
-                  THEN
-                     self.schema_discriminator
-                  ELSE
-                     NULL
-                  END                                           ABSENT ON NULL
-               ,'readOnly'      VALUE CASE
-                  WHEN self.schema_readOnly IS NOT NULL
-                  AND  str_jsonschema <> 'TRUE'
-                  THEN
-                     CASE
-                     WHEN LOWER(self.schema_readOnly) = 'true'
+                  ,'type'          VALUE CASE
+                     WHEN str_jsonschema = 'TRUE'
+                     AND  self.schema_nullable = 'TRUE'
                      THEN
-                        TRUE
-                     WHEN LOWER(self.schema_readOnly) = 'false'
+                        JSON_ARRAY(self.schema_type,'null')
+                     ELSE
+                        self.schema_type
+                     END
+                  ,'title'         VALUE self.schema_title
+                  ,'description'   VALUE self.schema_description
+                  ,'format'        VALUE self.schema_format
+                  ,'enum'          VALUE CASE
+                     WHEN self.schema_enum_string IS NOT NULL
+                     AND  int_schema_enum_string > 0
                      THEN
-                        FALSE
+                        (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_string))
+                     WHEN self.schema_enum_number IS NOT NULL
+                     AND  int_schema_enum_number > 0
+                     THEN
+                        (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_number))
                      ELSE
                         NULL
                      END
-                  ELSE
-                     NULL
-                  END                                           ABSENT ON NULL
-               ,'writeOnly'     VALUE CASE
-                  WHEN self.schema_writeOnly IS NOT NULL
-                  AND  str_jsonschema <> 'TRUE'
-                  THEN
-                     CASE
-                     WHEN LOWER(self.schema_writeOnly) = 'true'
+                  ,'nullable'      VALUE CASE
+                     WHEN self.schema_nullable IS NOT NULL
+                     AND str_jsonschema <> 'TRUE'
                      THEN
-                        TRUE
-                     WHEN LOWER(self.schema_writeOnly) = 'false'
+                        CASE
+                        WHEN LOWER(self.schema_nullable) = 'true'
+                        THEN
+                           'true'
+                        WHEN LOWER(self.schema_nullable) = 'false'
+                        THEN
+                           'false'
+                        ELSE
+                           NULL
+                        END
+                     ELSE
+                        NULL
+                     END FORMAT JSON
+                  ,'discriminator' VALUE CASE
+                     WHEN self.schema_discriminator IS NOT NULL
+                     AND  str_jsonschema <> 'TRUE'
                      THEN
-                        FALSE
+                        self.schema_discriminator
                      ELSE
                         NULL
                      END
-                  ELSE
-                     NULL
-                  END                                           ABSENT ON NULL
-               ,'maxItems'      VALUE self.schema_maxItems      ABSENT ON NULL
-               ,'minItems'      VALUE self.schema_minItems      ABSENT ON NULL
-               ,'maxProperties' VALUE self.schema_maxProperties ABSENT ON NULL
-               ,'minProperties' VALUE self.schema_minProperties ABSENT ON NULL
-               ,'externalDocs'  VALUE clb_schema_externalDocs   FORMAT JSON ABSENT ON NULL
-               ,'example'       VALUE CASE
-                  WHEN self.schema_example_string IS NOT NULL
-                  AND  str_jsonschema <> 'TRUE'
-                  THEN
-                     self.schema_example_string
-                  WHEN self.schema_example_number IS NOT NULL
-                  AND  str_jsonschema <> 'TRUE'
-                  THEN
-                     self.schema_example_number
-                  ELSE
-                     NULL
-                  END                                           ABSENT ON NULL
-               ,'deprecated'    VALUE CASE
-                  WHEN LOWER(self.schema_deprecated) = 'true'
-                  AND  str_jsonschema <> 'TRUE'
-                  THEN
-                     TRUE
-                  WHEN LOWER(self.schema_deprecated) = 'false'
-                  AND  str_jsonschema <> 'TRUE'
-                  THEN
-                     FALSE
-                  ELSE
-                     NULL
-                  END                                           ABSENT ON NULL
-               ,'schema'        VALUE clb_schema_items_schema   FORMAT JSON ABSENT ON NULL
-               ,'xml'           VALUE clb_xml                   FORMAT JSON ABSENT ON NULL
-               ,'properties'    VALUE clb_schema_properties     FORMAT JSON ABSENT ON NULL
-               ,'required'      VALUE clb_schema_prop_required  FORMAT JSON ABSENT ON NULL
-            )
-            INTO clb_output
-            FROM dual;
+                  ,'readOnly'      VALUE CASE
+                     WHEN self.schema_readOnly IS NOT NULL
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        CASE
+                        WHEN LOWER(self.schema_readOnly) = 'true'
+                        THEN
+                           'true'
+                        WHEN LOWER(self.schema_readOnly) = 'false'
+                        THEN
+                           'false'
+                        ELSE
+                           NULL
+                        END
+                     ELSE
+                        NULL
+                     END FORMAT JSON
+                  ,'writeOnly'     VALUE CASE
+                     WHEN self.schema_writeOnly IS NOT NULL
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        CASE
+                        WHEN LOWER(self.schema_writeOnly) = 'true'
+                        THEN
+                           'true'
+                        WHEN LOWER(self.schema_writeOnly) = 'false'
+                        THEN
+                           'false'
+                        ELSE
+                           NULL
+                        END
+                     ELSE
+                        NULL
+                     END FORMAT JSON
+                  ,'maxItems'      VALUE self.schema_maxItems
+                  ,'minItems'      VALUE self.schema_minItems
+                  ,'maxProperties' VALUE self.schema_maxProperties
+                  ,'minProperties' VALUE self.schema_minProperties
+                  ,'externalDocs'  VALUE clb_schema_externalDocs   FORMAT JSON
+                  ,'example'       VALUE self.schema_example_string
+                  ,'deprecated'    VALUE CASE
+                     WHEN LOWER(self.schema_deprecated) = 'true'
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        'true'
+                     WHEN LOWER(self.schema_deprecated) = 'false'
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        'false'
+                     ELSE
+                        NULL
+                     END FORMAT JSON
+                  ,'schema'        VALUE clb_schema_items_schema   FORMAT JSON
+                  ,'xml'           VALUE clb_xml                   FORMAT JSON
+                  ,'properties'    VALUE clb_schema_properties     FORMAT JSON
+                  ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                  ABSENT ON NULL
+                  RETURNING CLOB
+               )
+               INTO clb_output
+               FROM dual;
+               
+            ELSIF self.schema_example_number IS NOT NULL
+            AND   str_jsonschema <> 'TRUE'
+            THEN
+               SELECT
+               JSON_OBJECT(
+                   '$schema'       VALUE CASE
+                     WHEN LOWER(self.inject_jsonschema) = 'true'
+                     THEN
+                        'http://json-schema.org/draft-04/schema#'
+                     ELSE
+                        NULL
+                     END
+                  ,'type'          VALUE CASE
+                     WHEN str_jsonschema = 'TRUE'
+                     AND  self.schema_nullable = 'TRUE'
+                     THEN
+                        JSON_ARRAY(self.schema_type,'null')
+                     ELSE
+                        self.schema_type
+                     END
+                  ,'title'         VALUE self.schema_title
+                  ,'description'   VALUE self.schema_description
+                  ,'format'        VALUE self.schema_format
+                  ,'enum'          VALUE CASE
+                     WHEN self.schema_enum_string IS NOT NULL
+                     AND  int_schema_enum_string > 0
+                     THEN
+                        (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_string))
+                     WHEN self.schema_enum_number IS NOT NULL
+                     AND  int_schema_enum_number > 0
+                     THEN
+                        (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_number))
+                     ELSE
+                        NULL
+                     END
+                  ,'nullable'      VALUE CASE
+                     WHEN self.schema_nullable IS NOT NULL
+                     AND str_jsonschema <> 'TRUE'
+                     THEN
+                        CASE
+                        WHEN LOWER(self.schema_nullable) = 'true'
+                        THEN
+                           'true'
+                        WHEN LOWER(self.schema_nullable) = 'false'
+                        THEN
+                           'false'
+                        ELSE
+                           NULL
+                        END
+                     ELSE
+                        NULL
+                     END FORMAT JSON
+                  ,'discriminator' VALUE CASE
+                     WHEN self.schema_discriminator IS NOT NULL
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        self.schema_discriminator
+                     ELSE
+                        NULL
+                     END
+                  ,'readOnly'      VALUE CASE
+                     WHEN self.schema_readOnly IS NOT NULL
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        CASE
+                        WHEN LOWER(self.schema_readOnly) = 'true'
+                        THEN
+                           'true'
+                        WHEN LOWER(self.schema_readOnly) = 'false'
+                        THEN
+                           'false'
+                        ELSE
+                           NULL
+                        END
+                     ELSE
+                        NULL
+                     END FORMAT JSON
+                  ,'writeOnly'     VALUE CASE
+                     WHEN self.schema_writeOnly IS NOT NULL
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        CASE
+                        WHEN LOWER(self.schema_writeOnly) = 'true'
+                        THEN
+                           'true'
+                        WHEN LOWER(self.schema_writeOnly) = 'false'
+                        THEN
+                           'false'
+                        ELSE
+                           NULL
+                        END
+                     ELSE
+                        NULL
+                     END FORMAT JSON
+                  ,'maxItems'      VALUE self.schema_maxItems
+                  ,'minItems'      VALUE self.schema_minItems
+                  ,'maxProperties' VALUE self.schema_maxProperties
+                  ,'minProperties' VALUE self.schema_minProperties
+                  ,'externalDocs'  VALUE clb_schema_externalDocs   FORMAT JSON
+                  ,'example'       VALUE self.schema_example_number
+                  ,'deprecated'    VALUE CASE
+                     WHEN LOWER(self.schema_deprecated) = 'true'
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        'true'
+                     WHEN LOWER(self.schema_deprecated) = 'false'
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        'false'
+                     ELSE
+                        NULL
+                     END FORMAT JSON
+                  ,'schema'        VALUE clb_schema_items_schema   FORMAT JSON
+                  ,'xml'           VALUE clb_xml                   FORMAT JSON
+                  ,'properties'    VALUE clb_schema_properties     FORMAT JSON
+                  ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                  ABSENT ON NULL
+                  RETURNING CLOB
+               )
+               INTO clb_output
+               FROM dual;
+               
+            ELSE
+               SELECT
+               JSON_OBJECT(
+                   '$schema'       VALUE CASE
+                     WHEN LOWER(self.inject_jsonschema) = 'true'
+                     THEN
+                        'http://json-schema.org/draft-04/schema#'
+                     ELSE
+                        NULL
+                     END
+                  ,'type'          VALUE CASE
+                     WHEN str_jsonschema = 'TRUE'
+                     AND  self.schema_nullable = 'TRUE'
+                     THEN
+                        JSON_ARRAY(self.schema_type,'null')
+                     ELSE
+                        self.schema_type
+                     END
+                  ,'title'         VALUE self.schema_title
+                  ,'description'   VALUE self.schema_description
+                  ,'format'        VALUE self.schema_format
+                  ,'enum'          VALUE CASE
+                     WHEN self.schema_enum_string IS NOT NULL
+                     AND  int_schema_enum_string > 0
+                     THEN
+                        (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_string))
+                     WHEN self.schema_enum_number IS NOT NULL
+                     AND  int_schema_enum_number > 0
+                     THEN
+                        (SELECT JSON_ARRAYAGG(column_value) FROM TABLE(self.schema_enum_number))
+                     ELSE
+                        NULL
+                     END
+                  ,'nullable'      VALUE CASE
+                     WHEN self.schema_nullable IS NOT NULL
+                     AND str_jsonschema <> 'TRUE'
+                     THEN
+                        CASE
+                        WHEN LOWER(self.schema_nullable) = 'true'
+                        THEN
+                           'true'
+                        WHEN LOWER(self.schema_nullable) = 'false'
+                        THEN
+                           'false'
+                        ELSE
+                           NULL
+                        END
+                     ELSE
+                        NULL
+                     END FORMAT JSON
+                  ,'discriminator' VALUE CASE
+                     WHEN self.schema_discriminator IS NOT NULL
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        self.schema_discriminator
+                     ELSE
+                        NULL
+                     END
+                  ,'readOnly'      VALUE CASE
+                     WHEN self.schema_readOnly IS NOT NULL
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        CASE
+                        WHEN LOWER(self.schema_readOnly) = 'true'
+                        THEN
+                           'true'
+                        WHEN LOWER(self.schema_readOnly) = 'false'
+                        THEN
+                           'false'
+                        ELSE
+                           NULL
+                        END
+                     ELSE
+                        NULL
+                     END FORMAT JSON
+                  ,'writeOnly'     VALUE CASE
+                     WHEN self.schema_writeOnly IS NOT NULL
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        CASE
+                        WHEN LOWER(self.schema_writeOnly) = 'true'
+                        THEN
+                           'true'
+                        WHEN LOWER(self.schema_writeOnly) = 'false'
+                        THEN
+                           'false'
+                        ELSE
+                           NULL
+                        END
+                     ELSE
+                        NULL
+                     END FORMAT JSON
+                  ,'maxItems'      VALUE self.schema_maxItems
+                  ,'minItems'      VALUE self.schema_minItems
+                  ,'maxProperties' VALUE self.schema_maxProperties
+                  ,'minProperties' VALUE self.schema_minProperties
+                  ,'externalDocs'  VALUE clb_schema_externalDocs   FORMAT JSON
+                  ,'deprecated'    VALUE CASE
+                     WHEN LOWER(self.schema_deprecated) = 'true'
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        'true'
+                     WHEN LOWER(self.schema_deprecated) = 'false'
+                     AND  str_jsonschema <> 'TRUE'
+                     THEN
+                        'false'
+                     ELSE
+                        NULL
+                     END FORMAT JSON
+                  ,'schema'        VALUE clb_schema_items_schema   FORMAT JSON
+                  ,'xml'           VALUE clb_xml                   FORMAT JSON
+                  ,'properties'    VALUE clb_schema_properties     FORMAT JSON
+                  ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                  ABSENT ON NULL
+                  RETURNING CLOB
+               )
+               INTO clb_output
+               FROM dual;
+               
+            END IF;
             
          END IF;
             
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 140
+      -- Step 100
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;

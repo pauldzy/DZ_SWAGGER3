@@ -20,7 +20,7 @@ AS OBJECT (
       ,p_response_code           IN  VARCHAR2
       ,p_versionid               IN  VARCHAR2
    ) RETURN SELF AS RESULT
-   
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER PROCEDURE traverse

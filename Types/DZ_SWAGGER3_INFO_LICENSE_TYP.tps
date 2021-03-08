@@ -15,7 +15,7 @@ AS OBJECT (
        p_license_name     IN  VARCHAR2
       ,p_license_url      IN  VARCHAR2
    ) RETURN SELF AS RESULT
-   
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION isNULL

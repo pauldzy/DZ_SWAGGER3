@@ -332,7 +332,7 @@ AS
             ,CHR(10) || ' ' || CHR(10)
          );
          
-         ary_strings := dz_json_util.gz_split(
+         ary_strings := dz_swagger3_util.gz_split(
              str_output
             ,CHR(10)
          );

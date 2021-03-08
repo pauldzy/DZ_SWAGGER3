@@ -4,7 +4,7 @@ AS OBJECT (
     contact_name        VARCHAR2(255 Char)
    ,contact_url         VARCHAR2(255 Char)
    ,contact_email       VARCHAR2(255 Char)
-   
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_info_contact_typ

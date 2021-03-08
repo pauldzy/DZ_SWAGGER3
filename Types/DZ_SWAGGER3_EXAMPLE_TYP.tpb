@@ -78,7 +78,7 @@ AS
    ) RETURN CLOB
    AS
       clb_output       CLOB;
-      clb_ref          CLOB;
+      str_identifier   VARCHAR2(4000 Char);
       
    BEGIN
       
@@ -105,9 +105,9 @@ AS
          
          SELECT
          JSON_OBJECT(
-             '$ref'   VALUE  '#/components/examples/' || dz_swagger3_util.utl_url_escape(
+            '$ref'   VALUE  '#/components/examples/' || dz_swagger3_util.utl_url_escape(
                str_identifier
-             )
+            )
          )
          INTO clb_output
          FROM dual;
@@ -117,29 +117,52 @@ AS
       -- Or run it as usual
       --------------------------------------------------------------------------
       ELSE
-         SELECT
-         JSON_OBJECT(
-             'summary'       VALUE self.example_summary       ABSENT ON NULL
-            ,'description'   VALUE self.example_description   ABSENT ON NULL
-            ,'value'         VALUE CASE
-               WHEN self.example_value_string IS NOT NULL
-               THEN
-                  self.example_value_string
-               WHEN self.example_value_number IS NOT NULL
-               THEN
-                  self.example_value_number
-               ELSE
-                  NULL
-               END                                            ABSENT ON NULL
-            ,'externalValue' VALUE self.example_externalValue ABSENT ON NULL
-         )
-         INTO clb_output
-         FROM dual;
+         IF self.example_value_string IS NOT NULL
+         THEN
+            SELECT
+            JSON_OBJECT(
+                'summary'       VALUE self.example_summary
+               ,'description'   VALUE self.example_description
+               ,'value'         VALUE self.example_value_string
+               ,'externalValue' VALUE self.example_externalValue 
+               ABSENT ON NULL
+               RETURNING CLOB
+            )
+            INTO clb_output
+            FROM dual;
+
+         ELSIF self.example_value_number IS NOT NULL
+         THEN
+            SELECT
+            JSON_OBJECT(
+                'summary'       VALUE self.example_summary
+               ,'description'   VALUE self.example_description
+               ,'value'         VALUE self.example_value_number
+               ,'externalValue' VALUE self.example_externalValue 
+               ABSENT ON NULL
+               RETURNING CLOB
+            )
+            INTO clb_output
+            FROM dual;
+            
+         ELSE
+            SELECT
+            JSON_OBJECT(
+                'summary'       VALUE self.example_summary
+               ,'description'   VALUE self.example_description
+               ,'externalValue' VALUE self.example_externalValue 
+               ABSENT ON NULL
+               RETURNING CLOB
+            )
+            INTO clb_output
+            FROM dual;
+            
+         END IF;
  
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 80
+      -- Step 40
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;

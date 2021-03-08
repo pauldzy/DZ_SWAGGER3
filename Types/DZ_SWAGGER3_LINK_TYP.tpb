@@ -118,7 +118,7 @@ AS
       clb_output       CLOB;
       str_identifier   VARCHAR2(255 Char);
       str_operation_id VARCHAR2(255 Char);
-      clob_parameters  CLOB;
+      clb_parameters   CLOB;
       clb_server       CLOB;
       
    BEGIN
@@ -162,31 +162,29 @@ AS
          AND self.link_op_parm_names.COUNT > 0
          THEN
             SELECT
-            JSON_ARRAYAGG(
-               JSON_OBJECT(
-                  a.parmname VALUE b.parmexps
-               )
+            JSON_OBJECTAGG(
+               a.parmname VALUE b.parmexps             
             )
-            INTO clob_parameters
+            INTO clb_parameters
             FROM (
                SELECT
-                rownum      AS namerowid
-               ,column_name AS parmname
+                rownum       AS namerowid
+               ,column_value AS parmname
                FROM
                TABLE(self.link_op_parm_names)
             ) a
             JOIN (
                SELECT
-                rownum      AS descrowid
-               ,column_name AS parmexps
+                rownum       AS expsrowid
+               ,column_value AS parmexps
                FROM
                TABLE(self.link_op_parm_exps)
             ) b
             ON
-            a.namerowid = b.descrowid;
+            a.namerowid = b.expsrowid;
          
          END IF;
-         
+
       --------------------------------------------------------------------------
       -- Step 40
       -- Add server object
@@ -195,10 +193,7 @@ AS
          THEN
             BEGIN
                SELECT
-               a.servertyp.toJSON(
-                   p_force_inline  => p_force_inline
-                  ,p_short_id      => p_short_id
-               )
+               a.servertyp.toJSON()
                INTO clb_server
                FROM dz_swagger3_xobjects a
                WHERE
@@ -208,7 +203,7 @@ AS
             EXCEPTION
                WHEN NO_DATA_FOUND
                THEN
-                  clb_tmp := NULL;
+                  clb_server := NULL;
                   
                WHEN OTHERS
                THEN
@@ -248,12 +243,14 @@ AS
       --------------------------------------------------------------------------
          SELECT
          JSON_OBJECT(
-             'operationRef'  VALUE self.link_operationRef    ABSENT ON NULL
-            ,'operationId'   VALUE str_operation_id          ABSENT ON NULL
-            ,'parameters'    VALUE clb_parameters            FORMAT JSON ABSENT ON NULL
-            ,'requestBody'   VALUE self.link_requestBody_exp ABSENT ON NULL
-            ,'description'   VALUE self.link_description     ABSENT ON NULL
-            ,'server'        VALUE clb_server                FORMAT JSON ABSENT ON NULL
+             'operationRef'  VALUE self.link_operationRef
+            ,'operationId'   VALUE str_operation_id
+            ,'parameters'    VALUE clb_parameters            FORMAT JSON
+            ,'requestBody'   VALUE self.link_requestBody_exp
+            ,'description'   VALUE self.link_description
+            ,'server'        VALUE clb_server                FORMAT JSON 
+            ABSENT ON NULL
+            RETURNING CLOB
          )
          INTO clb_output
          FROM dual;  

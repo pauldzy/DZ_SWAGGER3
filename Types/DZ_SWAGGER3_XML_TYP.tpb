@@ -53,23 +53,25 @@ AS
       --------------------------------------------------------------------------
       SELECT
       JSON_OBJECT(
-          'name'         VALUE self.xml_name        ABSENT ON NULL
-         ,'namespace'    VALUE self.xml_namespace   ABSENT ON NULL
-         ,'prefix'       VALUE self.xml_prefix      ABSENT ON NULL
+          'name'         VALUE self.xml_name
+         ,'namespace'    VALUE self.xml_namespace
+         ,'prefix'       VALUE self.xml_prefix
          ,'attribute'    VALUE CASE
-            WHEN self.xml_attribute = 'TRUE'
+            WHEN LOWER(self.xml_attribute) = 'true'
             THEN
-               TRUE
+               'true'
             ELSE
                NULL
-            END                                     ABSENT ON NULL
+            END FORMAT JSON
          ,'wrapped'      VALUE CASE
-            WHEN self.xml_wrapped = 'TRUE'
+            WHEN LOWER(self.xml_wrapped) = 'true'
             THEN
-               TRUE
+               'true'
             ELSE
                NULL
-            END                                     ABSENT ON NULL
+            END FORMAT JSON
+         ABSENT ON NULL
+         RETURNING CLOB
       )
       INTO clb_output
       FROM dual;

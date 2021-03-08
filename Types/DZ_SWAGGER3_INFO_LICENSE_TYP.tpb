@@ -67,7 +67,8 @@ AS
       SELECT
       JSON_OBJECT(
           'name'         VALUE self.license_name
-         ,'url'          VALUE self.license_url     ABSENT ON NULL
+         ,'url'          VALUE self.license_url
+         ABSENT ON NULL
       )
       INTO clb_output
       FROM dual;

@@ -128,12 +128,12 @@ AS
       --------------------------------------------------------------------------
       SELECT
       JSON_OBJECT(
-          'type'             VALUE self.securityscheme_type         ABSENT ON NULL
-         ,'description'      VALUE self.securityscheme_description  ABSENT ON NULL
-         ,'name'             VALUE self.securityscheme_name         ABSENT ON NULL
-         ,'in'               VALUE self.securityscheme_in           ABSENT ON NULL
-         ,'scheme'           VALUE self.securityscheme_scheme       ABSENT ON NULL
-         ,'bearerFormat'     VALUE self.securityscheme_bearerFormat ABSENT ON NULL
+          'type'             VALUE self.securityscheme_type
+         ,'description'      VALUE self.securityscheme_description
+         ,'name'             VALUE self.securityscheme_name
+         ,'in'               VALUE self.securityscheme_in
+         ,'scheme'           VALUE self.securityscheme_scheme
+         ,'bearerFormat'     VALUE self.securityscheme_bearerFormat
          ,'flows'            VALUE CASE
             WHEN self.oauth_flow_implicit IS NOT NULL
             OR   self.oauth_flow_password IS NOT NULL
@@ -144,36 +144,40 @@ AS
                    'implicit'          VALUE CASE
                      WHEN self.oauth_flow_implicit IS NOT NULL
                      THEN
-                        self.oauth_flow_implicit.toJSON() FORMAT JSON
+                        self.oauth_flow_implicit.toJSON()
                      ELSE
                         NULL
-                     END                                        ABSENT ON NULL
+                     END FORMAT JSON
                   ,'password'          VALUE CASE
                      WHEN self.oauth_flow_password IS NOT NULL
                      THEN
-                        self.oauth_flow_password.toJSON() FORMAT JSON
+                        self.oauth_flow_password.toJSON()
                      ELSE
                         NULL
-                     END                                        ABSENT ON NULL
+                     END FORMAT JSON
                   ,'clientCredentials' VALUE CASE
                      WHEN self.oauth_flow_clientCredentials IS NOT NULL
                      THEN
-                        self.oauth_flow_clientCredentials.toJSON() FORMAT JSON
+                        self.oauth_flow_clientCredentials.toJSON()
                      ELSE
                         NULL
-                     END                                        ABSENT ON NULL
+                     END FORMAT JSON
                   ,'authorizationCode' VALUE CASE
                      WHEN self.oauth_flow_authorizationCode IS NOT NULL
                      THEN
-                        self.oauth_flow_authorizationCode.toJSON() FORMAT JSON
+                        self.oauth_flow_authorizationCode.toJSON()
                      ELSE
                         NULL
-                     END                                        ABSENT ON NULL
+                     END FORMAT JSON
+                  ABSENT ON NULL
+                  RETURNING CLOB
                )
             ELSE
                NULL
-            END                                                 ABSENT ON NULL
-         ,'openIdConnectUrl' VALUE self.securityscheme_openIdConUrl ABSENT ON NULL
+            END
+         ,'openIdConnectUrl' VALUE self.securityscheme_openIdConUrl 
+         ABSENT ON NULL
+         RETURNING CLOB
       )
       INTO clb_output
       FROM dual;
@@ -218,8 +222,8 @@ AS
                   TABLE(dz_swagger3_util.gz_split(p_oauth_scope_flows,','))
                )
             ELSE
-               '[]' FORMAT JSON
-            END
+               '[]'
+            END FORMAT JSON
       )
       INTO clb_output
       FROM dual;
@@ -546,7 +550,7 @@ AS
       IF  self.securityScheme_type IN ('oauth2','openIdConnect')
       AND p_oauth_scope_flows IS NOT NULL
       THEN
-         ary_oauth := dz_json_util.gz_split(p_oauth_scope_flows,',');
+         ary_oauth := dz_swagger3_util.gz_split(p_oauth_scope_flows,',');
          
          dz_swagger3_util.conc(
              p_c    => cb

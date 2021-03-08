@@ -18,7 +18,7 @@ AS OBJECT (
       ,p_title                IN  VARCHAR2 DEFAULT NULL
       ,p_versionid            IN  VARCHAR2 DEFAULT NULL
    ) RETURN SELF AS RESULT
-    
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(

@@ -97,7 +97,7 @@ AS OBJECT (
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
       ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'    
    ) RETURN CLOB
-   
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(

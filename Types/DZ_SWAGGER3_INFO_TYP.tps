@@ -7,7 +7,7 @@ AS OBJECT (
    ,info_contact         dz_swagger3_info_contact_typ
    ,info_license         dz_swagger3_info_license_typ
    ,info_version         VARCHAR2(255 Char)
-   
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_info_typ

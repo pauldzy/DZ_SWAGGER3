@@ -29,7 +29,7 @@ AS OBJECT (
        p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
     ) RETURN CLOB
-    
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toYAML(

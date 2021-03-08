@@ -267,7 +267,8 @@ AS
       clb_path_patch_operation   CLOB;
       clb_path_trace_operation   CLOB;
       clb_path_servers           CLOB;
-      clb_path_parameters
+      clb_path_parameters        CLOB;
+      str_identifier             VARCHAR2(4000 Char);
       
    BEGIN
       
@@ -294,9 +295,9 @@ AS
          
          SELECT
          JSON_OBJECT(
-             '$ref' VALUE '#/components/callbacks/' || dz_swagger3_util.utl_url_escape(
+            '$ref' VALUE '#/components/callbacks/' || dz_swagger3_util.utl_url_escape(
                str_identifier
-             )
+            )
          )
          INTO clb_output
          FROM dual;
@@ -341,7 +342,7 @@ AS
          END IF;
 
       --------------------------------------------------------------------------
-      -- Step 70
+      -- Step 40
       -- Add put operation
       --------------------------------------------------------------------------
          IF  self.path_put_operation IS NOT NULL
@@ -376,7 +377,7 @@ AS
          END IF;
 
       --------------------------------------------------------------------------
-      -- Step 80
+      -- Step 50
       -- Add post operation
       --------------------------------------------------------------------------
          IF  self.path_post_operation IS NOT NULL
@@ -411,7 +412,7 @@ AS
          END IF;
 
       --------------------------------------------------------------------------
-      -- Step 90
+      -- Step 60
       -- Add delete operation
       --------------------------------------------------------------------------
          IF  self.path_delete_operation IS NOT NULL
@@ -446,7 +447,7 @@ AS
          END IF;
       
       --------------------------------------------------------------------------
-      -- Step 100
+      -- Step 70
       -- Add options operation
       --------------------------------------------------------------------------
          IF  self.path_options_operation IS NOT NULL
@@ -481,7 +482,7 @@ AS
          END IF;
       
       --------------------------------------------------------------------------
-      -- Step 110
+      -- Step 80
       -- Add head operation
       --------------------------------------------------------------------------
          IF  self.path_head_operation IS NOT NULL
@@ -516,7 +517,7 @@ AS
          END IF;
       
       --------------------------------------------------------------------------
-      -- Step 120
+      -- Step 90
       -- Add patch operation
       --------------------------------------------------------------------------
          IF  self.path_patch_operation IS NOT NULL
@@ -551,7 +552,7 @@ AS
          END IF;
       
       --------------------------------------------------------------------------
-      -- Step 130
+      -- Step 100
       -- Add trace operation
       --------------------------------------------------------------------------
          IF  self.path_trace_operation IS NOT NULL
@@ -586,18 +587,16 @@ AS
          END IF;
 
       --------------------------------------------------------------------------
-      -- Step 140
+      -- Step 110
       -- Add servers
       --------------------------------------------------------------------------
          IF  self.path_servers IS NOT NULL 
          AND self.path_servers.COUNT > 0
          THEN
             SELECT
-            json_arrayagg(
-               a.servertyp.toJSON(
-                   p_force_inline   => p_force_inline
-                  ,p_short_id       => p_short_id
-               ) FORMAT JSON
+            JSON_ARRAYAGG(
+               a.servertyp.toJSON() FORMAT JSON
+               RETURNING CLOB
             )
             INTO clb_path_servers
             FROM
@@ -612,23 +611,22 @@ AS
          END IF;
 
       --------------------------------------------------------------------------
-      -- Step 150
+      -- Step 120
       -- Add parameters
       --------------------------------------------------------------------------
          IF  self.path_parameters IS NOT NULL 
          AND self.path_parameters.COUNT > 0
          THEN
             SELECT
-            json_arrayagg(
-               json_object(
-                   b.object_key VALUE a.parametertyp.toJSON(
-                      p_force_inline     => p_force_inline
-                     ,p_short_id         => p_short_id
-                     ,p_identifier       => a.object_id
-                     ,p_short_identifier => a.short_id
-                     ,p_reference_count  => a.reference_count
-                   ) FORMAT JSON
-               )
+            JSON_OBJECTAGG(
+               b.object_key VALUE a.parametertyp.toJSON(
+                   p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
+               ) FORMAT JSON
+               RETURNING CLOB
             )
             INTO clb_path_parameters
             FROM
@@ -645,23 +643,25 @@ AS
          END IF;
          
       --------------------------------------------------------------------------
-      -- Step 160
+      -- Step 130
       -- Add the left bracket
       --------------------------------------------------------------------------
          SELECT
          JSON_OBJECT(
-             'summary'      VALUE self.path_summary          ABSENT ON NULL
-            ,'description'  VALUE self.path_description      ABSENT ON NULL
-            ,'get'          VALUE clb_path_get_operation     FORMAT JSON ABSENT ON NULL
-            ,'put'          VALUE clb_path_put_operation     FORMAT JSON ABSENT ON NULL       
-            ,'post'         VALUE clb_path_post_operation    FORMAT JSON ABSENT ON NULL
-            ,'delete'       VALUE clb_path_delete_operation  FORMAT JSON ABSENT ON NULL
-            ,'options'      VALUE clb_path_options_operation FORMAT JSON ABSENT ON NULL
-            ,'head'         VALUE clb_path_head_operation    FORMAT JSON ABSENT ON NULL
-            ,'patch'        VALUE clb_path_patch_operation   FORMAT JSON ABSENT ON NULL
-            ,'trace'        VALUE clb_path_trace_operation   FORMAT JSON ABSENT ON NULL
-            ,'servers'      VALUE clb_path_servers           FORMAT JSON ABSENT ON NULL
-            ,'parameters'   VALUE clb_path_parameters        FORMAT JSON ABSENT ON NULL
+             'summary'      VALUE self.path_summary
+            ,'description'  VALUE self.path_description
+            ,'get'          VALUE clb_path_get_operation     FORMAT JSON
+            ,'put'          VALUE clb_path_put_operation     FORMAT JSON     
+            ,'post'         VALUE clb_path_post_operation    FORMAT JSON
+            ,'delete'       VALUE clb_path_delete_operation  FORMAT JSON
+            ,'options'      VALUE clb_path_options_operation FORMAT JSON
+            ,'head'         VALUE clb_path_head_operation    FORMAT JSON
+            ,'patch'        VALUE clb_path_patch_operation   FORMAT JSON
+            ,'trace'        VALUE clb_path_trace_operation   FORMAT JSON
+            ,'servers'      VALUE clb_path_servers           FORMAT JSON
+            ,'parameters'   VALUE clb_path_parameters        FORMAT JSON
+            ABSENT ON NULL
+            RETURNING CLOB
          )
          INTO clb_output
          FROM dual;
@@ -669,7 +669,7 @@ AS
       END IF;
 
       --------------------------------------------------------------------------
-      -- Step 170
+      -- Step 140
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
@@ -1193,7 +1193,7 @@ AS
          AND self.path_servers.COUNT > 0
          THEN
             SELECT
-            a.servertyp.toJSON(
+            a.servertyp.toYAML(
                 p_pretty_print   => p_pretty_print + 1
                ,p_force_inline   => p_force_inline
                ,p_short_id       => p_short_id

@@ -404,7 +404,7 @@ AS
       clb_operation_security     CLOB;
       clb_operation_servers      CLOB;
       str_identifier             VARCHAR2(255 Char);
-      
+  
    BEGIN
       
       --------------------------------------------------------------------------
@@ -444,10 +444,7 @@ AS
       THEN
          BEGIN
             SELECT
-            a.extrdocstyp.toJSON(
-                p_force_inline => p_force_inline
-               ,p_short_id     => p_short_id
-            )
+            a.extrdocstyp.toJSON()
             INTO clb_operation_externalDocs
             FROM 
             dz_swagger3_xobjects a
@@ -476,16 +473,15 @@ AS
       AND self.operation_parameters.COUNT > 0
       THEN
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               b.object_key VALUE a.parametertyp.toJSON(
-                   p_force_inline     => p_force_inline
-                  ,p_short_id         => p_short_id
-                  ,p_identifier       => a.object_id
-                  ,p_short_identifier => a.short_id
-                  ,p_reference_count  => a.reference_count
-               )
+         JSON_OBJECTAGG(
+            b.object_key VALUE a.parametertyp.toJSON(
+                p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count
             )
+            RETURNING CLOB
          )
          INTO clb_operation_parameters
          FROM
@@ -545,16 +541,15 @@ AS
       AND self.operation_responses.COUNT > 0
       THEN
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               b.object_key VALUE a.responsetyp.toJSON(
-                   p_force_inline     => p_force_inline
-                  ,p_short_id         => p_short_id
-                  ,p_identifier       => a.object_id
-                  ,p_short_identifier => a.short_id
-                  ,p_reference_count  => a.reference_count
-               )
+         JSON_OBJECTAGG(
+            b.object_key VALUE a.responsetyp.toJSON(
+                p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count
             )
+            RETURNING CLOB
          )
          INTO clb_operation_responses
          FROM
@@ -576,17 +571,16 @@ AS
       AND self.operation_callbacks.COUNT > 0
       THEN
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               b.object_key VALUE json_object(
-                  a.pathtyp.path_endpoint VALUE a.pathtyp.toJSON(
-                      p_force_inline     => p_force_inline
-                     ,p_short_id         => p_short_id
-                     ,p_identifier       => a.object_id
-                     ,p_short_identifier => a.short_id
-                     ,p_reference_count  => a.reference_count
-                  )
+         JSON_OBJECTAGG(
+            b.object_key VALUE json_object(
+               a.pathtyp.path_endpoint VALUE a.pathtyp.toJSON(
+                   p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
                )
+               RETURNING CLOB
             )
          )
          INTO clb_operation_callbacks
@@ -611,9 +605,9 @@ AS
          SELECT
          JSON_ARRAYAGG(
             a.securityschemetyp.toJSON_req(
-                p_pretty_print      => p_pretty_print + 2
-               ,p_oauth_scope_flows => b.object_attribute
+               p_oauth_scope_flows => b.object_attribute
             ) FORMAT JSON
+            RETURNING CLOB
          )
          INTO clb_operation_security
          FROM
@@ -637,6 +631,7 @@ AS
          SELECT
          JSON_ARRAYAGG(
             a.securityschemetyp.toJSON_req()
+            RETURNING CLOB
          )
          INTO clb_operation_servers
          FROM
@@ -665,33 +660,35 @@ AS
       
       SELECT
       JSON_OBJECT(
-          'tags'         VALUE clb_operation_tags         FORMAT JSON ABSENT ON NULL
-          'summary'      VALUE self.operation_summary     ABSENT ON NULL
-         ,'description'  VALUE self.operation_description ABSENT ON NULL
-         ,'externalDocs' VALUE clb_operation_externalDocs FORMAT JSON ABSENT ON NULL
-         ,'operationId'  VALUE str_identifier             ABSENT ON NULL
-         ,'parameters'   VALUE clb_operation_parameters   FORMAT JSON ABSENT ON NULL
-         ,'requestBody'  VALUE clb_operation_requestBody  FORMAT JSON ABSENT ON NULL
-         ,'responses'    VALUE clb_operation_responses    FORMAT JSON ABSENT ON NULL
-         ,'callbacks'    VALUE clb_operation_callbacks    FORMAT JSON ABSENT ON NULL
+          'tags'         VALUE clb_operation_tags         FORMAT JSON
+         ,'summary'      VALUE self.operation_summary
+         ,'description'  VALUE self.operation_description
+         ,'externalDocs' VALUE clb_operation_externalDocs FORMAT JSON
+         ,'operationId'  VALUE str_identifier
+         ,'parameters'   VALUE clb_operation_parameters   FORMAT JSON
+         ,'requestBody'  VALUE clb_operation_requestBody  FORMAT JSON
+         ,'responses'    VALUE clb_operation_responses    FORMAT JSON
+         ,'callbacks'    VALUE clb_operation_callbacks    FORMAT JSON
          ,'deprecated'   VALUE CASE
             WHEN LOWER(self.operation_deprecated) = 'true'
             THEN
-               TRUE
+               'true'
             WHEN LOWER(self.operation_deprecated) = 'false'
             THEN
-               FALSE
+               'false'
             ELSE
                NULL
-            END                                           ABSENT ON NULL
-         ,'security'     VALUE clb_operation_security     FORMAT JSON ABSENT ON NULL
-         ,'servers'      VALUE clb_operation_servers      FORMAT JSON ABSENT ON NULL
+            END FORMAT JSON
+         ,'security'     VALUE clb_operation_security     FORMAT JSON
+         ,'servers'      VALUE clb_operation_servers      FORMAT JSON 
+         ABSENT ON NULL
+         RETURNING CLOB
       )
       INTO clb_output
       FROM dual;
 
       --------------------------------------------------------------------------
-      -- Step 160
+      -- Step 110
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;

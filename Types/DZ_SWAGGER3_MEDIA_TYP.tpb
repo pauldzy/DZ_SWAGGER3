@@ -196,6 +196,7 @@ AS
       clb_output         CLOB;
       clb_media_schema   CLOB;
       clb_media_examples CLOB;
+      clb_media_encoding CLOB;
       
    BEGIN
 
@@ -248,16 +249,15 @@ AS
       AND self.media_examples.COUNT > 0
       THEN
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               b.object_key VALUE a.exampletyp.toJSON(
-                   p_force_inline     => p_force_inline
-                  ,p_short_id         => p_short_id
-                  ,p_identifier       => a.object_id
-                  ,p_short_identifier => a.short_id
-                  ,p_reference_count  => a.reference_count
-               ) FORMAT JSON
-            )
+         JSON_OBJECTAGG(
+            b.object_key VALUE a.exampletyp.toJSON(
+                p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count
+            ) FORMAT JSON
+            RETURNING CLOB
          )
          INTO clb_media_examples
          FROM
@@ -279,13 +279,12 @@ AS
       AND self.media_encoding.COUNT > 0
       THEN
          SELECT
-         JSON_ARRAYAGG(
-            JSON_OBJECT(
-               b.object_key VALUE a.encodingtyp.toJSON(
-                   p_force_inline   => p_force_inline
-                  ,p_short_id       => p_short_id
-               ) FORMAT JSON
-            )
+         JSON_OBJECTAGG(
+            b.object_key VALUE a.encodingtyp.toJSON(
+                p_force_inline   => p_force_inline
+               ,p_short_id       => p_short_id
+            ) FORMAT JSON
+            RETURNING CLOB
          )
          INTO clb_media_encoding
          FROM
@@ -303,25 +302,47 @@ AS
       -- Step 50
       -- Build the object
       --------------------------------------------------------------------------
-      SELECT
-      JSON_OBJECT(
-          'schema'       VALUE clb_media_schema     ABSENT ON NULL
-         ,'examples'     VALUE clb_media_examples   ABSENT ON NULL
-         ,'prefix'       VALUE self.xml_prefix      ABSENT ON NULL
-         ,'example'      VALUE CASE
-            WHEN self.media_example_string IS NOT NULL
-            THEN
-               self.media_example_string
-            WHEN self.media_example_number IS NOT NULL
-            THEN
-               self.media_example_number
-            ELSE
-               NULL
-            END                                     ABSENT ON NULL
-         ,'encoding'      VALUE clb_media_encoding  ABSENT ON NULL
-      )
-      INTO clb_output
-      FROM dual;
+      IF self.media_example_string IS NOT NULL
+      THEN
+         SELECT
+         JSON_OBJECT(
+             'schema'       VALUE clb_media_schema
+            ,'examples'     VALUE clb_media_examples
+            ,'example'      VALUE self.media_example_string
+            ,'encoding'     VALUE clb_media_encoding  
+            ABSENT ON NULL
+            RETURNING CLOB
+         )
+         INTO clb_output
+         FROM dual;
+         
+      ELSIF self.media_example_number IS NOT NULL
+      THEN
+         SELECT
+         JSON_OBJECT(
+             'schema'       VALUE clb_media_schema
+            ,'examples'     VALUE clb_media_examples
+            ,'example'      VALUE self.media_example_number
+            ,'encoding'     VALUE clb_media_encoding  
+            ABSENT ON NULL
+            RETURNING CLOB
+         )
+         INTO clb_output
+         FROM dual;
+      
+      ELSE
+         SELECT
+         JSON_OBJECT(
+             'schema'       VALUE clb_media_schema
+            ,'examples'     VALUE clb_media_examples
+            ,'encoding'     VALUE clb_media_encoding  
+            ABSENT ON NULL
+            RETURNING CLOB
+         )
+         INTO clb_output
+         FROM dual;
+      
+      END IF;
       
       --------------------------------------------------------------------------
       -- Step 60

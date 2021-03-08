@@ -14,7 +14,7 @@ AS OBJECT (
    ,header_example_number   NUMBER
    ,header_examples         dz_swagger3_object_vry --dz_swagger3_example_list
    ,versionid               VARCHAR2(255 Char)
-   
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_header_typ

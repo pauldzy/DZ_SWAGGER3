@@ -17,12 +17,12 @@ AS OBJECT (
    ,operation_security            dz_swagger3_object_vry --dz_swagger3_security_req_list
    ,operation_servers             dz_swagger3_object_vry --dz_swagger3_server_list
    ,versionid                     VARCHAR2(255 Char)
-   
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_operation_typ
     RETURN SELF AS RESULT
-    
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_operation_typ(
