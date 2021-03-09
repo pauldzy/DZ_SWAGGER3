@@ -151,14 +151,6 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE stringhashtyp(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  dz_swagger3_object_vry
-      ,p_versionid           IN  VARCHAR2
-   );
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    PROCEDURE tagtyp(
        p_parent_id           IN  VARCHAR2
       ,p_children_ids        IN  dz_swagger3_object_vry

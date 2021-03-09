@@ -1979,7 +1979,6 @@ AS
               || '    doc_id               VARCHAR2(255 Char) NOT NULL '
               || '   ,group_id             VARCHAR2(255 Char) NOT NULL '
               || '   ,json_payload         CLOB '
-              || '   ,json_pretty_payload  CLOB '
               || '   ,yaml_payload         CLOB '
               || '   ,extraction_timestamp TIMESTAMP '
               || '   ,shorten_logic        VARCHAR2(255 Char) '
@@ -2062,7 +2061,6 @@ AS
               || '   ,securityschemetyp    dz_swagger3_securityscheme_typ '
               || '   ,servertyp            dz_swagger3_server_typ '
               || '   ,servervartyp         dz_swagger3_server_var_typ '
-              || '   ,stringhashtyp        dz_swagger3_string_hash_typ '
               || '   ,tagtyp               dz_swagger3_tag_typ '
               || ') '
               || 'ON COMMIT PRESERVE ROWS ';
@@ -2148,7 +2146,6 @@ AS
    RETURN dz_swagger3_string_vry PIPELINED
    AS
       str_sql     VARCHAR2(32000 Char);
-      str_check   VARCHAR2(255 Char);
       ary_results dz_swagger3_string_vry;
       
    BEGIN

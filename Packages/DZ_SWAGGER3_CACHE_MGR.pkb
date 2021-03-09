@@ -58,7 +58,6 @@ AS
       ,p_versionid           IN  VARCHAR2  DEFAULT NULL
       ,p_shorten_logic       IN  VARCHAR2  DEFAULT NULL
       ,out_json              OUT CLOB
-      ,out_json_pretty       OUT CLOB
       ,out_yaml              OUT CLOB
    )
    AS
@@ -77,13 +76,8 @@ AS
       out_json        := obj_core.toJSON(
          p_short_id      => 'TRUE'   
       );
-      out_json_pretty := obj_core.toJSON(
-          p_pretty_print => 0
-         ,p_short_id     => 'TRUE'
-      );
       out_yaml        := obj_core.toYAML(
-          p_pretty_print => 0
-         ,p_short_id     => 'TRUE'
+         p_short_id     => 'TRUE'
       );
       
       BEGIN
@@ -91,7 +85,6 @@ AS
              doc_id
             ,group_id
             ,json_payload
-            ,json_pretty_payload
             ,yaml_payload
             ,extraction_timestamp 
             ,shorten_logic
@@ -100,7 +93,6 @@ AS
              p_doc_id
             ,p_group_id
             ,out_json
-            ,out_json_pretty
             ,out_yaml
             ,SYSTIMESTAMP
             ,p_shorten_logic
@@ -113,7 +105,6 @@ AS
             UPDATE dz_swagger3_cache
             SET
              json_payload         = out_json
-            ,json_pretty_payload  = out_json_pretty
             ,yaml_payload         = out_yaml
             ,extraction_timestamp = SYSTIMESTAMP
             ,shorten_logic        = p_shorten_logic
@@ -143,7 +134,6 @@ AS
    ) RETURN CLOB
    AS
       clb_output          CLOB;
-      clb_output2         CLOB;
       clb_output3         CLOB;
       str_doc_id          VARCHAR2(255 Char);
       str_group_id        VARCHAR2(255 Char);
@@ -204,7 +194,6 @@ AS
             ,p_versionid       => str_versionid
             ,p_shorten_logic   => str_shorten_logic
             ,out_json          => clb_output
-            ,out_json_pretty   => clb_output2
             ,out_yaml          => clb_output3
          );
          
@@ -227,98 +216,6 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   FUNCTION json_pretty(
-       p_doc_id              IN  VARCHAR2
-      ,p_group_id            IN  VARCHAR2  DEFAULT NULL
-      ,p_versionid           IN  VARCHAR2  DEFAULT NULL
-      ,p_refresh_interval    IN  INTERVAL  DAY TO SECOND DEFAULT NULL
-      ,p_shorten_logic       IN  VARCHAR2  DEFAULT NULL
-   ) RETURN CLOB
-   AS
-      clb_output          CLOB;
-      clb_output2         CLOB;
-      clb_output3         CLOB;
-      str_doc_id          VARCHAR2(255 Char);
-      str_group_id        VARCHAR2(255 Char);
-      str_versionid       VARCHAR2(40 Char);
-      dat_timestamp       TIMESTAMP;
-      str_shorten_logic   VARCHAR2(255 Char);
-
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Check over incoming parameters
-      --------------------------------------------------------------------------
-
-      --------------------------------------------------------------------------
-      -- Step 20     
-      -- Determine the default version if not provided
-      --------------------------------------------------------------------------
-      dz_swagger3_main.startup_defaults(
-          p_doc_id        => p_doc_id
-         ,p_group_id      => p_group_id
-         ,p_versionid     => p_versionid
-         ,out_doc_id      => str_doc_id
-         ,out_group_id    => str_group_id
-         ,out_versionid   => str_versionid
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 30     
-      -- Fetch cache if populated
-      --------------------------------------------------------------------------
-      vintage(
-          p_doc_id        => str_doc_id
-         ,p_group_id      => str_group_id
-         ,p_versionid     => str_versionid
-         ,p_timestamp     => dat_timestamp
-         ,p_shorten_logic => str_shorten_logic
-      );
-      
-      IF  p_shorten_logic IS NOT NULL
-      AND p_shorten_logic <> str_shorten_logic
-      THEN
-         str_shorten_logic := p_shorten_logic;
-      
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 40     
-      -- Return results if found
-      --------------------------------------------------------------------------
-      IF dat_timestamp IS NULL
-      OR SYSTIMESTAMP - dat_timestamp > p_refresh_interval
-      THEN
-         update_cache(
-             p_doc_id          => str_doc_id
-            ,p_group_id        => str_group_id
-            ,p_versionid       => str_versionid
-            ,p_shorten_logic   => str_shorten_logic
-            ,out_json          => clb_output
-            ,out_json_pretty   => clb_output2
-            ,out_yaml          => clb_output3
-         );
-         
-      ELSE
-         SELECT
-         a.json_pretty_payload
-         INTO clb_output2
-         FROM
-         dz_swagger3_cache a
-         WHERE
-             doc_id    = str_doc_id
-         AND group_id  = str_group_id
-         AND versionid = str_versionid;
-            
-      END IF;
-      
-      RETURN clb_output2;
-
-   END json_pretty;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    FUNCTION yaml(
        p_doc_id              IN  VARCHAR2
       ,p_group_id            IN  VARCHAR2  DEFAULT NULL
@@ -328,7 +225,6 @@ AS
    ) RETURN CLOB
    AS
       clb_output          CLOB;
-      clb_output2         CLOB;
       clb_output3         CLOB;
       str_doc_id          VARCHAR2(255 Char);
       str_group_id        VARCHAR2(255 Char);
@@ -388,7 +284,6 @@ AS
             ,p_versionid       => str_versionid
             ,p_shorten_logic   => str_shorten_logic
             ,out_json          => clb_output
-            ,out_json_pretty   => clb_output2
             ,out_yaml          => clb_output3
          );
          
@@ -444,7 +339,6 @@ AS
    )
    AS
       clb_output          CLOB;
-      clb_output2         CLOB;
       clb_output3         CLOB;
       str_doc_id          VARCHAR2(255 Char);
       str_group_id        VARCHAR2(255 Char);
@@ -467,7 +361,6 @@ AS
          ,p_versionid       => str_versionid
          ,p_shorten_logic   => p_shorten_logic
          ,out_json          => clb_output
-         ,out_json_pretty   => clb_output2
          ,out_yaml          => clb_output3
       );
          
