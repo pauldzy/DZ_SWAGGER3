@@ -186,9 +186,7 @@ AS
          
          SELECT
          JSON_OBJECT(
-            '$ref' VALUE '#/components/requestBodies/' || dz_swagger3_util.utl_url_escape(
-               str_identifier
-            )
+            '$ref' VALUE '#/components/requestBodies/' || str_identifier
          )
          INTO clb_output
          FROM dual;

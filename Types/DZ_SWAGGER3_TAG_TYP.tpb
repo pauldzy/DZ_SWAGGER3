@@ -31,30 +31,45 @@ AS
       -- Step 20 
       -- Load the tag self and external doc id
       --------------------------------------------------------------------------
-      SELECT
-       a.tag_id
-      ,a.tag_name
-      ,a.tag_description
-      ,CASE
-       WHEN a.tag_externaldocs_id IS NOT NULL
-       THEN
-         dz_swagger3_object_typ(
-             p_object_id => a.tag_externaldocs_id
-            ,p_object_type_id => 'extrdocstyp'
-         )
-       ELSE
-         NULL
-       END
-      INTO 
-       self.tag_id
-      ,self.tag_name
-      ,self.tag_description
-      ,self.tag_externalDocs
-      FROM
-      dz_swagger3_tag a
-      WHERE
-      a.versionid = p_versionid
-      AND a.tag_id = p_tag_id;
+      BEGIN
+         SELECT
+          a.tag_id
+         ,a.tag_name
+         ,a.tag_description
+         ,CASE
+          WHEN a.tag_externaldocs_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id => a.tag_externaldocs_id
+               ,p_object_type_id => 'extrdocstyp'
+            )
+          ELSE
+            NULL
+          END
+         INTO 
+          self.tag_id
+         ,self.tag_name
+         ,self.tag_description
+         ,self.tag_externalDocs
+         FROM
+         dz_swagger3_tag a
+         WHERE
+         a.versionid = p_versionid
+         AND a.tag_id = p_tag_id;
+
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            RAISE_APPLICATION_ERROR(
+                -20001
+               ,'Model missing tag record for tag_id ' || p_tag_id || ' in version ' || p_versionid
+            );
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+      
+      END;
       
       --------------------------------------------------------------------------
       -- Step 30 

@@ -9,6 +9,13 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
+   FUNCTION safe_to_number(
+       p_input            IN VARCHAR2
+      ,p_null_replacement IN NUMBER DEFAULT NULL
+   ) RETURN NUMBER;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
    FUNCTION gz_split(
        p_str              IN  VARCHAR2
       ,p_regex            IN  VARCHAR2
@@ -16,14 +23,6 @@ AS
       ,p_end              IN  NUMBER   DEFAULT 0
       ,p_trim             IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN dz_swagger3_string_vry DETERMINISTIC;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   FUNCTION utl_url_escape(
-       p_input_url        IN  VARCHAR2 CHARACTER SET ANY_CS
-      ,p_escape_reserved  IN  VARCHAR2 DEFAULT NULL
-      ,p_url_charset      IN  VARCHAR2 DEFAULT NULL
-   )  RETURN VARCHAR2 CHARACTER SET p_input_url%CHARSET DETERMINISTIC;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

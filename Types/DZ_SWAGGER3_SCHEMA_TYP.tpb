@@ -31,105 +31,120 @@ AS
       -- Step 20
       -- Load the easy items using constructor
       --------------------------------------------------------------------------
-      SELECT
-       a.schema_id
-      ,a.schema_category
-      ,a.schema_title
-      ,a.schema_type
-      ,a.schema_description
-      ,a.schema_format
-      ,a.schema_nullable
-      ,a.schema_discriminator
-      ,a.schema_readonly
-      ,a.schema_writeonly
-      ,CASE
-       WHEN a.schema_externaldocs_id IS NOT NULL
-       THEN
-         dz_swagger3_object_typ(
-             p_object_id => a.schema_externaldocs_id
-            ,p_object_type_id => 'extrdocstyp'
-         )
-       ELSE
-         NULL
-       END
-      ,a.schema_example_string
-      ,a.schema_example_number
-      ,a.schema_deprecated
-      ,CASE
-       WHEN a.schema_items_schema_id IS NOT NULL
-       THEN
-         dz_swagger3_object_typ(
-             p_object_id      => a.schema_items_schema_id
-            ,p_object_type_id => 'schematyp'
-         )
-       ELSE
-         NULL
-       END
-      ,a.schema_default_string
-      ,a.schema_default_number
-      ,a.schema_multipleOf
-      ,a.schema_minimum
-      ,a.schema_exclusiveMinimum
-      ,a.schema_maximum 
-      ,a.schema_exclusiveMaximum
-      ,a.schema_minLength
-      ,a.schema_maxLength
-      ,a.schema_pattern
-      ,a.schema_minItems
-      ,a.schema_maxItems
-      ,a.schema_uniqueItems 
-      ,a.schema_minProperties
-      ,a.schema_maxProperties
-      ,a.xml_name
-      ,a.xml_namespace
-      ,a.xml_prefix
-      ,a.xml_attribute
-      ,a.xml_wrapped
-      ,a.schema_force_inline
-      ,a.property_list_hidden
-      INTO
-       self.schema_id
-      ,self.schema_category
-      ,self.schema_title
-      ,self.schema_type
-      ,self.schema_description
-      ,self.schema_format
-      ,self.schema_nullable
-      ,self.schema_discriminator
-      ,self.schema_readonly
-      ,self.schema_writeonly
-      ,self.schema_externaldocs
-      ,self.schema_example_string
-      ,self.schema_example_number
-      ,self.schema_deprecated
-      ,self.schema_items_schema
-      ,self.schema_default_string
-      ,self.schema_default_number
-      ,self.schema_multipleOf
-      ,self.schema_minimum
-      ,self.schema_exclusiveMinimum
-      ,self.schema_maximum 
-      ,self.schema_exclusiveMaximum
-      ,self.schema_minLength
-      ,self.schema_maxLength
-      ,self.schema_pattern
-      ,self.schema_minItems
-      ,self.schema_maxItems
-      ,self.schema_uniqueItems 
-      ,self.schema_minProperties
-      ,self.schema_maxProperties
-      ,self.xml_name
-      ,self.xml_namespace
-      ,self.xml_prefix
-      ,self.xml_attribute
-      ,self.xml_wrapped
-      ,self.schema_force_inline
-      ,self.property_list_hidden
-      FROM
-      dz_swagger3_schema a
-      WHERE
-          a.versionid = p_versionid
-      AND a.schema_id = p_schema_id;
+      BEGIN
+         SELECT
+          a.schema_id
+         ,a.schema_category
+         ,a.schema_title
+         ,a.schema_type
+         ,a.schema_description
+         ,a.schema_format
+         ,a.schema_nullable
+         ,a.schema_discriminator
+         ,a.schema_readonly
+         ,a.schema_writeonly
+         ,CASE
+          WHEN a.schema_externaldocs_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id => a.schema_externaldocs_id
+               ,p_object_type_id => 'extrdocstyp'
+            )
+          ELSE
+            NULL
+          END
+         ,a.schema_example_string
+         ,a.schema_example_number
+         ,a.schema_deprecated
+         ,CASE
+          WHEN a.schema_items_schema_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id      => a.schema_items_schema_id
+               ,p_object_type_id => 'schematyp'
+            )
+          ELSE
+            NULL
+          END
+         ,a.schema_default_string
+         ,a.schema_default_number
+         ,a.schema_multipleOf
+         ,a.schema_minimum
+         ,a.schema_exclusiveMinimum
+         ,a.schema_maximum 
+         ,a.schema_exclusiveMaximum
+         ,a.schema_minLength
+         ,a.schema_maxLength
+         ,a.schema_pattern
+         ,a.schema_minItems
+         ,a.schema_maxItems
+         ,a.schema_uniqueItems 
+         ,a.schema_minProperties
+         ,a.schema_maxProperties
+         ,a.xml_name
+         ,a.xml_namespace
+         ,a.xml_prefix
+         ,a.xml_attribute
+         ,a.xml_wrapped
+         ,a.schema_force_inline
+         ,a.property_list_hidden
+         INTO
+          self.schema_id
+         ,self.schema_category
+         ,self.schema_title
+         ,self.schema_type
+         ,self.schema_description
+         ,self.schema_format
+         ,self.schema_nullable
+         ,self.schema_discriminator
+         ,self.schema_readonly
+         ,self.schema_writeonly
+         ,self.schema_externaldocs
+         ,self.schema_example_string
+         ,self.schema_example_number
+         ,self.schema_deprecated
+         ,self.schema_items_schema
+         ,self.schema_default_string
+         ,self.schema_default_number
+         ,self.schema_multipleOf
+         ,self.schema_minimum
+         ,self.schema_exclusiveMinimum
+         ,self.schema_maximum 
+         ,self.schema_exclusiveMaximum
+         ,self.schema_minLength
+         ,self.schema_maxLength
+         ,self.schema_pattern
+         ,self.schema_minItems
+         ,self.schema_maxItems
+         ,self.schema_uniqueItems 
+         ,self.schema_minProperties
+         ,self.schema_maxProperties
+         ,self.xml_name
+         ,self.xml_namespace
+         ,self.xml_prefix
+         ,self.xml_attribute
+         ,self.xml_wrapped
+         ,self.schema_force_inline
+         ,self.property_list_hidden
+         FROM
+         dz_swagger3_schema a
+         WHERE
+             a.versionid = p_versionid
+         AND a.schema_id = p_schema_id;
+         
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            RAISE_APPLICATION_ERROR(
+                -20001
+               ,'Model missing schema record for schema_id ' || p_schema_id || ' in version ' || p_versionid
+            );
+         
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
 
       --------------------------------------------------------------------------
       -- Step 30
@@ -632,9 +647,7 @@ AS
             
             SELECT
             JSON_OBJECT(
-               '$ref' VALUE '#/components/schemas/' || dz_swagger3_util.utl_url_escape(
-                  str_identifier
-               )
+               '$ref' VALUE '#/components/schemas/' || str_identifier
             )
             INTO clb_output
             FROM dual;
