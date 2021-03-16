@@ -4,19 +4,20 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    PROCEDURE create_storage_tables(
-       p_table_tablespace VARCHAR2 DEFAULT dz_swagger3_constants.c_table_tablespace
-      ,p_index_tablespace VARCHAR2 DEFAULT dz_swagger3_constants.c_index_tablespace
+       p_table_tablespace      VARCHAR2 DEFAULT dz_swagger3_constants.c_table_tablespace
+      ,p_index_tablespace      VARCHAR2 DEFAULT dz_swagger3_constants.c_index_tablespace
+      ,p_create_audit_triggers BOOLEAN  DEFAULT TRUE
    )
    AS
       str_sql VARCHAR2(4000 Char);
-      
+
    BEGIN
-   
+
       --------------------------------------------------------------------------
       -- Step 10
       -- Check that user is qualified to create tables in schema
       --------------------------------------------------------------------------
-   
+
       --------------------------------------------------------------------------
       -- Step 20
       -- Build VERS table
@@ -28,39 +29,53 @@ AS
               || '   ,version_created      DATE '
               || '   ,version_notes        VARCHAR2(255 Char)  '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_vers '
               || 'ADD CONSTRAINT dz_swagger3_vers_pk '
               || 'PRIMARY KEY(versionid) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_vers '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_vers_c01 '
               || '    CHECK (is_default IN (''TRUE'',''FALSE'')) '
-              || '    ENABLE VALIDATE ' 
+              || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_vers_c02 '
               || '    CHECK (REGEXP_LIKE(versionid,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
+      IF p_create_audit_triggers
+      THEN
+         str_sql := 'CREATE OR REPLACE TRIGGER dz_swagger3_vers_trig '
+                 || 'BEFORE UPDATE OR INSERT ON dz_swagger3_vers '
+                 || 'FOR EACH ROW '
+                 || 'BEGIN '
+                 || '   :NEW.version_owner   := SYS_CONTEXT(''userenv'',''os_user'');'
+                 || '   :NEW.version_created := TRUNC(SYSTIMESTAMP);'
+                 || 'END;';
+
+         EXECUTE IMMEDIATE str_sql;
+
+      END IF;
+
       --------------------------------------------------------------------------
       -- Step 30
       -- Build DOC table
@@ -83,27 +98,27 @@ AS
               || '   ,is_default           VARCHAR2(5 Char)   NOT NULL '
               || '   ,versionid            VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_doc '
               || 'ADD CONSTRAINT dz_swagger3_doc_pk '
               || 'PRIMARY KEY(versionid,doc_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_doc '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_doc_c01 '
@@ -121,7 +136,21 @@ AS
               || ') ';
 
       EXECUTE IMMEDIATE str_sql;
-      
+
+      IF p_create_audit_triggers
+      THEN
+         str_sql := 'CREATE OR REPLACE TRIGGER dz_swagger3_doc_trig '
+                 || 'BEFORE UPDATE OR INSERT ON dz_swagger3_doc '
+                 || 'FOR EACH ROW '
+                 || 'BEGIN '
+                 || '   :NEW.info_desc_author  := SYS_CONTEXT(''userenv'',''os_user'');'
+                 || '   :NEW.info_desc_updated := TRUNC(SYSTIMESTAMP);'
+                 || 'END;';
+
+         EXECUTE IMMEDIATE str_sql;
+
+      END IF;
+
       --------------------------------------------------------------------------
       -- Step 40
       -- Build GROUP table
@@ -133,27 +162,27 @@ AS
               || '   ,path_order                INTEGER            NOT NULL '
               || '   ,versionid                 VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_group '
               || 'ADD CONSTRAINT dz_swagger3_group_pk '
               || 'PRIMARY KEY(versionid,group_id,doc_id,path_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_group '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_group_c01 '
@@ -169,9 +198,9 @@ AS
               || '    CHECK (REGEXP_LIKE(path_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 50
       -- Build SERVER MAP table
@@ -182,27 +211,27 @@ AS
               || '   ,server_order        INTEGER            NOT NULL '
               || '   ,versionid           VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_parent_server_map '
               || 'ADD CONSTRAINT dz_swagger3_parent_server_mapk '
               || 'PRIMARY KEY(versionid,parent_id,server_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_parent_server_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_parent_server_mc01 '
@@ -215,9 +244,9 @@ AS
               || '    CHECK (REGEXP_LIKE(server_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 60
       -- Build SERVER table
@@ -228,27 +257,27 @@ AS
               || '   ,server_description  VARCHAR2(4000 Char) '
               || '   ,versionid           VARCHAR2(40 Char) NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_server '
               || 'ADD CONSTRAINT dz_swagger3_server_pk '
               || 'PRIMARY KEY(versionid,server_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_server '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_server_c01 '
@@ -258,9 +287,9 @@ AS
               || '    CHECK (REGEXP_LIKE(server_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 70
       -- Build SERVER VAR MAP table
@@ -271,27 +300,27 @@ AS
               || '   ,server_var_order       INTEGER            NOT NULL '
               || '   ,versionid              VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_server_var_map '
               || 'ADD CONSTRAINT dz_swagger3_server_var_map_pk '
               || 'PRIMARY KEY(versionid,server_id,server_var_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_server_var_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_server_var_map_c01 '
@@ -304,9 +333,9 @@ AS
               || '    CHECK (REGEXP_LIKE(server_var_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 80
       -- Build SERVER VARIABLE table
@@ -319,27 +348,27 @@ AS
               || '   ,server_var_description VARCHAR2(4000 Char) '
               || '   ,versionid              VARCHAR2(40 Char) NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_server_variable '
               || 'ADD CONSTRAINT dz_swagger3_server_variable_pk '
               || 'PRIMARY KEY(versionid,server_var_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_server_variable '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_server_variablec01 '
@@ -352,10 +381,10 @@ AS
               || '    CHECK (REGEXP_LIKE(server_var_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
-      
+
+
       --------------------------------------------------------------------------
       -- Step 90
       -- Build PATH table
@@ -378,27 +407,27 @@ AS
               || '   ,path_desc_notes           VARCHAR2(255 Char) '
               || '   ,versionid                 VARCHAR2(40 Char) NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_path '
               || 'ADD CONSTRAINT dz_swagger3_path_pk '
               || 'PRIMARY KEY(versionid,path_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_path '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_path_c01 '
@@ -435,9 +464,23 @@ AS
               || '    CHECK (REGEXP_LIKE(path_trace_operation_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
+      IF p_create_audit_triggers
+      THEN
+         str_sql := 'CREATE OR REPLACE TRIGGER dz_swagger3_path_trig '
+                 || 'BEFORE UPDATE OR INSERT ON dz_swagger3_path '
+                 || 'FOR EACH ROW '
+                 || 'BEGIN '
+                 || '   :NEW.path_desc_author  := SYS_CONTEXT(''userenv'',''os_user'');'
+                 || '   :NEW.path_desc_updated := TRUNC(SYSTIMESTAMP);'
+                 || 'END;';
+
+         EXECUTE IMMEDIATE str_sql;
+
+      END IF;
+
       --------------------------------------------------------------------------
       -- Step 100
       -- Build PARENT PARM MAP table
@@ -449,27 +492,27 @@ AS
               || '   ,requestbody_flag       VARCHAR2(5 Char) '
               || '   ,versionid              VARCHAR2(40 Char) NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_parent_parm_map '
               || 'ADD CONSTRAINT dz_swagger3_parent_parm_map_pk '
               || 'PRIMARY KEY(versionid,parent_id,parameter_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_parent_parm_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_parent_parm_mapc01 '
@@ -485,9 +528,9 @@ AS
               || '    CHECK (REGEXP_LIKE(parameter_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 110
       -- Build PARM table
@@ -514,27 +557,27 @@ AS
               || '   ,parameter_desc_notes      VARCHAR2(255 Char) '
               || '   ,versionid                 VARCHAR2(40 Char) NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_parameter '
               || 'ADD CONSTRAINT dz_swagger3_parameter_pk '
               || 'PRIMARY KEY(versionid,parameter_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_parameter '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_parameter_c01 '
@@ -571,9 +614,23 @@ AS
               || '    CHECK (REGEXP_LIKE(parameter_schema_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
+      IF p_create_audit_triggers
+      THEN
+         str_sql := 'CREATE OR REPLACE TRIGGER dz_swagger3_parameter_trig '
+                 || 'BEFORE UPDATE OR INSERT ON dz_swagger3_parameter '
+                 || 'FOR EACH ROW '
+                 || 'BEGIN '
+                 || '   :NEW.parameter_desc_author  := SYS_CONTEXT(''userenv'',''os_user'');'
+                 || '   :NEW.parameter_desc_updated := TRUNC(SYSTIMESTAMP);'
+                 || 'END;';
+
+         EXECUTE IMMEDIATE str_sql;
+
+      END IF;
+
       --------------------------------------------------------------------------
       -- Step 120
       -- Build OPERATION table
@@ -593,27 +650,27 @@ AS
               || '   ,operation_desc_notes      VARCHAR2(255 Char) '
               || '   ,versionid                 VARCHAR2(40 Char) NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_operation '
               || 'ADD CONSTRAINT dz_swagger3_operation_pk '
               || 'PRIMARY KEY(versionid,operation_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_operation '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_operation_c01 '
@@ -641,9 +698,23 @@ AS
               || '    CHECK (REGEXP_LIKE(operation_security_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
+      IF p_create_audit_triggers
+      THEN
+         str_sql := 'CREATE OR REPLACE TRIGGER dz_swagger3_operation_trig '
+                 || 'BEFORE UPDATE OR INSERT ON dz_swagger3_operation '
+                 || 'FOR EACH ROW '
+                 || 'BEGIN '
+                 || '   :NEW.operation_desc_author  := SYS_CONTEXT(''userenv'',''os_user'');'
+                 || '   :NEW.operation_desc_updated := TRUNC(SYSTIMESTAMP);'
+                 || 'END;';
+
+         EXECUTE IMMEDIATE str_sql;
+
+      END IF;
+
       --------------------------------------------------------------------------
       -- Step 130
       -- Build OPERATION REPONSE MAP table
@@ -655,27 +726,27 @@ AS
               || '   ,response_order      INTEGER '
               || '   ,versionid           VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_operation_resp_map '
               || 'ADD CONSTRAINT dz_swagger3_operation_resp_mpk '
               || 'PRIMARY KEY(versionid,operation_id,response_code,response_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_operation_resp_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_operation_resp_c01 '
@@ -691,9 +762,9 @@ AS
               || '    CHECK (REGEXP_LIKE(response_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 140
       -- Build OPERATION REPONSE MAP table
@@ -705,27 +776,27 @@ AS
               || '   ,callback_order      INTEGER '
               || '   ,versionid           VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_operation_call_map '
               || 'ADD CONSTRAINT dz_swagger3_operation_call_mpk '
               || 'PRIMARY KEY(versionid,operation_id,callback_name,callback_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_operation_call_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_operation_call_c01 '
@@ -741,9 +812,9 @@ AS
               || '    CHECK (REGEXP_LIKE(callback_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 150
       -- Build REQUESTBODY table
@@ -755,27 +826,27 @@ AS
               || '   ,requestbody_force_inline  VARCHAR2(5 Char) '
               || '   ,versionid                 VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_requestbody '
               || 'ADD CONSTRAINT dz_swagger3_requestbody_pk '
               || 'PRIMARY KEY(versionid,requestbody_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_requestbody '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_requestbody_c01 '
@@ -791,9 +862,9 @@ AS
               || '    CHECK (REGEXP_LIKE(requestbody_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 160
       -- Build OPERATION TAG MAP table
@@ -804,27 +875,27 @@ AS
               || '   ,tag_order           INTEGER            NOT NULL '
               || '   ,versionid           VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_operation_tag_map '
               || 'ADD CONSTRAINT dz_swagger3_operation_tag_mapk '
               || 'PRIMARY KEY(versionid,operation_id,tag_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_operation_tag_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_operation_tag_mc01 '
@@ -837,9 +908,9 @@ AS
               || '    CHECK (REGEXP_LIKE(tag_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 170
       -- Build RESPONSE table
@@ -853,27 +924,27 @@ AS
               || '   ,response_desc_notes   VARCHAR2(255 Char) '
               || '   ,versionid             VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_response '
               || 'ADD CONSTRAINT dz_swagger3_response_pk '
               || 'PRIMARY KEY(versionid,response_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_response '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_response_c01 '
@@ -886,9 +957,23 @@ AS
               || '    CHECK (REGEXP_LIKE(response_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
+      IF p_create_audit_triggers
+      THEN
+         str_sql := 'CREATE OR REPLACE TRIGGER dz_swagger3_response_trig '
+                 || 'BEFORE UPDATE OR INSERT ON dz_swagger3_response '
+                 || 'FOR EACH ROW '
+                 || 'BEGIN '
+                 || '   :NEW.response_desc_author  := SYS_CONTEXT(''userenv'',''os_user'');'
+                 || '   :NEW.response_desc_updated := TRUNC(SYSTIMESTAMP);'
+                 || 'END;';
+
+         EXECUTE IMMEDIATE str_sql;
+
+      END IF;
+
       --------------------------------------------------------------------------
       -- Step 180
       -- Build MEDIA TO PARENT table
@@ -900,27 +985,27 @@ AS
               || '   ,media_order         INTEGER '
               || '   ,versionid           VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_parent_media_map '
               || 'ADD CONSTRAINT dz_swagger3_parent_media_mappk '
               || 'PRIMARY KEY(versionid,parent_id,media_type,media_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_parent_media_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_parent_media_mac01 '
@@ -936,9 +1021,9 @@ AS
               || '    CHECK (REGEXP_LIKE(media_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 190
       -- Build MEDIA table
@@ -950,27 +1035,27 @@ AS
               || '   ,media_example_number  NUMBER '
               || '   ,versionid             VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_media '
               || 'ADD CONSTRAINT dz_swagger3_media_pk '
               || 'PRIMARY KEY(versionid,media_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_media '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_media_c01 '
@@ -983,9 +1068,9 @@ AS
               || '    CHECK (REGEXP_LIKE(media_schema_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 200
       -- Build SCHEMA table
@@ -1033,27 +1118,27 @@ AS
               || '   ,schema_desc_notes        VARCHAR2(255 Char) '
               || '   ,versionid                VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_schema '
               || 'ADD CONSTRAINT dz_swagger3_schema_pk '
               || 'PRIMARY KEY(versionid,schema_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_schema '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_schema_c01 '
@@ -1122,9 +1207,23 @@ AS
               || '    CHECK (REGEXP_LIKE(schema_items_schema_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
+      IF p_create_audit_triggers
+      THEN
+         str_sql := 'CREATE OR REPLACE TRIGGER dz_swagger3_schema_trig '
+                 || 'BEFORE UPDATE OR INSERT ON dz_swagger3_schema '
+                 || 'FOR EACH ROW '
+                 || 'BEGIN '
+                 || '   :NEW.schema_desc_author  := SYS_CONTEXT(''userenv'',''os_user'');'
+                 || '   :NEW.schema_desc_updated := TRUNC(SYSTIMESTAMP);'
+                 || 'END;';
+
+         EXECUTE IMMEDIATE str_sql;
+
+      END IF;
+
       --------------------------------------------------------------------------
       -- Step 210
       -- Build SCHEMA PROPERTY MAP table
@@ -1137,27 +1236,27 @@ AS
               || '   ,property_required        VARCHAR2(5 Char) '
               || '   ,versionid                VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_schema_prop_map '
               || 'ADD CONSTRAINT dz_swagger3_schema_prop_mappk '
               || 'PRIMARY KEY(versionid,parent_schema_id,property_name) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_schema_prop_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_schema_prop_mapc01 '
@@ -1176,9 +1275,9 @@ AS
               || '    CHECK (REGEXP_LIKE(property_schema_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 220
       -- Build SCHEMA ENUM MAP table
@@ -1190,27 +1289,27 @@ AS
               || '   ,enum_order               INTEGER '
               || '   ,versionid                VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_schema_enum_map '
               || 'ADD CONSTRAINT dz_swagger3_schema_enum_mappk '
               || 'PRIMARY KEY(versionid,schema_id,enum_order) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_schema_enum_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_schema_enum_mapc01 '
@@ -1223,9 +1322,9 @@ AS
               || '    CHECK (REGEXP_LIKE(schema_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 230
       -- Build SCHEMA COMBO MAP table
@@ -1237,27 +1336,27 @@ AS
               || '   ,combine_order            INTEGER '
               || '   ,versionid                VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_schema_combine_map '
               || 'ADD CONSTRAINT dz_swagger3_schema_combine_mpk '
               || 'PRIMARY KEY(versionid,schema_id,combine_keyword,combine_schema_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_schema_combine_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_schema_combine_c01 '
@@ -1273,9 +1372,9 @@ AS
               || '    CHECK (REGEXP_LIKE(combine_schema_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
- 
+
       --------------------------------------------------------------------------
       -- Step 240
       -- Build EXAMPLE table
@@ -1289,27 +1388,27 @@ AS
               || '   ,example_externalValue  VARCHAR2(255 Char) '
               || '   ,versionid              VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_example '
               || 'ADD CONSTRAINT dz_swagger3_example_pk '
               || 'PRIMARY KEY(versionid,example_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_example '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_example_c01 '
@@ -1319,9 +1418,9 @@ AS
               || '    CHECK (REGEXP_LIKE(example_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 250
       -- Build PARENT EXAMPLE MAP table
@@ -1333,27 +1432,27 @@ AS
               || '   ,example_order            INTEGER '
               || '   ,versionid                VARCHAR2(255 Char) NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_parent_example_map '
               || 'ADD CONSTRAINT dz_swagger3_parent_example_mpk '
               || 'PRIMARY KEY(versionid,parent_id,example_name,example_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_parent_example_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_parent_example_c01 '
@@ -1369,9 +1468,9 @@ AS
               || '    CHECK (REGEXP_LIKE(example_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-  
+
       --------------------------------------------------------------------------
       -- Step 260
       -- Build ENCODING table
@@ -1384,27 +1483,27 @@ AS
               || '   ,encoding_allowReserved VARCHAR2(5 Char) '
               || '   ,versionid              VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_encoding '
               || 'ADD CONSTRAINT dz_swagger3_encoding_pk '
               || 'PRIMARY KEY(versionid,encoding_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_encoding '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_encoding_c01 '
@@ -1420,9 +1519,9 @@ AS
               || '    CHECK (REGEXP_LIKE(encoding_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 270
       -- Build MEDIA ENCODING MAP table
@@ -1434,27 +1533,27 @@ AS
               || '   ,encoding_order      INTEGER '
               || '   ,versionid           VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_media_encoding_map '
               || 'ADD CONSTRAINT dz_swagger3_media_encoding_mpk '
               || 'PRIMARY KEY(versionid,media_id,encoding_name,encoding_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_media_encoding_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_media_encoding_c01 '
@@ -1470,9 +1569,9 @@ AS
               || '    CHECK (REGEXP_LIKE(encoding_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 280
       -- Build LINK table
@@ -1486,27 +1585,27 @@ AS
               || '   ,link_server_id         VARCHAR2(255 Char) '
               || '   ,versionid              VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_link '
               || 'ADD CONSTRAINT dz_swagger3_link_pk '
               || 'PRIMARY KEY(versionid,link_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_link '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_link_c01 '
@@ -1519,9 +1618,9 @@ AS
               || '    CHECK (REGEXP_LIKE(link_server_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 290
       -- Build LINK OP PARMS table
@@ -1533,27 +1632,27 @@ AS
               || '   ,link_op_parm_order     INTEGER             NOT NULL '
               || '   ,versionid              VARCHAR2(255 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_link_op_parms '
               || 'ADD CONSTRAINT dz_swagger3_link_op_parms_pk '
               || 'PRIMARY KEY(versionid,link_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_link_op_parms '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_link_op_parms_c01 '
@@ -1566,9 +1665,9 @@ AS
               || '    CHECK (REGEXP_LIKE(link_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 300
       -- Build HEADER table
@@ -1591,27 +1690,27 @@ AS
               || '   ,header_desc_notes      VARCHAR2(255 Char) '
               || '   ,versionid              VARCHAR2(40 Char) NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_header '
               || 'ADD CONSTRAINT dz_swagger3_header_pk '
               || 'PRIMARY KEY(versionid,header_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_header '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_header_c01 '
@@ -1639,9 +1738,23 @@ AS
               || '    CHECK (REGEXP_LIKE(header_schema_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
+      IF p_create_audit_triggers
+      THEN
+         str_sql := 'CREATE OR REPLACE TRIGGER dz_swagger3_header_trig '
+                 || 'BEFORE UPDATE OR INSERT ON dz_swagger3_header '
+                 || 'FOR EACH ROW '
+                 || 'BEGIN '
+                 || '   :NEW.header_desc_author  := SYS_CONTEXT(''userenv'',''os_user'');'
+                 || '   :NEW.header_desc_updated := TRUNC(SYSTIMESTAMP);'
+                 || 'END;';
+
+         EXECUTE IMMEDIATE str_sql;
+
+      END IF;
+
       --------------------------------------------------------------------------
       -- Step 310
       -- Build PARENT HEADER MAP table
@@ -1653,27 +1766,27 @@ AS
               || '   ,header_order             INTEGER '
               || '   ,versionid                VARCHAR2(255 Char) NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_parent_header_map '
               || 'ADD CONSTRAINT dz_swagger3_parent_header_mapk '
               || 'PRIMARY KEY(versionid,parent_id,header_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_parent_header_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_parent_header_mc01 '
@@ -1689,9 +1802,9 @@ AS
               || '    CHECK (REGEXP_LIKE(header_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 320
       -- Build RESPONSE LINK MAP table
@@ -1703,27 +1816,27 @@ AS
               || '   ,link_order               INTEGER '
               || '   ,versionid                VARCHAR2(255 Char) NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_response_link_map '
               || 'ADD CONSTRAINT dz_swagger3_response_link_mapk '
               || 'PRIMARY KEY(versionid,response_id,link_name,link_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_response_link_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_response_link_mc01 '
@@ -1739,9 +1852,9 @@ AS
               || '    CHECK (REGEXP_LIKE(link_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 330
       -- Build EXTERNALDOC table
@@ -1752,27 +1865,27 @@ AS
               || '   ,externaldoc_url          VARCHAR2(245 Char) '
               || '   ,versionid                VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_externaldoc '
               || 'ADD CONSTRAINT dz_swagger3_externaldoc_pk '
               || 'PRIMARY KEY(versionid,externaldoc_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_externaldoc '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_externaldoc_c01 '
@@ -1782,9 +1895,9 @@ AS
               || '    CHECK (REGEXP_LIKE(externaldoc_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 340
       -- Build SECURITY SCHEME table
@@ -1794,30 +1907,30 @@ AS
               || '   ,securityScheme_id           VARCHAR2(255 Char) NOT NULL '
               || '   ,securityScheme_name         VARCHAR2(255 Char) NOT NULL '
               || '   ,oauth_flow_scopes           VARCHAR2(4000 Char) '
-              || '   ,securityScheme_order        INTEGER            NOT NULL '              
+              || '   ,securityScheme_order        INTEGER            NOT NULL '
               || '   ,versionid                   VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE    dz_swagger3_parent_secSchm_map '
               || 'ADD CONSTRAINT dz_swagger3_parent_secSchm_mpk '
               || 'PRIMARY KEY(versionid,parent_id,securityScheme_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_parent_secSchm_map '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_parent_secSchm_c01 '
@@ -1830,7 +1943,7 @@ AS
               || '    CHECK (REGEXP_LIKE(securityScheme_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
 
       --------------------------------------------------------------------------
@@ -1849,30 +1962,30 @@ AS
               || '   ,oauth_flow_password            VARCHAR2(255 Char) '
               || '   ,oauth_flow_clientcredentials   VARCHAR2(255 Char) '
               || '   ,oauth_flow_authorizationcode   VARCHAR2(255 Char) '
-              || '   ,securityscheme_openidcredents  VARCHAR2(255 Char) '              
+              || '   ,securityscheme_openidcredents  VARCHAR2(255 Char) '
               || '   ,versionid                      VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_securityScheme '
               || 'ADD CONSTRAINT dz_swagger3_securityScheme_pk '
               || 'PRIMARY KEY(versionid,securityScheme_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_securityScheme '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_securityScheme_c01 '
@@ -1882,9 +1995,9 @@ AS
               || '    CHECK (REGEXP_LIKE(securityScheme_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 360
       -- Build OAUTH FLOW table
@@ -1896,27 +2009,27 @@ AS
               || '   ,oauth_flow_refreshurl       VARCHAR2(255 Char) '
               || '   ,versionid                   VARCHAR2(255 Char) NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_oauth_flow '
               || 'ADD CONSTRAINT dz_swagger3_oauth_flow_pk '
               || 'PRIMARY KEY(versionid,oauth_flow_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_oauth_flow '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_oauth_flow_c01 '
@@ -1926,9 +2039,9 @@ AS
               || '    CHECK (REGEXP_LIKE(oauth_flow_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 370
       -- Build OAUTH FLOW SCOPE table
@@ -1939,27 +2052,27 @@ AS
               || '   ,oauth_flow_scope_desc  VARCHAR2(255 Char) NOT NULL '
               || '   ,versionid              VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_oauth_flow_scope '
               || 'ADD CONSTRAINT dz_swagger3_oauth_flow_scopepk '
               || 'PRIMARY KEY(versionid,oauth_flow_id,oauth_flow_scope_name) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_oauth_flow_scope '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_oauth_flow_scopc01 '
@@ -1972,9 +2085,9 @@ AS
               || '    CHECK (REGEXP_LIKE(oauth_flow_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 380
       -- Build TAG table
@@ -1986,27 +2099,27 @@ AS
               || '   ,tag_externalDocs_id  VARCHAR2(255 Char) '
               || '   ,versionid            VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_tag '
               || 'ADD CONSTRAINT dz_swagger3_tag_pk '
               || 'PRIMARY KEY(versionid,tag_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_tag '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_tag_c01 '
@@ -2022,9 +2135,9 @@ AS
               || '    CHECK (REGEXP_LIKE(tag_externalDocs_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 390
       -- Build CACHE table
@@ -2038,29 +2151,29 @@ AS
               || '   ,shorten_logic        VARCHAR2(255 Char) '
               || '   ,versionid            VARCHAR2(40 Char)  NOT NULL '
               || ') ';
-              
+
       IF p_table_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'TABLESPACE ' || p_table_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_cache '
               || 'ADD CONSTRAINT dz_swagger3_cache_pk '
               || 'PRIMARY KEY(versionid,doc_id,group_id) ';
-              
+
       IF p_index_tablespace IS NOT NULL
       THEN
          str_sql := str_sql || 'USING INDEX TABLESPACE ' || p_index_tablespace;
-      
+
       END IF;
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
    END create_storage_tables;
-   
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    PROCEDURE create_temp_tables(
@@ -2069,9 +2182,9 @@ AS
    )
    AS
       str_sql VARCHAR2(4000 Char);
-      
+
    BEGIN
-   
+
       --------------------------------------------------------------------------
       -- Step 10
       -- Build XRELATES table
@@ -2082,15 +2195,15 @@ AS
               || '   ,child_object_type_id VARCHAR2(255 Char) NOT NULL '
               || ') '
               || 'ON COMMIT PRESERVE ROWS ';
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_xrelates '
               || 'ADD CONSTRAINT dz_swagger3_xrelates_pk '
               || 'PRIMARY KEY(parent_object_id,child_object_id) ';
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       --------------------------------------------------------------------------
       -- Step 20
       -- Build XOBJECTS table
@@ -2118,15 +2231,15 @@ AS
               || '   ,tagtyp               dz_swagger3_tag_typ '
               || ') '
               || 'ON COMMIT PRESERVE ROWS ';
-      
+
       EXECUTE IMMEDIATE str_sql;
-      
+
       str_sql := 'ALTER TABLE dz_swagger3_xobjects '
               || 'ADD CONSTRAINT dz_swagger3_xobjects_pk '
               || 'PRIMARY KEY(object_type_id,object_id) ';
-      
+
       EXECUTE IMMEDIATE str_sql;
-   
+
    END create_temp_tables;
 
    -----------------------------------------------------------------------------
@@ -2134,9 +2247,9 @@ AS
    FUNCTION dz_swagger3_storage_table_list
    RETURN dz_swagger3_string_vry
    AS
-   
+
    BEGIN
-   
+
       RETURN dz_swagger3_string_vry(
           'DZ_SWAGGER3_CACHE'
          ,'DZ_SWAGGER3_DOC'
@@ -2176,24 +2289,24 @@ AS
          ,'DZ_SWAGGER3_TAG'
          ,'DZ_SWAGGER3_VERS'
       );
-   
+
    END dz_swagger3_storage_table_list;
-   
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION dz_swagger3_temp_table_list
    RETURN dz_swagger3_string_vry
    AS
-   
+
    BEGIN
-   
+
       RETURN dz_swagger3_string_vry(
           'DZ_SWAGGER3_XRELATES'
          ,'DZ_SWAGGER3_XOBJECTS'
       );
-   
+
    END dz_swagger3_temp_table_list;
-   
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    FUNCTION is_valid
@@ -2201,9 +2314,9 @@ AS
    AS
       str_sql     VARCHAR2(32000 Char);
       ary_results dz_swagger3_string_vry;
-      
+
    BEGIN
-   
+
       str_sql := 'SELECT '
               || 'a.schema_id '
               || 'FROM '
@@ -2215,21 +2328,21 @@ AS
               || '   FROM '
               || '   dz_swagger3_schema b '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql
       BULK COLLECT INTO ary_results;
-      
+
       IF ary_results IS NULL
       OR ary_results.COUNT > 0
       THEN
          FOR i IN 1 .. ary_results.COUNT
          LOOP
             PIPE ROW('schema - bad items array; ' || ary_results(i));
-            
+
          END LOOP;
-      
+
       END IF;
-      
+
       str_sql := 'SELECT '
               || 'a.property_schema_id '
               || 'FROM '
@@ -2241,21 +2354,21 @@ AS
               || '   FROM '
               || '   dz_swagger3_schema b '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql
       BULK COLLECT INTO ary_results;
-      
+
       IF ary_results IS NULL
       OR ary_results.COUNT > 0
       THEN
          FOR i IN 1 .. ary_results.COUNT
          LOOP
             PIPE ROW('schema - bad property schema; ' || ary_results(i));
-            
+
          END LOOP;
-      
+
       END IF;
-      
+
       str_sql := 'SELECT '
               || 'a.parent_schema_id '
               || 'FROM '
@@ -2267,23 +2380,23 @@ AS
               || '   FROM '
               || '   dz_swagger3_schema b '
               || ') ';
-              
+
       EXECUTE IMMEDIATE str_sql
       BULK COLLECT INTO ary_results;
-      
+
       IF ary_results IS NULL
       OR ary_results.COUNT > 0
       THEN
          FOR i IN 1 .. ary_results.COUNT
          LOOP
             PIPE ROW('schema - bad property parent; ' || ary_results(i));
-            
+
          END LOOP;
-      
+
       END IF;
-      
+
       RETURN;
-   
+
    END is_valid;
 
 END dz_swagger3_setup;
@@ -2292,7 +2405,7 @@ END dz_swagger3_setup;
 /*
 BEGIN
    dz_swagger3_setup.create_storage_tables();
-   
+
 END;
 /
 

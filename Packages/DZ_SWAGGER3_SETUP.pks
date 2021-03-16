@@ -5,8 +5,9 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    PROCEDURE create_storage_tables(
-       p_table_tablespace VARCHAR2 DEFAULT dz_swagger3_constants.c_table_tablespace
-      ,p_index_tablespace VARCHAR2 DEFAULT dz_swagger3_constants.c_index_tablespace
+       p_table_tablespace      VARCHAR2 DEFAULT dz_swagger3_constants.c_table_tablespace
+      ,p_index_tablespace      VARCHAR2 DEFAULT dz_swagger3_constants.c_index_tablespace
+      ,p_create_audit_triggers BOOLEAN  DEFAULT TRUE
    );
    
    -----------------------------------------------------------------------------
