@@ -2148,7 +2148,8 @@ AS
               || '   ,json_payload         CLOB '
               || '   ,yaml_payload         CLOB '
               || '   ,extraction_timestamp TIMESTAMP '
-              || '   ,shorten_logic        VARCHAR2(255 Char) '
+              || '   ,short_id             VARCHAR2(255 Char) '
+              || '   ,force_escapes        VARCHAR2(255 Char) '
               || '   ,versionid            VARCHAR2(40 Char)  NOT NULL '
               || ') ';
 

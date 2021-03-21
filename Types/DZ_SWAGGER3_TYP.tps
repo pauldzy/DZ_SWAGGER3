@@ -20,7 +20,6 @@ AS OBJECT (
        p_doc_id              IN  VARCHAR2
       ,p_group_id            IN  VARCHAR2 DEFAULT NULL
       ,p_versionid           IN  VARCHAR2 DEFAULT NULL
-      ,p_shorten_logic       IN  VARCHAR2 DEFAULT NULL
    ) RETURN SELF AS RESULT
     
    -----------------------------------------------------------------------------

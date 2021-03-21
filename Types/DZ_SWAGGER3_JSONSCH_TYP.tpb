@@ -229,16 +229,6 @@ AS
       self.schema_obj.inject_jsonschema := 'TRUE';
       
       RETURN;
-      
-   EXCEPTION
-   
-      WHEN NO_DATA_FOUND
-      THEN
-         RETURN;
-         
-      WHEN OTHERS
-      THEN
-         RAISE;
    
    END dz_swagger3_jsonsch_typ;
    

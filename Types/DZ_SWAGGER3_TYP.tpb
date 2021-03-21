@@ -18,7 +18,6 @@ AS
        p_doc_id              IN  VARCHAR2
       ,p_group_id            IN  VARCHAR2 DEFAULT NULL
       ,p_versionid           IN  VARCHAR2 DEFAULT NULL
-      ,p_shorten_logic       IN  VARCHAR2 DEFAULT NULL
    ) RETURN SELF AS RESULT
    AS
       str_doc_id          VARCHAR2(255 Char) := p_doc_id;

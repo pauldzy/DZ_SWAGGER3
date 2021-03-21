@@ -233,7 +233,13 @@ AS
    AS
    BEGIN
       
-      IF INSTR(p_input,CHR(10)) > 0
+      -- When the string contains unicode, we just need to double-quote it
+      IF INSTR(ASCIISTR(p_input),'\') > 0
+      THEN
+         RETURN 'double';
+      
+      -- If the string has newlines then try to multiline line it
+      ELSIF INSTR(p_input,CHR(10)) > 0 
       OR INSTR(p_input,CHR(13)) > 0
       THEN
          RETURN 'multiline';
@@ -353,6 +359,12 @@ AS
       --------------------------------------------------------------------------
       ELSIF str_format = 'multiline'
       THEN
+         clb_output := REGEXP_REPLACE(
+             clb_output
+            ,CHR(10) || '$'
+            ,''
+         );
+      
          clb_output := REGEXP_REPLACE(
              clb_output
             ,CHR(13)
