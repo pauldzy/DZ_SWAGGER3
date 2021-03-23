@@ -2,5 +2,5 @@
 Insert into DZ_SWAGGER3_OPERATION_CALL_MAP
    (OPERATION_ID, CALLBACK_NAME, CALLBACK_ID, CALLBACK_ORDER, VERSIONID)
  Values
-   ('Sample.randomnav.GET', 'onData', 'Sample.randomnav.Callback', 10, 'SAMPLE');
+   ('Sample.randomnav.GET', 'onData', 'Sample.randomnav.CALLBACK', 10, 'SAMPLE');
 COMMIT;

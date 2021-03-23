@@ -2,21 +2,25 @@
 Insert into DZ_SWAGGER3_MEDIA
    (MEDIA_ID, MEDIA_SCHEMA_ID, VERSIONID)
  Values
-   ('Sample.Navigation30.Media', 'Sample.Navigation30.root', 'SAMPLE');
+   ('Sample.Navigation30.MEDIA', 'Sample.Navigation30.root', 'SAMPLE');
 Insert into DZ_SWAGGER3_MEDIA
    (MEDIA_ID, MEDIA_SCHEMA_ID, VERSIONID)
  Values
-   ('Sample.Streamcat.Media', 'Sample.Streamcat.root', 'SAMPLE');
+   ('Sample.Streamcat.MEDIA', 'Sample.Streamcat.root', 'SAMPLE');
 Insert into DZ_SWAGGER3_MEDIA
    (MEDIA_ID, MEDIA_SCHEMA_ID, VERSIONID)
  Values
-   ('Sample.Streamcat.RequestBody.Media', 'Sample.Streamcat.RequestBody.root', 'SAMPLE');
+   ('Sample.Streamcat.REQUESTBODY.MEDIA', 'Sample.Streamcat.REQUESTBODY.root', 'SAMPLE');
 Insert into DZ_SWAGGER3_MEDIA
    (MEDIA_ID, MEDIA_SCHEMA_ID, VERSIONID)
  Values
-   ('Sample.csv.download', 'Sample.csv.download.root', 'SAMPLE');
+   ('Sample.csv.download.MEDIA', 'Sample.csv.download.root', 'SAMPLE');
 Insert into DZ_SWAGGER3_MEDIA
    (MEDIA_ID, MEDIA_SCHEMA_ID, VERSIONID)
  Values
-   ('Sample.randomnav.Media', 'Sample.randomnav.root', 'SAMPLE');
+   ('Sample.randomnav.CALLBACK.MEDIA', 'Sample.randomnav.CALLBACK.root', 'SAMPLE');
+Insert into DZ_SWAGGER3_MEDIA
+   (MEDIA_ID, MEDIA_SCHEMA_ID, VERSIONID)
+ Values
+   ('Sample.randomnav.MEDIA', 'Sample.randomnav.root', 'SAMPLE');
 COMMIT;

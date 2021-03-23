@@ -26,122 +26,137 @@ AS
       --------------------------------------------------------------------------
       --dbms_output.put_line('path: ' || p_path_id);
       self.versionid := p_versionid;
-      
+
       --------------------------------------------------------------------------
       -- Step 20
       -- Fetch component items
       --------------------------------------------------------------------------
-      SELECT
-       a.path_endpoint
-      ,a.path_id
-      ,a.path_summary
-      ,a.path_description
-      ,CASE
-       WHEN a.path_get_operation_id IS NOT NULL
-       THEN
-         dz_swagger3_object_typ(
-             p_object_id      => a.path_get_operation_id
-            ,p_object_type_id => 'operationtyp'
-            ,p_object_subtype => 'get'
-         )
-       ELSE
-         NULL
-       END
-      ,CASE
-       WHEN a.path_put_operation_id IS NOT NULL
-       THEN
-         dz_swagger3_object_typ(
-             p_object_id      => a.path_put_operation_id
-            ,p_object_type_id => 'operationtyp'
-            ,p_object_subtype => 'put'
-         )
-       ELSE
-         NULL
-       END
-      ,CASE
-       WHEN a.path_post_operation_id IS NOT NULL
-       THEN
-         dz_swagger3_object_typ(
-             p_object_id      => a.path_post_operation_id
-            ,p_object_type_id => 'operationtyp'
-            ,p_object_subtype => 'post'
-         )
-       ELSE
-         NULL
-       END
-      ,CASE
-       WHEN a.path_delete_operation_id IS NOT NULL
-       THEN
-         dz_swagger3_object_typ(
-             p_object_id      => a.path_delete_operation_id
-            ,p_object_type_id => 'operationtyp'
-            ,p_object_subtype => 'delete'
-         )
-       ELSE
-         NULL
-       END
-      ,CASE
-       WHEN a.path_options_operation_id IS NOT NULL
-       THEN
-         dz_swagger3_object_typ(
-             p_object_id      => a.path_options_operation_id
-            ,p_object_type_id => 'operationtyp'
-            ,p_object_subtype => 'options'
-         )
-       ELSE
-         NULL
-       END
-      ,CASE
-       WHEN a.path_head_operation_id IS NOT NULL
-       THEN
-         dz_swagger3_object_typ(
-             p_object_id      => a.path_head_operation_id
-            ,p_object_type_id => 'operationtyp'
-            ,p_object_subtype => 'head'
-         )
-       ELSE
-         NULL
-       END
-      ,CASE
-       WHEN a.path_patch_operation_id IS NOT NULL
-       THEN
-         dz_swagger3_object_typ(
-             p_object_id      => a.path_patch_operation_id
-            ,p_object_type_id => 'operationtyp'
-            ,p_object_subtype => 'patch'
-         )
-       ELSE
-         NULL
-       END
-      ,CASE
-       WHEN a.path_trace_operation_id IS NOT NULL
-       THEN
-         dz_swagger3_object_typ(
-             p_object_id      => a.path_trace_operation_id
-            ,p_object_type_id => 'operationtyp'
-            ,p_object_subtype => 'trace'
-         )
-       ELSE
-         NULL
-       END
-      INTO 
-       self.path_endpoint
-      ,self.path_id
-      ,self.path_summary
-      ,self.path_description
-      ,self.path_get_operation
-      ,self.path_put_operation
-      ,self.path_post_operation
-      ,self.path_delete_operation
-      ,self.path_options_operation
-      ,self.path_head_operation
-      ,self.path_patch_operation
-      ,self.path_trace_operation
-      FROM
-      dz_swagger3_path a
-      WHERE
-          a.versionid = p_versionid
-      AND a.path_id   = p_path_id;
+      BEGIN
+         SELECT
+          a.path_endpoint
+         ,a.path_id
+         ,a.path_summary
+         ,a.path_description
+         ,CASE
+          WHEN a.path_get_operation_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id      => a.path_get_operation_id
+               ,p_object_type_id => 'operationtyp'
+               ,p_object_subtype => 'get'
+            )
+          ELSE
+            NULL
+          END
+         ,CASE
+          WHEN a.path_put_operation_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id      => a.path_put_operation_id
+               ,p_object_type_id => 'operationtyp'
+               ,p_object_subtype => 'put'
+            )
+          ELSE
+            NULL
+          END
+         ,CASE
+          WHEN a.path_post_operation_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id      => a.path_post_operation_id
+               ,p_object_type_id => 'operationtyp'
+               ,p_object_subtype => 'post'
+            )
+          ELSE
+            NULL
+          END
+         ,CASE
+          WHEN a.path_delete_operation_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id      => a.path_delete_operation_id
+               ,p_object_type_id => 'operationtyp'
+               ,p_object_subtype => 'delete'
+            )
+          ELSE
+            NULL
+          END
+         ,CASE
+          WHEN a.path_options_operation_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id      => a.path_options_operation_id
+               ,p_object_type_id => 'operationtyp'
+               ,p_object_subtype => 'options'
+            )
+          ELSE
+            NULL
+          END
+         ,CASE
+          WHEN a.path_head_operation_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id      => a.path_head_operation_id
+               ,p_object_type_id => 'operationtyp'
+               ,p_object_subtype => 'head'
+            )
+          ELSE
+            NULL
+          END
+         ,CASE
+          WHEN a.path_patch_operation_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id      => a.path_patch_operation_id
+               ,p_object_type_id => 'operationtyp'
+               ,p_object_subtype => 'patch'
+            )
+          ELSE
+            NULL
+          END
+         ,CASE
+          WHEN a.path_trace_operation_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id      => a.path_trace_operation_id
+               ,p_object_type_id => 'operationtyp'
+               ,p_object_subtype => 'trace'
+            )
+          ELSE
+            NULL
+          END
+         INTO 
+          self.path_endpoint
+         ,self.path_id
+         ,self.path_summary
+         ,self.path_description
+         ,self.path_get_operation
+         ,self.path_put_operation
+         ,self.path_post_operation
+         ,self.path_delete_operation
+         ,self.path_options_operation
+         ,self.path_head_operation
+         ,self.path_patch_operation
+         ,self.path_trace_operation
+         FROM
+         dz_swagger3_path a
+         WHERE
+             a.versionid = p_versionid
+         AND a.path_id   = p_path_id;
+         
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            RAISE_APPLICATION_ERROR(
+                -20001
+               ,'path not found for path_id = ' || p_path_id || ' versionid ' || p_versionid
+            );
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
 
       --------------------------------------------------------------------------
       -- Step 20
@@ -187,7 +202,7 @@ AS
       -- Return the object
       --------------------------------------------------------------------------
       RETURN; 
-      
+ 
    END dz_swagger3_path_typ;
 
    -----------------------------------------------------------------------------

@@ -404,6 +404,7 @@ AS
       clb_operation_security     CLOB;
       clb_operation_servers      CLOB;
       str_identifier             VARCHAR2(255 Char);
+      str_externaldoc_url        varchar2(4000 Char);
   
    BEGIN
       
@@ -445,8 +446,11 @@ AS
       THEN
          BEGIN
             SELECT
-            a.extrdocstyp.toJSON()
-            INTO clb_operation_externalDocs
+             a.extrdocstyp.toJSON()
+            ,a.extrdocstyp.externaldoc_url
+            INTO
+             clb_operation_externalDocs
+            ,str_externaldoc_url
             FROM 
             dz_swagger3_xobjects a
             WHERE
@@ -463,6 +467,12 @@ AS
                RAISE;
                
          END;
+         
+         IF str_externaldoc_url IS NULL
+         THEN
+            clb_operation_externalDocs := NULL;
+            
+         END IF;
          
       END IF;
       

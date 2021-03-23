@@ -2,13 +2,13 @@
 Insert into DZ_SWAGGER3_GROUP
    (GROUP_ID, DOC_ID, PATH_ID, PATH_ORDER, VERSIONID)
  Values
-   ('SAMPLE', 'SAMPLE', 'Sample.Navigation30', 10, 'SAMPLE');
+   ('SAMPLE', 'SAMPLE', 'Sample.Navigation30', 1000000, 'SAMPLE');
 Insert into DZ_SWAGGER3_GROUP
    (GROUP_ID, DOC_ID, PATH_ID, PATH_ORDER, VERSIONID)
  Values
-   ('SAMPLE', 'SAMPLE', 'Sample.Streamcat', 20, 'SAMPLE');
+   ('SAMPLE', 'SAMPLE', 'Sample.Streamcat', 1000010, 'SAMPLE');
 Insert into DZ_SWAGGER3_GROUP
    (GROUP_ID, DOC_ID, PATH_ID, PATH_ORDER, VERSIONID)
  Values
-   ('SAMPLE', 'SAMPLE', 'Sample.randomnav', 30, 'SAMPLE');
+   ('SAMPLE', 'SAMPLE', 'Sample.randomnav', 1000020, 'SAMPLE');
 COMMIT;

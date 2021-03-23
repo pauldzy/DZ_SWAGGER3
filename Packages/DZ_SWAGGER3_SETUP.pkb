@@ -1206,6 +1206,19 @@ AS
               || '   ,CONSTRAINT dz_swagger3_schema_c17 '
               || '    CHECK (REGEXP_LIKE(schema_items_schema_id,''^[0-9a-zA-Z_\.-]+$'')) '
               || '    ENABLE VALIDATE '
+              || '   ,CONSTRAINT dz_swagger3_schema_c18 '
+              || '    CHECK ( '
+              || '          ( schema_type not in (''integer'',''number'',''string'') ) '
+              || '       OR '
+              || '          ( schema_example_string IS NULL AND schema_example_number IS NULL ) '
+              || '       OR '
+              || '          ( schema_type = ''integer'' AND schema_example_string IS NULL AND schema_example_number IS NOT NULL) '
+              || '       OR '
+              || '          ( schema_type = ''number''  AND schema_example_string IS NULL AND schema_example_number IS NOT NULL) '
+              || '       OR '
+              || '          ( schema_type = ''string''  AND schema_example_string IS NOT NULL AND schema_example_number IS NULL) '
+              || '    ) '
+              || '    ENABLE VALIDATE '
               || ') ';
 
       EXECUTE IMMEDIATE str_sql;
