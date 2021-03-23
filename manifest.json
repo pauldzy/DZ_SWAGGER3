@@ -10,7 +10,7 @@
        }
       ,{
           "key": "GITCOMMIT"
-         ,"cmd": "git rev-parse master"
+         ,"cmd": "git rev-parse main"
        }
       ,{
           "key": "GITCOMMITDATE"
@@ -27,8 +27,8 @@
          ,"output": "dz_swagger3_deploy.sql"
          ,"includes": [
              "%%SQLHEADER%%"
-            ,"Types/DZ_SWAGGER3_NUMBER_VRY.tps"
-            ,"Types/DZ_SWAGGER3_STRING_VRY.tps"
+            ,"Collections/DZ_SWAGGER3_NUMBER_VRY.tps"
+            ,"Collections/DZ_SWAGGER3_STRING_VRY.tps"
             ,"Packages/DZ_SWAGGER3_CONSTANTS.pks"
             ,"Packages/DZ_SWAGGER3_UTIL.pks"
             ,"Packages/DZ_SWAGGER3_UTIL.pkb"
