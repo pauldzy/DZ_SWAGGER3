@@ -76,17 +76,10 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
+   MEMBER FUNCTION toJSON
+   RETURN CLOB
    AS
-      cb               CLOB;
-      v2               VARCHAR2(32000);
-      
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
+      clb_output       CLOB;
       
    BEGIN
       
@@ -97,173 +90,25 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Build the wrapper
+      -- Build the object
       --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',NULL)
-         );
-
-      ELSE
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',-1)
-         );
-         str_pad     := ' ';
-
-      END IF;
-      str_pad1 := str_pad;
+      SELECT
+      JSON_OBJECT(
+          'description'  VALUE self.externaldoc_description
+         ,'url'          VALUE self.externaldoc_url         
+         ABSENT ON NULL
+         RETURNING CLOB
+      )
+      INTO clb_output
+      FROM dual;
       
       --------------------------------------------------------------------------
       -- Step 30
-      -- Add name element
-      --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => str_pad1 || dz_json_main.value2json(
-             'description'
-            ,self.externaldoc_description
-            ,p_pretty_print + 1
-          )
-         ,p_pretty_print => p_pretty_print + 1
-      );
-      str_pad1 := ',';
-         
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Add optional url 
-      --------------------------------------------------------------------------
-      IF self.externaldoc_url IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'url'
-               ,self.externaldoc_url
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-
-      END IF;
- 
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Add the left bracket
-      --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => '}'
-         ,p_pretty_print   => p_pretty_print
-         ,p_final_linefeed => FALSE
-      );
-
-      --------------------------------------------------------------------------
-      -- Step 60
       -- Cough it out
       --------------------------------------------------------------------------
-      dz_swagger3_util.fconc(
-          p_c    => cb
-         ,p_v    => v2
-      );
-      
-      RETURN cb;
-           
+      RETURN clb_output;
+
    END toJSON;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toYAML(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
-   AS
-      cb               CLOB;
-      v2               VARCHAR2(32000);
-      
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Check incoming parameters
-      --------------------------------------------------------------------------
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Write the yaml description
-      --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => 'description: ' || dz_swagger3_util.yaml_text(
-             self.externaldoc_description
-            ,p_pretty_print
-          )
-         ,p_pretty_print => p_pretty_print
-         ,p_amount       => '  '
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Write the optional license url
-      --------------------------------------------------------------------------
-      IF self.externaldoc_url IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'url: ' || dz_swagger3_util.yaml_text(
-                self.externaldoc_url
-               ,p_pretty_print
-             )
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 110
-      -- Cough it out without final line feed
-      --------------------------------------------------------------------------
-      dz_swagger3_util.fconc(
-          p_c    => cb
-         ,p_v    => v2
-      );
-      
-      IF p_initial_indent = 'FALSE'
-      THEN
-         cb := REGEXP_REPLACE(cb,'^\s+','');
-       
-      END IF;
-      
-      IF p_final_linefeed = 'FALSE'
-      THEN
-         cb := REGEXP_REPLACE(cb,CHR(10) || '$','');
-         
-      END IF;
-               
-      RETURN cb;
-      
-   END toYAML;
    
 END;
 /

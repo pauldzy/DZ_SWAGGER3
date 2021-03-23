@@ -1028,46 +1028,6 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   PROCEDURE stringhashtyp(
-       p_parent_id           IN  VARCHAR2
-      ,p_children_ids        IN  dz_swagger3_object_vry
-      ,p_versionid           IN  VARCHAR2
-   )
-   AS
-      ary_ids   dz_swagger3_object_vry;
-      obj       dz_swagger3_string_hash_typ;
-
-   BEGIN
-   
-      ary_ids := filter_ids(p_children_ids,p_parent_id);
-
-      FOR i IN 1 .. ary_ids.COUNT
-      LOOP
-         obj := dz_swagger3_string_hash_typ(
-             p_hash_key       => ary_ids(i).object_id
-            ,p_string_value   => ary_ids(i).object_key
-            ,p_versionid      => p_versionid
-         );
-
-         INSERT 
-         INTO dz_swagger3_xobjects(
-              object_id
-             ,object_type_id
-             ,stringhashtyp
-         ) VALUES (
-             ary_ids(i).object_id
-            ,ary_ids(i).object_type_id
-            ,obj
-         );
-         
-      END LOOP;
-      
-      -- No subobjects
-      
-   END stringhashtyp;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
    PROCEDURE tagtyp(
        p_parent_id           IN  VARCHAR2
       ,p_children_ids        IN  dz_swagger3_object_vry

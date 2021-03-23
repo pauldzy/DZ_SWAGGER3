@@ -48,12 +48,10 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS
       clb_output       CLOB;
-      str_pad          VARCHAR2(1 Char);
       
    BEGIN
       
@@ -64,134 +62,24 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Build the wrapper
+      -- Build the object
       --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         clb_output  := dz_json_util.pretty('{',NULL);
-         
-      ELSE
-         clb_output  := dz_json_util.pretty('{',-1);
-         str_pad     := ' ';
-         
-      END IF;
-      
+      SELECT
+      JSON_OBJECT(
+          'name'         VALUE self.license_name
+         ,'url'          VALUE self.license_url
+         ABSENT ON NULL
+      )
+      INTO clb_output
+      FROM dual;
+
       --------------------------------------------------------------------------
       -- Step 30
-      -- Add name element
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          str_pad || dz_json_main.value2json(
-             'name'
-            ,self.license_name
-            ,p_pretty_print + 1
-         )
-         ,p_pretty_print + 1
-      );
-      str_pad := ',';
-         
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Add optional url 
-      --------------------------------------------------------------------------
-      IF self.license_url IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty(
-             str_pad || dz_json_main.value2json(
-                'url'
-               ,self.license_url
-               ,p_pretty_print + 1
-            )
-            ,p_pretty_print + 1
-         );
-         str_pad := ',';
-
-      END IF;
- 
-      --------------------------------------------------------------------------
-      -- Step 100
-      -- Add the left bracket
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty(
-          '}'
-         ,p_pretty_print,NULL,NULL
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 110
       -- Cough it out
       --------------------------------------------------------------------------
       RETURN clb_output;
-           
+
    END toJSON;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toYAML(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
-   AS
-      clb_output        CLOB;
-      
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Check incoming parameters
-      --------------------------------------------------------------------------
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Write the yaml license name
-      --------------------------------------------------------------------------
-      clb_output := clb_output || dz_json_util.pretty_str(
-          'name: ' || dz_swagger3_util.yaml_text(
-             self.license_name
-            ,p_pretty_print
-         )
-         ,p_pretty_print
-         ,'  '
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Write the optional license url
-      --------------------------------------------------------------------------
-      IF self.license_url IS NOT NULL
-      THEN
-         clb_output := clb_output || dz_json_util.pretty_str(
-             'url: ' || dz_swagger3_util.yaml_text(
-                self.license_url
-               ,p_pretty_print
-            )
-            ,p_pretty_print
-            ,'  '
-         );
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 110
-      -- Cough it out without final line feed
-      --------------------------------------------------------------------------
-      IF p_initial_indent = 'FALSE'
-      THEN
-         clb_output := REGEXP_REPLACE(clb_output,'^\s+','');
-       
-      END IF;
-      
-      IF p_final_linefeed = 'FALSE'
-      THEN
-         clb_output := REGEXP_REPLACE(clb_output,CHR(10) || '$','');
-         
-      END IF;
-               
-      RETURN clb_output;
-      
-   END toYAML;
    
 END;
 /

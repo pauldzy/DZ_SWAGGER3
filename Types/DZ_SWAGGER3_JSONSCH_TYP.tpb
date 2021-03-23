@@ -29,6 +29,16 @@ AS
       
    BEGIN
    
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check over incoming parameters
+      --------------------------------------------------------------------------
+      dz_swagger3_main.purge_xtemp();
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Determine the proper versionid value
+      --------------------------------------------------------------------------
       IF p_versionid IS NULL
       THEN
          SELECT
@@ -45,6 +55,10 @@ AS
          
       END IF;
    
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Determine the operation id
+      --------------------------------------------------------------------------
       IF LOWER(p_http_method) = 'get'
       THEN
          SELECT
@@ -146,6 +160,10 @@ AS
          
       END IF;
       
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Determine the response id
+      --------------------------------------------------------------------------
       SELECT
       a.response_id
       INTO
@@ -157,6 +175,10 @@ AS
       AND a.operation_id = str_operation_id
       AND a.response_code = p_response_code;
       
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Determine the media id
+      --------------------------------------------------------------------------
       SELECT
       a.media_id
       INTO
@@ -168,6 +190,10 @@ AS
       AND a.parent_id = str_response_id
       AND a.media_type = p_media_type;
             
+      --------------------------------------------------------------------------
+      -- Step 60
+      -- Pull the base schema for the operation response
+      --------------------------------------------------------------------------
       SELECT
       dz_swagger3_schema_typ(
           p_schema_id    => a.media_schema_id
@@ -181,8 +207,16 @@ AS
          a.versionid = str_versionid
       AND a.media_id = str_media_id;
       
+      --------------------------------------------------------------------------
+      -- Step 70
+      -- Walk the schema tree
+      --------------------------------------------------------------------------
       self.schema_obj.traverse();
       
+      --------------------------------------------------------------------------
+      -- Step 80
+      -- Determine the schema title
+      --------------------------------------------------------------------------
       IF p_title IS NULL
       THEN
          self.schema_obj.schema_title := p_path_id || '|' || p_http_method || '|' || p_response_code || '|' || p_media_type;
@@ -195,24 +229,13 @@ AS
       self.schema_obj.inject_jsonschema := 'TRUE';
       
       RETURN;
-      
-   EXCEPTION
-   
-      WHEN NO_DATA_FOUND
-      THEN
-         RETURN;
-         
-      WHEN OTHERS
-      THEN
-         RAISE;
    
    END dz_swagger3_jsonsch_typ;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print         IN  INTEGER  DEFAULT NULL
-      ,p_short_id             IN  VARCHAR2 DEFAULT 'FALSE'
+      p_short_id              IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN CLOB
    AS 
    BEGIN
@@ -225,7 +248,7 @@ AS
       OR self.schema_obj.schema_id IS NULL
       THEN
          RETURN NULL;
-         
+
       END IF;
       
       --------------------------------------------------------------------------
@@ -233,12 +256,11 @@ AS
       -- Return the schema for the endpoint media
       --------------------------------------------------------------------------
       RETURN self.schema_obj.toJSON(
-          p_pretty_print   => p_pretty_print
-         ,p_force_inline   => 'TRUE'
+          p_force_inline   => 'TRUE'
          ,p_short_id       => p_short_id
          ,p_jsonschema     => 'TRUE'
       );
-           
+ 
    END toJSON;
    
 END;

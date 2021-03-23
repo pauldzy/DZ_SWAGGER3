@@ -31,30 +31,45 @@ AS
       -- Step 20 
       -- Load the tag self and external doc id
       --------------------------------------------------------------------------
-      SELECT
-       a.tag_id
-      ,a.tag_name
-      ,a.tag_description
-      ,CASE
-       WHEN a.tag_externaldocs_id IS NOT NULL
-       THEN
-         dz_swagger3_object_typ(
-             p_object_id => a.tag_externaldocs_id
-            ,p_object_type_id => 'extrdocstyp'
-         )
-       ELSE
-         NULL
-       END
-      INTO 
-       self.tag_id
-      ,self.tag_name
-      ,self.tag_description
-      ,self.tag_externalDocs
-      FROM
-      dz_swagger3_tag a
-      WHERE
-      a.versionid = p_versionid
-      AND a.tag_id = p_tag_id;
+      BEGIN
+         SELECT
+          a.tag_id
+         ,a.tag_name
+         ,a.tag_description
+         ,CASE
+          WHEN a.tag_externaldocs_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id => a.tag_externaldocs_id
+               ,p_object_type_id => 'extrdocstyp'
+            )
+          ELSE
+            NULL
+          END
+         INTO 
+          self.tag_id
+         ,self.tag_name
+         ,self.tag_description
+         ,self.tag_externalDocs
+         FROM
+         dz_swagger3_tag a
+         WHERE
+         a.versionid = p_versionid
+         AND a.tag_id = p_tag_id;
+
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            RAISE_APPLICATION_ERROR(
+                -20001
+               ,'Model missing tag record for tag_id ' || p_tag_id || ' in version ' || p_versionid
+            );
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+      
+      END;
       
       --------------------------------------------------------------------------
       -- Step 30 
@@ -88,18 +103,11 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
+   MEMBER FUNCTION toJSON
+   RETURN CLOB
    AS
-      cb               CLOB;
-      v2               VARCHAR2(32000);
-      
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      clb_tmp          CLOB;
+      clb_output       CLOB;
+      clb_extrdocstyp  CLOB;
       
    BEGIN
       
@@ -110,81 +118,14 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Build the wrapper
-      --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',NULL)
-         );
-
-      ELSE
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',-1)
-         );
-         str_pad     := ' ';
-
-      END IF;
-      str_pad1 := str_pad;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Add mandatory name
-      --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => str_pad1 || dz_json_main.value2json(
-             'name'
-            ,self.tag_name
-            ,p_pretty_print + 1
-          )
-         ,p_pretty_print => p_pretty_print + 1
-      );
-      str_pad1 := ',';
-         
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Add optional description
-      --------------------------------------------------------------------------
-      IF self.tag_description IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'description'
-               ,self.tag_description
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 50
       -- Add optional externalDocs
       --------------------------------------------------------------------------
       IF self.tag_externalDocs IS NOT NULL
       THEN
          BEGIN
             SELECT
-            a.extrdocstyp.toJSON(
-                p_pretty_print   => p_pretty_print + 1
-               ,p_force_inline   => p_force_inline
-               ,p_short_id       => p_short_id
-            )
-            INTO clb_tmp
+            a.extrdocstyp.toJSON()
+            INTO clb_extrdocstyp
             FROM
             dz_swagger3_xobjects a
             WHERE
@@ -194,193 +135,38 @@ AS
          EXCEPTION
             WHEN NO_DATA_FOUND
             THEN
-               clb_tmp := NULL;
+               clb_extrdocstyp := NULL;
                
             WHEN OTHERS
             THEN
                RAISE;
                
          END;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || '"externalDocs":' || str_pad
-            ,p_pretty_print => p_pretty_print + 1
-            ,p_final_linefeed => FALSE
-         );
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => clb_tmp
-            ,p_in_v => NULL
-            ,p_pretty_print => p_pretty_print + 1
-            ,p_initial_indent => FALSE
-         );
-         
-         str_pad1 := ',';
-
-      END IF;
- 
-      --------------------------------------------------------------------------
-      -- Step 60
-      -- Add the left bracket
-      --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => '}'
-         ,p_pretty_print   => p_pretty_print
-         ,p_final_linefeed => FALSE
-      );
-
-      --------------------------------------------------------------------------
-      -- Step 70
-      -- Cough it out
-      --------------------------------------------------------------------------
-      dz_swagger3_util.fconc(
-          p_c    => cb
-         ,p_v    => v2
-      );
       
-      RETURN cb;
-           
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Build the object
+      --------------------------------------------------------------------------
+      SELECT
+      JSON_OBJECT(
+          'name'         VALUE self.tag_name
+         ,'description'  VALUE self.tag_description
+         ,'externalDocs' VALUE clb_extrdocstyp        FORMAT JSON 
+         ABSENT ON NULL
+         RETURNING CLOB
+      )
+      INTO clb_output
+      FROM dual;
+
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Cough out the results
+      --------------------------------------------------------------------------
+      RETURN clb_output;
+
    END toJSON;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toYAML(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
-   AS
-      cb               CLOB;
-      v2               VARCHAR2(32000);
-
-      clb_tmp          CLOB;
-      
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Check incoming parameters
-      --------------------------------------------------------------------------
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Write the required name
-      --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => 'name: ' || dz_swagger3_util.yaml_text(
-             self.tag_name
-            ,p_pretty_print
-          )
-         ,p_pretty_print => p_pretty_print
-         ,p_amount       => '  '
-      );
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Write the optional description
-      --------------------------------------------------------------------------
-      IF self.tag_description IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'description: ' || dz_swagger3_util.yaml_text(
-                self.tag_description
-               ,p_pretty_print
-             )
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Write the optional externalDocs object
-      --------------------------------------------------------------------------
-      IF self.tag_externalDocs IS NOT NULL
-      THEN
-         BEGIN
-            SELECT
-            a.extrdocstyp.toYAML(
-                p_pretty_print   => p_pretty_print + 1
-               ,p_force_inline   => p_force_inline
-               ,p_short_id       => p_short_id
-            )
-            INTO clb_tmp
-            FROM
-            dz_swagger3_xobjects a
-            WHERE
-                a.object_type_id = self.tag_externalDocs.object_type_id
-            AND a.object_id      = self.tag_externalDocs.object_id;
-           
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'externalDocs: '
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => clb_tmp
-            ,p_in_v => NULL
-         );
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 110
-      -- Cough it out without final line feed
-      --------------------------------------------------------------------------
-      dz_swagger3_util.fconc(
-          p_c    => cb
-         ,p_v    => v2
-      );
-      
-      IF p_initial_indent = 'FALSE'
-      THEN
-         cb := REGEXP_REPLACE(cb,'^\s+','');
-       
-      END IF;
-      
-      IF p_final_linefeed = 'FALSE'
-      THEN
-         cb := REGEXP_REPLACE(cb,CHR(10) || '$','');
-         
-      END IF;
-               
-      RETURN cb;
-      
-   END toYAML;
    
 END;
 /

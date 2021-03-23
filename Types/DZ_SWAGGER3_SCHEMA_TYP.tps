@@ -41,8 +41,8 @@ AS OBJECT (
    ,schema_properties        dz_swagger3_object_vry --dz_swagger3_schema_list
    ,schema_emulated_parms    dz_swagger3_object_vry --dz_swagger3_parameter_list
    -----
-   ,schema_enum_string       MDSYS.SDO_STRING2_ARRAY
-   ,schema_enum_number       MDSYS.SDO_NUMBER_ARRAY
+   ,schema_enum_string       dz_swagger3_string_vry
+   ,schema_enum_number       dz_swagger3_number_vry
    -----
    ,xml_name                 VARCHAR2(255 Char)
    ,xml_namespace            VARCHAR2(2000 Char)
@@ -90,26 +90,12 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+       p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
       ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'    
-   ) RETURN CLOB
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toYAML(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
-      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
-      ,p_reference_count     IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
 
 );

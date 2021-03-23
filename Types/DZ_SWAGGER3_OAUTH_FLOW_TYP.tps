@@ -5,8 +5,8 @@ AS OBJECT (
    ,oauth_flow_authorizationUrl  VARCHAR2(255 Char)
    ,oauth_flow_tokenUrl          VARCHAR2(255 Char)
    ,oauth_flow_refreshUrl        VARCHAR2(255 Char)
-   ,oauth_flow_scope_names       MDSYS.SDO_STRING2_ARRAY
-   ,oauth_flow_scope_desc        MDSYS.SDO_STRING2_ARRAY
+   ,oauth_flow_scope_names       dz_swagger3_string_vry
+   ,oauth_flow_scope_desc        dz_swagger3_string_vry
    ,versionid                    VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
@@ -23,17 +23,8 @@ AS OBJECT (
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-    ) RETURN CLOB
-    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toYAML(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-   ) RETURN CLOB
+   ,MEMBER FUNCTION toJSON
+    RETURN CLOB
 
 );
 /

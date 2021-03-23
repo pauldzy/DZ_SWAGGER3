@@ -7,7 +7,7 @@ AS OBJECT (
    ,info_contact         dz_swagger3_info_contact_typ
    ,info_license         dz_swagger3_info_license_typ
    ,info_version         VARCHAR2(255 Char)
-   
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,CONSTRUCTOR FUNCTION dz_swagger3_info_typ
@@ -39,18 +39,8 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      p_force_inline         IN  VARCHAR2  DEFAULT 'FALSE'
     ) RETURN CLOB
-    
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toYAML(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN CLOB
 
 );
 /

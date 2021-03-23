@@ -388,28 +388,24 @@ AS
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toJSON(
-       p_pretty_print        IN  INTEGER   DEFAULT NULL
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+       p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB
    AS
-      cb               CLOB;
-      v2               VARCHAR2(32000);
-      
-      boo_temp         BOOLEAN;
-      str_pad          VARCHAR2(1 Char);
-      str_pad1         VARCHAR2(1 Char);
-      str_pad2         VARCHAR2(1 Char);
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      ary_keys2        MDSYS.SDO_STRING2_ARRAY;
-      clb_tmp          CLOB;
-      str_identifier   VARCHAR2(255 Char);
-      
-      TYPE clob_table IS TABLE OF CLOB;
-      ary_clb          clob_table;
-      
+      clb_output                 CLOB;
+      clb_operation_tags         CLOB;
+      clb_operation_externalDocs CLOB;
+      clb_operation_parameters   CLOB;
+      clb_operation_requestBody  CLOB;
+      clb_operation_responses    CLOB;
+      clb_operation_callbacks    CLOB;
+      clb_operation_security     CLOB;
+      clb_operation_servers      CLOB;
+      str_identifier             VARCHAR2(255 Char);
+      str_externaldoc_url        varchar2(4000 Char);
+  
    BEGIN
       
       --------------------------------------------------------------------------
@@ -419,135 +415,30 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Build the wrapper
-      --------------------------------------------------------------------------
-      IF p_pretty_print IS NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',NULL)
-         );
-
-      ELSE
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty('{',-1)
-         );
-         str_pad     := ' ';
-
-      END IF;
-      str_pad1 := str_pad;
-      
-      --------------------------------------------------------------------------
-      -- Step 30
-      -- Add ooperational tags if populated 
+      -- Add operation tags array if populated 
       --------------------------------------------------------------------------
       IF  self.operation_tags IS NOT NULL
       AND self.operation_tags.COUNT > 0
       THEN
          SELECT
-         a.tagtyp.tag_name
-         BULK COLLECT INTO ary_keys
+         JSON_ARRAYAGG(
+            a.tagtyp.tag_name
+            ORDER BY b.object_order
+            RETURNING CLOB
+         )
+         INTO clb_operation_tags
          FROM
          dz_swagger3_xobjects a
          JOIN
          TABLE(self.operation_tags) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
-
-         IF  ary_keys IS NOT NULL
-         AND ary_keys.COUNT > 0
-         THEN 
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || '"tags":' || str_pad || '['
-               ,p_pretty_print => p_pretty_print + 1
-            );
-      
-            str_pad2 := str_pad;
-         
-            FOR i IN 1 .. ary_keys.COUNT
-            LOOP
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => dz_json_util.pretty(
-                      str_pad2 || '"' || ary_keys(i) || '"'
-                     ,p_pretty_print + 2
-                  )
-               );
-               str_pad2 := ',';
-            
-            END LOOP;
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => dz_json_util.pretty(
-                   ']'
-                  ,p_pretty_print + 1
-               )
-            );
-            str_pad1 := ',';
-
-         END IF;
-         
+         AND a.object_id      = b.object_id;
+ 
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 40
-      -- Add summary 
-      --------------------------------------------------------------------------
-      IF self.operation_summary IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'summary'
-               ,self.operation_summary
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-         
-      END IF;
-
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Add description 
-      --------------------------------------------------------------------------
-      IF self.operation_description IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'description'
-               ,self.operation_description
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 60
+      -- Step 30
       -- Add optional externalDocs
       --------------------------------------------------------------------------
       IF  self.operation_externalDocs IS NOT NULL
@@ -555,12 +446,11 @@ AS
       THEN
          BEGIN
             SELECT
-            a.extrdocstyp.toJSON(
-                p_pretty_print => p_pretty_print + 1
-               ,p_force_inline => p_force_inline
-               ,p_short_id     => p_short_id
-            )
-            INTO clb_tmp
+             a.extrdocstyp.toJSON()
+            ,a.extrdocstyp.externaldoc_url
+            INTO
+             clb_operation_externalDocs
+            ,str_externaldoc_url
             FROM 
             dz_swagger3_xobjects a
             WHERE
@@ -570,7 +460,7 @@ AS
          EXCEPTION
             WHEN NO_DATA_FOUND
             THEN
-               clb_tmp := NULL;
+               clb_operation_externalDocs := NULL;
                
             WHEN OTHERS
             THEN
@@ -578,77 +468,34 @@ AS
                
          END;
          
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || '"externalDocs":' || str_pad
-            ,p_pretty_print   => p_pretty_print + 1
-            ,p_final_linefeed => FALSE
-         );
-      
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => clb_tmp
-            ,p_in_v => NULL
-            ,p_pretty_print   => p_pretty_print + 1
-            ,p_initial_indent => FALSE
-         );
-         str_pad1 := ',';
-
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 70
-      -- Add operationId 
-      --------------------------------------------------------------------------
-      IF p_short_id = 'TRUE'
-      THEN
-         str_identifier := p_short_identifier;
-         
-      ELSE
-         str_identifier := p_identifier;
-      
-      END IF;
-      
-      IF str_identifier IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || dz_json_main.value2json(
-                'operationId'
-               ,str_identifier
-               ,p_pretty_print + 1
-             )
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
+         IF str_externaldoc_url IS NULL
+         THEN
+            clb_operation_externalDocs := NULL;
+            
+         END IF;
          
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 80
-      -- Add parameters array
+      -- Step 40
+      -- Generate parameters array
       --------------------------------------------------------------------------
       IF  self.operation_parameters IS NOT NULL 
       AND self.operation_parameters.COUNT > 0
       THEN
          SELECT
-          a.parametertyp.toJSON(
-             p_pretty_print     => p_pretty_print + 2
-            ,p_force_inline     => p_force_inline
-            ,p_short_id         => p_short_id
-            ,p_identifier       => a.object_id
-            ,p_short_identifier => a.short_id
-            ,p_reference_count  => a.reference_count
-          )
-         ,b.object_key
-         BULK COLLECT INTO
-          ary_clb
-         ,ary_keys
+         JSON_ARRAYAGG(
+            a.parametertyp.toJSON(
+                p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count
+            ) FORMAT JSON
+            ORDER BY b.object_order
+            RETURNING CLOB
+         )
+         INTO clb_operation_parameters
          FROM
          dz_swagger3_xobjects a
          JOIN
@@ -657,62 +504,13 @@ AS
              a.object_type_id = b.object_type_id
          AND a.object_id      = b.object_id
          WHERE
-         COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE'
-         ORDER BY b.object_order;
+         COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE'         ;
 
-         IF  ary_keys IS NOT NULL
-         AND ary_keys.COUNT > 0
-         THEN            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad1 || '"parameters":' || str_pad || '['
-               ,p_pretty_print => p_pretty_print + 1
-            );
-         
-            str_pad2 := str_pad;
-         
-            FOR i IN 1 .. ary_keys.COUNT
-            LOOP
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => str_pad2
-                  ,p_pretty_print => p_pretty_print + 2
-                  ,p_final_linefeed => FALSE
-               );
-               
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => ary_clb(i)
-                  ,p_in_v => NULL
-                  ,p_pretty_print => p_pretty_print + 2
-                  ,p_initial_indent => FALSE
-               );
-               
-               str_pad2 := ',';
-                  
-            END LOOP;
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => ']'
-               ,p_pretty_print => p_pretty_print + 1
-            );
-            str_pad1 := ',';
-            
-         END IF;
-      
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 90
-      -- Add requestBody object
+      -- Step 50
+      -- Generate operation requestBody value
       --------------------------------------------------------------------------
       IF  self.operation_requestBody IS NOT NULL
       AND self.operation_requestBody.object_id IS NOT NULL
@@ -720,14 +518,13 @@ AS
          BEGIN
             SELECT
             a.requestbodytyp.toJSON(
-                p_pretty_print     => p_pretty_print + 1
-               ,p_force_inline     => p_force_inline
+                p_force_inline     => p_force_inline
                ,p_short_id         => p_short_id
                ,p_identifier       => a.object_id
                ,p_short_identifier => a.short_id
                ,p_reference_count  => a.reference_count
             )
-            INTO clb_tmp
+            INTO clb_operation_requestBody
             FROM 
             dz_swagger3_xobjects a
             WHERE
@@ -737,7 +534,7 @@ AS
          EXCEPTION
             WHEN NO_DATA_FOUND
             THEN
-               clb_tmp := NULL;
+               clb_operation_requestBody := NULL;
                
             WHEN OTHERS
             THEN
@@ -745,531 +542,122 @@ AS
                
          END;
 
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => dz_json_util.pretty(
-                str_pad1 || dz_json_main.formatted2json(
-                   'requestBody'
-                  ,clb_tmp
-                  ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
-            )
-            ,p_in_v => NULL
-         );
-         str_pad1 := ',';
-
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 100
-      -- Add responses map
+      -- Step 60
+      -- Generate operation responses map
       --------------------------------------------------------------------------
       IF  self.operation_responses IS NOT NULL 
       AND self.operation_responses.COUNT > 0
       THEN
          SELECT
-          a.responsetyp.toJSON(
-             p_pretty_print     => p_pretty_print + 2
-            ,p_force_inline     => p_force_inline
-            ,p_short_id         => p_short_id
-            ,p_identifier       => a.object_id
-            ,p_short_identifier => a.short_id
-            ,p_reference_count  => a.reference_count
-          )
-         ,b.object_key
-         BULK COLLECT INTO
-          ary_clb
-         ,ary_keys
+         JSON_OBJECTAGG(
+            b.object_key VALUE a.responsetyp.toJSON(
+                p_force_inline     => p_force_inline
+               ,p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+               ,p_reference_count  => a.reference_count
+            ) FORMAT JSON
+            RETURNING CLOB
+         )
+         INTO clb_operation_responses
          FROM
          dz_swagger3_xobjects a
          JOIN
          TABLE(self.operation_responses) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || '"responses":' || str_pad || '{'
-               ,p_pretty_print + 1
-             )
-         );
-      
-         str_pad2 := str_pad;
+         AND a.object_id      = b.object_id;
  
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => dz_json_util.pretty(
-                   str_pad2 || '"' || ary_keys(i) || '":' || str_pad || ary_clb(i)
-                  ,p_pretty_print + 2
-               )
-               ,p_in_v => NULL
-            );
-            str_pad2 := ',';
-         
-         END LOOP;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                '}'
-               ,p_pretty_print + 1
-            )
-         );
-         str_pad1 := ',';
-         
       END IF;
-
+      
       --------------------------------------------------------------------------
-      -- Step 110
-      -- Add operation callbacks map
+      -- Step 70
+      -- Generate operation callbacks map
       --------------------------------------------------------------------------
       IF  self.operation_callbacks IS NOT NULL 
       AND self.operation_callbacks.COUNT > 0
       THEN
          SELECT
-         a.pathtyp.toJSON(
-             p_pretty_print     => p_pretty_print + 3
-            ,p_force_inline     => p_force_inline
-            ,p_short_id         => p_short_id
-            ,p_identifier       => a.object_id
-            ,p_short_identifier => a.short_id
-            ,p_reference_count  => a.reference_count
+         JSON_OBJECTAGG(
+            b.object_key VALUE json_object(
+               a.pathtyp.path_endpoint VALUE a.pathtyp.toJSON(
+                   p_force_inline     => p_force_inline
+                  ,p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+                  ,p_reference_count  => a.reference_count
+               ) FORMAT JSON
+               RETURNING CLOB
+            )
+            RETURNING CLOB
          )
-         ,b.object_key
-         ,a.pathtyp.path_endpoint
-         BULK COLLECT INTO
-          ary_clb
-         ,ary_keys
-         ,ary_keys2
+         INTO clb_operation_callbacks
          FROM
          dz_swagger3_xobjects a
          JOIN
          TABLE(self.operation_callbacks) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => str_pad1 || '"callbacks":' || str_pad || '{'
-            ,p_pretty_print => p_pretty_print + 1
-         );
-      
-         str_pad2 := str_pad;
-      
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad2 || '"' || ary_keys(i) || '":' || str_pad || '{'
-               ,p_pretty_print => p_pretty_print + 2
-            );
-
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => str_pad  || '"' || ary_keys2(i) || '":' || str_pad
-               ,p_pretty_print   => p_pretty_print + 3
-               ,p_final_linefeed => FALSE
-            );
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => ary_clb(i)
-               ,p_in_v => NULL
-               ,p_pretty_print   => p_pretty_print + 4
-               ,p_initial_indent => FALSE
-            );
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => '}'
-               ,p_pretty_print => p_pretty_print + 2
-            );
-            str_pad2 := ',';
-         
-         END LOOP;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => '}'
-            ,p_pretty_print => p_pretty_print + 1
-         );
-         str_pad1 := ',';
-         
-      END IF;
-         
-      --------------------------------------------------------------------------
-      -- Step 120
-      -- Add deprecated flag
-      --------------------------------------------------------------------------
-      IF self.operation_deprecated IS NOT NULL
-      THEN
-         IF LOWER(self.operation_deprecated) = 'true'
-         THEN
-            boo_temp := TRUE;
-            
-         ELSE
-            boo_temp := FALSE;
-            
-         END IF;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || dz_json_main.value2json(
-                   'deprecated'
-                  ,boo_temp
-                  ,p_pretty_print + 1
-               )
-               ,p_pretty_print + 1
-            )
-         );
-         str_pad1 := ',';
+         AND a.object_id      = b.object_id;
 
       END IF;
-
+      
       --------------------------------------------------------------------------
-      -- Step 130
-      -- Add security req array
+      -- Step 80
+      -- Generate operation security req array
       --------------------------------------------------------------------------
       IF  self.operation_security IS NOT NULL 
       AND self.operation_security.COUNT > 0
       THEN
          SELECT
-         a.securityschemetyp.toJSON_req(
-             p_pretty_print      => p_pretty_print + 2
-            ,p_oauth_scope_flows => b.object_attribute
+         JSON_ARRAYAGG(
+            a.securityschemetyp.toJSON_req(
+               p_oauth_scope_flows => b.object_attribute
+            ) FORMAT JSON
+            ORDER BY b.object_order
+            RETURNING CLOB
          )
-         BULK COLLECT INTO ary_clb
+         INTO clb_operation_security
          FROM
          dz_swagger3_xobjects a
          JOIN
          TABLE(self.operation_security) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
+         AND a.object_id      = b.object_id;
 
-         str_pad2 := str_pad;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || '"security":' || str_pad || '['
-               ,p_pretty_print + 1
-             )
-         );
-      
-         FOR i IN 1 .. ary_clb.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => dz_json_util.pretty(
-                   str_pad2 || ary_clb(i)
-                  ,p_pretty_print + 2
-               )
-               ,p_in_v => NULL
-            );
-            str_pad2 := ',';
-         
-         END LOOP;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                ']'
-               ,p_pretty_print + 1
-            )
-         );
-         str_pad1 := ',';
-         
       END IF;
-         
+      
       --------------------------------------------------------------------------
-      -- Step 140
-      -- Add server array
+      -- Step 90
+      -- Gnerate operation server array
       --------------------------------------------------------------------------
       IF  self.operation_servers IS NOT NULL 
       AND self.operation_servers.COUNT > 0
       THEN
          SELECT
-         a.securityschemetyp.toJSON_req(
-            p_pretty_print  => p_pretty_print + 2
+         JSON_ARRAYAGG(
+            a.securityschemetyp.toJSON_req() FORMAT JSON
+            ORDER BY b.object_order
+            RETURNING CLOB
          )
-         BULK COLLECT INTO ary_clb
+         INTO clb_operation_servers
          FROM
          dz_swagger3_xobjects a
          JOIN
          TABLE(self.operation_servers) b
          ON
              a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
-         
-         str_pad2 := str_pad;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                str_pad1 || '"servers":' || str_pad || '['
-               ,p_pretty_print + 1
-             )
-         );
-      
-         FOR i IN 1 .. ary_clb.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => dz_json_util.pretty(
-                   str_pad2 || ary_clb(i)
-                  ,p_pretty_print + 2
-               )
-               ,p_in_v => NULL
-            );
-            str_pad2 := ',';
-         
-         END LOOP;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => dz_json_util.pretty(
-                ']'
-               ,p_pretty_print + 1
-            )
-         );
-         str_pad1 := ',';
-         
-      END IF;
-         
-      --------------------------------------------------------------------------
-      -- Step 150
-      -- Add the left bracket
-      --------------------------------------------------------------------------
-      dz_swagger3_util.conc(
-          p_c    => cb
-         ,p_v    => v2
-         ,p_in_c => NULL
-         ,p_in_v => dz_json_util.pretty(
-             '}'
-            ,p_pretty_print,NULL,NULL
-         )
-      );
-
-      --------------------------------------------------------------------------
-      -- Step 160
-      -- Cough it out
-      --------------------------------------------------------------------------
-      dz_swagger3_util.fconc(
-          p_c    => cb
-         ,p_v    => v2
-      );
-      
-      RETURN cb;
-           
-   END toJSON;
-   
-   -----------------------------------------------------------------------------
-   -----------------------------------------------------------------------------
-   MEMBER FUNCTION toYAML(
-       p_pretty_print        IN  INTEGER   DEFAULT 0
-      ,p_initial_indent      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_final_linefeed      IN  VARCHAR2  DEFAULT 'TRUE'
-      ,p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
-      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
-   ) RETURN CLOB
-   AS
-      cb               CLOB;
-      v2               VARCHAR2(32000);
-
-      ary_keys         MDSYS.SDO_STRING2_ARRAY;
-      ary_keys2        MDSYS.SDO_STRING2_ARRAY;
-      clb_tmp          CLOB;
-      str_identifier   VARCHAR2(255 Char);
-      
-      TYPE clob_table IS TABLE OF CLOB;
-      ary_clb          clob_table;
-      
-   BEGIN
-   
-      --------------------------------------------------------------------------
-      -- Step 10
-      -- Check incoming parameters
-      --------------------------------------------------------------------------
-      
-      --------------------------------------------------------------------------
-      -- Step 20
-      -- Write the tags
-      --------------------------------------------------------------------------
-      IF  self.operation_tags IS NOT NULL
-      AND self.operation_tags.COUNT > 0
-      THEN
-         SELECT
-         a.tagtyp.tag_name
-         BULK COLLECT INTO ary_keys
-         FROM
-         dz_swagger3_xobjects a
-         JOIN
-         TABLE(self.operation_tags) b
-         ON
-             a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
-      
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'tags: '
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-         
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => '- ' || dz_swagger3_util.yamlq(ary_keys(i))
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_amount       => '  '
-            );
-            
-         END LOOP;
-         
+         AND a.object_id      = b.object_id;
+  
       END IF;
       
       --------------------------------------------------------------------------
-      -- Step 30
-      -- Write the summary
-      --------------------------------------------------------------------------
-      IF self.operation_summary IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'summary: ' || dz_swagger3_util.yaml_text(
-                self.operation_summary
-               ,p_pretty_print
-            )
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 40
-      -- Write the description
-      --------------------------------------------------------------------------
-      IF self.operation_description IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'description: ' || dz_swagger3_util.yaml_text(
-                self.operation_description
-               ,p_pretty_print
-            )
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 50
-      -- Write the externalDoc object
-      --------------------------------------------------------------------------
-      IF  self.operation_externalDocs IS NOT NULL
-      AND self.operation_externalDocs.object_id IS NOT NULL
-      THEN
-         BEGIN
-            SELECT
-            a.extrdocstyp.toYAML(
-                p_pretty_print => p_pretty_print + 1
-               ,p_force_inline => p_force_inline
-               ,p_short_id     => p_short_id
-            )
-            INTO clb_tmp
-            FROM 
-            dz_swagger3_xobjects a
-            WHERE
-                a.object_type_id = self.operation_externalDocs.object_type_id
-            AND a.object_id      = self.operation_externalDocs.object_id;
-
-         EXCEPTION
-            WHEN NO_DATA_FOUND
-            THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
-            THEN
-               RAISE;
-               
-         END;
-
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'externalDocs: '
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => clb_tmp
-            ,p_in_v => NULL
-         );
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 60
-      -- Write the operationId
+      -- Step 100
+      -- Build the object
       --------------------------------------------------------------------------
       IF p_short_id = 'TRUE'
       THEN
@@ -1279,429 +667,43 @@ AS
          str_identifier := p_identifier;
       
       END IF;
-
-      IF str_identifier IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'operationId: ' || dz_swagger3_util.yaml_text(
-                str_identifier
-               ,p_pretty_print
-             )
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-         
-      END IF;
       
-      --------------------------------------------------------------------------
-      -- Step 70
-      -- Write the parameters map
-      --------------------------------------------------------------------------
-      IF  self.operation_parameters IS NOT NULL 
-      AND self.operation_parameters.COUNT > 0
-      THEN
-         SELECT
-          a.parametertyp.toYAML(
-             p_pretty_print     => p_pretty_print + 2
-            ,p_initial_indent   => 'FALSE'
-            ,p_final_linefeed   => 'TRUE'
-            ,p_force_inline     => p_force_inline
-            ,p_short_id         => p_short_id
-            ,p_identifier       => a.object_id
-            ,p_short_identifier => a.short_id
-            ,p_reference_count  => a.reference_count
-          )
-         ,b.object_key
-         BULK COLLECT INTO
-          ary_clb
-         ,ary_keys
-         FROM
-         dz_swagger3_xobjects a
-         JOIN
-         TABLE(self.operation_parameters) b
-         ON
-             a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         WHERE
-         COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE'
-         ORDER BY b.object_order;
-         
-         IF  ary_keys IS NOT NULL
-         AND ary_keys.COUNT > 0
-         THEN
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => 'parameters: '
-               ,p_pretty_print => p_pretty_print
-               ,p_amount       => '  '
-            );
-            
-            FOR i IN 1 .. ary_clb.COUNT
-            LOOP
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => NULL
-                  ,p_in_v => '- '
-                  ,p_pretty_print => p_pretty_print + 1
-                  ,p_amount       => '  '
-                  ,p_final_linefeed => FALSE
-               );
-               
-               dz_swagger3_util.conc(
-                   p_c    => cb
-                  ,p_v    => v2
-                  ,p_in_c => ary_clb(i)
-                  ,p_in_v => NULL
-               );
-            
-            END LOOP;
-
-         END IF;
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 80
-      -- Write the requestBody
-      --------------------------------------------------------------------------
-      IF  self.operation_requestBody IS NOT NULL
-      AND self.operation_requestBody.object_id IS NOT NULL
-      THEN
-         BEGIN
-            SELECT
-            a.requestbodytyp.toYAML(
-                p_pretty_print     => p_pretty_print + 1
-               ,p_force_inline     => p_force_inline
-               ,p_short_id         => p_short_id
-               ,p_identifier       => a.object_id
-               ,p_short_identifier => a.short_id
-               ,p_reference_count  => a.reference_count
-            )
-            INTO clb_tmp
-            FROM
-            dz_swagger3_xobjects a
-            WHERE
-                a.object_type_id = self.operation_requestBody.object_type_id
-            AND a.object_id      = self.operation_requestBody.object_id;
-
-         EXCEPTION
-            WHEN NO_DATA_FOUND
+      SELECT
+      JSON_OBJECT(
+          'tags'         VALUE clb_operation_tags         FORMAT JSON
+         ,'summary'      VALUE self.operation_summary
+         ,'description'  VALUE self.operation_description
+         ,'externalDocs' VALUE clb_operation_externalDocs FORMAT JSON
+         ,'operationId'  VALUE str_identifier
+         ,'parameters'   VALUE clb_operation_parameters   FORMAT JSON
+         ,'requestBody'  VALUE clb_operation_requestBody  FORMAT JSON
+         ,'responses'    VALUE clb_operation_responses    FORMAT JSON
+         ,'callbacks'    VALUE clb_operation_callbacks    FORMAT JSON
+         ,'deprecated'   VALUE CASE
+            WHEN LOWER(self.operation_deprecated) = 'true'
             THEN
-               clb_tmp := NULL;
-               
-            WHEN OTHERS
+               'true'
+            WHEN LOWER(self.operation_deprecated) = 'false'
             THEN
-               RAISE;
-               
-         END;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'requestBody: '
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => clb_tmp
-            ,p_in_v => NULL
-         );
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 90
-      -- Write the responses map
-      --------------------------------------------------------------------------
-      IF  self.operation_responses IS NOT NULL 
-      AND self.operation_responses.COUNT > 0
-      THEN
-         SELECT
-          a.responsetyp.toYAML(
-             p_pretty_print     => p_pretty_print + 2
-            ,p_force_inline     => p_force_inline
-            ,p_short_id         => p_short_id
-            ,p_identifier       => a.object_id
-            ,p_short_identifier => a.short_id
-            ,p_reference_count  => a.reference_count
-          )
-         ,b.object_key
-         BULK COLLECT INTO
-          ary_clb
-         ,ary_keys
-         FROM
-         dz_swagger3_xobjects a
-         JOIN
-         TABLE(self.operation_responses) b
-         ON
-             a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
-      
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'responses:' 
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-      
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => dz_swagger3_util.yamlq(ary_keys(i)) || ': '
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_amount       => '  '
-            );
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => ary_clb(i)
-               ,p_in_v => NULL
-            );
-         
-         END LOOP;
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 100
-      -- Write the optional variables map
-      --------------------------------------------------------------------------
-      IF  self.operation_callbacks IS NOT NULL 
-      AND self.operation_callbacks.COUNT > 0
-      THEN
-         SELECT
-          a.pathtyp.toYAML(
-             p_pretty_print     => p_pretty_print + 3
-            ,p_force_inline     => p_force_inline
-            ,p_short_id         => p_short_id
-            ,p_identifier       => a.object_id
-            ,p_short_identifier => a.short_id
-            ,p_reference_count  => a.reference_count
-          )
-         ,b.object_key
-         ,a.pathtyp.path_endpoint
-         BULK COLLECT INTO
-          ary_clb
-         ,ary_keys
-         ,ary_keys2
-         FROM
-         dz_swagger3_xobjects a
-         JOIN
-         TABLE(self.operation_callbacks) b
-         ON
-             a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'callbacks:'
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-      
-         FOR i IN 1 .. ary_keys.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => dz_swagger3_util.yamlq(ary_keys(i)) || ': '
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_amount       => '  '
-            );
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => dz_swagger3_util.yamlq(ary_keys2(i)) || ': '
-               ,p_pretty_print => p_pretty_print + 2
-               ,p_amount       => '  '
-            );
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => ary_clb(i)
-               ,p_in_v => NULL
-            );
-         
-         END LOOP;
-         
-      END IF;
-      
+               'false'
+            ELSE
+               NULL
+            END FORMAT JSON
+         ,'security'     VALUE clb_operation_security     FORMAT JSON
+         ,'servers'      VALUE clb_operation_servers      FORMAT JSON 
+         ABSENT ON NULL
+         RETURNING CLOB
+      )
+      INTO clb_output
+      FROM dual;
+
       --------------------------------------------------------------------------
       -- Step 110
-      -- Write the operationId
-      --------------------------------------------------------------------------
-      IF self.operation_deprecated IS NOT NULL
-      THEN
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'deprecated: ' || LOWER(self.operation_deprecated)
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 120
-      -- Write the security array
-      --------------------------------------------------------------------------
-      IF  self.operation_security IS NOT NULL 
-      AND self.operation_security.COUNT > 0
-      THEN
-         SELECT
-         a.securityschemetyp.toYAML_req(
-             p_pretty_print      => p_pretty_print + 2
-            ,p_oauth_scope_flows => b.object_attribute
-         )
-         BULK COLLECT INTO ary_clb
-         FROM
-         dz_swagger3_xobjects a
-         JOIN
-         TABLE(self.operation_security) b
-         ON
-             a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'security: '
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-         
-         FOR i IN 1 .. ary_clb.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => '- '
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_amount       => '  '
-               ,p_final_linefeed => FALSE
-            );
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => ary_clb(i)
-               ,p_in_v => NULL
-            );
-            
-         END LOOP;
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 130
-      -- Write the servers array
-      --------------------------------------------------------------------------
-      IF  self.operation_servers IS NOT NULL 
-      AND self.operation_servers.COUNT > 0
-      THEN
-         SELECT
-         a.servertyp.toYAML(
-             p_pretty_print   => p_pretty_print + 2
-            ,p_initial_indent => 'FALSE'
-            ,p_final_linefeed => 'FALSE'
-            ,p_force_inline   => p_force_inline
-            ,p_short_id       => p_short_id
-         )
-         BULK COLLECT INTO ary_clb
-         FROM
-         dz_swagger3_xobjects a
-         JOIN
-         TABLE(self.operation_servers) b
-         ON
-             a.object_type_id = b.object_type_id
-         AND a.object_id      = b.object_id
-         ORDER BY b.object_order;
-         
-         dz_swagger3_util.conc(
-             p_c    => cb
-            ,p_v    => v2
-            ,p_in_c => NULL
-            ,p_in_v => 'servers: '
-            ,p_pretty_print => p_pretty_print
-            ,p_amount       => '  '
-         );
-         
-         FOR i IN 1 .. ary_clb.COUNT
-         LOOP
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => NULL
-               ,p_in_v => '- '
-               ,p_pretty_print => p_pretty_print + 1
-               ,p_amount       => '  '
-               ,p_final_linefeed => FALSE
-            );
-            
-            dz_swagger3_util.conc(
-                p_c    => cb
-               ,p_v    => v2
-               ,p_in_c => ary_clb(i)
-               ,p_in_v => NULL
-            );
-            
-         END LOOP;
-         
-      END IF;
-      
-      --------------------------------------------------------------------------
-      -- Step 140
       -- Cough it out
       --------------------------------------------------------------------------
-      dz_swagger3_util.fconc(
-          p_c    => cb
-         ,p_v    => v2
-      );
-      
-      IF p_initial_indent = 'FALSE'
-      THEN
-         cb := REGEXP_REPLACE(cb,'^\s+','');
-       
-      END IF;
-      
-      IF p_final_linefeed = 'FALSE'
-      THEN
-         cb := REGEXP_REPLACE(cb,CHR(10) || '$','');
-         
-      END IF;
-               
-      RETURN cb;
-      
-   END toYAML;
+      RETURN clb_output;
+
+   END toJSON;
    
 END;
 /
