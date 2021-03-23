@@ -451,7 +451,7 @@ AS
             INTO
             str_pathid
             FROM
-            echo_swagger.dz_swagger3_path a
+            dz_swagger3_path a
             WHERE
                 a.versionid     = str_versionid
             AND a.path_endpoint = str_path_endpoint
@@ -463,9 +463,9 @@ AS
             INTO
             str_pathid
             FROM
-            echo_swagger.dz_swagger3_path a
+            dz_swagger3_path a
             JOIN
-            echo_swagger.dz_swagger3_group b
+            dz_swagger3_group b
             ON
             a.path_id = b.path_id
             WHERE
