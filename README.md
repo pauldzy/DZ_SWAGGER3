@@ -7,6 +7,8 @@ Generally the approach is something along the lines of [SwaggerHub](https://app.
 
 DZ_SWAGGER3 is thus a set of tabular resources to store Open API elements and a set of logic to generate Swagger specifications from the table.  One item missing is the logic to take an existing 3.0 specification document and unload it into the tables.  
 
+For details on recents updates, see the [change log](/CHANGELOG.md).
+
 ## Sample Data
 A rough sample dataset is provided for testing and evaluation.  The sample was developed to test the rarer OpenAPI scenarios and could be improved with more functional examples.
 
