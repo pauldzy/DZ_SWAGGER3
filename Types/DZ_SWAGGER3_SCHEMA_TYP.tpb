@@ -492,6 +492,7 @@ AS
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
       ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_xorder              IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       str_jsonschema                 VARCHAR2(4000 Char) := UPPER(p_jsonschema);
@@ -508,6 +509,7 @@ AS
       int_schema_enum_string         PLS_INTEGER;
       int_schema_enum_number         PLS_INTEGER;
       boo_is_not                     BOOLEAN;
+      int_inject_property_xorder     INTEGER;
       
    BEGIN
       
@@ -759,6 +761,7 @@ AS
                      ,p_short_identifier => a.short_id
                      ,p_reference_count  => a.reference_count
                      ,p_jsonschema       => str_jsonschema
+                     ,p_xorder           => b.object_order
                   ) FORMAT JSON
                   RETURNING CLOB
                )
@@ -813,6 +816,12 @@ AS
             ELSE
                int_schema_enum_number := 0;
 
+            END IF;
+            
+            IF dz_swagger3_constants.c_inject_property_xorder
+            THEN
+               int_inject_property_xorder := 1;
+               
             END IF;
 
             IF  self.schema_example_string IS NOT NULL
@@ -925,6 +934,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -1036,6 +1052,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -1155,6 +1178,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -1266,6 +1296,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -1381,6 +1418,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -1491,6 +1535,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -1512,6 +1563,24 @@ AS
       RETURN clb_output;
            
    END toJSON;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toExampleJSON
+   RETURN CLOB
+   AS
+   BEGIN
+      NULL;
+   END toExampleJSON;
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toExampleXML
+   RETURN XMLTYPE
+   AS
+   BEGIN
+      NULL;
+   END toExampleXML;
    
 END;
 /

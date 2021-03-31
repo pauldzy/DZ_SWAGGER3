@@ -95,8 +95,19 @@ AS OBJECT (
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'    
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_xorder              IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toExampleJSON
+    RETURN CLOB
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toExampleXML
+    RETURN XMLTYPE
 
 );
 /

@@ -310,6 +310,7 @@ AS
             b.object_key VALUE a.pathtyp.toJSON(
                 p_force_inline   => p_force_inline
                ,p_short_id       => p_short_id
+               ,p_xorder         => b.object_order
             ) FORMAT JSON
             RETURNING CLOB
          )

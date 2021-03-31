@@ -24,6 +24,12 @@ AS OBJECT (
    ,MEMBER FUNCTION toJSON(
       p_short_id              IN  VARCHAR2 DEFAULT 'FALSE'
    ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toXML(
+      p_short_id              IN  VARCHAR2 DEFAULT 'FALSE'
+   ) RETURN XMLTYPE
 
 );
 /

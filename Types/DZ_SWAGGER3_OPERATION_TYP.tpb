@@ -392,19 +392,21 @@ AS
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_xorder              IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      clb_output                 CLOB;
-      clb_operation_tags         CLOB;
-      clb_operation_externalDocs CLOB;
-      clb_operation_parameters   CLOB;
-      clb_operation_requestBody  CLOB;
-      clb_operation_responses    CLOB;
-      clb_operation_callbacks    CLOB;
-      clb_operation_security     CLOB;
-      clb_operation_servers      CLOB;
-      str_identifier             VARCHAR2(255 Char);
-      str_externaldoc_url        varchar2(4000 Char);
+      clb_output                  CLOB;
+      clb_operation_tags          CLOB;
+      clb_operation_externalDocs  CLOB;
+      clb_operation_parameters    CLOB;
+      clb_operation_requestBody   CLOB;
+      clb_operation_responses     CLOB;
+      clb_operation_callbacks     CLOB;
+      clb_operation_security      CLOB;
+      clb_operation_servers       CLOB;
+      str_identifier              VARCHAR2(255 Char);
+      str_externaldoc_url         VARCHAR2(4000 Char);
+      int_inject_operation_xorder INTEGER;
   
    BEGIN
       
@@ -668,6 +670,12 @@ AS
       
       END IF;
       
+      IF dz_swagger3_constants.c_inject_operation_xorder
+      THEN
+         int_inject_operation_xorder := 1;
+         
+      END IF;
+      
       SELECT
       JSON_OBJECT(
           'tags'         VALUE clb_operation_tags         FORMAT JSON
@@ -690,7 +698,14 @@ AS
                NULL
             END FORMAT JSON
          ,'security'     VALUE clb_operation_security     FORMAT JSON
-         ,'servers'      VALUE clb_operation_servers      FORMAT JSON 
+         ,'servers'      VALUE clb_operation_servers      FORMAT JSON
+         ,'x-order'      VALUE CASE
+          WHEN int_inject_operation_xorder = 1
+          THEN
+            p_xorder
+          ELSE
+            NULL
+          END
          ABSENT ON NULL
          RETURNING CLOB
       )

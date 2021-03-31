@@ -44,6 +44,7 @@ AS
                 p_object_id      => a.path_get_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'get'
+               ,p_object_order   => a.path_get_operation_order
             )
           ELSE
             NULL
@@ -55,6 +56,7 @@ AS
                 p_object_id      => a.path_put_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'put'
+               ,p_object_order   => a.path_put_operation_order
             )
           ELSE
             NULL
@@ -66,6 +68,7 @@ AS
                 p_object_id      => a.path_post_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'post'
+               ,p_object_order   => a.path_post_operation_order
             )
           ELSE
             NULL
@@ -77,6 +80,7 @@ AS
                 p_object_id      => a.path_delete_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'delete'
+               ,p_object_order   => a.path_delete_operation_order
             )
           ELSE
             NULL
@@ -88,6 +92,7 @@ AS
                 p_object_id      => a.path_options_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'options'
+               ,p_object_order   => a.path_options_operation_order
             )
           ELSE
             NULL
@@ -99,6 +104,7 @@ AS
                 p_object_id      => a.path_head_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'head'
+               ,p_object_order   => a.path_head_operation_order
             )
           ELSE
             NULL
@@ -110,6 +116,7 @@ AS
                 p_object_id      => a.path_patch_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'patch'
+               ,p_object_order   => a.path_patch_operation_order
             )
           ELSE
             NULL
@@ -121,6 +128,7 @@ AS
                 p_object_id      => a.path_trace_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'trace'
+               ,p_object_order   => a.path_trace_operation_order
             )
           ELSE
             NULL
@@ -270,6 +278,7 @@ AS
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
+      ,p_xorder              IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output                 CLOB;
@@ -284,6 +293,7 @@ AS
       clb_path_servers           CLOB;
       clb_path_parameters        CLOB;
       str_identifier             VARCHAR2(4000 Char);
+      int_inject_path_xorder     INTEGER;
       
    BEGIN
       
@@ -326,10 +336,11 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_force_inline     => p_force_inline 
+                   p_force_inline     => p_force_inline
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_get_operation.object_order
                )
                INTO clb_path_get_operation
                FROM 
@@ -368,6 +379,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_put_operation.object_order
                )
                INTO clb_path_put_operation
                FROM 
@@ -403,6 +415,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_post_operation.object_order
                )
                INTO clb_path_post_operation
                FROM 
@@ -438,6 +451,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_delete_operation.object_order
                )
                INTO clb_path_delete_operation
                FROM 
@@ -473,6 +487,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_options_operation.object_order
                )
                INTO clb_path_options_operation
                FROM 
@@ -508,6 +523,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_head_operation.object_order
                )
                INTO clb_path_head_operation
                FROM 
@@ -543,6 +559,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_patch_operation.object_order
                )
                INTO clb_path_patch_operation
                FROM 
@@ -578,6 +595,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_trace_operation.object_order
                )
                INTO clb_path_trace_operation
                FROM 
@@ -659,6 +677,12 @@ AS
       -- Step 130
       -- Add the left bracket
       --------------------------------------------------------------------------
+         IF dz_swagger3_constants.c_inject_path_xorder
+         THEN
+            int_inject_path_xorder := 1;
+            
+         END IF;
+         
          SELECT
          JSON_OBJECT(
              'summary'      VALUE self.path_summary
@@ -673,6 +697,13 @@ AS
             ,'trace'        VALUE clb_path_trace_operation   FORMAT JSON
             ,'servers'      VALUE clb_path_servers           FORMAT JSON
             ,'parameters'   VALUE clb_path_parameters        FORMAT JSON
+            ,'x-order'      VALUE CASE
+             WHEN int_inject_path_xorder = 1
+             THEN
+               p_xorder
+             ELSE
+               NULL
+             END
             ABSENT ON NULL
             RETURNING CLOB
          )
