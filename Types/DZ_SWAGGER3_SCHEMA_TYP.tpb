@@ -1566,21 +1566,21 @@ AS
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION toExampleJSON
+   MEMBER FUNCTION toMockJSON
    RETURN CLOB
    AS
    BEGIN
       NULL;
-   END toExampleJSON;
+   END toMockJSON;
     
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION toExampleXML
+   MEMBER FUNCTION toMockXML
    RETURN XMLTYPE
    AS
    BEGIN
       NULL;
-   END toExampleXML;
+   END toMockXML;
    
 END;
 /
