@@ -20,13 +20,15 @@ AS OBJECT (
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toMockJSON
-    RETURN CLOB
+   ,MEMBER FUNCTION toMockJSON(
+      p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+   ) RETURN CLOB
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   ,MEMBER FUNCTION toMockXML
-    RETURN XMLTYPE
+   ,MEMBER FUNCTION toMockXML(
+      p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+   ) RETURN XMLTYPE
 
 );
 /
