@@ -1833,7 +1833,7 @@ AS
                   END IF;
                    
                ELSE
-                  clb_output :=  self.schema_example_string;
+                  clb_output :=  DBMS_XMLGEN.CONVERT(self.schema_example_string);
                   
                END IF;
             

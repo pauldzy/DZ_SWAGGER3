@@ -520,7 +520,7 @@ AS
    ) RETURN CLOB
    AS
       clb_output         CLOB;
-      xml_output         XMLTYPE;
+      typ_output         dz_swagger3_mocksrv_typ;
       str_pathid         VARCHAR2(4000 Char);
       str_versionid      VARCHAR2(4000 Char) := p_versionid;
       str_pathgroupid    VARCHAR2(4000 Char) := UPPER(p_path_group_id);
@@ -579,30 +579,39 @@ AS
 
       END;
       
+      typ_output := dz_swagger3_mocksrv_typ(
+          p_path_id        => str_pathid
+         ,p_http_method    => p_operation
+         ,p_response_code  => p_response_code
+         ,p_media_type     => p_media_type
+         ,p_versionid      => str_versionid
+      );
+      
       IF str_media_type = 'application/xml'
       THEN
-         clb_output := dz_swagger3_mocksrv_typ(
-             p_path_id        => str_pathid
-            ,p_http_method    => p_operation
-            ,p_response_code  => p_response_code
-            ,p_media_type     => p_media_type
-            ,p_versionid      => str_versionid
-         ).toMockXML(
+         clb_output := typ_output.toMockXML(
             p_short_id        => p_short_id
          );
          
-         --clb_output := xml_output.getCLOBVal();
+         IF typ_output.return_code != 0
+         THEN
+            clb_output := '<?xml version="1.0" encoding="UTF-8"?><root>'
+                       || '<return_code>' || typ_output.return_code || '</return_code>'
+                       || '<status_message>' || typ_output.status_message || '</status_message></root>';
+                       
+         END IF;
          
       ELSE
-         clb_output := dz_swagger3_mocksrv_typ(
-             p_path_id        => str_pathid
-            ,p_http_method    => p_operation
-            ,p_response_code  => p_response_code
-            ,p_media_type     => p_media_type
-            ,p_versionid      => str_versionid
-         ).toMockJSON(
+         clb_output := typ_output.toMockJSON(
             p_short_id        => p_short_id
          );
+         
+         IF typ_output.return_code != 0
+         THEN
+            clb_output := '{"return_code":' || typ_output.return_code || ','
+                       ||  '"status_message":"' || typ_output.status_message || '"}';
+                       
+         END IF;
          
          IF UPPER(p_force_escapes) = 'TRUE'
          THEN

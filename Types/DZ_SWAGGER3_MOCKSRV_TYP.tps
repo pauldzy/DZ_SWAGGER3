@@ -2,6 +2,8 @@ CREATE OR REPLACE TYPE dz_swagger3_mocksrv_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
     schema_obj     dz_swagger3_schema_typ
+   ,return_code    INTEGER
+   ,status_message VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

@@ -32,6 +32,7 @@ AS
       -- Step 10
       -- Check over incoming parameters
       --------------------------------------------------------------------------
+      self.return_code := 0;
       dz_swagger3_main.purge_xtemp();
       
       --------------------------------------------------------------------------
@@ -178,16 +179,30 @@ AS
       -- Step 50
       -- Determine the media id
       --------------------------------------------------------------------------
-      SELECT
-      a.media_id
-      INTO
-      str_media_id
-      FROM
-      dz_swagger3_parent_media_map a
-      WHERE
-         a.versionid = str_versionid
-      AND a.parent_id = str_response_id
-      AND a.media_type = p_media_type;
+      BEGIN
+         SELECT
+         a.media_id
+         INTO
+         str_media_id
+         FROM
+         dz_swagger3_parent_media_map a
+         WHERE
+            a.versionid = str_versionid
+         AND a.parent_id = str_response_id
+         AND a.media_type = p_media_type;
+         
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            self.return_code    := -1;
+            self.status_message := 'path does not have media type ' || p_media_type;
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
             
       --------------------------------------------------------------------------
       -- Step 60
@@ -282,10 +297,10 @@ AS
       -- Step 20
       -- Generate wrapper
       --------------------------------------------------------------------------
-      clb_output := '<?xml version="1.0" encoding="UTF-8"?>'
+      clb_output := '<?xml version="1.0" encoding="UTF-8"?><Root>'
                  || self.schema_obj.toMockXML(
          p_short_id => p_short_id
-      ); 
+      ) || '</Root>'; 
       
       --------------------------------------------------------------------------
       -- Step 30
