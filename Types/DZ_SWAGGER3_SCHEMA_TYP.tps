@@ -113,7 +113,7 @@ AS OBJECT (
        p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
-   ) RETURN XMLTYPE
+   ) RETURN CLOB
 
 );
 /

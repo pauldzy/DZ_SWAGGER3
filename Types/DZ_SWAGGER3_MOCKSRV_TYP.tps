@@ -28,7 +28,7 @@ AS OBJECT (
    -----------------------------------------------------------------------------
    ,MEMBER FUNCTION toMockXML(
       p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN XMLTYPE
+   ) RETURN CLOB
 
 );
 /

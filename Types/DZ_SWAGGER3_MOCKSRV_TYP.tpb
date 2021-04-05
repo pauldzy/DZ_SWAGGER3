@@ -261,12 +261,9 @@ AS
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toMockXML(
       p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
-   ) RETURN XMLTYPE
+   ) RETURN CLOB
    AS
-      doc_working  DBMS_XMLDOM.DOMDocument;
-      node_working DBMS_XMLDOM.DOMNode;
-      doc_output   DBMS_XMLDOM.DOMDocument;
-      node_output  DBMS_XMLDOM.DOMNode;
+      clb_output  CLOB;
       
    BEGIN
       
@@ -285,23 +282,16 @@ AS
       -- Step 20
       -- Generate wrapper
       --------------------------------------------------------------------------
-      doc_working  := DBMS_XMLDOM.newDOMDocument(self.schema_obj.toMockXML);
-      node_working := DBMS_XMLDOM.makeNode(doc_working);
-      
-      doc_output := DBMS_XMLDOM.newDOMDocument;
-      DBMS_XMLDOM.setVersion(doc_output,'1.0');
-      DBMS_XMLDOM.setcharset(doc_output,'UTF-8');
-      node_output := DBMS_XMLDOM.makeNode(doc_output);
-      node_output := DBMS_XMLDOM.appendChild(
-          node_output
-         ,node_working
-      );
+      clb_output := '<?xml version="1.0" encoding="UTF-8"?>'
+                 || self.schema_obj.toMockXML(
+         p_short_id => p_short_id
+      ); 
       
       --------------------------------------------------------------------------
       -- Step 30
       -- Return results
       --------------------------------------------------------------------------
-      RETURN DBMS_XMLDOM.getXMLType(doc_output);
+      RETURN clb_output;
 
    END toMockXML;
    

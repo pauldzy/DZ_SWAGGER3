@@ -581,7 +581,7 @@ AS
       
       IF str_media_type = 'application/xml'
       THEN
-         xml_output := dz_swagger3_mocksrv_typ(
+         clb_output := dz_swagger3_mocksrv_typ(
              p_path_id        => str_pathid
             ,p_http_method    => p_operation
             ,p_response_code  => p_response_code
@@ -590,6 +590,8 @@ AS
          ).toMockXML(
             p_short_id        => p_short_id
          );
+         
+         --clb_output := xml_output.getCLOBVal();
          
       ELSE
          clb_output := dz_swagger3_mocksrv_typ(

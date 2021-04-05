@@ -1740,14 +1740,17 @@ AS
        p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
-   ) RETURN XMLTYPE
+   ) RETURN CLOB
    AS
-      doc_output                 XMLDOM.DOMDOCUMENT;
-      node_root                  XMLDOM.DOMNODE;
-      node_output                XMLDOM.DOMNODE;
-      elem_output                XMLDOM.DOMELEMENT;
-      text_output                XMLDOM.DOMTEXT;
-      str_identifier             VARCHAR2(255 Char);
+      clb_temp                       CLOB;
+      clb_output                     CLOB;
+      str_identifier                 VARCHAR2(255 Char);
+      str_combine_type               VARCHAR2(255 Char);
+      str_combine_target             VARCHAR2(255 Char);
+      str_xml_name                   VARCHAR2(255 Char);
+      str_array_name                 VARCHAR2(255 Char);
+      ary_keys                       dz_swagger3_string_vry;
+      ary_clob                       dz_swagger3_clob_vry;
       
    BEGIN
    
@@ -1767,37 +1770,53 @@ AS
       IF  self.combine_schemas IS NOT NULL
       AND self.combine_schemas.COUNT > 0
       THEN
-      null;
+         SELECT
+          a.object_type_id
+         ,a.object_id
+         INTO
+          str_combine_type
+         ,str_combine_target
+         FROM (
+            SELECT
+             bb.object_type_id
+            ,bb.object_id
+            FROM
+            dz_swagger3_xobjects aa
+            JOIN
+            TABLE(self.combine_schemas) bb
+            ON
+                aa.object_type_id = bb.object_type_id
+            AND aa.object_id      = bb.object_id
+            ORDER BY
+            bb.object_order 
+         ) a
+         WHERE
+         ROWNUM <= 1;
+         
+         SELECT
+         a.schematyp.toMockXML(
+             p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+         )
+         INTO clb_output
+         FROM
+         dz_swagger3_xobjects a
+         WHERE
+             a.object_type_id = str_combine_type
+         AND a.object_id = str_combine_target;
       
       ELSE
-      
-         IF self.schema_type = 'scalar'
+         IF self.schema_category = 'scalar'
          THEN
-            doc_output := DBMS_XMLDOM.NEWDOMDOCUMENT();
-            DBMS_XMLDOM.SETVERSION(doc_output,'1.0'); 
-            DBMS_XMLDOM.SETCHARSET(doc_output,'UTF-8');
-            node_root   := DBMS_XMLDOM.MAKENODE(
-               doc      => doc_output
-            );
-            elem_output := DBMS_XMLDOM.CREATEELEMENT(
-                doc     => doc_output
-               ,tagName => str_identifier
-            );
-            node_output := DBMS_XMLDOM.APPENDCHILD(
-                node_root
-               ,DBMS_XMLDOM.MAKENODE(
-                  elem  => elem_output
-               )
-            );       
-
             IF self.schema_type IN ('number','integer')
             THEN
                IF self.schema_example_number IS NULL
                THEN
-                  text_output := DBMS_XMLDOM.CREATETEXTNODE(doc_output,0);
+                  clb_output := '0';
                    
                ELSE
-                  text_output := DBMS_XMLDOM.CREATETEXTNODE(doc_output,self.schema_example_number);
+                  clb_output := TO_CHAR(self.schema_example_number);
                   
                END IF;
             
@@ -1806,33 +1825,87 @@ AS
                THEN
                   IF self.schema_format = 'date'
                   THEN
-                     text_output := DBMS_XMLDOM.CREATETEXTNODE(doc_output,'2013-12-25');
+                     clb_output := '2013-12-25';
                      
                   ELSE
-                     text_output := DBMS_XMLDOM.CREATETEXTNODE(doc_output,'string');
+                     clb_output := 'string';
                   
                   END IF;
-                  
+                   
                ELSE
-                  text_output := DBMS_XMLDOM.CREATETEXTNODE(doc_output,self.schema_example_string);
+                  clb_output :=  self.schema_example_string;
                   
                END IF;
             
             END IF;
-           
-            node_output := DBMS_XMLDOM.APPENDCHILD(
-                node_output
-               ,DBMS_XMLDOM.MAKENODE(text_output)
-            );
          
-         ELSE
-         null;
-         
+         ELSIF self.schema_category = 'array'
+         THEN
+            SELECT
+             a.schematyp.xml_name
+            ,a.schematyp.toMockXML(
+                p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+            ) 
+            INTO 
+             str_xml_name
+            ,clb_temp
+            FROM
+            dz_swagger3_xobjects a
+            WHERE
+                a.object_type_id = self.schema_items_schema.object_type_id
+            AND a.object_id      = self.schema_items_schema.object_id;
+            
+            IF str_xml_name IS NOT NULL
+            THEN
+               str_array_name := str_xml_name;
+               
+            ELSE
+               str_array_name := self.schema_items_schema.object_id;
+
+            END IF;
+            
+            clb_output := '<'  || str_array_name || '>'
+                       || clb_temp
+                       || '</' || str_array_name || '>';            
+            
+         ELSIF self.schema_category IN ('combine','object')
+         THEN
+            SELECT
+             b.object_key
+            ,a.schematyp.toMockXML(
+                p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+            )
+            BULK COLLECT INTO
+             ary_keys
+            ,ary_clob
+            FROM
+            dz_swagger3_xobjects a
+            JOIN
+            TABLE(self.schema_properties) b
+            ON
+                a.object_type_id = b.object_type_id
+            AND a.object_id      = b.object_id
+            WHERE
+            COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE';
+
+            FOR i IN 1 .. ary_keys.COUNT
+            LOOP
+               clb_output := clb_output
+                          || '<'  || ary_keys(i) || '>'
+                          || ary_clob(i)
+                          || '</' || ary_keys(i) || '>';
+
+            END LOOP;
+
          END IF;
          
       END IF;
       
-      RETURN DBMS_XMLDOM.GETXMLTYPE(doc_output);
+      RETURN clb_output;
       
    END toMockXML;
    
