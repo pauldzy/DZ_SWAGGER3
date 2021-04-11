@@ -160,52 +160,102 @@ AS
          
       END IF;
       
+      IF str_operation_id IS NULL
+      THEN
+         self.return_code    := -1;
+         self.status_message := 'path does not have http method ' || p_http_method;
+         RETURN;
+         
+      END IF;
+      
       --------------------------------------------------------------------------
       -- Step 40
       -- Determine the response id
       --------------------------------------------------------------------------
-      SELECT
-      a.response_id
-      INTO
-      str_response_id
-      FROM
-      dz_swagger3_operation_resp_map a
-      WHERE
-          a.versionid = str_versionid
-      AND a.operation_id = str_operation_id
-      AND a.response_code = p_response_code;
+      BEGIN
+         SELECT
+         a.response_id
+         INTO
+         str_response_id
+         FROM
+         dz_swagger3_operation_resp_map a
+         WHERE
+             a.versionid = str_versionid
+         AND a.operation_id = str_operation_id
+         AND a.response_code = p_response_code;
+
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            self.return_code    := -1;
+            self.status_message := 'operation does not have response map ' || p_response_code;
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+
+      END;
       
       --------------------------------------------------------------------------
       -- Step 50
       -- Determine the media id
       --------------------------------------------------------------------------
-      SELECT
-      a.media_id
-      INTO
-      str_media_id
-      FROM
-      dz_swagger3_parent_media_map a
-      WHERE
-         a.versionid = str_versionid
-      AND a.parent_id = str_response_id
-      AND a.media_type = p_media_type;
+      BEGIN
+         SELECT
+         a.media_id
+         INTO
+         str_media_id
+         FROM
+         dz_swagger3_parent_media_map a
+         WHERE
+            a.versionid = str_versionid
+         AND a.parent_id = str_response_id
+         AND a.media_type = p_media_type;
+         
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            self.return_code    := -1;
+            self.status_message := 'path does not have media map of type ' || p_media_type;
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
             
       --------------------------------------------------------------------------
       -- Step 60
       -- Pull the base schema for the operation response
       --------------------------------------------------------------------------
-      SELECT
-      dz_swagger3_schema_typ(
-          p_schema_id    => a.media_schema_id
-         ,p_versionid    => str_versionid
-      )
-      INTO
-      self.schema_obj
-      FROM
-      dz_swagger3_media a
-      WHERE
-         a.versionid = str_versionid
-      AND a.media_id = str_media_id;
+      BEGIN
+         SELECT
+         dz_swagger3_schema_typ(
+             p_schema_id    => a.media_schema_id
+            ,p_versionid    => str_versionid
+         )
+         INTO
+         self.schema_obj
+         FROM
+         dz_swagger3_media a
+         WHERE
+            a.versionid = str_versionid
+         AND a.media_id = str_media_id;
+         
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            self.return_code    := -1;
+            self.status_message := 'path does not have media ' || str_media_id;
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
       
       --------------------------------------------------------------------------
       -- Step 70

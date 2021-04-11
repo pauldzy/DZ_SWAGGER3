@@ -430,6 +430,7 @@ AS
    ) RETURN CLOB
    AS
       clb_output         CLOB;
+      typ_output         dz_swagger3_jsonsch_typ;
       str_pathid         VARCHAR2(4000 Char);
       str_versionid      VARCHAR2(4000 Char) := p_versionid;
       str_pathgroupid    VARCHAR2(4000 Char) := UPPER(p_path_group_id);
@@ -487,19 +488,29 @@ AS
 
       END;
       
-      clb_output := dz_swagger3_jsonsch_typ(
+      typ_output := dz_swagger3_jsonsch_typ(
           p_path_id        => str_pathid
          ,p_http_method    => p_operation
          ,p_response_code  => p_response_code
          ,p_media_type     => p_media_type
          ,p_title          => p_schema_title
          ,p_versionid      => str_versionid
-      ).toJSON();
+      );
       
-      IF UPPER(p_force_escapes) = 'TRUE'
+      clb_output := typ_output.toJSON();
+      
+      IF typ_output.return_code != 0
       THEN
-         force_escape(p_json => clb_output);
-         
+         clb_output := '{"return_code":' || typ_output.return_code || ','
+                    ||  '"status_message":"' || typ_output.status_message || '"}';
+                    
+      ELSE
+         IF UPPER(p_force_escapes) = 'TRUE'
+         THEN
+            force_escape(p_json => clb_output);
+            
+         END IF;
+
       END IF;
       
       RETURN clb_output;
