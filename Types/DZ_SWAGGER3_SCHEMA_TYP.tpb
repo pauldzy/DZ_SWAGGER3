@@ -1764,8 +1764,8 @@ AS
       str_child_xml_namespace         VARCHAR2(4000);
       str_child_xml_prefix            VARCHAR2(4000);
       str_child_xml_attribute         VARCHAR2(4000);
-      str_child_schema_example_string VARCHAR2(4000);
-      str_child_schema_example_number VARCHAR2(4000);
+      str_child_schema_example_str    VARCHAR2(4000);
+      str_child_schema_example_num    VARCHAR2(4000);
       str_child_attributes            VARCHAR2(32000);
       
    BEGIN
@@ -1928,8 +1928,8 @@ AS
                ,str_child_xml_name
                ,str_child_xml_prefix
                ,str_child_xml_attribute
-               ,str_child_schema_example_string
-               ,str_child_schema_example_number
+               ,str_child_schema_example_str
+               ,str_child_schema_example_num
                FROM
                dz_swagger3_xobjects a
                WHERE
@@ -1956,7 +1956,7 @@ AS
                   str_child_attributes := str_child_attributes 
                      || ' ' || str_child_xml_name || '="'
                      || DBMS_XMLGEN.CONVERT(
-                        COALESCE(str_child_schema_example_string,str_child_schema_example_number,'string')
+                        COALESCE(str_child_schema_example_str,str_child_schema_example_num,'string')
                      ) || '"';
                      
                END IF;
@@ -2069,8 +2069,8 @@ AS
                      ,str_child_xml_name
                      ,str_child_xml_prefix
                      ,str_child_xml_attribute
-                     ,str_child_schema_example_string
-                     ,str_child_schema_example_number
+                     ,str_child_schema_example_str
+                     ,str_child_schema_example_num
                      FROM
                      dz_swagger3_xobjects a
                      WHERE
@@ -2098,7 +2098,7 @@ AS
                         str_child_attributes := str_child_attributes 
                            || ' ' || str_child_xml_name || '="'
                            || DBMS_XMLGEN.CONVERT(
-                              COALESCE(str_child_schema_example_string,str_child_schema_example_number,'string')
+                              COALESCE(str_child_schema_example_str,str_child_schema_example_num,'string')
                            ) || '"';
                            
                      END IF;
