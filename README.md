@@ -1,7 +1,7 @@
 # DZ_SWAGGER3
-PLSQL module for the creation, storage and production of Open API 3.0 service definitions.  This code is a rewrite of the existing DZ_SWAGGER project which uses the now defunct 2.0 specification.
+PLSQL module for the creation, storage, production and validation of Open API 3.0 service definitions.  This code is a rewrite of the existing DZ_SWAGGER project which uses the now defunct 2.0 specification.
 
-Oracle mod_plsql and APEX allow for the exposure as services of as many parameters and data elements that you have procedures and tables to produce.  A complex dataset may generates hundreds - even thousands - of often changing inputs and outputs for which users must track and comprehend to consume the service.  Using the [OpenAPI (Swagger) specification](http://swagger.io/specification), service details may be documented and published using JSON or YAML documents.  However managing and generating such documentation may be a large undertaking when the underlying services are ever-expanding and ever-changing.  As a new service comes online it may use some or even most of the components of existing services.  This then leads to copy-and-paste nightmares as common elements are updated in one specification and not in others.
+Oracle mod_plsql and APEX allow for the exposure as services of as many parameters and data elements that you have procedures and tables to produce.  A complex dataset may generates hundreds - even thousands - of often changing inputs and outputs for which users must track and comprehend to consume the service.  Using the [OpenAPI (Swagger) specification](http://swagger.io/specification), a given set of service's details may be documented and published using JSON or YAML documents.  However managing and generating such documentation may be a large undertaking when the underlying services are ever-expanding and ever-changing.  As a new service comes online it may use some or even most of the components of existing services.  This then leads to copy-and-paste nightmares as common elements are updated in one specification and not in others.
 
 Generally the approach is something along the lines of [SwaggerHub](https://app.swaggerhub.com) which provides a solid and powerful platform for managing, versioning and publishing specifications.  However, it still can be challenging when a universe of swagger elements needs to be sliced and diced on the fly into different specifications with some elements in common and other separate.
 
@@ -62,6 +62,61 @@ BEGIN
 END;
 /
 ```
+
+## Mock Service extension
+OpenAPI provides structures for persisting example values for both input and output.  Thus a variety of products will take an OpenAPI path endpoint and output a generic "mocked" emulation of what real output should look like.  DZ_SWAGGER3 provides a basic form of this via the mocksrv object:
+
+```
+DECLARE
+   clb_output CLOB;
+BEGIN
+   clb_output := dz_swagger3_mocksrv_typ(
+       p_path_id        => 'NavigationServiceGeoJSON'
+      ,p_http_method    => 'get'
+      ,p_response_code  => 'default'
+      ,p_media_type     => 'application/json'
+      ,p_versionid      => 'SAMPLE'
+   ).toMockJSON();
+END;
+/
+```
+
+or mock the service as XML
+
+```
+DECLARE
+   clb_output CLOB;
+BEGIN
+   clb_output := dz_swagger3_mocksrv_typ(
+       p_path_id        => 'NavigationServiceGeoJSON'
+      ,p_http_method    => 'get'
+      ,p_response_code  => 'default'
+      ,p_media_type     => 'application/xml'
+      ,p_versionid      => 'SAMPLE'
+   ).toMockXML();
+END;
+/
+```
+
+OpenAPI 3.0 examples are rather complicated and will undergo improvements with 3.1 to make them the same as modern JSON Schema.  The current DZ_SWAGGER3 mock server renderer only works with scalar example values tied directly to the schema record.  At this time it does not render the more complicated [examples](https://swagger.io/docs/specification/adding-examples/) definitions.  
+
+DZ_SWAGGER3 also supports the generation of XML mocked services if the endpoint has application/xml loaded as a media type.  But the code is not optimized as the current manner of lazy-loading walking the object tree does not fit well with the needs of XML renderering in OpenAPI.  It does work but the logic is convoluted as each XML node must cast forward in the object tree to sniff for situations where elements need to be moved onto the XML node as attributes.  This points to a rigidity in the current logic that could use some improvement. 
+
+## OpenAPI results validation
+Both DZ_SWAGGER3 and DZ_SWAGGER are completely capable of creating an invalid OpenAPI document.  While constraints and triggers are provided to help keep things in order as best as possible, determining the final, ultimate validity of a given document is not so easy from the PLSQL perspective.
+
+The DZ_SWAGGER3_VALIDATION package attempts to provide several forms of validation for users in an à la carte fashion:
+
+1.**No Validation**: If the folks creating the DZ_SWAGGER3 data records for your endpoints are conscientious hard workers who spot-check their results in [Swagger Editor](https://editor.swagger.io/), well then perhaps you can just forgo validation and hope for the best.
+2.**PLSQL Validation**: PLSQL-based validation is more of a proposal than a reality for now.  Basically we can build PLSQL tools in the DZ_SWAGGER3_VALIDATION package to test and proof an OpenAPI 3.x document.  At least for now on 18c there is little provided by Oracle to help with this task.  It becomes problematic when we need to fetch external references.  I have mulled if things like the new Javascript engine and other enhancements to the new binary JSON object on 21c might make it easier down-the-line.
+3.**External Validation**: An easier solution would be to simply call out to an external service to test validity.  In fact that is what the Swagger-UI does each time you view a document and receive that small "valid" badge.  Though while an easier solution getting your DBAs to agree to allow service calls (via an Oracle Wallet) to a foreign or internally-hosted service may or may not be viable in your environment. 
+
+Sources of external validation:
+
+1. The [Swagger Editor](https://editor.swagger.io/) by Smart Bear contains validation logic written in Javascript that provides some pretty solid validation logic.  However, Smart Bear [has declined](https://github.com/swagger-api/swagger-editor/issues/2036) to make this a component that could be used via a service.
+2. The [Swagger Badge Validator](https://github.com/swagger-api/validator-badge) agains by Smart Bear is a Java service that validates an OpenAPI document to determine the greed or red badging on Swagger-UI.  Its important to note this logic is not the same as the logic in the Swagger Editor but both generally catch similar errors.  Using the badge validator from PLSQL is one of the better options as the server can hosted from a docker container easily inside the safety of your firewall.
+3. [speccy](https://github.com/wework/speccy) 
+4. [Express OpenAPI Validator](https://github.com/cdimascio/express-openapi-validator)
 
 ## Post Parameter RequestBody extension
 OpenAPI 3.0 bravely moves into the world of complex JSON input for post operations via the new RequestBody component.  However some of us remain stuck on our old middleware systems whereby posts are little but form reflections of get parameters.  When get and post are mirrors of each other it is rather onerous to maintain parallel structures and descriptions via parameters and request bodies.
