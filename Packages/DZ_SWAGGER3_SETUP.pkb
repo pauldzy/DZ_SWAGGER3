@@ -2097,7 +2097,7 @@ AS
       str_sql := 'ALTER TABLE dz_swagger3_oauth_flow_scope '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_oauth_flow_scopc01 '
-              || '    CCHECK (oauth_flow_scope_name = TRIM(oauth_flow_scope_name)) '
+              || '    CHECK (oauth_flow_scope_name = TRIM(oauth_flow_scope_name)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_oauth_flow_scopc02 '
               || '    CHECK (REGEXP_LIKE(versionid,''^[0-9a-zA-Z_\.-]+$'')) '
