@@ -673,6 +673,26 @@ AS
       RETURN clb_output;
 
    END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION validity(
+       p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_options             IN  VARCHAR2  DEFAULT NULL
+   ) RETURN CLOB
+   AS
+   BEGIN
+   
+      RETURN dz_swagger3_validate.request_validate(
+          p_reqb  => p_options
+         ,p_doc   => self.toJSON(
+             p_force_inline => p_force_inline
+            ,p_short_id     => p_short_id
+         )
+      );
+      
+   END validity;
 
 END;
 /
