@@ -5,12 +5,9 @@ AS
    -- One partical solution to hard-coding your wallet password here would be 
    -- to encrypt the package body source via DBMS_DDL.CREATE_WRAPPED
    -----------------------------------------------------------------------------
-   c_swagger_badge_url             CONSTANT VARCHAR2(4000 Char) 
-      := NULL;
-   c_swagger_badge_wallet_path     CONSTANT VARCHAR2(4000 Char) 
-      := NULL;
-   c_swagger_badge_wallet_password CONSTANT VARCHAR2(4000 Char) 
-      := NULL;
+   c_swagger_badge_url         CONSTANT VARCHAR2(4000 Char) := NULL;
+   c_swagger_badge_wallet_path CONSTANT VARCHAR2(4000 Char) := NULL;
+   c_swagger_badge_wallet_pwd  CONSTANT VARCHAR2(4000 Char) := NULL;
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -176,7 +173,7 @@ AS
          THEN
             rcx := UTL_HTTP.CREATE_REQUEST_CONTEXT(
                 wallet_path     => c_swagger_badge_wallet_path
-               ,wallet_password => c_swagger_badge_wallet_password
+               ,wallet_password => c_swagger_badge_wallet_pwd
                ,enable_cookies  => TRUE
                ,max_cookies     => 300
                ,max_cookies_per_site => 20
