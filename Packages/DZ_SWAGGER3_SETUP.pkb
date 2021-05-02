@@ -1664,7 +1664,7 @@ AS
 
       str_sql := 'ALTER TABLE dz_swagger3_link_op_parms '
               || 'ADD CONSTRAINT dz_swagger3_link_op_parms_pk '
-              || 'PRIMARY KEY(versionid,link_id) ';
+              || 'PRIMARY KEY(versionid,link_id,link_op_parm_name) ';
 
       IF p_index_tablespace IS NOT NULL
       THEN
