@@ -23,6 +23,16 @@ VARRAY(2147483647) OF VARCHAR2(4000 Char);
 GRANT EXECUTE ON dz_swagger3_string_vry TO public;
 
 --******************************--
+PROMPT Collections/DZ_SWAGGER3_CLOB_VRY.tps 
+
+CREATE OR REPLACE TYPE dz_swagger3_clob_vry FORCE                                       
+AS 
+VARRAY(2147483647) OF CLOB;
+/
+
+GRANT EXECUTE ON dz_swagger3_clob_vry TO public;
+
+--******************************--
 PROMPT Packages/DZ_SWAGGER3_CONSTANTS.pks 
 
 CREATE OR REPLACE PACKAGE dz_swagger3_constants
@@ -33,8 +43,8 @@ AS
    /*
    Header: DZ_SWAGGER3
      
-   - Release: 1.0.0
-   - Commit Date: Tue Mar 23 10:40:54 2021 -0400
+   - Release: v1.1.0
+   - Commit Date: Sun May 2 17:36:23 2021 -0400
    
    PLSQL module for the creation, storage and production of Open API 3.0 service 
    definitions.   Support for the unloading of Swagger JSON specifications into
@@ -68,6 +78,27 @@ AS
       package.
    */
    c_openapi_version  CONSTANT VARCHAR2(16 Char) := '3.0.3';
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   /*
+   Constant: dz_swagger3_constants.c_inject_path_xorder
+   */
+   c_inject_path_xorder CONSTANT BOOLEAN := TRUE;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   /*
+   Constant: dz_swagger3_constants.c_inject_operation_xorder
+   */
+   c_inject_operation_xorder CONSTANT BOOLEAN := FALSE;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   /*
+   Constant: dz_swagger3_constants.c_inject_property_xorder
+   */
+   c_inject_property_xorder CONSTANT BOOLEAN := FALSE;
 
 END dz_swagger3_constants;
 /
@@ -1139,22 +1170,30 @@ AS
       -- Build PATH table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_path('
-              || '    path_id                   VARCHAR2(255 Char) NOT NULL '
-              || '   ,path_endpoint             VARCHAR2(255 Char) NOT NULL '
-              || '   ,path_summary              VARCHAR2(4000 Char) '
-              || '   ,path_description          VARCHAR2(4000 Char) '
-              || '   ,path_get_operation_id     VARCHAR2(255 Char) '
-              || '   ,path_put_operation_id     VARCHAR2(255 Char) '
-              || '   ,path_post_operation_id    VARCHAR2(255 Char) '
-              || '   ,path_delete_operation_id  VARCHAR2(255 Char) '
-              || '   ,path_options_operation_id VARCHAR2(255 Char) '
-              || '   ,path_head_operation_id    VARCHAR2(255 Char) '
-              || '   ,path_patch_operation_id   VARCHAR2(255 Char) '
-              || '   ,path_trace_operation_id   VARCHAR2(255 Char) '
-              || '   ,path_desc_updated         DATE '
-              || '   ,path_desc_author          VARCHAR2(30 Char) '
-              || '   ,path_desc_notes           VARCHAR2(255 Char) '
-              || '   ,versionid                 VARCHAR2(40 Char) NOT NULL '
+              || '    path_id                      VARCHAR2(255 Char) NOT NULL '
+              || '   ,path_endpoint                VARCHAR2(255 Char) NOT NULL '
+              || '   ,path_summary                 VARCHAR2(4000 Char) '
+              || '   ,path_description             VARCHAR2(4000 Char) '
+              || '   ,path_get_operation_id        VARCHAR2(255 Char) '
+              || '   ,path_get_operation_order     INTEGER '
+              || '   ,path_put_operation_id        VARCHAR2(255 Char) '
+              || '   ,path_put_operation_order     INTEGER '
+              || '   ,path_post_operation_id       VARCHAR2(255 Char) '
+              || '   ,path_post_operation_order    INTEGER '
+              || '   ,path_delete_operation_id     VARCHAR2(255 Char) '
+              || '   ,path_delete_operation_order  INTEGER '
+              || '   ,path_options_operation_id    VARCHAR2(255 Char) '
+              || '   ,path_options_operation_order INTEGER '
+              || '   ,path_head_operation_id       VARCHAR2(255 Char) '
+              || '   ,path_head_operation_order    INTEGER '
+              || '   ,path_patch_operation_id      VARCHAR2(255 Char) '
+              || '   ,path_patch_operation_order   INTEGER '
+              || '   ,path_trace_operation_id      VARCHAR2(255 Char) '
+              || '   ,path_trace_operation_order   INTEGER '
+              || '   ,path_desc_updated            DATE '
+              || '   ,path_desc_author             VARCHAR2(30 Char) '
+              || '   ,path_desc_notes              VARCHAR2(255 Char) '
+              || '   ,versionid                    VARCHAR2(40 Char) NOT NULL '
               || ') ';
 
       IF p_table_tablespace IS NOT NULL
@@ -2838,7 +2877,7 @@ AS
       str_sql := 'ALTER TABLE dz_swagger3_oauth_flow_scope '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_oauth_flow_scopc01 '
-              || '    CCHECK (oauth_flow_scope_name = TRIM(oauth_flow_scope_name)) '
+              || '    CHECK (oauth_flow_scope_name = TRIM(oauth_flow_scope_name)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_oauth_flow_scopc02 '
               || '    CHECK (REGEXP_LIKE(versionid,''^[0-9a-zA-Z_\.-]+$'')) '
@@ -3173,6 +3212,315 @@ END;
 /
 
 */
+
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_VALIDATE.pks 
+
+CREATE OR REPLACE PACKAGE dz_swagger3_validate
+AUTHID DEFINER
+AS
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   /*
+   Constant: c_default_validators
+   */
+   c_default_validators CONSTANT VARCHAR2(4000 Char) := '["plsql"]';
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION request_validate(
+       p_reqb  IN  VARCHAR2
+      ,p_doc   IN  CLOB 
+   ) RETURN CLOB;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION plsql_validate(
+      p_doc    IN  CLOB
+   ) RETURN CLOB;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION swagger_badge_validate(
+      p_doc    IN  CLOB
+   ) RETURN CLOB;
+      
+END dz_swagger3_validate;
+/
+
+GRANT EXECUTE ON dz_swagger3_validate TO public;
+
+--******************************--
+PROMPT Packages/DZ_SWAGGER3_VALIDATE.pkb 
+
+CREATE OR REPLACE PACKAGE BODY dz_swagger3_validate
+AS
+
+   -----------------------------------------------------------------------------
+   -- One partical solution to hard-coding your wallet password here would be 
+   -- to encrypt the package body source via DBMS_DDL.CREATE_WRAPPED
+   -----------------------------------------------------------------------------
+   c_swagger_badge_url             CONSTANT VARCHAR2(4000 Char) 
+      := NULL;
+   c_swagger_badge_wallet_path     CONSTANT VARCHAR2(4000 Char) 
+      := NULL;
+   c_swagger_badge_wallet_password CONSTANT VARCHAR2(4000 Char) 
+      := NULL;
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION request_validate(
+       p_reqb  IN  VARCHAR2
+      ,p_doc   IN  CLOB 
+   ) RETURN CLOB
+   AS
+      json_input     JSON_OBJECT_T;
+      json_keys      JSON_KEY_LIST;
+      json_element   JSON_ELEMENT_T;
+      json_tests     JSON_ARRAY_T;
+      json_index     NUMBER;
+      json_ary_val   VARCHAR2(4000 Char);
+      json_plsql_tst JSON_OBJECT_T;
+      boo_plsql_tst  BOOLEAN;
+      json_badge_tst JSON_OBJECT_T;
+      boo_badge_tst  BOOLEAN;
+      boo_overall    BOOLEAN;
+      json_results   JSON_ARRAY_T;
+      json_output    JSON_OBJECT_T;
+ 
+   BEGIN
+   
+      IF p_reqb IS NULL
+      THEN
+         RETURN '{"tests":null}';
+         
+      END IF;
+      
+      json_input := JSON_OBJECT_T.PARSE(p_reqb);
+      json_keys  := json_input.GET_KEYS;
+      
+      IF json_input.has('tests')
+      THEN
+         json_element := json_input.get('tests');
+      
+      ELSE
+         RETURN '{"tests":null}';
+         
+      END IF;
+      
+      IF json_element.is_array()
+      THEN
+         json_tests := JSON_ARRAY_T(json_element);
+         json_index := json_element.get_size();
+         
+      ELSE
+         RETURN '{"tests":null}';
+         
+      END IF;
+      
+      json_results := JSON_ARRAY_T();
+      
+      FOR i IN 0 .. json_index
+      LOOP
+         json_ary_val := json_tests.get_string(i);
+      
+         IF json_ary_val = 'plsql'
+         THEN
+            json_plsql_tst := JSON_OBJECT_T.parse(plsql_validate(p_doc));
+            boo_plsql_tst  := json_plsql_tst.get_boolean('valid');
+            
+            json_results.append(json_plsql_tst);
+            
+         ELSIF json_ary_val = 'swagger_badge'
+         THEN
+            json_badge_tst := JSON_OBJECT_T.parse(swagger_badge_validate(p_doc));
+            boo_badge_tst  := json_badge_tst.get_boolean('valid');
+            
+            json_results.append(json_badge_tst);
+            
+         END IF;
+      
+      END LOOP;
+      
+      IF  boo_badge_tst IS NULL
+      AND boo_plsql_tst IS NULL
+      THEN
+         boo_overall := NULL;
+         
+      ELSIF boo_badge_tst IS NULL
+      THEN
+         boo_overall := boo_plsql_tst;
+         
+      ELSIF boo_plsql_tst IS NULL
+      THEN
+         boo_overall := boo_badge_tst;
+         
+      ELSE
+         IF  boo_badge_tst
+         AND boo_plsql_tst
+         THEN
+            boo_overall := TRUE;
+            
+         ELSE
+            boo_overall := FALSE;
+            
+         END IF;
+      
+      END IF;
+      
+      json_output := JSON_OBJECT_T();
+      json_output.put('valid',boo_overall);
+      json_output.put('tests',json_element);
+      json_output.put('results',json_results);
+      RETURN json_output.to_clob();
+   
+   END request_validate;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION plsql_validate(
+      p_doc    IN  CLOB
+   ) RETURN CLOB
+   AS
+      json_output    JSON_OBJECT_T;
+      
+   BEGIN
+   
+      json_output := JSON_OBJECT_T();
+      json_output.put('test','plsql');
+      json_output.put('version',1.0);
+      json_output.put('valid',TRUE);
+   
+      RETURN json_output.to_clob();     
+   
+   END plsql_validate;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION swagger_badge_validate(
+      p_doc    IN  CLOB
+   ) RETURN CLOB
+   AS
+      rcx UTL_HTTP.REQUEST_CONTEXT_KEY;
+      req UTL_HTTP.REQ;
+      res UTL_HTTP.RESP;
+      buf VARCHAR2(32767 Char);
+      clb CLOB;
+      cln NUMBER;
+      cst NUMBER;
+      
+      json_output    JSON_OBJECT_T;
+      
+   BEGIN
+   
+      json_output := JSON_OBJECT_T();
+      json_output.put('test','swagger_badge');
+   
+      IF c_swagger_badge_url IS NULL
+      THEN
+         json_output.put('valid',CAST(NULL AS BOOLEAN));
+         json_output.put('error','swagger_badge_url is null');
+         RETURN json_output.to_clob();
+      
+      END IF;
+      
+      json_output.put('url',c_swagger_badge_url);
+      
+      BEGIN
+         IF c_swagger_badge_wallet_path IS NOT NULL
+         THEN
+            rcx := UTL_HTTP.CREATE_REQUEST_CONTEXT(
+                wallet_path     => c_swagger_badge_wallet_path
+               ,wallet_password => c_swagger_badge_wallet_password
+               ,enable_cookies  => TRUE
+               ,max_cookies     => 300
+               ,max_cookies_per_site => 20
+            );
+         
+            req := UTL_HTTP.BEGIN_REQUEST(
+                url             => c_swagger_badge_url
+               ,request_context => rcx
+            );
+            
+         ELSE      
+            req := UTL_HTTP.BEGIN_REQUEST(
+                url             => c_swagger_badge_url
+               ,method          => 'POST'
+            );
+            
+         END IF;
+         
+      EXCEPTION
+         WHEN OTHERS 
+         THEN
+            IF SQLCODE IN (-24247,-29273)
+            THEN
+               json_output.put('valid',CAST(NULL AS BOOLEAN));
+               json_output.put('error',SQLERRM);
+               RETURN json_output.to_clob();
+         
+            ELSE
+               RAISE;
+               
+            END IF;
+         
+      END;
+
+      UTL_HTTP.SET_HEADER(req,'content-type','application/json');
+      UTL_HTTP.SET_HEADER(req,'transfer-encoding','chunked');
+      
+      cst := 1;
+      cln := 32767;
+      LOOP
+         buf := SUBSTR(clb,cst,cln);
+         UTL_HTTP.WRITE_TEXT(req,buf);
+         
+         IF LENGTH(buf) < cln
+         THEN
+            EXIT;
+         
+         END IF;
+      
+         cst := cst + cln;
+         
+      END LOOP;
+      
+      res := UTL_HTTP.GET_RESPONSE(req);
+      clb := NULL;
+
+      BEGIN
+         LOOP
+            UTL_HTTP.READ_LINE(res,buf);
+            clb := clb || buf;
+         
+         END LOOP;
+         
+         UTL_HTTP.END_RESPONSE(res);
+         
+      EXCEPTION
+         WHEN UTL_HTTP.END_OF_BODY
+         THEN
+            UTL_HTTP.END_RESPONSE(res);
+            
+      END;
+      
+      IF c_swagger_badge_wallet_path IS NOT NULL
+      THEN
+         UTL_HTTP.DESTROY_REQUEST_CONTEXT(rcx);
+         
+      END IF;
+
+      json_output.put('valid',TRUE);
+      
+      json_output.put('results',JSON_OBJECT_T.parse(clb));
+   
+      RETURN json_output.to_clob();  
+      
+   END swagger_badge_validate;
+
+END dz_swagger3_validate;
+/
 
 --******************************--
 PROMPT Actions/DZ_SWAGGER3_STORAGE_SETUP.sql 
@@ -4268,6 +4616,7 @@ AS OBJECT (
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_xorder              IN  INTEGER   DEFAULT NULL
     ) RETURN CLOB
 
 );
@@ -4377,6 +4726,7 @@ AS OBJECT (
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
+      ,p_xorder              IN  INTEGER   DEFAULT NULL
     ) RETURN CLOB
 
 );
@@ -4583,7 +4933,24 @@ AS OBJECT (
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
-      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'    
+      ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_xorder              IN  INTEGER   DEFAULT NULL
+   ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toMockJSON(
+       p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+   ) RETURN CLOB
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toMockXML(
+       p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
    ) RETURN CLOB
 
 );
@@ -4795,7 +5162,15 @@ AS OBJECT (
        p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
     ) RETURN CLOB
-
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION validity(
+       p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_options             IN  VARCHAR2  DEFAULT NULL
+    ) RETURN CLOB
+    
 );
 /
 
@@ -6078,8 +6453,8 @@ AS
    /*
    header: DZ_SWAGGER3
      
-   - Release: 1.0.0
-   - Commit Date: Tue Mar 23 10:40:54 2021 -0400
+   - Release: v1.1.0
+   - Commit Date: Sun May 2 17:36:23 2021 -0400
    
    Conversion of DZ_SWAGGER from specification 2.0 to OpenAPI 3.0.
    
@@ -6238,6 +6613,19 @@ AS
       ,p_response_code       IN  VARCHAR2  DEFAULT 'default'
       ,p_media_type          IN  VARCHAR2  DEFAULT 'application/json' 
       ,p_schema_title        IN  VARCHAR2  DEFAULT NULL
+      ,p_versionid           IN  VARCHAR2  DEFAULT NULL
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_escapes       IN  VARCHAR2  DEFAULT 'FALSE'
+   ) RETURN CLOB;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION mocksrv(
+       p_path_endpoint       IN  VARCHAR2
+      ,p_path_group_id       IN  VARCHAR2  DEFAULT NULL
+      ,p_operation           IN  VARCHAR2  DEFAULT 'get'
+      ,p_response_code       IN  VARCHAR2  DEFAULT 'default'
+      ,p_media_type          IN  VARCHAR2  DEFAULT 'application/json' 
       ,p_versionid           IN  VARCHAR2  DEFAULT NULL
       ,p_short_id            IN  VARCHAR2  DEFAULT 'TRUE'
       ,p_force_escapes       IN  VARCHAR2  DEFAULT 'FALSE'
@@ -6709,6 +7097,7 @@ AS
    ) RETURN CLOB
    AS
       clb_output         CLOB;
+      typ_output         dz_swagger3_jsonsch_typ;
       str_pathid         VARCHAR2(4000 Char);
       str_versionid      VARCHAR2(4000 Char) := p_versionid;
       str_pathgroupid    VARCHAR2(4000 Char) := UPPER(p_path_group_id);
@@ -6730,7 +7119,7 @@ AS
             INTO
             str_pathid
             FROM
-            echo_swagger.dz_swagger3_path a
+            dz_swagger3_path a
             WHERE
                 a.versionid     = str_versionid
             AND a.path_endpoint = str_path_endpoint
@@ -6742,9 +7131,9 @@ AS
             INTO
             str_pathid
             FROM
-            echo_swagger.dz_swagger3_path a
+            dz_swagger3_path a
             JOIN
-            echo_swagger.dz_swagger3_group b
+            dz_swagger3_group b
             ON
             a.path_id = b.path_id
             WHERE
@@ -6766,24 +7155,153 @@ AS
 
       END;
       
-      clb_output := dz_swagger3_jsonsch_typ(
+      typ_output := dz_swagger3_jsonsch_typ(
           p_path_id        => str_pathid
          ,p_http_method    => p_operation
          ,p_response_code  => p_response_code
          ,p_media_type     => p_media_type
          ,p_title          => p_schema_title
          ,p_versionid      => str_versionid
-      ).toJSON();
+      );
       
-      IF UPPER(p_force_escapes) = 'TRUE'
+      clb_output := typ_output.toJSON();
+      
+      IF typ_output.return_code != 0
       THEN
-         force_escape(p_json => clb_output);
-         
+         clb_output := '{"return_code":' || typ_output.return_code || ','
+                    ||  '"status_message":"' || typ_output.status_message || '"}';
+                    
+      ELSE
+         IF UPPER(p_force_escapes) = 'TRUE'
+         THEN
+            force_escape(p_json => clb_output);
+            
+         END IF;
+
       END IF;
       
       RETURN clb_output;
       
    END jsonschema;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION mocksrv(
+       p_path_endpoint       IN  VARCHAR2
+      ,p_path_group_id       IN  VARCHAR2  DEFAULT NULL
+      ,p_operation           IN  VARCHAR2  DEFAULT 'get'
+      ,p_response_code       IN  VARCHAR2  DEFAULT 'default'
+      ,p_media_type          IN  VARCHAR2  DEFAULT 'application/json' 
+      ,p_versionid           IN  VARCHAR2  DEFAULT NULL
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_escapes       IN  VARCHAR2  DEFAULT 'FALSE'
+   ) RETURN CLOB
+   AS
+      clb_output         CLOB;
+      typ_output         dz_swagger3_mocksrv_typ;
+      str_pathid         VARCHAR2(4000 Char);
+      str_versionid      VARCHAR2(4000 Char) := p_versionid;
+      str_pathgroupid    VARCHAR2(4000 Char) := UPPER(p_path_group_id);
+      str_path_endpoint  VARCHAR2(4000 Char) := p_path_endpoint;
+      str_media_type     VARCHAR2(4000 Char) := LOWER(p_media_type);
+      
+   BEGIN
+   
+      IF str_versionid IS NULL
+      THEN
+         str_versionid := 'TRUNK';
+         
+      END IF;
+   
+      BEGIN
+         IF str_pathgroupid IS NULL
+         THEN
+            SELECT
+            a.path_id
+            INTO
+            str_pathid
+            FROM
+            dz_swagger3_path a
+            WHERE
+                a.versionid     = str_versionid
+            AND a.path_endpoint = str_path_endpoint
+            AND rownum <= 1;
+            
+         ELSE
+            SELECT
+            a.path_id
+            INTO
+            str_pathid
+            FROM
+            dz_swagger3_path a
+            JOIN
+            dz_swagger3_group b
+            ON
+            a.path_id = b.path_id
+            WHERE
+                a.versionid     = str_versionid
+            AND b.versionid     = str_versionid
+            AND a.path_endpoint = str_path_endpoint
+            AND b.group_id      = str_pathgroupid;
+         
+         END IF;
+      
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            RETURN NULL;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+
+      END;
+      
+      typ_output := dz_swagger3_mocksrv_typ(
+          p_path_id        => str_pathid
+         ,p_http_method    => p_operation
+         ,p_response_code  => p_response_code
+         ,p_media_type     => p_media_type
+         ,p_versionid      => str_versionid
+      );
+      
+      IF str_media_type = 'application/xml'
+      THEN
+         clb_output := typ_output.toMockXML(
+            p_short_id        => p_short_id
+         );
+         
+         IF typ_output.return_code != 0
+         THEN
+            clb_output := '<?xml version="1.0" encoding="UTF-8"?><root>'
+                       || '<return_code>' || typ_output.return_code || '</return_code>'
+                       || '<status_message>' || typ_output.status_message || '</status_message></root>';
+                       
+         END IF;
+         
+      ELSE
+         clb_output := typ_output.toMockJSON(
+            p_short_id        => p_short_id
+         );
+         
+         IF typ_output.return_code != 0
+         THEN
+            clb_output := '{"return_code":' || typ_output.return_code || ','
+                       ||  '"status_message":"' || typ_output.status_message || '"}';
+                       
+         END IF;
+         
+         IF UPPER(p_force_escapes) = 'TRUE'
+         THEN
+            force_escape(p_json => clb_output);
+            
+         END IF;
+         
+      END IF;
+      
+      RETURN clb_output;
+   
+   END mocksrv;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -9001,19 +9519,21 @@ AS
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+      ,p_xorder              IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
-      clb_output                 CLOB;
-      clb_operation_tags         CLOB;
-      clb_operation_externalDocs CLOB;
-      clb_operation_parameters   CLOB;
-      clb_operation_requestBody  CLOB;
-      clb_operation_responses    CLOB;
-      clb_operation_callbacks    CLOB;
-      clb_operation_security     CLOB;
-      clb_operation_servers      CLOB;
-      str_identifier             VARCHAR2(255 Char);
-      str_externaldoc_url        varchar2(4000 Char);
+      clb_output                  CLOB;
+      clb_operation_tags          CLOB;
+      clb_operation_externalDocs  CLOB;
+      clb_operation_parameters    CLOB;
+      clb_operation_requestBody   CLOB;
+      clb_operation_responses     CLOB;
+      clb_operation_callbacks     CLOB;
+      clb_operation_security      CLOB;
+      clb_operation_servers       CLOB;
+      str_identifier              VARCHAR2(255 Char);
+      str_externaldoc_url         VARCHAR2(4000 Char);
+      int_inject_operation_xorder INTEGER;
   
    BEGIN
       
@@ -9277,6 +9797,12 @@ AS
       
       END IF;
       
+      IF dz_swagger3_constants.c_inject_operation_xorder
+      THEN
+         int_inject_operation_xorder := 1;
+         
+      END IF;
+      
       SELECT
       JSON_OBJECT(
           'tags'         VALUE clb_operation_tags         FORMAT JSON
@@ -9299,7 +9825,14 @@ AS
                NULL
             END FORMAT JSON
          ,'security'     VALUE clb_operation_security     FORMAT JSON
-         ,'servers'      VALUE clb_operation_servers      FORMAT JSON 
+         ,'servers'      VALUE clb_operation_servers      FORMAT JSON
+         ,'x-order'      VALUE CASE
+          WHEN int_inject_operation_xorder = 1
+          THEN
+            p_xorder
+          ELSE
+            NULL
+          END
          ABSENT ON NULL
          RETURNING CLOB
       )
@@ -9850,6 +10383,7 @@ AS
                 p_object_id      => a.path_get_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'get'
+               ,p_object_order   => a.path_get_operation_order
             )
           ELSE
             NULL
@@ -9861,6 +10395,7 @@ AS
                 p_object_id      => a.path_put_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'put'
+               ,p_object_order   => a.path_put_operation_order
             )
           ELSE
             NULL
@@ -9872,6 +10407,7 @@ AS
                 p_object_id      => a.path_post_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'post'
+               ,p_object_order   => a.path_post_operation_order
             )
           ELSE
             NULL
@@ -9883,6 +10419,7 @@ AS
                 p_object_id      => a.path_delete_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'delete'
+               ,p_object_order   => a.path_delete_operation_order
             )
           ELSE
             NULL
@@ -9894,6 +10431,7 @@ AS
                 p_object_id      => a.path_options_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'options'
+               ,p_object_order   => a.path_options_operation_order
             )
           ELSE
             NULL
@@ -9905,6 +10443,7 @@ AS
                 p_object_id      => a.path_head_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'head'
+               ,p_object_order   => a.path_head_operation_order
             )
           ELSE
             NULL
@@ -9916,6 +10455,7 @@ AS
                 p_object_id      => a.path_patch_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'patch'
+               ,p_object_order   => a.path_patch_operation_order
             )
           ELSE
             NULL
@@ -9927,6 +10467,7 @@ AS
                 p_object_id      => a.path_trace_operation_id
                ,p_object_type_id => 'operationtyp'
                ,p_object_subtype => 'trace'
+               ,p_object_order   => a.path_trace_operation_order
             )
           ELSE
             NULL
@@ -10076,6 +10617,7 @@ AS
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
+      ,p_xorder              IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       clb_output                 CLOB;
@@ -10090,6 +10632,7 @@ AS
       clb_path_servers           CLOB;
       clb_path_parameters        CLOB;
       str_identifier             VARCHAR2(4000 Char);
+      int_inject_path_xorder     INTEGER;
       
    BEGIN
       
@@ -10132,10 +10675,11 @@ AS
             BEGIN
                SELECT 
                a.operationtyp.toJSON( 
-                   p_force_inline     => p_force_inline 
+                   p_force_inline     => p_force_inline
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_get_operation.object_order
                )
                INTO clb_path_get_operation
                FROM 
@@ -10174,6 +10718,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_put_operation.object_order
                )
                INTO clb_path_put_operation
                FROM 
@@ -10209,6 +10754,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_post_operation.object_order
                )
                INTO clb_path_post_operation
                FROM 
@@ -10244,6 +10790,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_delete_operation.object_order
                )
                INTO clb_path_delete_operation
                FROM 
@@ -10279,6 +10826,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_options_operation.object_order
                )
                INTO clb_path_options_operation
                FROM 
@@ -10314,6 +10862,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_head_operation.object_order
                )
                INTO clb_path_head_operation
                FROM 
@@ -10349,6 +10898,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_patch_operation.object_order
                )
                INTO clb_path_patch_operation
                FROM 
@@ -10384,6 +10934,7 @@ AS
                   ,p_short_id         => p_short_id
                   ,p_identifier       => a.object_id
                   ,p_short_identifier => a.short_id
+                  ,p_xorder           => self.path_trace_operation.object_order
                )
                INTO clb_path_trace_operation
                FROM 
@@ -10465,6 +11016,12 @@ AS
       -- Step 130
       -- Add the left bracket
       --------------------------------------------------------------------------
+         IF dz_swagger3_constants.c_inject_path_xorder
+         THEN
+            int_inject_path_xorder := 1;
+            
+         END IF;
+         
          SELECT
          JSON_OBJECT(
              'summary'      VALUE self.path_summary
@@ -10479,6 +11036,13 @@ AS
             ,'trace'        VALUE clb_path_trace_operation   FORMAT JSON
             ,'servers'      VALUE clb_path_servers           FORMAT JSON
             ,'parameters'   VALUE clb_path_parameters        FORMAT JSON
+            ,'x-order'      VALUE CASE
+             WHEN int_inject_path_xorder = 1
+             THEN
+               p_xorder
+             ELSE
+               NULL
+             END
             ABSENT ON NULL
             RETURNING CLOB
          )
@@ -11589,6 +12153,7 @@ AS
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
       ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_xorder              IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       str_jsonschema                 VARCHAR2(4000 Char) := UPPER(p_jsonschema);
@@ -11605,6 +12170,7 @@ AS
       int_schema_enum_string         PLS_INTEGER;
       int_schema_enum_number         PLS_INTEGER;
       boo_is_not                     BOOLEAN;
+      int_inject_property_xorder     INTEGER;
       
    BEGIN
       
@@ -11856,6 +12422,7 @@ AS
                      ,p_short_identifier => a.short_id
                      ,p_reference_count  => a.reference_count
                      ,p_jsonschema       => str_jsonschema
+                     ,p_xorder           => b.object_order
                   ) FORMAT JSON
                   RETURNING CLOB
                )
@@ -11910,6 +12477,12 @@ AS
             ELSE
                int_schema_enum_number := 0;
 
+            END IF;
+            
+            IF dz_swagger3_constants.c_inject_property_xorder
+            THEN
+               int_inject_property_xorder := 1;
+               
             END IF;
 
             IF  self.schema_example_string IS NOT NULL
@@ -12022,6 +12595,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -12133,6 +12713,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -12252,6 +12839,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -12363,6 +12957,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -12478,6 +13079,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -12588,6 +13196,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -12609,6 +13224,564 @@ AS
       RETURN clb_output;
            
    END toJSON;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toMockJSON(
+       p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+   ) RETURN CLOB
+   AS
+      clb_output                     CLOB;
+      str_identifier                 VARCHAR2(255 Char);
+      str_combine_type               VARCHAR2(255 Char);
+      str_combine_target             VARCHAR2(255 Char);
+      
+      FUNCTION esc(
+         pin IN VARCHAR2
+      ) RETURN VARCHAR2
+      AS
+         pout VARCHAR2(32000);
+      BEGIN
+         SELECT
+         JSON_OBJECT('a' VALUE pin)
+         INTO pout
+         FROM dual;
+         
+         pout := REGEXP_REPLACE(pout,'^\{"a"\:','');
+         pout := REGEXP_REPLACE(pout,'\}$','');
+         
+         RETURN pout;
+         
+      END esc;
+      
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Determine item identifier
+      --------------------------------------------------------------------------
+      IF p_short_id = 'TRUE'
+      THEN
+         str_identifier := p_short_identifier;
+         
+      ELSE
+         str_identifier := p_identifier;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Branch if needed for combines
+      --------------------------------------------------------------------------
+      IF  self.combine_schemas IS NOT NULL
+      AND self.combine_schemas.COUNT > 0
+      THEN
+         SELECT
+          a.object_type_id
+         ,a.object_id
+         INTO
+          str_combine_type
+         ,str_combine_target
+         FROM (
+            SELECT
+             bb.object_type_id
+            ,bb.object_id
+            FROM
+            dz_swagger3_xobjects aa
+            JOIN
+            TABLE(self.combine_schemas) bb
+            ON
+                aa.object_type_id = bb.object_type_id
+            AND aa.object_id      = bb.object_id
+            ORDER BY
+            bb.object_order 
+         ) a
+         WHERE
+         ROWNUM <= 1;
+         
+         SELECT
+         a.schematyp.toMockJSON(
+             p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+         )
+         INTO clb_output
+         FROM
+         dz_swagger3_xobjects a
+         WHERE
+             a.object_type_id = str_combine_type
+         AND a.object_id = str_combine_target;
+            
+      ELSE
+         IF self.schema_category = 'scalar'
+         THEN
+            IF self.schema_type IN ('number','integer')
+            THEN
+               IF self.schema_example_number IS NULL
+               THEN
+                  clb_output := '0';
+                   
+               ELSE
+                  clb_output := TO_CHAR(self.schema_example_number);
+                  
+               END IF;
+            
+            ELSE
+               IF self.schema_example_string IS NULL
+               THEN
+                  IF self.schema_format = 'date'
+                  THEN
+                     clb_output := esc('2013-12-25');
+                     
+                  ELSE
+                     clb_output := esc('string');
+                  
+                  END IF;
+                   
+               ELSE
+                  clb_output :=  esc(self.schema_example_string);
+                  
+               END IF;
+            
+            END IF;
+         
+         ELSIF self.schema_category = 'array'
+         THEN
+            SELECT
+            JSON_ARRAY(
+               a.schematyp.toMockJSON(
+                   p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+               ) FORMAT JSON
+               RETURNING CLOB
+            )
+            INTO clb_output
+            FROM
+            dz_swagger3_xobjects a
+            WHERE
+                a.object_type_id = self.schema_items_schema.object_type_id
+            AND a.object_id      = self.schema_items_schema.object_id;
+            
+         ELSIF self.schema_category IN ('combine','object')
+         THEN
+            SELECT
+            JSON_OBJECTAGG(
+               b.object_key VALUE a.schematyp.toMockJSON(
+                   p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+               ) FORMAT JSON
+               RETURNING CLOB
+            )
+            INTO clb_output
+            FROM
+            dz_swagger3_xobjects a
+            JOIN
+            TABLE(self.schema_properties) b
+            ON
+                a.object_type_id = b.object_type_id
+            AND a.object_id      = b.object_id
+            WHERE
+            COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE';
+         
+         END IF;
+         
+      END IF;
+      
+      RETURN clb_output;
+      
+   END toMockJSON;
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toMockXML(
+       p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+   ) RETURN CLOB
+   AS
+      clb_temp                        CLOB;
+      clb_output                      CLOB;
+      str_identifier                  VARCHAR2(255 Char);
+      str_combine_type                VARCHAR2(255 Char);
+      str_combine_target              VARCHAR2(255 Char);
+      ary_ids                         dz_swagger3_string_vry;
+      ary_keys                        dz_swagger3_string_vry;
+      ary_clob                        dz_swagger3_clob_vry;
+      str_object_name_start           VARCHAR2(255 Char);
+      str_object_name_stop            VARCHAR2(255 Char);
+      ary_self_schema_type            dz_swagger3_string_vry;
+      ary_self_xml_name               dz_swagger3_string_vry;
+      ary_self_xml_wrapped            dz_swagger3_string_vry;
+      ary_self_xml_namespace          dz_swagger3_string_vry;
+      ary_self_xml_prefix             dz_swagger3_string_vry;
+      ary_self_xml_attribute          dz_swagger3_string_vry;
+      ary_self_properties             dz_swagger3_object_vry;
+      str_child_key                   VARCHAR2(4000);
+      str_child_xml_name              VARCHAR2(4000);
+      str_child_xml_namespace         VARCHAR2(4000);
+      str_child_xml_prefix            VARCHAR2(4000);
+      str_child_xml_attribute         VARCHAR2(4000);
+      str_child_schema_example_str    VARCHAR2(4000);
+      str_child_schema_example_num    VARCHAR2(4000);
+      str_child_attributes            VARCHAR2(32000);
+      
+   BEGIN
+   
+      IF p_short_id = 'TRUE'
+      THEN
+         str_identifier := p_short_identifier;
+         
+      ELSE
+         str_identifier := p_identifier;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Branch if needed for combines
+      --------------------------------------------------------------------------
+      IF  self.combine_schemas IS NOT NULL
+      AND self.combine_schemas.COUNT > 0
+      THEN
+         SELECT
+          a.object_type_id
+         ,a.object_id
+         INTO
+          str_combine_type
+         ,str_combine_target
+         FROM (
+            SELECT
+             bb.object_type_id
+            ,bb.object_id
+            FROM
+            dz_swagger3_xobjects aa
+            JOIN
+            TABLE(self.combine_schemas) bb
+            ON
+                aa.object_type_id = bb.object_type_id
+            AND aa.object_id      = bb.object_id
+            ORDER BY
+            bb.object_order 
+         ) a
+         WHERE
+         ROWNUM <= 1;
+         
+         SELECT
+         a.schematyp.toMockXML(
+             p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+         )
+         INTO clb_output
+         FROM
+         dz_swagger3_xobjects a
+         WHERE
+             a.object_type_id = str_combine_type
+         AND a.object_id = str_combine_target;
+      
+      ELSE
+         IF self.schema_category = 'scalar'
+         THEN
+            IF self.schema_type IN ('number','integer')
+            THEN
+               IF self.schema_example_number IS NULL
+               THEN
+                  clb_output := '0';
+                   
+               ELSE
+                  clb_output := TO_CHAR(self.schema_example_number);
+                  
+               END IF;
+            
+            ELSE
+               IF self.schema_example_string IS NULL
+               THEN
+                  IF self.schema_format = 'date'
+                  THEN
+                     clb_output := '2013-12-25';
+                     
+                  ELSE
+                     clb_output := 'string';
+                  
+                  END IF;
+                   
+               ELSE
+                  clb_output :=  DBMS_XMLGEN.CONVERT(self.schema_example_string);
+                  
+               END IF;
+            
+            END IF;
+         
+         ELSIF self.schema_category = 'array'
+         THEN
+            SELECT
+             a.schematyp.xml_name
+            ,a.schematyp.xml_prefix
+            ,a.schematyp.xml_namespace
+            ,a.schematyp.toMockXML(
+                p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+            )
+            ,a.schematyp.schema_properties
+            INTO 
+             str_child_xml_name
+            ,str_child_xml_prefix
+            ,str_child_xml_namespace
+            ,clb_temp
+            ,ary_self_properties
+            FROM
+            dz_swagger3_xobjects a
+            WHERE
+                a.object_type_id = self.schema_items_schema.object_type_id
+            AND a.object_id      = self.schema_items_schema.object_id;
+            
+            IF str_child_xml_name IS NOT NULL
+            THEN
+               str_object_name_start := str_child_xml_name;
+               str_object_name_stop := str_child_xml_name;
+               
+            ELSE
+               str_object_name_start := self.schema_items_schema.object_id;
+               str_object_name_stop  := self.schema_items_schema.object_id;
+
+            END IF;
+            
+            IF str_child_xml_prefix IS NOT NULL
+            THEN
+               str_object_name_start := str_child_xml_prefix || ':' || str_object_name_start;
+               str_object_name_stop  := str_child_xml_prefix || ':' || str_object_name_stop;
+               
+            END IF;
+            
+            IF str_child_xml_namespace IS NOT NULL
+            THEN
+               IF str_child_xml_prefix IS NOT NULL
+               THEN
+                  str_object_name_start := str_object_name_start 
+                     || ' xmlns:' || str_child_xml_prefix
+                     || '="' || str_child_xml_namespace || '"';
+                     
+               ELSE
+                  str_object_name_start := str_object_name_start 
+                     || ' xmlns="' || str_child_xml_namespace || '"';
+                     
+               END IF;
+               
+            END IF;
+            
+            str_child_attributes := '';
+            FOR j IN 1 .. ary_self_properties.COUNT
+            LOOP
+               SELECT
+                a.object_id
+               ,a.schematyp.xml_name
+               ,a.schematyp.xml_prefix
+               ,a.schematyp.xml_attribute
+               ,a.schematyp.schema_example_string
+               ,TO_CHAR(a.schematyp.schema_example_number)
+               INTO
+                str_child_key
+               ,str_child_xml_name
+               ,str_child_xml_prefix
+               ,str_child_xml_attribute
+               ,str_child_schema_example_str
+               ,str_child_schema_example_num
+               FROM
+               dz_swagger3_xobjects a
+               WHERE
+                   a.object_type_id = 'schematyp'
+               AND a.object_id = ary_self_properties(j).object_id;
+
+               IF str_child_xml_attribute = 'TRUE'
+               THEN               
+                  IF str_child_xml_name IS NOT NULL
+                  THEN
+                     str_child_xml_name := str_child_xml_name;
+                     
+                  ELSE
+                     str_child_xml_name := str_child_key;
+                  
+                  END IF;
+                     
+                  IF str_child_xml_prefix IS NOT NULL
+                  THEN
+                     str_child_xml_name := str_child_xml_prefix || ':' || str_child_xml_name;
+                     
+                  END IF;
+                  
+                  str_child_attributes := str_child_attributes 
+                     || ' ' || str_child_xml_name || '="'
+                     || DBMS_XMLGEN.CONVERT(
+                        COALESCE(str_child_schema_example_str,str_child_schema_example_num,'string')
+                     ) || '"';
+                     
+               END IF;
+               
+            END LOOP;
+            
+            clb_output := '<'  || str_object_name_start || str_child_attributes || '>'
+                       || clb_temp
+                       || '</' || str_object_name_stop || '>';
+            
+         ELSIF self.schema_category IN ('combine','object')
+         THEN
+            SELECT
+             b.object_id
+            ,b.object_key
+            ,a.schematyp.toMockXML(
+                p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+            )
+            ,a.schematyp.schema_type
+            ,a.schematyp.xml_name
+            ,a.schematyp.xml_wrapped
+            ,a.schematyp.xml_namespace
+            ,a.schematyp.xml_prefix
+            ,a.schematyp.xml_attribute
+            BULK COLLECT INTO
+             ary_ids
+            ,ary_keys
+            ,ary_clob
+            ,ary_self_schema_type
+            ,ary_self_xml_name
+            ,ary_self_xml_wrapped
+            ,ary_self_xml_namespace
+            ,ary_self_xml_prefix
+            ,ary_self_xml_attribute
+            FROM
+            dz_swagger3_xobjects a
+            JOIN
+            TABLE(self.schema_properties) b
+            ON
+                a.object_type_id = b.object_type_id
+            AND a.object_id      = b.object_id
+            WHERE
+            COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE';
+
+            FOR i IN 1 .. ary_keys.COUNT
+            LOOP
+               IF ary_self_xml_attribute(i) IS NULL
+               OR ary_self_xml_attribute(i) != 'TRUE'
+               THEN
+                  IF  ary_self_schema_type(i) = 'array'
+                  AND ary_self_xml_name(i) IS NOT NULL
+                  AND ary_self_xml_wrapped(i) = 'TRUE'
+                  THEN
+                     str_object_name_start := ary_self_xml_name(i);
+                     str_object_name_stop  := ary_self_xml_name(i);
+                     
+                  ELSE
+                     str_object_name_start := ary_keys(i);
+                     str_object_name_stop  := ary_keys(i);
+                                 
+                  END IF;
+                  
+                  IF ary_self_xml_prefix(i) IS NOT NULL
+                  THEN
+                     str_object_name_start := ary_self_xml_prefix(i) || ':' || str_object_name_start;
+                     str_object_name_stop  := ary_self_xml_prefix(i) || ':' || str_object_name_stop;
+                     
+                  END IF;
+                  
+                  IF ary_self_xml_namespace(i) IS NOT NULL
+                  THEN
+                     IF ary_self_xml_prefix(i) IS NOT NULL
+                     THEN
+                        str_object_name_start := str_object_name_start 
+                           || ' xmlns:' || ary_self_xml_prefix(i)
+                           || '="' || ary_self_xml_namespace(i) || '"';
+                           
+                     ELSE
+                        str_object_name_start := str_object_name_start 
+                           || ' xmlns="' || ary_self_xml_namespace(i) || '"';
+                           
+                     END IF;
+                     
+                  END IF;
+                  
+                  SELECT
+                  a.schematyp.schema_properties
+                  INTO
+                  ary_self_properties
+                  FROM
+                  dz_swagger3_xobjects a
+                  WHERE
+                      a.object_id = ary_ids(i)
+                  AND a.object_type_id = 'schematyp';
+                  
+                  str_child_attributes := '';
+                  FOR j IN 1 .. ary_self_properties.COUNT
+                  LOOP
+                     SELECT
+                      a.object_id
+                     ,a.schematyp.xml_name
+                     ,a.schematyp.xml_prefix
+                     ,a.schematyp.xml_attribute
+                     ,a.schematyp.schema_example_string
+                     ,TO_CHAR(a.schematyp.schema_example_number)
+                     INTO
+                      str_child_key
+                     ,str_child_xml_name
+                     ,str_child_xml_prefix
+                     ,str_child_xml_attribute
+                     ,str_child_schema_example_str
+                     ,str_child_schema_example_num
+                     FROM
+                     dz_swagger3_xobjects a
+                     WHERE
+                         a.object_type_id = 'schematyp'
+                     AND a.object_id = ary_self_properties(j).object_id;
+
+                     IF str_child_xml_attribute = 'TRUE'
+                     THEN
+                     
+                        IF str_child_xml_name IS NOT NULL
+                        THEN
+                           str_child_xml_name := str_child_xml_name;
+                           
+                        ELSE
+                           str_child_xml_name := str_child_key;
+                        
+                        END IF;
+                           
+                        IF str_child_xml_prefix IS NOT NULL
+                        THEN
+                           str_child_xml_name := str_child_xml_prefix || ':' || str_child_xml_name;
+                           
+                        END IF;
+                        
+                        str_child_attributes := str_child_attributes 
+                           || ' ' || str_child_xml_name || '="'
+                           || DBMS_XMLGEN.CONVERT(
+                              COALESCE(str_child_schema_example_str,str_child_schema_example_num,'string')
+                           ) || '"';
+                           
+                     END IF;
+                     
+                  END LOOP;
+
+                  clb_output := clb_output
+                             || '<'  || str_object_name_start || str_child_attributes || '>'
+                             || ary_clob(i)
+                             || '</' || str_object_name_stop || '>';
+                             
+               END IF;
+
+            END LOOP;
+
+         END IF;
+         
+      END IF;
+      
+      RETURN clb_output;
+      
+   END toMockXML;
    
 END;
 /
@@ -13640,6 +14813,7 @@ AS
             b.object_key VALUE a.pathtyp.toJSON(
                 p_force_inline   => p_force_inline
                ,p_short_id       => p_short_id
+               ,p_xorder         => b.object_order
             ) FORMAT JSON
             RETURNING CLOB
          )
@@ -14002,6 +15176,26 @@ AS
       RETURN clb_output;
 
    END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION validity(
+       p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_options             IN  VARCHAR2  DEFAULT NULL
+   ) RETURN CLOB
+   AS
+   BEGIN
+   
+      RETURN dz_swagger3_validate.request_validate(
+          p_reqb  => p_options
+         ,p_doc   => self.toJSON(
+             p_force_inline => p_force_inline
+            ,p_short_id     => p_short_id
+         )
+      );
+      
+   END validity;
 
 END;
 /
@@ -14013,6 +15207,8 @@ CREATE OR REPLACE TYPE dz_swagger3_jsonsch_typ FORCE
 AUTHID DEFINER 
 AS OBJECT (
     schema_obj     dz_swagger3_schema_typ
+   ,return_code    INTEGER
+   ,status_message VARCHAR2(255 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -14206,52 +15402,102 @@ AS
          
       END IF;
       
+      IF str_operation_id IS NULL
+      THEN
+         self.return_code    := -1;
+         self.status_message := 'path does not have http method ' || p_http_method;
+         RETURN;
+         
+      END IF;
+      
       --------------------------------------------------------------------------
       -- Step 40
       -- Determine the response id
       --------------------------------------------------------------------------
-      SELECT
-      a.response_id
-      INTO
-      str_response_id
-      FROM
-      dz_swagger3_operation_resp_map a
-      WHERE
-          a.versionid = str_versionid
-      AND a.operation_id = str_operation_id
-      AND a.response_code = p_response_code;
+      BEGIN
+         SELECT
+         a.response_id
+         INTO
+         str_response_id
+         FROM
+         dz_swagger3_operation_resp_map a
+         WHERE
+             a.versionid = str_versionid
+         AND a.operation_id = str_operation_id
+         AND a.response_code = p_response_code;
+
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            self.return_code    := -1;
+            self.status_message := 'operation does not have response map ' || p_response_code;
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+
+      END;
       
       --------------------------------------------------------------------------
       -- Step 50
       -- Determine the media id
       --------------------------------------------------------------------------
-      SELECT
-      a.media_id
-      INTO
-      str_media_id
-      FROM
-      dz_swagger3_parent_media_map a
-      WHERE
-         a.versionid = str_versionid
-      AND a.parent_id = str_response_id
-      AND a.media_type = p_media_type;
+      BEGIN
+         SELECT
+         a.media_id
+         INTO
+         str_media_id
+         FROM
+         dz_swagger3_parent_media_map a
+         WHERE
+            a.versionid = str_versionid
+         AND a.parent_id = str_response_id
+         AND a.media_type = p_media_type;
+         
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            self.return_code    := -1;
+            self.status_message := 'path does not have media map of type ' || p_media_type;
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
             
       --------------------------------------------------------------------------
       -- Step 60
       -- Pull the base schema for the operation response
       --------------------------------------------------------------------------
-      SELECT
-      dz_swagger3_schema_typ(
-          p_schema_id    => a.media_schema_id
-         ,p_versionid    => str_versionid
-      )
-      INTO
-      self.schema_obj
-      FROM
-      dz_swagger3_media a
-      WHERE
-         a.versionid = str_versionid
-      AND a.media_id = str_media_id;
+      BEGIN
+         SELECT
+         dz_swagger3_schema_typ(
+             p_schema_id    => a.media_schema_id
+            ,p_versionid    => str_versionid
+         )
+         INTO
+         self.schema_obj
+         FROM
+         dz_swagger3_media a
+         WHERE
+            a.versionid = str_versionid
+         AND a.media_id = str_media_id;
+         
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            self.return_code    := -1;
+            self.status_message := 'path does not have media ' || str_media_id;
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
       
       --------------------------------------------------------------------------
       -- Step 70
@@ -14313,20 +15559,414 @@ END;
 /
 
 --******************************--
+PROMPT Types/DZ_SWAGGER3_MOCKSRV_TYP.tps 
+
+CREATE OR REPLACE TYPE dz_swagger3_mocksrv_typ FORCE
+AUTHID DEFINER 
+AS OBJECT (
+    schema_obj     dz_swagger3_schema_typ
+   ,return_code    INTEGER
+   ,status_message VARCHAR2(255 Char)
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_mocksrv_typ 
+    RETURN SELF AS RESULT
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,CONSTRUCTOR FUNCTION dz_swagger3_mocksrv_typ(
+       p_path_id              IN  VARCHAR2
+      ,p_http_method          IN  VARCHAR2 DEFAULT 'get'
+      ,p_response_code        IN  VARCHAR2 DEFAULT 'default'
+      ,p_media_type           IN  VARCHAR2 DEFAULT 'application/json'
+      ,p_versionid            IN  VARCHAR2 DEFAULT NULL
+   ) RETURN SELF AS RESULT
+
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toMockJSON(
+      p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+   ) RETURN CLOB
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION toMockXML(
+      p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+   ) RETURN CLOB
+
+);
+/
+
+GRANT EXECUTE ON dz_swagger3_mocksrv_typ TO public;
+
+--******************************--
+PROMPT Types/DZ_SWAGGER3_MOCKSRV_TYP.tpb 
+
+CREATE OR REPLACE TYPE BODY dz_swagger3_mocksrv_typ
+AS 
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_mocksrv_typ
+   RETURN SELF AS RESULT 
+   AS 
+   BEGIN 
+      RETURN; 
+      
+   END dz_swagger3_mocksrv_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   CONSTRUCTOR FUNCTION dz_swagger3_mocksrv_typ(
+       p_path_id              IN  VARCHAR2
+      ,p_http_method          IN  VARCHAR2 DEFAULT 'get'
+      ,p_response_code        IN  VARCHAR2 DEFAULT 'default'
+      ,p_media_type           IN  VARCHAR2 DEFAULT 'application/json'
+      ,p_versionid            IN  VARCHAR2 DEFAULT NULL
+   ) RETURN SELF AS RESULT
+   AS    
+      str_versionid     VARCHAR2(255 Char);
+      str_operation_id  VARCHAR2(255 Char);
+      str_response_id   VARCHAR2(255 Char);
+      str_media_id      VARCHAR2(255 Char);
+      
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check over incoming parameters
+      --------------------------------------------------------------------------
+      self.return_code := 0;
+      dz_swagger3_main.purge_xtemp();
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Determine the proper versionid value
+      --------------------------------------------------------------------------
+      IF p_versionid IS NULL
+      THEN
+         SELECT
+         a.versionid
+         INTO str_versionid
+         FROM
+         dz_swagger3_vers a
+         WHERE
+             a.is_default = 'TRUE'
+         AND rownum <= 1;
+
+      ELSE
+         str_versionid  := p_versionid;
+         
+      END IF;
+   
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Determine the operation id
+      --------------------------------------------------------------------------
+      IF LOWER(p_http_method) = 'get'
+      THEN
+         SELECT
+         a.path_get_operation_id
+         INTO
+         str_operation_id
+         FROM
+         dz_swagger3_path a
+         WHERE
+             a.versionid = str_versionid
+         AND a.path_id = p_path_id;
+         
+      ELSIF LOWER(p_http_method) = 'put'
+      THEN
+         SELECT
+         a.path_put_operation_id
+         INTO
+         str_operation_id
+         FROM
+         dz_swagger3_path a
+         WHERE
+             a.versionid = str_versionid
+         AND a.path_id = p_path_id;
+         
+      ELSIF LOWER(p_http_method) = 'post'
+      THEN
+         SELECT
+         a.path_post_operation_id
+         INTO
+         str_operation_id
+         FROM
+         dz_swagger3_path a
+         WHERE
+             a.versionid = str_versionid
+         AND a.path_id = p_path_id;
+         
+      ELSIF LOWER(p_http_method) = 'delete'
+      THEN
+         SELECT
+         a.path_delete_operation_id
+         INTO
+         str_operation_id
+         FROM
+         dz_swagger3_path a
+         WHERE
+             a.versionid = str_versionid
+         AND a.path_id = p_path_id;
+         
+      ELSIF LOWER(p_http_method) = 'options'
+      THEN
+         SELECT
+         a.path_options_operation_id
+         INTO
+         str_operation_id
+         FROM
+         dz_swagger3_path a
+         WHERE
+             a.versionid = str_versionid
+         AND a.path_id = p_path_id;
+         
+      ELSIF LOWER(p_http_method) = 'head'
+      THEN
+         SELECT
+         a.path_head_operation_id
+         INTO
+         str_operation_id
+         FROM
+         dz_swagger3_path a
+         WHERE
+             a.versionid = str_versionid
+         AND a.path_id = p_path_id;
+         
+      ELSIF LOWER(p_http_method) = 'patch'
+      THEN
+         SELECT
+         a.path_patch_operation_id
+         INTO
+         str_operation_id
+         FROM
+         dz_swagger3_path a
+         WHERE
+             a.versionid = str_versionid
+         AND a.path_id = p_path_id;
+         
+      ELSIF LOWER(p_http_method) = 'trace'
+      THEN
+         SELECT
+         a.path_trace_operation_id
+         INTO
+         str_operation_id
+         FROM
+         dz_swagger3_path a
+         WHERE
+             a.versionid = str_versionid
+         AND a.path_id = p_path_id;
+         
+      ELSE
+         RAISE_APPLICATION_ERROR(-20001,'incorrect http method value');
+         
+      END IF;
+      
+      IF str_operation_id IS NULL
+      THEN
+         self.return_code    := -1;
+         self.status_message := 'path does not have http method ' || p_http_method;
+         RETURN;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 40
+      -- Determine the response id
+      --------------------------------------------------------------------------
+      BEGIN
+         SELECT
+         a.response_id
+         INTO
+         str_response_id
+         FROM
+         dz_swagger3_operation_resp_map a
+         WHERE
+             a.versionid = str_versionid
+         AND a.operation_id = str_operation_id
+         AND a.response_code = p_response_code;
+
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            self.return_code    := -1;
+            self.status_message := 'operation does not have response map ' || p_response_code;
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
+      
+      --------------------------------------------------------------------------
+      -- Step 50
+      -- Determine the media id
+      --------------------------------------------------------------------------
+      BEGIN
+         SELECT
+         a.media_id
+         INTO
+         str_media_id
+         FROM
+         dz_swagger3_parent_media_map a
+         WHERE
+            a.versionid = str_versionid
+         AND a.parent_id = str_response_id
+         AND a.media_type = p_media_type;
+         
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            self.return_code    := -1;
+            self.status_message := 'path does not have media type ' || p_media_type;
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
+            
+      --------------------------------------------------------------------------
+      -- Step 60
+      -- Pull the base schema for the operation response
+      --------------------------------------------------------------------------
+      BEGIN
+         SELECT
+         dz_swagger3_schema_typ(
+             p_schema_id    => a.media_schema_id
+            ,p_versionid    => str_versionid
+         )
+         INTO
+         self.schema_obj
+         FROM
+         dz_swagger3_media a
+         WHERE
+            a.versionid = str_versionid
+         AND a.media_id = str_media_id;
+         
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            self.return_code    := -1;
+            self.status_message := 'path does not have media ' || str_media_id;
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
+      
+      --------------------------------------------------------------------------
+      -- Step 70
+      -- Walk the schema tree
+      --------------------------------------------------------------------------
+      self.schema_obj.traverse();
+      
+      --------------------------------------------------------------------------
+      -- Step 80
+      -- Determine the schema title
+      --------------------------------------------------------------------------
+      RETURN;
+   
+   END dz_swagger3_mocksrv_typ;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toMockJSON(
+      p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+   ) RETURN CLOB
+   AS 
+      clb_output CLOB;
+      
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      IF self.schema_obj IS NULL
+      OR self.schema_obj.schema_id IS NULL
+      THEN
+         RETURN NULL;
+
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Generate wrapper
+      --------------------------------------------------------------------------
+      clb_output := self.schema_obj.toMockJSON(
+         p_short_id   => p_short_id
+      );
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Return results
+      --------------------------------------------------------------------------
+      RETURN clb_output;
+ 
+   END toMockJSON;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toMockXML(
+      p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+   ) RETURN CLOB
+   AS
+      clb_output  CLOB;
+      
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      IF self.schema_obj IS NULL
+      OR self.schema_obj.schema_id IS NULL
+      THEN
+         RETURN NULL;
+
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Generate wrapper
+      --------------------------------------------------------------------------
+      clb_output := '<?xml version="1.0" encoding="UTF-8"?><Root>'
+                 || self.schema_obj.toMockXML(
+         p_short_id => p_short_id
+      ) || '</Root>'; 
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Return results
+      --------------------------------------------------------------------------
+      RETURN clb_output;
+
+   END toMockXML;
+   
+END;
+/
+
+--******************************--
 PROMPT Packages/DZ_SWAGGER3_TEST.pks 
 
 CREATE OR REPLACE PACKAGE dz_swagger3_test
 AUTHID DEFINER
 AS
 
-   C_GITRELEASE    CONSTANT VARCHAR2(255 Char) := '1.0.0';
-   C_GITCOMMIT     CONSTANT VARCHAR2(255 Char) := 'e79524c8c077974a7f81c935d06e31768a0b40c8';
-   C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := 'Tue Mar 23 10:40:54 2021 -0400';
+   C_GITRELEASE    CONSTANT VARCHAR2(255 Char) := 'v1.1.0';
+   C_GITCOMMIT     CONSTANT VARCHAR2(255 Char) := '9d4000272ab2b89c0a0d5eae5a6f855c453889fa';
+   C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := 'Sun May 2 17:36:23 2021 -0400';
    C_GITCOMMITAUTH CONSTANT VARCHAR2(255 Char) := 'Paul Dziemiela';
    
-   C_PREREQUISITES CONSTANT dz_swagger3_string_vry := dz_swagger3_string_vry(
-      'DZ_JSON'
-   );
+   C_PREREQUISITES CONSTANT dz_swagger3_string_vry := NULL;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
