@@ -8,6 +8,8 @@ AS OBJECT (
    ,paths               dz_swagger3_object_vry --dz_swagger3_path_list
    ,security            dz_swagger3_object_vry --dz_swagger3_security_req_list
    ,externalDocs        dz_swagger3_object_typ --dz_swagger3_extrdocs_typ
+   ,return_code         NUMBER
+   ,status_message      VARCHAR2(4000 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
