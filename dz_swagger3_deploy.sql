@@ -44,7 +44,7 @@ AS
    Header: DZ_SWAGGER3
      
    - Release: v1.1.0
-   - Commit Date: Sun May 2 18:26:22 2021 -0400
+   - Commit Date: Sun May 2 19:46:39 2021 -0400
    
    PLSQL module for the creation, storage and production of Open API 3.0 service 
    definitions.   Support for the unloading of Swagger JSON specifications into
@@ -2444,7 +2444,7 @@ AS
 
       str_sql := 'ALTER TABLE dz_swagger3_link_op_parms '
               || 'ADD CONSTRAINT dz_swagger3_link_op_parms_pk '
-              || 'PRIMARY KEY(versionid,link_id) ';
+              || 'PRIMARY KEY(versionid,link_id,link_op_parm_name) ';
 
       IF p_index_tablespace IS NOT NULL
       THEN
@@ -6451,7 +6451,7 @@ AS
    header: DZ_SWAGGER3
      
    - Release: v1.1.0
-   - Commit Date: Sun May 2 18:26:22 2021 -0400
+   - Commit Date: Sun May 2 19:46:39 2021 -0400
    
    Conversion of DZ_SWAGGER from specification 2.0 to OpenAPI 3.0.
    
@@ -15960,7 +15960,7 @@ AS
 
    C_GITRELEASE    CONSTANT VARCHAR2(255 Char) := 'v1.1.0';
    C_GITCOMMIT     CONSTANT VARCHAR2(255 Char) := '9d4000272ab2b89c0a0d5eae5a6f855c453889fa';
-   C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := 'Sun May 2 18:26:22 2021 -0400';
+   C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := 'Sun May 2 19:46:39 2021 -0400';
    C_GITCOMMITAUTH CONSTANT VARCHAR2(255 Char) := 'Paul Dziemiela';
    
    C_PREREQUISITES CONSTANT dz_swagger3_string_vry := NULL;
