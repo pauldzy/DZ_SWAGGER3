@@ -1,0 +1,28 @@
+version: "3.7"
+services:
+   dz_xe:
+      build:
+         context: ./
+         dockerfile: Docker/Dockerfile
+      shm_size: "2gb"
+      hostname: dz_xe
+      environment:
+         - ORACLE_PWD=swagger123
+         - ORACLE_CHARACTERSET=AL32UTF8
+      ports:
+         - "1521:1521"
+         - "5500:5500"
+      networks:
+         - dz
+   dz_badge:
+      image: swaggerapi/swagger-validator-v2:latest
+      hostname: dz_badge      
+      environment:
+         - REJECT_LOCAL=false
+      ports:
+         - "8080:8080"
+      networks:
+         - dz
+networks:
+   dz:
+      driver: bridge
