@@ -20,7 +20,7 @@ END;
 CONNECT ECHO_SWAGGER/swagger123@//localhost:1521/XEPDB1;
 
 @/opt/oracle/scripts/src/dz_swagger3_deploy.sql
-@/opt/oracle/scripts/src/DZ_SWAGGER3_VALIDATE.sql
+@/opt/oracle/scripts/src/DZ_SWAGGER3_VALIDATE.pkb
 
 @/opt/oracle/scripts/src/DZ_SWAGGER3_DOC.sql
 @/opt/oracle/scripts/src/DZ_SWAGGER3_ENCODING.sql
