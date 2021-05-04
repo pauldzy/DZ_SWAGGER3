@@ -1,24 +1,23 @@
-CREATE OR REPLACE TYPE BODY dz_swagger3_jsonsch_typ
+CREATE OR REPLACE TYPE BODY dz_swagger3_mocksrv_typ
 AS 
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_jsonsch_typ
+   CONSTRUCTOR FUNCTION dz_swagger3_mocksrv_typ
    RETURN SELF AS RESULT 
    AS 
    BEGIN 
       RETURN; 
       
-   END dz_swagger3_jsonsch_typ;
+   END dz_swagger3_mocksrv_typ;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   CONSTRUCTOR FUNCTION dz_swagger3_jsonsch_typ(
+   CONSTRUCTOR FUNCTION dz_swagger3_mocksrv_typ(
        p_path_id              IN  VARCHAR2
       ,p_http_method          IN  VARCHAR2 DEFAULT 'get'
       ,p_response_code        IN  VARCHAR2 DEFAULT 'default'
       ,p_media_type           IN  VARCHAR2 DEFAULT 'application/json'
-      ,p_title                IN  VARCHAR2 DEFAULT NULL
       ,p_versionid            IN  VARCHAR2 DEFAULT NULL
    ) RETURN SELF AS RESULT
    AS    
@@ -33,6 +32,7 @@ AS
       -- Step 10
       -- Check over incoming parameters
       --------------------------------------------------------------------------
+      self.return_code := 0;
       dz_swagger3_main.purge_xtemp();
       
       --------------------------------------------------------------------------
@@ -194,7 +194,7 @@ AS
          WHEN OTHERS
          THEN
             RAISE;
-
+            
       END;
       
       --------------------------------------------------------------------------
@@ -217,7 +217,7 @@ AS
          WHEN NO_DATA_FOUND
          THEN
             self.return_code    := -1;
-            self.status_message := 'path does not have media map of type ' || p_media_type;
+            self.status_message := 'path does not have media type ' || p_media_type;
             RETURN;
             
          WHEN OTHERS
@@ -267,27 +267,18 @@ AS
       -- Step 80
       -- Determine the schema title
       --------------------------------------------------------------------------
-      IF p_title IS NULL
-      THEN
-         self.schema_obj.schema_title := p_path_id || '|' || p_http_method || '|' || p_response_code || '|' || p_media_type;
-         
-      ELSE
-         self.schema_obj.schema_title := p_title;
-      
-      END IF;
-      
-      self.schema_obj.inject_jsonschema := 'TRUE';
-      
       RETURN;
    
-   END dz_swagger3_jsonsch_typ;
+   END dz_swagger3_mocksrv_typ;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   MEMBER FUNCTION toJSON(
-      p_short_id              IN  VARCHAR2 DEFAULT 'FALSE'
+   MEMBER FUNCTION toMockJSON(
+      p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
    ) RETURN CLOB
    AS 
+      clb_output CLOB;
+      
    BEGIN
       
       --------------------------------------------------------------------------
@@ -303,15 +294,57 @@ AS
       
       --------------------------------------------------------------------------
       -- Step 20
-      -- Return the schema for the endpoint media
+      -- Generate wrapper
       --------------------------------------------------------------------------
-      RETURN self.schema_obj.toJSON(
-          p_force_inline   => 'TRUE'
-         ,p_short_id       => p_short_id
-         ,p_jsonschema     => 'TRUE'
+      clb_output := self.schema_obj.toMockJSON(
+         p_short_id   => p_short_id
       );
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Return results
+      --------------------------------------------------------------------------
+      RETURN clb_output;
  
-   END toJSON;
+   END toMockJSON;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toMockXML(
+      p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+   ) RETURN CLOB
+   AS
+      clb_output  CLOB;
+      
+   BEGIN
+      
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      IF self.schema_obj IS NULL
+      OR self.schema_obj.schema_id IS NULL
+      THEN
+         RETURN NULL;
+
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Generate wrapper
+      --------------------------------------------------------------------------
+      clb_output := '<?xml version="1.0" encoding="UTF-8"?><Root>'
+                 || self.schema_obj.toMockXML(
+         p_short_id => p_short_id
+      ) || '</Root>'; 
+      
+      --------------------------------------------------------------------------
+      -- Step 30
+      -- Return results
+      --------------------------------------------------------------------------
+      RETURN clb_output;
+
+   END toMockXML;
    
 END;
 /

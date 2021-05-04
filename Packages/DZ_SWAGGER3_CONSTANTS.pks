@@ -41,6 +41,27 @@ AS
       package.
    */
    c_openapi_version  CONSTANT VARCHAR2(16 Char) := '3.0.3';
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   /*
+   Constant: dz_swagger3_constants.c_inject_path_xorder
+   */
+   c_inject_path_xorder CONSTANT BOOLEAN := TRUE;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   /*
+   Constant: dz_swagger3_constants.c_inject_operation_xorder
+   */
+   c_inject_operation_xorder CONSTANT BOOLEAN := FALSE;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   /*
+   Constant: dz_swagger3_constants.c_inject_property_xorder
+   */
+   c_inject_property_xorder CONSTANT BOOLEAN := FALSE;
 
 END dz_swagger3_constants;
 /

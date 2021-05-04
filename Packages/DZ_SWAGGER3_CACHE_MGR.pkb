@@ -430,6 +430,7 @@ AS
    ) RETURN CLOB
    AS
       clb_output         CLOB;
+      typ_output         dz_swagger3_jsonsch_typ;
       str_pathid         VARCHAR2(4000 Char);
       str_versionid      VARCHAR2(4000 Char) := p_versionid;
       str_pathgroupid    VARCHAR2(4000 Char) := UPPER(p_path_group_id);
@@ -487,24 +488,153 @@ AS
 
       END;
       
-      clb_output := dz_swagger3_jsonsch_typ(
+      typ_output := dz_swagger3_jsonsch_typ(
           p_path_id        => str_pathid
          ,p_http_method    => p_operation
          ,p_response_code  => p_response_code
          ,p_media_type     => p_media_type
          ,p_title          => p_schema_title
          ,p_versionid      => str_versionid
-      ).toJSON();
+      );
       
-      IF UPPER(p_force_escapes) = 'TRUE'
+      clb_output := typ_output.toJSON();
+      
+      IF typ_output.return_code != 0
       THEN
-         force_escape(p_json => clb_output);
-         
+         clb_output := '{"return_code":' || typ_output.return_code || ','
+                    ||  '"status_message":"' || typ_output.status_message || '"}';
+                    
+      ELSE
+         IF UPPER(p_force_escapes) = 'TRUE'
+         THEN
+            force_escape(p_json => clb_output);
+            
+         END IF;
+
       END IF;
       
       RETURN clb_output;
       
    END jsonschema;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   FUNCTION mocksrv(
+       p_path_endpoint       IN  VARCHAR2
+      ,p_path_group_id       IN  VARCHAR2  DEFAULT NULL
+      ,p_operation           IN  VARCHAR2  DEFAULT 'get'
+      ,p_response_code       IN  VARCHAR2  DEFAULT 'default'
+      ,p_media_type          IN  VARCHAR2  DEFAULT 'application/json' 
+      ,p_versionid           IN  VARCHAR2  DEFAULT NULL
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'TRUE'
+      ,p_force_escapes       IN  VARCHAR2  DEFAULT 'FALSE'
+   ) RETURN CLOB
+   AS
+      clb_output         CLOB;
+      typ_output         dz_swagger3_mocksrv_typ;
+      str_pathid         VARCHAR2(4000 Char);
+      str_versionid      VARCHAR2(4000 Char) := p_versionid;
+      str_pathgroupid    VARCHAR2(4000 Char) := UPPER(p_path_group_id);
+      str_path_endpoint  VARCHAR2(4000 Char) := p_path_endpoint;
+      str_media_type     VARCHAR2(4000 Char) := LOWER(p_media_type);
+      
+   BEGIN
+   
+      IF str_versionid IS NULL
+      THEN
+         str_versionid := 'TRUNK';
+         
+      END IF;
+   
+      BEGIN
+         IF str_pathgroupid IS NULL
+         THEN
+            SELECT
+            a.path_id
+            INTO
+            str_pathid
+            FROM
+            dz_swagger3_path a
+            WHERE
+                a.versionid     = str_versionid
+            AND a.path_endpoint = str_path_endpoint
+            AND rownum <= 1;
+            
+         ELSE
+            SELECT
+            a.path_id
+            INTO
+            str_pathid
+            FROM
+            dz_swagger3_path a
+            JOIN
+            dz_swagger3_group b
+            ON
+            a.path_id = b.path_id
+            WHERE
+                a.versionid     = str_versionid
+            AND b.versionid     = str_versionid
+            AND a.path_endpoint = str_path_endpoint
+            AND b.group_id      = str_pathgroupid;
+         
+         END IF;
+      
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            RETURN NULL;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+
+      END;
+      
+      typ_output := dz_swagger3_mocksrv_typ(
+          p_path_id        => str_pathid
+         ,p_http_method    => p_operation
+         ,p_response_code  => p_response_code
+         ,p_media_type     => p_media_type
+         ,p_versionid      => str_versionid
+      );
+      
+      IF str_media_type = 'application/xml'
+      THEN
+         clb_output := typ_output.toMockXML(
+            p_short_id        => p_short_id
+         );
+         
+         IF typ_output.return_code != 0
+         THEN
+            clb_output := '<?xml version="1.0" encoding="UTF-8"?><root>'
+                       || '<return_code>' || typ_output.return_code || '</return_code>'
+                       || '<status_message>' || typ_output.status_message || '</status_message></root>';
+                       
+         END IF;
+         
+      ELSE
+         clb_output := typ_output.toMockJSON(
+            p_short_id        => p_short_id
+         );
+         
+         IF typ_output.return_code != 0
+         THEN
+            clb_output := '{"return_code":' || typ_output.return_code || ','
+                       ||  '"status_message":"' || typ_output.status_message || '"}';
+                       
+         END IF;
+         
+         IF UPPER(p_force_escapes) = 'TRUE'
+         THEN
+            force_escape(p_json => clb_output);
+            
+         END IF;
+         
+      END IF;
+      
+      RETURN clb_output;
+   
+   END mocksrv;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------

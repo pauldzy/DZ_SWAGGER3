@@ -8,6 +8,7 @@ AS
    AS
    BEGIN
       
+      self.return_code := 0;
       RETURN;
 
    END dz_swagger3_typ;
@@ -30,6 +31,7 @@ AS
       -- Step 10
       -- Check over incoming parameters
       --------------------------------------------------------------------------
+      self.return_code := 0;
       dz_swagger3_main.purge_xtemp();
 
       --------------------------------------------------------------------------
@@ -49,40 +51,54 @@ AS
       -- Step 30
       -- Load the info object and externalDocs object
       --------------------------------------------------------------------------
-      SELECT
-       dz_swagger3_info_typ(
-          p_info_title          => a.info_title
-         ,p_info_description    => a.info_description
-         ,p_info_termsofservice => a.info_termsofservice
-         ,p_info_contact        => dz_swagger3_info_contact_typ(
-             p_contact_name  => a.info_contact_name
-            ,p_contact_url   => a.info_contact_url
-            ,p_contact_email => a.info_contact_email
+      BEGIN
+         SELECT
+          dz_swagger3_info_typ(
+             p_info_title          => a.info_title
+            ,p_info_description    => a.info_description
+            ,p_info_termsofservice => a.info_termsofservice
+            ,p_info_contact        => dz_swagger3_info_contact_typ(
+                p_contact_name  => a.info_contact_name
+               ,p_contact_url   => a.info_contact_url
+               ,p_contact_email => a.info_contact_email
+             )
+            ,p_info_license        => dz_swagger3_info_license_typ(
+                p_license_name  => a.info_license_name
+               ,p_license_url   => a.info_license_url
+             )
+            ,p_info_version        => a.info_version
           )
-         ,p_info_license        => dz_swagger3_info_license_typ(
-             p_license_name  => a.info_license_name
-            ,p_license_url   => a.info_license_url
-          )
-         ,p_info_version        => a.info_version
-       )
-      ,CASE
-       WHEN a.doc_externaldocs_id IS NOT NULL
-       THEN
-         dz_swagger3_object_typ(
-             p_object_id      => a.doc_externaldocs_id
-            ,p_object_type_id => 'extrdocstyp'
-         )
-       ELSE
-         NULL
-       END 
-      INTO 
-       self.info
-      ,self.externalDocs
-      FROM
-      dz_swagger3_doc a
-      WHERE
-          a.versionid  = str_versionid
-      AND a.doc_id     = str_doc_id;
+         ,CASE
+          WHEN a.doc_externaldocs_id IS NOT NULL
+          THEN
+            dz_swagger3_object_typ(
+                p_object_id      => a.doc_externaldocs_id
+               ,p_object_type_id => 'extrdocstyp'
+            )
+          ELSE
+            NULL
+          END 
+         INTO 
+          self.info
+         ,self.externalDocs
+         FROM
+         dz_swagger3_doc a
+         WHERE
+             a.versionid  = str_versionid
+         AND a.doc_id     = str_doc_id;
+         
+      EXCEPTION
+         WHEN NO_DATA_FOUND
+         THEN
+            self.return_code := -1;
+            self.status_message := 'doc id not found';
+            RETURN;
+            
+         WHEN OTHERS
+         THEN
+            RAISE;
+            
+      END;
       
       IF self.externalDocs IS NOT NULL
       THEN
@@ -273,6 +289,20 @@ AS
       -- Step 10
       -- Check incoming parameters
       --------------------------------------------------------------------------
+      IF self.return_code <> 0
+      THEN
+         SELECT
+         JSON_OBJECT(
+             'return_code'    VALUE self.return_code
+            ,'status_message' VALUE self.status_message
+            RETURNING CLOB
+         )
+         INTO clb_output
+         FROM dual;
+         
+         RETURN clb_output;
+      
+      END IF;
 
       --------------------------------------------------------------------------
       -- Step 20
@@ -310,6 +340,7 @@ AS
             b.object_key VALUE a.pathtyp.toJSON(
                 p_force_inline   => p_force_inline
                ,p_short_id       => p_short_id
+               ,p_xorder         => b.object_order
             ) FORMAT JSON
             RETURNING CLOB
          )
@@ -672,6 +703,48 @@ AS
       RETURN clb_output;
 
    END toYAML;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION validity(
+       p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_options             IN  VARCHAR2  DEFAULT NULL
+   ) RETURN CLOB
+   AS
+      clb_output CLOB;
+      
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Check incoming parameters
+      --------------------------------------------------------------------------
+      IF self.return_code <> 0
+      THEN
+         SELECT
+         JSON_OBJECT(
+             'valid'          VALUE NULL
+            ,'return_code'    VALUE self.return_code
+            ,'status_message' VALUE self.status_message
+            RETURNING CLOB
+         )
+         INTO clb_output
+         FROM dual;
+         
+         RETURN clb_output;
+      
+      END IF;
+   
+      RETURN dz_swagger3_validate.request_validate(
+          p_doc => self.toJSON(
+             p_force_inline => p_force_inline
+            ,p_short_id     => p_short_id
+          )
+         ,p_options => p_options
+      );
+      
+   END validity;
 
 END;
 /

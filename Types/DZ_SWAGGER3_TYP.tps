@@ -8,6 +8,8 @@ AS OBJECT (
    ,paths               dz_swagger3_object_vry --dz_swagger3_path_list
    ,security            dz_swagger3_object_vry --dz_swagger3_security_req_list
    ,externalDocs        dz_swagger3_object_typ --dz_swagger3_extrdocs_typ
+   ,return_code         NUMBER
+   ,status_message      VARCHAR2(4000 Char)
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
@@ -35,7 +37,15 @@ AS OBJECT (
        p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
       ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
     ) RETURN CLOB
-
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   ,MEMBER FUNCTION validity(
+       p_force_inline        IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_options             IN  VARCHAR2  DEFAULT NULL
+    ) RETURN CLOB
+    
 );
 /
 

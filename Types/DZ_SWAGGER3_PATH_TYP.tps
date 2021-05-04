@@ -41,6 +41,7 @@ AS OBJECT (
       ,p_identifier          IN  VARCHAR2  DEFAULT NULL
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
+      ,p_xorder              IN  INTEGER   DEFAULT NULL
     ) RETURN CLOB
 
 );

@@ -492,6 +492,7 @@ AS
       ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
       ,p_reference_count     IN  INTEGER   DEFAULT NULL
       ,p_jsonschema          IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_xorder              IN  INTEGER   DEFAULT NULL
    ) RETURN CLOB
    AS
       str_jsonschema                 VARCHAR2(4000 Char) := UPPER(p_jsonschema);
@@ -508,6 +509,7 @@ AS
       int_schema_enum_string         PLS_INTEGER;
       int_schema_enum_number         PLS_INTEGER;
       boo_is_not                     BOOLEAN;
+      int_inject_property_xorder     INTEGER;
       
    BEGIN
       
@@ -759,6 +761,7 @@ AS
                      ,p_short_identifier => a.short_id
                      ,p_reference_count  => a.reference_count
                      ,p_jsonschema       => str_jsonschema
+                     ,p_xorder           => b.object_order
                   ) FORMAT JSON
                   RETURNING CLOB
                )
@@ -813,6 +816,12 @@ AS
             ELSE
                int_schema_enum_number := 0;
 
+            END IF;
+            
+            IF dz_swagger3_constants.c_inject_property_xorder
+            THEN
+               int_inject_property_xorder := 1;
+               
             END IF;
 
             IF  self.schema_example_string IS NOT NULL
@@ -925,6 +934,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -1036,6 +1052,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -1155,6 +1178,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -1266,6 +1296,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -1381,6 +1418,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -1491,6 +1535,13 @@ AS
                      ,'xml'           VALUE clb_xml                   FORMAT JSON
                      ,'properties'    VALUE clb_schema_properties     FORMAT JSON
                      ,'required'      VALUE clb_schema_prop_required  FORMAT JSON
+                     ,'x-order'       VALUE CASE
+                      WHEN int_inject_property_xorder = 1
+                      THEN
+                        p_xorder
+                      ELSE
+                        NULL
+                      END
                      ABSENT ON NULL
                      RETURNING CLOB
                   )
@@ -1512,6 +1563,564 @@ AS
       RETURN clb_output;
            
    END toJSON;
+   
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toMockJSON(
+       p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+   ) RETURN CLOB
+   AS
+      clb_output                     CLOB;
+      str_identifier                 VARCHAR2(255 Char);
+      str_combine_type               VARCHAR2(255 Char);
+      str_combine_target             VARCHAR2(255 Char);
+      
+      FUNCTION esc(
+         pin IN VARCHAR2
+      ) RETURN VARCHAR2
+      AS
+         pout VARCHAR2(32000);
+      BEGIN
+         SELECT
+         JSON_OBJECT('a' VALUE pin)
+         INTO pout
+         FROM dual;
+         
+         pout := REGEXP_REPLACE(pout,'^\{"a"\:','');
+         pout := REGEXP_REPLACE(pout,'\}$','');
+         
+         RETURN pout;
+         
+      END esc;
+      
+   BEGIN
+   
+      --------------------------------------------------------------------------
+      -- Step 10
+      -- Determine item identifier
+      --------------------------------------------------------------------------
+      IF p_short_id = 'TRUE'
+      THEN
+         str_identifier := p_short_identifier;
+         
+      ELSE
+         str_identifier := p_identifier;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Branch if needed for combines
+      --------------------------------------------------------------------------
+      IF  self.combine_schemas IS NOT NULL
+      AND self.combine_schemas.COUNT > 0
+      THEN
+         SELECT
+          a.object_type_id
+         ,a.object_id
+         INTO
+          str_combine_type
+         ,str_combine_target
+         FROM (
+            SELECT
+             bb.object_type_id
+            ,bb.object_id
+            FROM
+            dz_swagger3_xobjects aa
+            JOIN
+            TABLE(self.combine_schemas) bb
+            ON
+                aa.object_type_id = bb.object_type_id
+            AND aa.object_id      = bb.object_id
+            ORDER BY
+            bb.object_order 
+         ) a
+         WHERE
+         ROWNUM <= 1;
+         
+         SELECT
+         a.schematyp.toMockJSON(
+             p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+         )
+         INTO clb_output
+         FROM
+         dz_swagger3_xobjects a
+         WHERE
+             a.object_type_id = str_combine_type
+         AND a.object_id = str_combine_target;
+            
+      ELSE
+         IF self.schema_category = 'scalar'
+         THEN
+            IF self.schema_type IN ('number','integer')
+            THEN
+               IF self.schema_example_number IS NULL
+               THEN
+                  clb_output := '0';
+                   
+               ELSE
+                  clb_output := TO_CHAR(self.schema_example_number);
+                  
+               END IF;
+            
+            ELSE
+               IF self.schema_example_string IS NULL
+               THEN
+                  IF self.schema_format = 'date'
+                  THEN
+                     clb_output := esc('2013-12-25');
+                     
+                  ELSE
+                     clb_output := esc('string');
+                  
+                  END IF;
+                   
+               ELSE
+                  clb_output :=  esc(self.schema_example_string);
+                  
+               END IF;
+            
+            END IF;
+         
+         ELSIF self.schema_category = 'array'
+         THEN
+            SELECT
+            JSON_ARRAY(
+               a.schematyp.toMockJSON(
+                   p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+               ) FORMAT JSON
+               RETURNING CLOB
+            )
+            INTO clb_output
+            FROM
+            dz_swagger3_xobjects a
+            WHERE
+                a.object_type_id = self.schema_items_schema.object_type_id
+            AND a.object_id      = self.schema_items_schema.object_id;
+            
+         ELSIF self.schema_category IN ('combine','object')
+         THEN
+            SELECT
+            JSON_OBJECTAGG(
+               b.object_key VALUE a.schematyp.toMockJSON(
+                   p_short_id         => p_short_id
+                  ,p_identifier       => a.object_id
+                  ,p_short_identifier => a.short_id
+               ) FORMAT JSON
+               RETURNING CLOB
+            )
+            INTO clb_output
+            FROM
+            dz_swagger3_xobjects a
+            JOIN
+            TABLE(self.schema_properties) b
+            ON
+                a.object_type_id = b.object_type_id
+            AND a.object_id      = b.object_id
+            WHERE
+            COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE';
+         
+         END IF;
+         
+      END IF;
+      
+      RETURN clb_output;
+      
+   END toMockJSON;
+    
+   -----------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
+   MEMBER FUNCTION toMockXML(
+       p_short_id            IN  VARCHAR2  DEFAULT 'FALSE'
+      ,p_identifier          IN  VARCHAR2  DEFAULT NULL
+      ,p_short_identifier    IN  VARCHAR2  DEFAULT NULL
+   ) RETURN CLOB
+   AS
+      clb_temp                        CLOB;
+      clb_output                      CLOB;
+      str_identifier                  VARCHAR2(255 Char);
+      str_combine_type                VARCHAR2(255 Char);
+      str_combine_target              VARCHAR2(255 Char);
+      ary_ids                         dz_swagger3_string_vry;
+      ary_keys                        dz_swagger3_string_vry;
+      ary_clob                        dz_swagger3_clob_vry;
+      str_object_name_start           VARCHAR2(255 Char);
+      str_object_name_stop            VARCHAR2(255 Char);
+      ary_self_schema_type            dz_swagger3_string_vry;
+      ary_self_xml_name               dz_swagger3_string_vry;
+      ary_self_xml_wrapped            dz_swagger3_string_vry;
+      ary_self_xml_namespace          dz_swagger3_string_vry;
+      ary_self_xml_prefix             dz_swagger3_string_vry;
+      ary_self_xml_attribute          dz_swagger3_string_vry;
+      ary_self_properties             dz_swagger3_object_vry;
+      str_child_key                   VARCHAR2(4000);
+      str_child_xml_name              VARCHAR2(4000);
+      str_child_xml_namespace         VARCHAR2(4000);
+      str_child_xml_prefix            VARCHAR2(4000);
+      str_child_xml_attribute         VARCHAR2(4000);
+      str_child_schema_example_str    VARCHAR2(4000);
+      str_child_schema_example_num    VARCHAR2(4000);
+      str_child_attributes            VARCHAR2(32000);
+      
+   BEGIN
+   
+      IF p_short_id = 'TRUE'
+      THEN
+         str_identifier := p_short_identifier;
+         
+      ELSE
+         str_identifier := p_identifier;
+         
+      END IF;
+      
+      --------------------------------------------------------------------------
+      -- Step 20
+      -- Branch if needed for combines
+      --------------------------------------------------------------------------
+      IF  self.combine_schemas IS NOT NULL
+      AND self.combine_schemas.COUNT > 0
+      THEN
+         SELECT
+          a.object_type_id
+         ,a.object_id
+         INTO
+          str_combine_type
+         ,str_combine_target
+         FROM (
+            SELECT
+             bb.object_type_id
+            ,bb.object_id
+            FROM
+            dz_swagger3_xobjects aa
+            JOIN
+            TABLE(self.combine_schemas) bb
+            ON
+                aa.object_type_id = bb.object_type_id
+            AND aa.object_id      = bb.object_id
+            ORDER BY
+            bb.object_order 
+         ) a
+         WHERE
+         ROWNUM <= 1;
+         
+         SELECT
+         a.schematyp.toMockXML(
+             p_short_id         => p_short_id
+            ,p_identifier       => a.object_id
+            ,p_short_identifier => a.short_id
+         )
+         INTO clb_output
+         FROM
+         dz_swagger3_xobjects a
+         WHERE
+             a.object_type_id = str_combine_type
+         AND a.object_id = str_combine_target;
+      
+      ELSE
+         IF self.schema_category = 'scalar'
+         THEN
+            IF self.schema_type IN ('number','integer')
+            THEN
+               IF self.schema_example_number IS NULL
+               THEN
+                  clb_output := '0';
+                   
+               ELSE
+                  clb_output := TO_CHAR(self.schema_example_number);
+                  
+               END IF;
+            
+            ELSE
+               IF self.schema_example_string IS NULL
+               THEN
+                  IF self.schema_format = 'date'
+                  THEN
+                     clb_output := '2013-12-25';
+                     
+                  ELSE
+                     clb_output := 'string';
+                  
+                  END IF;
+                   
+               ELSE
+                  clb_output :=  DBMS_XMLGEN.CONVERT(self.schema_example_string);
+                  
+               END IF;
+            
+            END IF;
+         
+         ELSIF self.schema_category = 'array'
+         THEN
+            SELECT
+             a.schematyp.xml_name
+            ,a.schematyp.xml_prefix
+            ,a.schematyp.xml_namespace
+            ,a.schematyp.toMockXML(
+                p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+            )
+            ,a.schematyp.schema_properties
+            INTO 
+             str_child_xml_name
+            ,str_child_xml_prefix
+            ,str_child_xml_namespace
+            ,clb_temp
+            ,ary_self_properties
+            FROM
+            dz_swagger3_xobjects a
+            WHERE
+                a.object_type_id = self.schema_items_schema.object_type_id
+            AND a.object_id      = self.schema_items_schema.object_id;
+            
+            IF str_child_xml_name IS NOT NULL
+            THEN
+               str_object_name_start := str_child_xml_name;
+               str_object_name_stop := str_child_xml_name;
+               
+            ELSE
+               str_object_name_start := self.schema_items_schema.object_id;
+               str_object_name_stop  := self.schema_items_schema.object_id;
+
+            END IF;
+            
+            IF str_child_xml_prefix IS NOT NULL
+            THEN
+               str_object_name_start := str_child_xml_prefix || ':' || str_object_name_start;
+               str_object_name_stop  := str_child_xml_prefix || ':' || str_object_name_stop;
+               
+            END IF;
+            
+            IF str_child_xml_namespace IS NOT NULL
+            THEN
+               IF str_child_xml_prefix IS NOT NULL
+               THEN
+                  str_object_name_start := str_object_name_start 
+                     || ' xmlns:' || str_child_xml_prefix
+                     || '="' || str_child_xml_namespace || '"';
+                     
+               ELSE
+                  str_object_name_start := str_object_name_start 
+                     || ' xmlns="' || str_child_xml_namespace || '"';
+                     
+               END IF;
+               
+            END IF;
+            
+            str_child_attributes := '';
+            FOR j IN 1 .. ary_self_properties.COUNT
+            LOOP
+               SELECT
+                a.object_id
+               ,a.schematyp.xml_name
+               ,a.schematyp.xml_prefix
+               ,a.schematyp.xml_attribute
+               ,a.schematyp.schema_example_string
+               ,TO_CHAR(a.schematyp.schema_example_number)
+               INTO
+                str_child_key
+               ,str_child_xml_name
+               ,str_child_xml_prefix
+               ,str_child_xml_attribute
+               ,str_child_schema_example_str
+               ,str_child_schema_example_num
+               FROM
+               dz_swagger3_xobjects a
+               WHERE
+                   a.object_type_id = 'schematyp'
+               AND a.object_id = ary_self_properties(j).object_id;
+
+               IF str_child_xml_attribute = 'TRUE'
+               THEN               
+                  IF str_child_xml_name IS NOT NULL
+                  THEN
+                     str_child_xml_name := str_child_xml_name;
+                     
+                  ELSE
+                     str_child_xml_name := str_child_key;
+                  
+                  END IF;
+                     
+                  IF str_child_xml_prefix IS NOT NULL
+                  THEN
+                     str_child_xml_name := str_child_xml_prefix || ':' || str_child_xml_name;
+                     
+                  END IF;
+                  
+                  str_child_attributes := str_child_attributes 
+                     || ' ' || str_child_xml_name || '="'
+                     || DBMS_XMLGEN.CONVERT(
+                        COALESCE(str_child_schema_example_str,str_child_schema_example_num,'string')
+                     ) || '"';
+                     
+               END IF;
+               
+            END LOOP;
+            
+            clb_output := '<'  || str_object_name_start || str_child_attributes || '>'
+                       || clb_temp
+                       || '</' || str_object_name_stop || '>';
+            
+         ELSIF self.schema_category IN ('combine','object')
+         THEN
+            SELECT
+             b.object_id
+            ,b.object_key
+            ,a.schematyp.toMockXML(
+                p_short_id         => p_short_id
+               ,p_identifier       => a.object_id
+               ,p_short_identifier => a.short_id
+            )
+            ,a.schematyp.schema_type
+            ,a.schematyp.xml_name
+            ,a.schematyp.xml_wrapped
+            ,a.schematyp.xml_namespace
+            ,a.schematyp.xml_prefix
+            ,a.schematyp.xml_attribute
+            BULK COLLECT INTO
+             ary_ids
+            ,ary_keys
+            ,ary_clob
+            ,ary_self_schema_type
+            ,ary_self_xml_name
+            ,ary_self_xml_wrapped
+            ,ary_self_xml_namespace
+            ,ary_self_xml_prefix
+            ,ary_self_xml_attribute
+            FROM
+            dz_swagger3_xobjects a
+            JOIN
+            TABLE(self.schema_properties) b
+            ON
+                a.object_type_id = b.object_type_id
+            AND a.object_id      = b.object_id
+            WHERE
+            COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE';
+
+            FOR i IN 1 .. ary_keys.COUNT
+            LOOP
+               IF ary_self_xml_attribute(i) IS NULL
+               OR ary_self_xml_attribute(i) != 'TRUE'
+               THEN
+                  IF  ary_self_schema_type(i) = 'array'
+                  AND ary_self_xml_name(i) IS NOT NULL
+                  AND ary_self_xml_wrapped(i) = 'TRUE'
+                  THEN
+                     str_object_name_start := ary_self_xml_name(i);
+                     str_object_name_stop  := ary_self_xml_name(i);
+                     
+                  ELSE
+                     str_object_name_start := ary_keys(i);
+                     str_object_name_stop  := ary_keys(i);
+                                 
+                  END IF;
+                  
+                  IF ary_self_xml_prefix(i) IS NOT NULL
+                  THEN
+                     str_object_name_start := ary_self_xml_prefix(i) || ':' || str_object_name_start;
+                     str_object_name_stop  := ary_self_xml_prefix(i) || ':' || str_object_name_stop;
+                     
+                  END IF;
+                  
+                  IF ary_self_xml_namespace(i) IS NOT NULL
+                  THEN
+                     IF ary_self_xml_prefix(i) IS NOT NULL
+                     THEN
+                        str_object_name_start := str_object_name_start 
+                           || ' xmlns:' || ary_self_xml_prefix(i)
+                           || '="' || ary_self_xml_namespace(i) || '"';
+                           
+                     ELSE
+                        str_object_name_start := str_object_name_start 
+                           || ' xmlns="' || ary_self_xml_namespace(i) || '"';
+                           
+                     END IF;
+                     
+                  END IF;
+                  
+                  SELECT
+                  a.schematyp.schema_properties
+                  INTO
+                  ary_self_properties
+                  FROM
+                  dz_swagger3_xobjects a
+                  WHERE
+                      a.object_id = ary_ids(i)
+                  AND a.object_type_id = 'schematyp';
+                  
+                  str_child_attributes := '';
+                  FOR j IN 1 .. ary_self_properties.COUNT
+                  LOOP
+                     SELECT
+                      a.object_id
+                     ,a.schematyp.xml_name
+                     ,a.schematyp.xml_prefix
+                     ,a.schematyp.xml_attribute
+                     ,a.schematyp.schema_example_string
+                     ,TO_CHAR(a.schematyp.schema_example_number)
+                     INTO
+                      str_child_key
+                     ,str_child_xml_name
+                     ,str_child_xml_prefix
+                     ,str_child_xml_attribute
+                     ,str_child_schema_example_str
+                     ,str_child_schema_example_num
+                     FROM
+                     dz_swagger3_xobjects a
+                     WHERE
+                         a.object_type_id = 'schematyp'
+                     AND a.object_id = ary_self_properties(j).object_id;
+
+                     IF str_child_xml_attribute = 'TRUE'
+                     THEN
+                     
+                        IF str_child_xml_name IS NOT NULL
+                        THEN
+                           str_child_xml_name := str_child_xml_name;
+                           
+                        ELSE
+                           str_child_xml_name := str_child_key;
+                        
+                        END IF;
+                           
+                        IF str_child_xml_prefix IS NOT NULL
+                        THEN
+                           str_child_xml_name := str_child_xml_prefix || ':' || str_child_xml_name;
+                           
+                        END IF;
+                        
+                        str_child_attributes := str_child_attributes 
+                           || ' ' || str_child_xml_name || '="'
+                           || DBMS_XMLGEN.CONVERT(
+                              COALESCE(str_child_schema_example_str,str_child_schema_example_num,'string')
+                           ) || '"';
+                           
+                     END IF;
+                     
+                  END LOOP;
+
+                  clb_output := clb_output
+                             || '<'  || str_object_name_start || str_child_attributes || '>'
+                             || ary_clob(i)
+                             || '</' || str_object_name_stop || '>';
+                             
+               END IF;
+
+            END LOOP;
+
+         END IF;
+         
+      END IF;
+      
+      RETURN clb_output;
+      
+   END toMockXML;
    
 END;
 /

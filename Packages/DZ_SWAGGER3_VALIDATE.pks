@@ -1,36 +1,35 @@
-CREATE OR REPLACE PACKAGE dz_swagger3_test
+CREATE OR REPLACE PACKAGE dz_swagger3_validate
 AUTHID DEFINER
 AS
 
-   C_GITRELEASE    CONSTANT VARCHAR2(255 Char) := 'NULL';
-   C_GITCOMMIT     CONSTANT VARCHAR2(255 Char) := 'NULL';
-   C_GITCOMMITDATE CONSTANT VARCHAR2(255 Char) := 'NULL';
-   C_GITCOMMITAUTH CONSTANT VARCHAR2(255 Char) := 'NULL';
-   
-   C_PREREQUISITES CONSTANT dz_swagger3_string_vry := NULL;
-   
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   FUNCTION prerequisites
-   RETURN NUMBER;
-   
+   /*
+   Constant: c_default_validators
+   */
+   c_default_validators CONSTANT VARCHAR2(4000 Char) := '["plsql"]';
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   FUNCTION version
-   RETURN VARCHAR2;
+   FUNCTION request_validate(
+       p_doc     IN  CLOB
+      ,p_options IN  VARCHAR2
+   ) RETURN CLOB;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   FUNCTION inmemory_test
-   RETURN NUMBER;
+   FUNCTION plsql_validate(
+      p_doc    IN  CLOB
+   ) RETURN CLOB;
    
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
-   FUNCTION scratch_test
-   RETURN NUMBER;
+   FUNCTION swagger_badge_validate(
+      p_doc    IN  CLOB
+   ) RETURN CLOB;
       
-END dz_swagger3_test;
+END dz_swagger3_validate;
 /
 
-GRANT EXECUTE ON dz_swagger3_test TO public;
+GRANT EXECUTE ON dz_swagger3_validate TO public;
 

@@ -390,22 +390,30 @@ AS
       -- Build PATH table
       --------------------------------------------------------------------------
       str_sql := 'CREATE TABLE dz_swagger3_path('
-              || '    path_id                   VARCHAR2(255 Char) NOT NULL '
-              || '   ,path_endpoint             VARCHAR2(255 Char) NOT NULL '
-              || '   ,path_summary              VARCHAR2(4000 Char) '
-              || '   ,path_description          VARCHAR2(4000 Char) '
-              || '   ,path_get_operation_id     VARCHAR2(255 Char) '
-              || '   ,path_put_operation_id     VARCHAR2(255 Char) '
-              || '   ,path_post_operation_id    VARCHAR2(255 Char) '
-              || '   ,path_delete_operation_id  VARCHAR2(255 Char) '
-              || '   ,path_options_operation_id VARCHAR2(255 Char) '
-              || '   ,path_head_operation_id    VARCHAR2(255 Char) '
-              || '   ,path_patch_operation_id   VARCHAR2(255 Char) '
-              || '   ,path_trace_operation_id   VARCHAR2(255 Char) '
-              || '   ,path_desc_updated         DATE '
-              || '   ,path_desc_author          VARCHAR2(30 Char) '
-              || '   ,path_desc_notes           VARCHAR2(255 Char) '
-              || '   ,versionid                 VARCHAR2(40 Char) NOT NULL '
+              || '    path_id                      VARCHAR2(255 Char) NOT NULL '
+              || '   ,path_endpoint                VARCHAR2(255 Char) NOT NULL '
+              || '   ,path_summary                 VARCHAR2(4000 Char) '
+              || '   ,path_description             VARCHAR2(4000 Char) '
+              || '   ,path_get_operation_id        VARCHAR2(255 Char) '
+              || '   ,path_get_operation_order     INTEGER '
+              || '   ,path_put_operation_id        VARCHAR2(255 Char) '
+              || '   ,path_put_operation_order     INTEGER '
+              || '   ,path_post_operation_id       VARCHAR2(255 Char) '
+              || '   ,path_post_operation_order    INTEGER '
+              || '   ,path_delete_operation_id     VARCHAR2(255 Char) '
+              || '   ,path_delete_operation_order  INTEGER '
+              || '   ,path_options_operation_id    VARCHAR2(255 Char) '
+              || '   ,path_options_operation_order INTEGER '
+              || '   ,path_head_operation_id       VARCHAR2(255 Char) '
+              || '   ,path_head_operation_order    INTEGER '
+              || '   ,path_patch_operation_id      VARCHAR2(255 Char) '
+              || '   ,path_patch_operation_order   INTEGER '
+              || '   ,path_trace_operation_id      VARCHAR2(255 Char) '
+              || '   ,path_trace_operation_order   INTEGER '
+              || '   ,path_desc_updated            DATE '
+              || '   ,path_desc_author             VARCHAR2(30 Char) '
+              || '   ,path_desc_notes              VARCHAR2(255 Char) '
+              || '   ,versionid                    VARCHAR2(40 Char) NOT NULL '
               || ') ';
 
       IF p_table_tablespace IS NOT NULL
@@ -1656,7 +1664,7 @@ AS
 
       str_sql := 'ALTER TABLE dz_swagger3_link_op_parms '
               || 'ADD CONSTRAINT dz_swagger3_link_op_parms_pk '
-              || 'PRIMARY KEY(versionid,link_id) ';
+              || 'PRIMARY KEY(versionid,link_id,link_op_parm_name) ';
 
       IF p_index_tablespace IS NOT NULL
       THEN
@@ -2089,7 +2097,7 @@ AS
       str_sql := 'ALTER TABLE dz_swagger3_oauth_flow_scope '
               || 'ADD( '
               || '    CONSTRAINT dz_swagger3_oauth_flow_scopc01 '
-              || '    CCHECK (oauth_flow_scope_name = TRIM(oauth_flow_scope_name)) '
+              || '    CHECK (oauth_flow_scope_name = TRIM(oauth_flow_scope_name)) '
               || '    ENABLE VALIDATE '
               || '   ,CONSTRAINT dz_swagger3_oauth_flow_scopc02 '
               || '    CHECK (REGEXP_LIKE(versionid,''^[0-9a-zA-Z_\.-]+$'')) '

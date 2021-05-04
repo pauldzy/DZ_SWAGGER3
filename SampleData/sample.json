@@ -306,7 +306,8 @@
 						"$ref": "#/components/responses/Sample.Navigation30.DEFAULT"
 					}
 				}
-			}
+			},
+			"x-order": 1000000
 		},
 		"/v1/streamcat": {
 			"post": {
@@ -423,47 +424,311 @@
 												"comid": {
 													"$ref": "#/components/schemas/Sample.property.comid"
 												},
-												"landscape_layers": {
-													"type": "string",
-													"title": "Landscape Layers",
-													"description": "Unique Identifier for a project within the assigned grant",
-													"nullable": true
+												"areas_of_interest": {
+													"type": "array",
+													"nullable": true,
+													"items": {
+														"type": "object",
+														"nullable": true,
+														"xml": {
+															"name": "area_of_interest",
+															"namespace": "http://www.dziemiela.com"
+														},
+														"properties": {
+															"description": {
+																"$ref": "#/components/schemas/Sample.property.description"
+															},
+															"display_name": {
+																"$ref": "#/components/schemas/Sample.property.display_name"
+															},
+															"area_description": {
+																"type": "string",
+																"nullable": true,
+																"example": "Area of watershed"
+															},
+															"areasqkm": {
+																"type": "number",
+																"nullable": true,
+																"example": 33.7597
+															},
+															"id": {
+																"$ref": "#/components/schemas/Sample.property.id"
+															},
+															"filter_group": {
+																"type": "string",
+																"nullable": true,
+																"example": "Riparian Buffer (100m)"
+															}
+														},
+														"required": ["id", "display_name", "filter_group", "description", "area_description", "areasqkm"]
+													}
+												},
+												"metrics": {
+													"type": "array",
+													"nullable": true,
+													"items": {
+														"type": "object",
+														"title": "Metrics",
+														"nullable": true,
+														"xml": {
+															"name": "metric"
+														},
+														"properties": {
+															"description": {
+																"$ref": "#/components/schemas/Sample.property.description"
+															},
+															"id": {
+																"$ref": "#/components/schemas/Sample.property.id"
+															},
+															"metric_alias": {
+																"type": "string",
+																"nullable": true,
+																"example": "PctAg2006Slp10Cat"
+															},
+															"metric_value": {
+																"type": "number",
+																"nullable": true,
+																"example": 23.546
+															},
+															"full_display_name": {
+																"type": "string",
+																"title": "Full Display Name",
+																"nullable": true,
+																"example": "Agricultural Land Cover 20% Slope"
+															},
+															"landscape_layer_agg": {
+																"type": "string",
+																"nullable": true,
+																"example": "agmidhislopes"
+															},
+															"landscape_layer_id": {
+																"type": "string",
+																"nullable": true,
+																"example": "agmidhislopes"
+															},
+															"short_display_name": {
+																"type": "string",
+																"nullable": true,
+																"example": "Biological Nitrogen Mean Rate"
+															},
+															"unit_of_measure": {
+																"type": "string",
+																"nullable": true,
+																"example": "kg/ha/yr"
+															},
+															"area_of_interest_id": {
+																"type": "string",
+																"title": "Area of Interest ID",
+																"nullable": true,
+																"example": "cat"
+															},
+															"format_keyword": {
+																"type": "string",
+																"title": "Format Keyword",
+																"nullable": true,
+																"example": "Percentage"
+															},
+															"metric_type": {
+																"type": "string",
+																"nullable": true,
+																"example": "Agriculture"
+															},
+															"landscape_percentage": {
+																"type": "number",
+																"nullable": true,
+																"example": 100
+															},
+															"metric_class": {
+																"type": "string",
+																"nullable": true,
+																"example": "Disturbance"
+															}
+														},
+														"required": ["area_of_interest_id", "description", "format_keyword", "full_display_name", "id", "landscape_layer_agg", "landscape_layer_id", "landscape_percentage", "metric_alias", "metric_class", "metric_type", "metric_value", "short_display_name", "unit_of_measure"]
+													},
+													"xml": {
+														"name": "metrics"
+													}
+												},
+												"search_criteria": {
+													"type": "object",
+													"title": "Search Criteria",
+													"nullable": true,
+													"properties": {
+														"area_of_interest": {
+															"type": "array",
+															"nullable": true,
+															"items": {
+																"type": "string",
+																"title": "Area of Interest",
+																"nullable": true,
+																"example": "Riparian Buffer (100m)",
+																"xml": {
+																	"name": "area_of_interest"
+																}
+															},
+															"xml": {
+																"name": "areas_of_interest",
+																"wrapped": true
+															}
+														},
+														"landscape_metric_type": {
+															"type": "array",
+															"nullable": true,
+															"items": {
+																"type": "string",
+																"title": "Landscape Metric Type",
+																"nullable": true,
+																"example": "Climate",
+																"xml": {
+																	"name": "landscape_metric_type"
+																}
+															},
+															"xml": {
+																"name": "landscape_metric_types",
+																"wrapped": true
+															}
+														},
+														"landscape_metric_class": {
+															"type": "array",
+															"nullable": true,
+															"items": {
+																"type": "string",
+																"title": "Landscape Metric Class",
+																"nullable": true,
+																"example": "Disturbance",
+																"xml": {
+																	"name": "landscape_metric_class"
+																}
+															},
+															"xml": {
+																"name": "landscape_metric_classes",
+																"wrapped": true
+															}
+														}
+													},
+													"required": ["area_of_interest", "landscape_metric_type", "landscape_metric_class"]
 												},
 												"streamcat_url": {
 													"type": "string",
 													"title": "StreamCat URL",
 													"description": "Unique Identifier for a project within the assigned grant",
-													"nullable": true
-												},
-												"metrics": {
-													"type": "string",
-													"title": "Metrics",
-													"description": "Unique Identifier for a project within the assigned grant",
-													"nullable": true
-												},
-												"areas_of_interest": {
-													"type": "string",
-													"title": "Areas Of Interest",
-													"description": "Unique Identifier for a project within the assigned grant",
-													"nullable": true
+													"nullable": true,
+													"example": "https://www.epa.gov/national-aquatic-resource-surveys/streamcat"
 												},
 												"identifier_summary": {
-													"type": "string",
+													"type": "object",
 													"title": "Identifier Summary",
-													"description": "Unique Identifier for a project within the assigned grant",
-													"nullable": true
+													"nullable": true,
+													"xml": {
+														"namespace": "http://www.dziemiela.com",
+														"prefix": "dz"
+													},
+													"properties": {
+														"notification": {
+															"type": "string",
+															"title": "Notification",
+															"nullable": true,
+															"xml": {
+																"name": "notification",
+																"prefix": "dz",
+																"attribute": true
+															}
+														},
+														"is_coast": {
+															"type": "string",
+															"title": "Catchment Coast Flag",
+															"description": "Flag (Y/N) indicating if catchment is coastal.",
+															"nullable": true,
+															"example": "Y",
+															"xml": {
+																"prefix": "dz"
+															}
+														},
+														"is_headwater": {
+															"type": "string",
+															"title": "Catchment Headwater Flag",
+															"description": "Flag (Y/N) indicating if catchment is headwater.",
+															"nullable": true,
+															"example": "Y",
+															"xml": {
+																"prefix": "dz"
+															}
+														},
+														"is_tidal": {
+															"type": "string",
+															"title": "Catchment Tidal Flag",
+															"description": "Flag (Y/N) indicating if catchment is tidal.",
+															"nullable": true,
+															"example": "Y",
+															"xml": {
+																"prefix": "dz"
+															}
+														},
+														"is_sink": {
+															"type": "string",
+															"title": "Catchment Sink Flag",
+															"description": "Flag (Y/N) indicating if catchment is as sink.",
+															"nullable": true,
+															"example": "Y",
+															"xml": {
+																"prefix": "dz"
+															}
+														}
+													},
+													"required": ["is_sink", "is_coast", "is_headwater", "is_tidal", "notification"]
 												},
-												"search_criteria": {
-													"type": "string",
-													"title": "Search Criteria",
-													"description": "Unique Identifier for a project within the assigned grant",
-													"nullable": true
+												"landscape_layers": {
+													"type": "array",
+													"nullable": true,
+													"items": {
+														"type": "object",
+														"nullable": true,
+														"xml": {
+															"name": "landscape_layer"
+														},
+														"properties": {
+															"description": {
+																"$ref": "#/components/schemas/Sample.property.description"
+															},
+															"display_name": {
+																"$ref": "#/components/schemas/Sample.property.display_name"
+															},
+															"id": {
+																"$ref": "#/components/schemas/Sample.property.id"
+															},
+															"display_alias": {
+																"type": "string",
+																"nullable": true,
+																"example": "AgMidHiSlopes",
+																"xml": {
+																	"name": "display_name"
+																}
+															},
+															"filename": {
+																"type": "string",
+																"nullable": true,
+																"example": "AgMidHiSlopes_<RegionID>.csv"
+															},
+															"metadata": {
+																"type": "string",
+																"nullable": true,
+																"example": "ftp://newftp.epa.gov/EPADataCommons/ORD/NHDPlusLandscapeAttributes/StreamCat/Documentation/Metadata/AgMidHiSlopes.html"
+															}
+														},
+														"required": ["id", "display_alias", "display_name", "description", "metadata", "filename"]
+													},
+													"xml": {
+														"name": "landscape_layers"
+													}
 												},
 												"streamcat_extract_date": {
 													"type": "string",
 													"title": "StreamCat Extraction Date",
 													"description": "Unique Identifier for a project within the assigned grant",
-													"nullable": true
+													"format": "date-time",
+													"nullable": true,
+													"example": "2017-03-27T00:00:00.00+00:00"
 												}
 											},
 											"required": ["comid", "streamcat_extract_date", "streamcat_url", "identifier_summary", "search_criteria", "areas_of_interest", "landscape_layers", "metrics", "shape"]
@@ -500,7 +765,394 @@
 													"type": "string",
 													"title": "Submission ID",
 													"description": "String identifier used to match submissions to results.",
+													"nullable": true,
+													"example": "{2d2d511f-000b-4202-aee2-03b4347468c3}"
+												}
+											},
+											"required": ["submission_id", "status_code", "status_message", "execution_time", "output_bytes"]
+										}
+									},
+									"required": ["output", "status"]
+								},
+								"encoding": {
+									"historyMetadata": {
+										"contentType": "application/xml; charset=utf-8"
+									},
+									"profileImage": {
+										"contentType": "image/png, image/jpeg",
+										"headers": {
+											"X-Rate-Limit-Limit": {
+												"description": "The number of allowed requests in the current period.",
+												"required": true,
+												"allowEmptyValue": false,
+												"schema": {
+													"type": "integer",
+													"title": "Header String Value",
 													"nullable": true
+												}
+											}
+										}
+									}
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"type": "object",
+									"title": "Sample Streamcat Root Schema",
+									"properties": {
+										"output": {
+											"type": "object",
+											"title": "StreamCat Output",
+											"properties": {
+												"shape": {
+													"$ref": "#/components/schemas/Sample.geojson.Geometry"
+												},
+												"comid": {
+													"$ref": "#/components/schemas/Sample.property.comid"
+												},
+												"areas_of_interest": {
+													"type": "array",
+													"nullable": true,
+													"items": {
+														"type": "object",
+														"nullable": true,
+														"xml": {
+															"name": "area_of_interest",
+															"namespace": "http://www.dziemiela.com"
+														},
+														"properties": {
+															"description": {
+																"$ref": "#/components/schemas/Sample.property.description"
+															},
+															"display_name": {
+																"$ref": "#/components/schemas/Sample.property.display_name"
+															},
+															"area_description": {
+																"type": "string",
+																"nullable": true,
+																"example": "Area of watershed"
+															},
+															"areasqkm": {
+																"type": "number",
+																"nullable": true,
+																"example": 33.7597
+															},
+															"id": {
+																"$ref": "#/components/schemas/Sample.property.id"
+															},
+															"filter_group": {
+																"type": "string",
+																"nullable": true,
+																"example": "Riparian Buffer (100m)"
+															}
+														},
+														"required": ["id", "display_name", "filter_group", "description", "area_description", "areasqkm"]
+													}
+												},
+												"metrics": {
+													"type": "array",
+													"nullable": true,
+													"items": {
+														"type": "object",
+														"title": "Metrics",
+														"nullable": true,
+														"xml": {
+															"name": "metric"
+														},
+														"properties": {
+															"description": {
+																"$ref": "#/components/schemas/Sample.property.description"
+															},
+															"id": {
+																"$ref": "#/components/schemas/Sample.property.id"
+															},
+															"metric_alias": {
+																"type": "string",
+																"nullable": true,
+																"example": "PctAg2006Slp10Cat"
+															},
+															"metric_value": {
+																"type": "number",
+																"nullable": true,
+																"example": 23.546
+															},
+															"full_display_name": {
+																"type": "string",
+																"title": "Full Display Name",
+																"nullable": true,
+																"example": "Agricultural Land Cover 20% Slope"
+															},
+															"landscape_layer_agg": {
+																"type": "string",
+																"nullable": true,
+																"example": "agmidhislopes"
+															},
+															"landscape_layer_id": {
+																"type": "string",
+																"nullable": true,
+																"example": "agmidhislopes"
+															},
+															"short_display_name": {
+																"type": "string",
+																"nullable": true,
+																"example": "Biological Nitrogen Mean Rate"
+															},
+															"unit_of_measure": {
+																"type": "string",
+																"nullable": true,
+																"example": "kg/ha/yr"
+															},
+															"area_of_interest_id": {
+																"type": "string",
+																"title": "Area of Interest ID",
+																"nullable": true,
+																"example": "cat"
+															},
+															"format_keyword": {
+																"type": "string",
+																"title": "Format Keyword",
+																"nullable": true,
+																"example": "Percentage"
+															},
+															"metric_type": {
+																"type": "string",
+																"nullable": true,
+																"example": "Agriculture"
+															},
+															"landscape_percentage": {
+																"type": "number",
+																"nullable": true,
+																"example": 100
+															},
+															"metric_class": {
+																"type": "string",
+																"nullable": true,
+																"example": "Disturbance"
+															}
+														},
+														"required": ["area_of_interest_id", "description", "format_keyword", "full_display_name", "id", "landscape_layer_agg", "landscape_layer_id", "landscape_percentage", "metric_alias", "metric_class", "metric_type", "metric_value", "short_display_name", "unit_of_measure"]
+													},
+													"xml": {
+														"name": "metrics"
+													}
+												},
+												"search_criteria": {
+													"type": "object",
+													"title": "Search Criteria",
+													"nullable": true,
+													"properties": {
+														"area_of_interest": {
+															"type": "array",
+															"nullable": true,
+															"items": {
+																"type": "string",
+																"title": "Area of Interest",
+																"nullable": true,
+																"example": "Riparian Buffer (100m)",
+																"xml": {
+																	"name": "area_of_interest"
+																}
+															},
+															"xml": {
+																"name": "areas_of_interest",
+																"wrapped": true
+															}
+														},
+														"landscape_metric_type": {
+															"type": "array",
+															"nullable": true,
+															"items": {
+																"type": "string",
+																"title": "Landscape Metric Type",
+																"nullable": true,
+																"example": "Climate",
+																"xml": {
+																	"name": "landscape_metric_type"
+																}
+															},
+															"xml": {
+																"name": "landscape_metric_types",
+																"wrapped": true
+															}
+														},
+														"landscape_metric_class": {
+															"type": "array",
+															"nullable": true,
+															"items": {
+																"type": "string",
+																"title": "Landscape Metric Class",
+																"nullable": true,
+																"example": "Disturbance",
+																"xml": {
+																	"name": "landscape_metric_class"
+																}
+															},
+															"xml": {
+																"name": "landscape_metric_classes",
+																"wrapped": true
+															}
+														}
+													},
+													"required": ["area_of_interest", "landscape_metric_type", "landscape_metric_class"]
+												},
+												"streamcat_url": {
+													"type": "string",
+													"title": "StreamCat URL",
+													"description": "Unique Identifier for a project within the assigned grant",
+													"nullable": true,
+													"example": "https://www.epa.gov/national-aquatic-resource-surveys/streamcat"
+												},
+												"identifier_summary": {
+													"type": "object",
+													"title": "Identifier Summary",
+													"nullable": true,
+													"xml": {
+														"namespace": "http://www.dziemiela.com",
+														"prefix": "dz"
+													},
+													"properties": {
+														"notification": {
+															"type": "string",
+															"title": "Notification",
+															"nullable": true,
+															"xml": {
+																"name": "notification",
+																"prefix": "dz",
+																"attribute": true
+															}
+														},
+														"is_coast": {
+															"type": "string",
+															"title": "Catchment Coast Flag",
+															"description": "Flag (Y/N) indicating if catchment is coastal.",
+															"nullable": true,
+															"example": "Y",
+															"xml": {
+																"prefix": "dz"
+															}
+														},
+														"is_headwater": {
+															"type": "string",
+															"title": "Catchment Headwater Flag",
+															"description": "Flag (Y/N) indicating if catchment is headwater.",
+															"nullable": true,
+															"example": "Y",
+															"xml": {
+																"prefix": "dz"
+															}
+														},
+														"is_tidal": {
+															"type": "string",
+															"title": "Catchment Tidal Flag",
+															"description": "Flag (Y/N) indicating if catchment is tidal.",
+															"nullable": true,
+															"example": "Y",
+															"xml": {
+																"prefix": "dz"
+															}
+														},
+														"is_sink": {
+															"type": "string",
+															"title": "Catchment Sink Flag",
+															"description": "Flag (Y/N) indicating if catchment is as sink.",
+															"nullable": true,
+															"example": "Y",
+															"xml": {
+																"prefix": "dz"
+															}
+														}
+													},
+													"required": ["is_sink", "is_coast", "is_headwater", "is_tidal", "notification"]
+												},
+												"landscape_layers": {
+													"type": "array",
+													"nullable": true,
+													"items": {
+														"type": "object",
+														"nullable": true,
+														"xml": {
+															"name": "landscape_layer"
+														},
+														"properties": {
+															"description": {
+																"$ref": "#/components/schemas/Sample.property.description"
+															},
+															"display_name": {
+																"$ref": "#/components/schemas/Sample.property.display_name"
+															},
+															"id": {
+																"$ref": "#/components/schemas/Sample.property.id"
+															},
+															"display_alias": {
+																"type": "string",
+																"nullable": true,
+																"example": "AgMidHiSlopes",
+																"xml": {
+																	"name": "display_name"
+																}
+															},
+															"filename": {
+																"type": "string",
+																"nullable": true,
+																"example": "AgMidHiSlopes_<RegionID>.csv"
+															},
+															"metadata": {
+																"type": "string",
+																"nullable": true,
+																"example": "ftp://newftp.epa.gov/EPADataCommons/ORD/NHDPlusLandscapeAttributes/StreamCat/Documentation/Metadata/AgMidHiSlopes.html"
+															}
+														},
+														"required": ["id", "display_alias", "display_name", "description", "metadata", "filename"]
+													},
+													"xml": {
+														"name": "landscape_layers"
+													}
+												},
+												"streamcat_extract_date": {
+													"type": "string",
+													"title": "StreamCat Extraction Date",
+													"description": "Unique Identifier for a project within the assigned grant",
+													"format": "date-time",
+													"nullable": true,
+													"example": "2017-03-27T00:00:00.00+00:00"
+												}
+											},
+											"required": ["comid", "streamcat_extract_date", "streamcat_url", "identifier_summary", "search_criteria", "areas_of_interest", "landscape_layers", "metrics", "shape"]
+										},
+										"status": {
+											"type": "object",
+											"title": "Status Object",
+											"properties": {
+												"status_message": {
+													"$ref": "#/components/schemas/Sample.property.status_message"
+												},
+												"output_bytes": {
+													"type": "number",
+													"title": "Output Bytes",
+													"description": "Total size in bytes of the service results payload.",
+													"nullable": true,
+													"example": 60847
+												},
+												"status_code": {
+													"type": "integer",
+													"title": "Status Code",
+													"description": "Integer code indicating the overall success or failure of the service call.  A value of zero or null indicates success.",
+													"nullable": true,
+													"example": 0
+												},
+												"execution_time": {
+													"type": "number",
+													"title": "Execution Time",
+													"description": "Total time in seconds utilized by the server to provide service results.",
+													"nullable": true,
+													"example": 14.963124
+												},
+												"submission_id": {
+													"type": "string",
+													"title": "Submission ID",
+													"description": "String identifier used to match submissions to results.",
+													"nullable": true,
+													"example": "{2d2d511f-000b-4202-aee2-03b4347468c3}"
 												}
 											},
 											"required": ["submission_id", "status_code", "status_message", "execution_time", "output_bytes"]
@@ -541,7 +1193,8 @@
 						}
 					}
 				}
-			}
+			},
+			"x-order": 1000010
 		},
 		"/v1/randomnav": {
 			"get": {
@@ -679,7 +1332,8 @@
 						}
 					}
 				}
-			}
+			},
+			"x-order": 1000020
 		}
 	},
 	"components": {
@@ -764,12 +1418,37 @@
 			"Sample.geojson.Geometry.ordinate": {
 				"type": "number",
 				"title": "GeoJSON Ordinate",
-				"example": -89.5327
+				"example": -89.5327,
+				"xml": {
+					"name": "ordinate"
+				}
 			},
 			"Sample.Header.String": {
 				"type": "string",
 				"title": "Header String Value",
 				"nullable": true
+			},
+			"Sample.property.description": {
+				"type": "string",
+				"nullable": true,
+				"example": "National Hydrography Dataset version 2.1",
+				"xml": {
+					"name": "description",
+					"attribute": true
+				}
+			},
+			"Sample.property.display_name": {
+				"type": "string",
+				"nullable": true,
+				"example": "2006 National Land Cover Database",
+				"xml": {
+					"name": "display_name"
+				}
+			},
+			"Sample.property.id": {
+				"type": "string",
+				"nullable": true,
+				"example": "agmidhislopes"
 			},
 			"Sample.property.measure": {
 				"type": "number",
@@ -1069,39 +1748,6 @@
 			}
 		},
 		"securitySchemes": {
-			"sample.security.openIdConnect": {
-				"type": "openIdConnect",
-				"description": "Another description regarding OpenIdConnect",
-				"openIdConnectUrl": "https://www.openid.org"
-			},
-			"sample.security.oauth2": {
-				"type": "oauth2",
-				"description": "A short description for oauth2 sample.",
-				"flows": {
-					"implicit": {
-						"authorizationUrl": "https://sampleimplicit.authorization.com",
-						"refreshUrl": "https://sampleimplicit.refreshurl.com",
-						"scopes": {
-							"admin": "Admin Scope",
-							"poweruser": "Power User Scope",
-							"user": "User Scope"
-						}
-					},
-					"password": {
-						"tokenUrl": "https://password.sampletokenurl.com",
-						"refreshUrl": "https://samplepassword.refreshurl.com"
-					},
-					"clientCredentials": {
-						"tokenUrl": "https://clientcreds.sampletokenurl.com",
-						"refreshUrl": "https://sampleclientcreds.refreshurl.com"
-					},
-					"authorizationCode": {
-						"authorizationUrl": "https://sampleauth.authorization.com",
-						"tokenUrl": "https://authcode.sampletokenurl.com",
-						"refreshUrl": "https://sampleauthcodes.refreshurl.com"
-					}
-				}
-			},
 			"sample.security.apikey": {
 				"type": "apiKey",
 				"description": "A short description for the scheme.",
@@ -1112,6 +1758,49 @@
 				"type": "http",
 				"description": "A second short description for the http security.",
 				"scheme": "basic"
+			},
+			"sample.security.oauth2": {
+				"type": "oauth2",
+				"description": "A short description for oauth2 sample.",
+				"flows": {
+					"implicit": {
+						"authorizationUrl": "https://sampleimplicit.authorization.com",
+						"refreshUrl": "https://sampleimplicit.refreshurl.com",
+						"scopes": {
+							"user": "User Scope"
+						}
+					},
+					"password": {
+						"tokenUrl": "https://password.sampletokenurl.com",
+						"refreshUrl": "https://samplepassword.refreshurl.com",
+						"scopes": {
+							"poweruser": "Power User Scope",
+							"user": "User Scope"
+						}
+					},
+					"clientCredentials": {
+						"tokenUrl": "https://clientcreds.sampletokenurl.com",
+						"refreshUrl": "https://sampleclientcreds.refreshurl.com",
+						"scopes": {
+							"admin": "Admin Scope",
+							"poweruser": "Power User Scope"
+						}
+					},
+					"authorizationCode": {
+						"authorizationUrl": "https://sampleauth.authorization.com",
+						"tokenUrl": "https://authcode.sampletokenurl.com",
+						"refreshUrl": "https://sampleauthcodes.refreshurl.com",
+						"scopes": {
+							"admin": "Admin Scope",
+							"poweruser": "Power User Scope"
+						}
+					}
+				}
+			},
+			"sample.security.openIdConnect": {
+				"type": "openIdConnect",
+				"description": "Another description regarding OpenIdConnect",
+				"openIdConnectUrl": "https://www.openid.org"
 			}
 		}
 	},
