@@ -7,7 +7,7 @@ AS
    /*
    Constant: c_default_validators
    */
-   c_default_validators CONSTANT VARCHAR2(4000 Char) := '["plsql"]';
+   c_default_validators CONSTANT VARCHAR2(4000 Char) := '{"tests":["plsql"]}';
 
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
