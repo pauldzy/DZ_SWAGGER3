@@ -10,11 +10,11 @@ Insert into DZ_SWAGGER3_PARENT_MEDIA_MAP
 Insert into DZ_SWAGGER3_PARENT_MEDIA_MAP
    (PARENT_ID, MEDIA_TYPE, MEDIA_ID, MEDIA_ORDER, VERSIONID)
  Values
-   ('Sample.Streamcat.DEFAULT', 'text/csv', 'Sample.csv.download.MEDIA', 20, 'SAMPLE');
+   ('Sample.Streamcat.DEFAULT', 'application/xml', 'Sample.Streamcat.MEDIA', 20, 'SAMPLE');
 Insert into DZ_SWAGGER3_PARENT_MEDIA_MAP
    (PARENT_ID, MEDIA_TYPE, MEDIA_ID, MEDIA_ORDER, VERSIONID)
  Values
-   ('Sample.Streamcat.DEFAULT', 'application/xml', 'Sample.Streamcat.MEDIA', 20, 'SAMPLE');
+   ('Sample.Streamcat.DEFAULT', 'text/csv', 'Sample.csv.download.MEDIA', 30, 'SAMPLE');
 Insert into DZ_SWAGGER3_PARENT_MEDIA_MAP
    (PARENT_ID, MEDIA_TYPE, MEDIA_ID, MEDIA_ORDER, VERSIONID)
  Values
