@@ -7,7 +7,7 @@ AS
    RETURN SELF AS RESULT
    AS
    BEGIN
-      
+
       self.return_code := 0;
       RETURN;
 
@@ -86,20 +86,20 @@ AS
          WHERE
              a.versionid  = str_versionid
          AND a.doc_id     = str_doc_id;
-         
+
       EXCEPTION
          WHEN NO_DATA_FOUND
          THEN
             self.return_code := -1;
             self.status_message := 'doc id not found';
             RETURN;
-            
+
          WHEN OTHERS
          THEN
             RAISE;
-            
+
       END;
-      
+
       IF self.externalDocs IS NOT NULL
       THEN
          dz_swagger3_loader.extrdocstyp(
@@ -107,7 +107,7 @@ AS
             ,p_children_ids => dz_swagger3_object_vry(self.externalDocs)
             ,p_versionid    => str_versionid
          );
-         
+
       END IF;
 
       --------------------------------------------------------------------------
@@ -126,7 +126,7 @@ AS
       WHERE
           a.versionid = str_versionid
       AND a.parent_id = str_doc_id;
-      
+
       IF self.servers.COUNT > 0
       THEN
          dz_swagger3_loader.servertyp(
@@ -134,7 +134,7 @@ AS
             ,p_children_ids => self.servers
             ,p_versionid    => str_versionid
          );
-         
+
       END IF;
 
       --------------------------------------------------------------------------
@@ -171,7 +171,7 @@ AS
          AND a.path_id   = b.path_id
          WHERE
          a.versionid = str_versionid;
-         
+
       ELSE
          SELECT
          dz_swagger3_object_typ(
@@ -193,7 +193,7 @@ AS
          AND a.group_id  = str_group_id;
 
       END IF;
-      
+
       IF self.paths.COUNT > 0
       THEN
          dz_swagger3_loader.pathtyp(
@@ -201,7 +201,7 @@ AS
             ,p_children_ids => self.paths
             ,p_versionid    => str_versionid
          );
-      
+
       END IF;
 
       --------------------------------------------------------------------------
@@ -222,7 +222,7 @@ AS
       WHERE
           a.versionid = str_versionid
       AND a.parent_id = str_doc_id;
-      
+
       IF self.security.COUNT > 0
       THEN
          dz_swagger3_loader.securitySchemetyp(
@@ -230,7 +230,7 @@ AS
             ,p_children_ids => self.security 
             ,p_versionid    => str_versionid
          );
-         
+
       END IF;
 
       --------------------------------------------------------------------------
@@ -255,7 +255,7 @@ AS
       -- Return the completed object
       --------------------------------------------------------------------------
       COMMIT;
-      
+
       RETURN;
 
    END dz_swagger3_typ;
@@ -269,6 +269,7 @@ AS
    AS
       clb_output              CLOB;
       clb_servers             CLOB;
+      vry_paths               dz_swagger3_jsonobject_vry;
       clb_paths               CLOB;
       clb_schemas             CLOB;
       clb_responses           CLOB;
@@ -282,7 +283,7 @@ AS
       clb_security            CLOB;
       clb_tags                CLOB;
       clb_externalDocs        CLOB;
-      
+
    BEGIN
 
       --------------------------------------------------------------------------
@@ -299,9 +300,9 @@ AS
          )
          INTO clb_output
          FROM dual;
-         
+
          RETURN clb_output;
-      
+
       END IF;
 
       --------------------------------------------------------------------------
@@ -325,7 +326,7 @@ AS
          ON 
              a.object_type_id = b.object_type_id
          AND a.object_id      = b.object_id;
-         
+
       END IF;
 
       --------------------------------------------------------------------------
@@ -336,15 +337,16 @@ AS
       OR self.paths.COUNT > 0
       THEN
          SELECT
-         JSON_OBJECTAGG(
-            b.object_key VALUE a.pathtyp.toJSON(
+         dz_swagger3_jsonobject_typ(
+             p_object_key   => b.object_key
+            ,p_object_value => a.pathtyp.toJSON(
                 p_force_inline   => p_force_inline
                ,p_short_id       => p_short_id
                ,p_xorder         => b.object_order
-            ) FORMAT JSON
-            RETURNING CLOB
+             )
+            ,p_object_order => b.object_order
          )
-         INTO clb_paths 
+         BULK COLLECT INTO vry_paths 
          FROM
          dz_swagger3_xobjects a
          JOIN
@@ -352,9 +354,13 @@ AS
          ON
              a.object_type_id = b.object_type_id
          AND a.object_id      = b.object_id;
-         
+
+         clb_paths := dz_swagger3_jsonobject_agg(
+            p_jsonobject_vry => vry_paths
+         ).toJSON();
+
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 40
       -- Add schemas components map
@@ -387,7 +393,7 @@ AS
              a.object_type_id = 'schematyp'
          AND a.reference_count > 1 
          AND COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE'; 
-         
+
          SELECT
          JSON_OBJECTAGG(
             CASE 
@@ -408,7 +414,7 @@ AS
          WHERE 
              a.object_type_id = 'responsetyp'
          AND a.reference_count > 1;
-         
+
          SELECT
          JSON_OBJECTAGG(
             CASE
@@ -430,7 +436,7 @@ AS
              a.object_type_id = 'parametertyp'
          AND a.reference_count > 1
          AND COALESCE(a.parametertyp.parameter_list_hidden,'FALSE') <> 'TRUE';
-            
+
          SELECT
          JSON_OBJECTAGG(
             CASE
@@ -451,7 +457,7 @@ AS
          WHERE
              a.object_type_id = 'exampletyp'
          AND a.reference_count > 1;
-         
+
          SELECT
          JSON_OBJECTAGG(
             CASE
@@ -493,7 +499,7 @@ AS
          WHERE
              a.object_type_id = 'headertyp'
          AND a.reference_count > 1;
-            
+
          SELECT
          JSON_OBJECTAGG(
             a.securityschemetyp.securityscheme_fullname VALUE a.securityschemetyp.toJSON() FORMAT JSON
@@ -504,7 +510,7 @@ AS
          dz_swagger3_xobjects a
          WHERE
              a.object_type_id = 'securityschemetyp';
-            
+
          SELECT
          JSON_OBJECTAGG(
             CASE
@@ -525,7 +531,7 @@ AS
          WHERE
              a.object_type_id = 'linktyp'
          AND a.reference_count > 1;
-            
+
          SELECT
          JSON_OBJECTAGG(
             CASE
@@ -546,10 +552,10 @@ AS
          WHERE
              a.object_type_id = 'callbacktyp'
          AND a.reference_count > 1;
-            
-            
+
+
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 50
       -- Add security
@@ -575,7 +581,7 @@ AS
          AND a.object_id      = b.object_id;
 
       END IF;
-      
+
       --------------------------------------------------------------------------
       -- Step 60
       -- Add tags
@@ -595,7 +601,7 @@ AS
             a.tagtyp.tag_description IS NOT NULL
          OR a.tagtyp.tag_externaldocs IS NOT NULL 
       );
-      
+
       --------------------------------------------------------------------------
       -- Step 70
       -- Add externalDocs
@@ -611,16 +617,16 @@ AS
             WHERE 
                 a.object_type_id = self.externalDocs.object_type_id 
             AND a.object_id      = self.externalDocs.object_id; 
-         
+
          EXCEPTION
             WHEN NO_DATA_FOUND
             THEN
                clb_externalDocs := NULL;
-               
+
             WHEN OTHERS
             THEN
                RAISE;
-               
+
          END;
 
       END IF;
@@ -667,7 +673,7 @@ AS
       RETURN clb_output;
 
    END toJSON;
-   
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION toYAML(
@@ -676,7 +682,7 @@ AS
    ) RETURN CLOB
    AS
       clb_output    CLOB;
-      
+
    BEGIN
 
       --------------------------------------------------------------------------
@@ -695,7 +701,7 @@ AS
           )
          ,p_output           => clb_output
       );
-      
+
       --------------------------------------------------------------------------
       -- Step 200
       -- Cough it out
@@ -703,7 +709,7 @@ AS
       RETURN clb_output;
 
    END toYAML;
-   
+
    -----------------------------------------------------------------------------
    -----------------------------------------------------------------------------
    MEMBER FUNCTION validity(
@@ -713,9 +719,9 @@ AS
    ) RETURN CLOB
    AS
       clb_output CLOB;
-      
+
    BEGIN
-   
+
       --------------------------------------------------------------------------
       -- Step 10
       -- Check incoming parameters
@@ -731,11 +737,11 @@ AS
          )
          INTO clb_output
          FROM dual;
-         
+
          RETURN clb_output;
-      
+
       END IF;
-   
+
       RETURN dz_swagger3_validate.request_validate(
           p_doc => self.toJSON(
              p_force_inline => p_force_inline
@@ -743,7 +749,7 @@ AS
           )
          ,p_options => p_options
       );
-      
+
    END validity;
 
 END;

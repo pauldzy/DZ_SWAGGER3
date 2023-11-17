@@ -27,6 +27,11 @@
          ,"output": "dz_swagger3_deploy.sql"
          ,"includes": [
              "%%SQLHEADER%%"
+            ,"Types/DZ_SWAGGER3_JSONOBJECT_TYP.tps"
+            ,"Types/DZ_SWAGGER3_JSONOBJECT_TYP.tpb"
+            ,"Collections/DZ_SWAGGER3_JSONOBJECT_VRY.tps"
+            ,"Types/DZ_SWAGGER3_JSONOBJECT_AGG.tps"
+            ,"Types/DZ_SWAGGER3_JSONOBJECT_AGG.tpb"
             ,"Collections/DZ_SWAGGER3_NUMBER_VRY.tps"
             ,"Collections/DZ_SWAGGER3_STRING_VRY.tps"
             ,"Collections/DZ_SWAGGER3_CLOB_VRY.tps"
