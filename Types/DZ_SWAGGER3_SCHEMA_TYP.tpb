@@ -502,6 +502,7 @@ AS
       clb_schema_externalDocs        CLOB;
       clb_schema_items_schema        CLOB;
       clb_schema_properties          CLOB;
+      vry_schema_properties          dz_swagger3_jsonobject_vry;
       clb_schema_prop_required       CLOB;
       clb_xml                        CLOB;
       str_object_key                 VARCHAR2(255 Char);
@@ -747,14 +748,15 @@ AS
             
       -------------------------------------------------------------------------
       -- Step 80
-      -- Add parameters
+      -- Add properties
       -------------------------------------------------------------------------
             IF  self.schema_properties IS NOT NULL 
             AND self.schema_properties.COUNT > 0
             THEN
                SELECT
-               JSON_OBJECTAGG(
-                  b.object_key VALUE a.schematyp.toJSON(
+               dz_swagger3_jsonobject_typ(
+                   p_object_key   => b.object_key
+                  ,p_object_value => a.schematyp.toJSON(
                       p_force_inline     => p_force_inline
                      ,p_short_id         => p_short_id
                      ,p_identifier       => a.object_id
@@ -762,10 +764,10 @@ AS
                      ,p_reference_count  => a.reference_count
                      ,p_jsonschema       => str_jsonschema
                      ,p_xorder           => b.object_order
-                  ) FORMAT JSON
-                  RETURNING CLOB
+                   )
+                  ,p_object_order => b.object_order
                )
-               INTO clb_schema_properties
+               BULK COLLECT INTO vry_schema_properties 
                FROM
                dz_swagger3_xobjects a
                JOIN
@@ -774,7 +776,11 @@ AS
                    a.object_type_id = b.object_type_id
                AND a.object_id      = b.object_id
                WHERE
-               COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE'; 
+               COALESCE(a.schematyp.property_list_hidden,'FALSE') <> 'TRUE';
+               
+               clb_schema_properties  := dz_swagger3_jsonobject_agg(
+                  p_jsonobject_vry => vry_schema_properties 
+               ).toJSON();
                
                SELECT
                JSON_ARRAYAGG(
